@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 디자인 컨펌 가이드라인 · Confirm Protocol</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#121110;
+    --panel:#1b1815;
+    --panel-2:#211d19;
+    --panel-3:#26211c;
+    --line: rgba(237,230,216,0.10);
+    --line-strong: rgba(237,230,216,0.18);
+    --paper:#ede6d8;
+    --paper-dim:#c9c1b2;
+    --muted:#8f867a;
+    --brass:#c9a24b;
+    --brass-dim:#8a7443;
+    --teal:#2fa893;
+    --amber:#dba53c;
+    --orange:#dd6b2e;
+    --red:#d05252;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    padding:0;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Oswald',sans-serif;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  .wrap{max-width:960px;margin:0 auto;padding:56px 28px 90px;}
+
+  .reveal{opacity:0;animation:rise .6s ease forwards;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  header{margin-bottom:44px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--brass);margin-bottom:18px;
+  }
+  .eyebrow::before{content:"";width:16px;height:1px;background:var(--brass);display:inline-block;}
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:clamp(30px,5vw,46px);
+    letter-spacing:-.01em;
+    margin:0 0 14px;
+    color:var(--paper);
+  }
+  .sub{font-size:16px;color:var(--paper-dim);max-width:620px;margin:0 0 32px;}
+  .sub b{color:var(--paper);font-weight:600;}
+
+  .stepper{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line-strong);border-radius:2px;overflow:hidden;}
+  .step{flex:1 1 140px;padding:14px 16px;border-right:1px solid var(--line-strong);background:var(--panel);}
+  .step:last-child{border-right:none;}
+  .step .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brass);display:block;margin-bottom:4px;}
+  .step .t{font-size:13.5px;color:var(--paper-dim);}
+
+  .section-label{
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:56px 0 16px;display:flex;align-items:center;gap:10px;
+  }
+  .section-label::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .core-rules{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-strong);border:1px solid var(--line-strong);}
+  .rule{background:var(--panel);padding:20px 18px;}
+  .rule .k{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brass);margin-bottom:8px;display:block;}
+  .rule .v{font-size:14.5px;color:var(--paper);font-weight:500;}
+  .rule .d{font-size:12.5px;color:var(--muted);margin-top:6px;}
+
+  .proofbar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-strong);border:1px solid var(--line-strong);}
+  .swatch{background:var(--panel);padding:16px 14px 14px;}
+  .swatch .bar{height:5px;border-radius:1px;margin-bottom:10px;}
+  .swatch .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;background:none !important;}
+  .swatch .kr{font-size:13.5px;font-weight:600;color:var(--paper);margin-bottom:4px;}
+  .swatch .desc{font-size:12px;color:var(--muted);}
+  .t-pass .bar,.t-pass .lbl{color:var(--teal);background:var(--teal);}
+  .t-minor .bar,.t-minor .lbl{color:var(--amber);background:var(--amber);}
+  .t-major .bar,.t-major .lbl{color:var(--orange);background:var(--orange);}
+  .t-reject .bar,.t-reject .lbl{color:var(--red);background:var(--red);}
+
+  .frames{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  .frame{position:relative;background:var(--panel);border:1px solid var(--line);padding:20px 20px 18px;}
+  .frame::before,.frame::after{content:"";position:absolute;width:11px;height:11px;pointer-events:none;}
+  .frame::before{top:-1px;left:-1px;border-top:1px solid var(--brass-dim);border-left:1px solid var(--brass-dim);}
+  .frame::after{bottom:-1px;right:-1px;border-bottom:1px solid var(--brass-dim);border-right:1px solid var(--brass-dim);}
+  .frame-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .frame-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brass);display:block;margin-bottom:4px;}
+  .frame-title{font-size:16px;font-weight:600;color:var(--paper);}
+  .frame-title .en{display:block;font-family:'JetBrains Mono',monospace;font-weight:400;font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.02em;}
+  .prio{flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;padding:4px 8px;border-radius:20px;border:1px solid;white-space:nowrap;margin-top:2px;}
+  .prio.must{color:var(--red);border-color:rgba(208,82,82,.5);}
+  .prio.should{color:var(--muted);border-color:var(--line-strong);}
+
+  .checkpoints{list-style:none;margin:0 0 14px;padding:0;}
+  .checkpoints li{position:relative;padding-left:14px;font-size:13.5px;color:var(--paper-dim);margin-bottom:7px;}
+  .checkpoints li::before{content:"–";position:absolute;left:0;color:var(--brass-dim);}
+
+  .stamp{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.04em;color:var(--red);border:1px dashed rgba(208,82,82,.55);padding:8px 10px;border-radius:2px;transform:rotate(-1.1deg);}
+  .stamp b{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:3px;color:var(--red);}
+  .stamp span{color:var(--paper-dim);font-family:'Pretendard',sans-serif;}
+
+  .appendix{background:var(--panel-2);border:1px solid var(--line-strong);padding:24px 24px 20px;}
+  .appendix h3{margin:0 0 4px;font-family:'Oswald',sans-serif;font-size:19px;color:var(--paper);font-weight:600;}
+  .appendix .note{font-size:13px;color:var(--muted);margin-bottom:18px;}
+  .ai-item{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13.5px;color:var(--paper-dim);padding:11px 0;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .ai-item-main{flex:1;min-width:220px;}
+  .ai-item-main .idx{font-family:'JetBrains Mono',monospace;color:var(--brass);margin-right:6px;}
+  .ai-item-side{display:flex;align-items:center;gap:10px;}
+  .flagbtn{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.05em;padding:5px 11px;border-radius:20px;border:1px solid var(--line-strong);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;}
+  .flagbtn:hover{border-color:var(--paper-dim);color:var(--paper);}
+  .flagbtn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+  .flagbtn.flagged{background:var(--red);border-color:var(--red);color:#220a0a;}
+  .anote{font-size:11px;color:var(--muted);max-width:160px;text-align:right;}
+
+  /* ---------- upload / auto-analyze panel ---------- */
+  /* ---------- reference image panel ---------- */
+  .image-panel{border:1px solid var(--line-strong);background:var(--panel);padding:24px;text-align:center;}
+  .image-panel .ref-img{max-width:100%;width:380px;height:auto;border:1px solid var(--line-strong);display:block;margin:0 auto;}
+  .image-panel .ref-caption{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);}
+
+  .upload-panel{border:1px solid var(--line-strong);background:var(--panel);padding:24px;}
+  .upload-panel h3{margin:0 0 4px;font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;color:var(--paper);}
+  .upload-panel .note{font-size:13px;color:var(--muted);margin-bottom:18px;}
+  .dropzone{border:1.5px dashed var(--line-strong);border-radius:2px;padding:30px 20px;text-align:center;cursor:pointer;transition:border-color .2s ease, background .2s ease;}
+  .dropzone:hover,.dropzone.dragover{border-color:var(--brass);background:var(--panel-2);}
+  .dropzone .dz-icon{font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--brass);margin-bottom:8px;}
+  .dropzone .dz-text{font-size:13.5px;color:var(--paper-dim);}
+  .dropzone .dz-sub{font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;}
+
+  .preview-wrap{display:none;gap:18px;align-items:center;flex-wrap:wrap;margin-top:16px;}
+  .preview-wrap.show{display:flex;}
+  .preview-img{max-height:150px;max-width:220px;object-fit:contain;border:1px solid var(--line-strong);background:#000;}
+  .file-meta{flex:1;min-width:160px;}
+  .file-meta .fname{font-size:13px;color:var(--paper);word-break:break-all;}
+  .file-meta .fsize{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+  .file-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+
+  .analyze-btn{font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.04em;background:var(--brass);color:#221a06;border:none;padding:10px 18px;border-radius:2px;cursor:pointer;font-weight:600;}
+  .analyze-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .analyze-btn:hover:not(:disabled){filter:brightness(1.08);}
+  .analyze-btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+  .ghost-btn{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);background:none;border:1px solid var(--line-strong);padding:9px 14px;border-radius:2px;cursor:pointer;}
+  .ghost-btn:hover{color:var(--paper);border-color:var(--paper-dim);}
+  .ghost-btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+
+  .status-line{font-size:12.5px;color:var(--muted);margin-top:14px;font-family:'JetBrains Mono',monospace;min-height:18px;}
+  .status-line.error{color:var(--red);}
+  .status-line.loading::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brass);margin-left:7px;animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:.15;}50%{opacity:1;}}
+
+  .disclaimer{font-size:11.5px;color:var(--muted);margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+
+  .ai-summary-box{display:none;background:var(--panel-2);border:1px solid var(--brass-dim);padding:14px 18px;font-size:13px;color:var(--paper-dim);}
+  .ai-summary-box.show{display:block;}
+  .ai-summary-box b{color:var(--brass);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;display:block;margin-bottom:6px;text-transform:uppercase;}
+
+  /* ---------- checklist / confirm slip ---------- */
+  .slip{border:1px solid var(--line-strong);border-top:none;background:var(--panel);}
+  .slip-head{padding:20px 24px 16px;border-bottom:1px solid var(--line-strong);display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+  .slip-head h3{margin:0 0 4px;font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;color:var(--paper);}
+  .slip-head .note{font-size:13px;color:var(--muted);}
+  .reset-btn{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);background:none;border:1px solid var(--line-strong);padding:8px 12px;border-radius:2px;cursor:pointer;letter-spacing:.05em;}
+  .reset-btn:hover{color:var(--paper);border-color:var(--paper-dim);}
+  .reset-btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+
+  .row{padding:14px 24px;border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none;}
+  .row.ai-flash{animation:flash 1s ease;}
+  @keyframes flash{0%{background:rgba(201,162,75,.20);}100%{background:transparent;}}
+  .row-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .row-label{flex:1 1 220px;min-width:180px;}
+  .row-label .rn{font-family:'JetBrains Mono',monospace;color:var(--brass);font-size:12px;margin-right:8px;}
+  .row-label .rt{font-size:14px;color:var(--paper);}
+  .row-btns{display:flex;gap:6px;flex-wrap:wrap;}
+  .stbtn{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.03em;padding:7px 11px;border-radius:2px;cursor:pointer;background:transparent;color:var(--muted);border:1px solid var(--line-strong);transition:transform .12s ease;}
+  .stbtn:hover{transform:translateY(-1px);}
+  .stbtn:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+  .stbtn[data-status="pass"].active{background:var(--teal);border-color:var(--teal);color:#0e1a17;}
+  .stbtn[data-status="minor"].active{background:var(--amber);border-color:var(--amber);color:#221a06;}
+  .stbtn[data-status="major"].active{background:var(--orange);border-color:var(--orange);color:#221206;}
+  .stbtn[data-status="reject"].active{background:var(--red);border-color:var(--red);color:#220a0a;}
+  .stbtn[data-status="na"].active{background:var(--muted);border-color:var(--muted);color:#151310;}
+  .row-note{font-size:12px;color:var(--muted);margin-top:8px;padding-left:2px;display:none;}
+  .row-note.show{display:block;}
+  .row-note::before{content:"AI · ";color:var(--brass-dim);}
+
+  .slip-summary{padding:20px 24px 24px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line-strong);}
+  .progress-block{flex:1 1 260px;}
+  .progress-track{height:6px;background:var(--panel-3);border-radius:4px;overflow:hidden;margin-bottom:10px;}
+  .progress-fill{height:100%;background:var(--brass);width:0%;transition:width .3s ease;}
+  .tally{display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);}
+  .tally span b{color:var(--paper);}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;}
+  .dot.pass{background:var(--teal);} .dot.minor{background:var(--amber);}
+  .dot.major{background:var(--orange);} .dot.reject{background:var(--red);} .dot.na{background:var(--muted);}
+  .ai-warn{display:none;font-size:11.5px;color:var(--red);font-family:'JetBrains Mono',monospace;margin-top:8px;}
+  .ai-warn.show{display:block;}
+
+  .verdict{flex-shrink:0;width:150px;height:100px;border:2px dashed var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;transform:rotate(-4deg);transition:border-color .25s ease;text-align:center;padding:8px;}
+  .verdict .vt{font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;letter-spacing:.03em;color:var(--muted);}
+  .verdict .vs{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.06em;}
+  .verdict.v-pass{border-color:var(--teal);} .verdict.v-pass .vt,.verdict.v-pass .vs{color:var(--teal);}
+  .verdict.v-minor{border-color:var(--amber);} .verdict.v-minor .vt,.verdict.v-minor .vs{color:var(--amber);}
+  .verdict.v-major{border-color:var(--orange);} .verdict.v-major .vt,.verdict.v-major .vs{color:var(--orange);}
+  .verdict.v-reject{border-color:var(--red);} .verdict.v-reject .vt,.verdict.v-reject .vs{color:var(--red);}
+  .verdict.pop{animation:pop .35s ease;}
+  @keyframes pop{0%{transform:rotate(-4deg) scale(.92);}60%{transform:rotate(-4deg) scale(1.05);}100%{transform:rotate(-4deg) scale(1);}}
+
+  footer{margin-top:40px;font-size:12px;color:var(--muted);text-align:center;}
+
+  @media (max-width:720px){
+    .wrap{padding:36px 18px 70px;}
+    .core-rules,.proofbar,.frames{grid-template-columns:1fr;}
+    .rule,.swatch{border-bottom:1px solid var(--line-strong);}
+    .slip-summary{flex-direction:column;align-items:stretch;}
+    .verdict{width:100%;height:84px;}
+    .ai-item{flex-direction:column;align-items:flex-start;}
+    .anote{text-align:left;max-width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="reveal">
+    <div class="eyebrow">Proofing Protocol · AI Design Confirm</div>
+    <h1>디자인 시안 컨펌 가이드라인</h1>
+    <p class="sub"><b>3초 안에 이해되지 않으면 실패입니다.</b> 메시지 → 가독성 → 설득 → 전환 순으로 점검하고, 디테일은 마지막 단계가 아니라 디자인의 기본값으로 다룹니다.</p>
+    <div class="stepper">
+      <div class="step"><span class="n mono">01</span><span class="t">이미지 업로드 · AI 1차 판정</span></div>
+      <div class="step"><span class="n mono">02</span><span class="t">디자이너 셀프 체크</span></div>
+      <div class="step"><span class="n mono">03</span><span class="t">1차 팀 리뷰</span></div>
+      <div class="step"><span class="n mono">04</span><span class="t">최종 승인</span></div>
+    </div>
+  </header>
+
+  <div class="section-label reveal">Core Rule</div>
+  <div class="core-rules reveal">
+    <div class="rule">
+      <span class="k mono">01 · 판단 기준</span>
+      <div class="v">3초 테스트</div>
+      <div class="d">3초 안에 핵심이 파악되지 않으면 무조건 실패로 간주합니다.</div>
+    </div>
+    <div class="rule">
+      <span class="k mono">02 · 평가 순서</span>
+      <div class="v">메시지 → 가독성 → 설득 → 전환</div>
+      <div class="d">순서를 건너뛰고 디테일부터 보지 않습니다.</div>
+    </div>
+    <div class="rule">
+      <span class="k mono">03 · 디테일 원칙</span>
+      <div class="v">디테일 = 기본값</div>
+      <div class="d">마지막에 손보는 항목이 아니라 처음부터 지켜야 할 기준입니다.</div>
+    </div>
+  </div>
+
+  <div class="section-label reveal">Grading Scale · 4단계 판정 기준</div>
+  <div class="proofbar reveal">
+    <div class="swatch t-pass"><div class="bar"></div><div class="lbl">PASS</div><div class="kr">통과</div><div class="desc">수정 없이 그대로 출고 가능</div></div>
+    <div class="swatch t-minor"><div class="bar"></div><div class="lbl">MINOR</div><div class="kr">경미 수정</div><div class="desc">간단한 보완 후 통과 가능</div></div>
+    <div class="swatch t-major"><div class="bar"></div><div class="lbl">MAJOR</div><div class="kr">주요 수정</div><div class="desc">재작업 후 재검수 필요</div></div>
+    <div class="swatch t-reject"><div class="bar"></div><div class="lbl">REJECT</div><div class="kr">반려</div><div class="desc">컨셉 단계부터 전면 재검토</div></div>
+  </div>
+
+  <div class="section-label reveal">11 Evaluation Frames · 평가 영역</div>
+  <div class="frames reveal">
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">01</span><div class="frame-title">전략 적합성<span class="en">Concept &amp; Direction</span></div></div><span class="prio must">필수</span></div>
+      <ul class="checkpoints"><li>캠페인 목적(브랜딩/전환/이벤트)과 타깃 톤앤매너가 일치하는가</li><li>여러 메시지가 아닌 단 1개의 핵심 메시지로 구조가 정리되었는가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>핵심 메시지가 2개 이상이거나 컨셉 없이 예쁘기만 한 디자인</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">02</span><div class="frame-title">위계 및 구조<span class="en">Hierarchy</span></div></div><span class="prio must">필수</span></div>
+      <ul class="checkpoints"><li>헤드라인 → 서브 → CTA로 이어지는 시선 동선(Z/F/집중형)이 자연스러운가</li><li>무엇을 파는지·혜택·행동이 3초 안에 파악되는가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>무엇/혜택/행동 중 하나라도 3초 내 파악 불가</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">03</span><div class="frame-title">타이포 · 정렬<span class="en">Typography &amp; Alignment</span></div></div><span class="prio must">필수</span></div>
+      <ul class="checkpoints"><li>폰트가 2~3종 이내이며 시각적 정렬(Optical Alignment)이 적용되었는가</li><li>단순 중앙 정렬에 의존하지 않고 자간·행간이 안정적인가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>폰트 4종 이상 혼용 또는 정렬 오차가 육안으로 식별됨</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">04</span><div class="frame-title">정보 정확성<span class="en">Data Accuracy</span></div></div><span class="prio must">필수</span></div>
+      <ul class="checkpoints"><li>가격·날짜·용량·성분 등 숫자·단위 표기에 오탈자가 없는가</li><li>법적 고지 및 단위 표기가 실제 상품 정보와 일치하는가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>오탈자 1건 이상 발견 시 예외 없이 보류</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">05</span><div class="frame-title">컬러 일관성<span class="en">Color &amp; Brand</span></div></div><span class="prio should">권장</span></div>
+      <ul class="checkpoints"><li>브랜드 컬러를 준수하며 전체 컬러 수가 3~4개로 제한되는가</li><li>배경-텍스트 대비가 충분해 CTA가 가장 먼저 보이는가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>브랜드 컬러 미준수 + 텍스트가 배경에 묻혀 가독성 상실</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">06</span><div class="frame-title">합성 리얼리티<span class="en">Lighting &amp; Space</span></div></div><span class="prio must">필수</span></div>
+      <ul class="checkpoints"><li>광원 방향·하이라이트가 통일되고 Contact/Form/Cast 그림자가 구분되는가</li><li>근경-중경-원경의 공간감이 자연스러운가 (단순 블러 금지)</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>그림자 방향 불일치 등 합성 흔적이 육안으로 확인됨</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">07</span><div class="frame-title">피사체 보정<span class="en">Retouching</span></div></div><span class="prio must">필수</span></div>
+      <ul class="checkpoints"><li>카테고리별 소구점(질감/선명도/입체감)이 살아 구매욕을 자극하는가</li><li>모델 피부가 플라스틱처럼 보이지 않고 텍스처가 자연스러운가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>AI 보정 후 수작업 마무리 없이 텍스처가 뭉개지거나 왜곡됨</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">08</span><div class="frame-title">그래픽 완성도<span class="en">Image Quality</span></div></div><span class="prio should">권장</span></div>
+      <ul class="checkpoints"><li>픽셀 깨짐 없이 해상도가 확보되고 스톡 이미지 느낌이 배제되었는가</li><li>아이콘 스타일과 색감이 요소별로 일관되게 통일되었는가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>저해상도로 인한 깨짐이 썸네일 크기에서도 확인됨</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">09</span><div class="frame-title">CTA 및 전환<span class="en">CTA &amp; Conversion</span></div></div><span class="prio must">필수</span></div>
+      <ul class="checkpoints"><li>CTA 문구·위치가 명확하며 시선 동선의 마지막 종착지에 배치되는가</li><li>행동을 유도하는 능동태 문구로 작성되었는가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>CTA가 묻혀 보이지 않거나 시선 동선 밖에 위치</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">10</span><div class="frame-title">매체 최적화<span class="en">Output</span></div></div><span class="prio should">권장</span></div>
+      <ul class="checkpoints"><li>세이프존을 준수하고 모바일·썸네일 사이즈에서도 메시지가 전달되는가</li><li>다양한 비율 크롭에 대응 가능한 구조인가 (인스타/배너 등)</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>세이프존을 벗어난 로고·CTA가 크롭 시 잘림</span></div></div>
+
+    <div class="frame"><div class="frame-head"><div><span class="frame-num">11</span><div class="frame-title">최종 디테일<span class="en">Final Polish</span></div></div><span class="prio should">권장</span></div>
+      <ul class="checkpoints"><li>200% 확대 시 픽셀 정렬·간격·라인 두께가 일관되는가</li><li>오탈자, 미세한 여백 오차 등 마감 요소에 문제가 없는가</li></ul>
+      <div class="stamp"><b>즉시 반려</b><span>200% 확대 검수를 거치지 않은 상태로 컨펌 요청됨</span></div></div>
+
+  </div>
+
+  <div class="section-label reveal">Appendix</div>
+  <div class="appendix reveal">
+    <h3>AI 아티팩트 특별 점검</h3>
+    <p class="note">AI로 생성·보정된 이미지는 위 11개 항목을 통과해도 특유의 결함이 남아있을 수 있습니다. 이미지를 업로드해 분석하면 아래 항목도 함께 자동 표시됩니다.</p>
+    <div class="ai-item"><div class="ai-item-main"><span class="idx mono">a.</span>손가락·관절 등 신체 비율이 왜곡되지 않았는가</div><div class="ai-item-side"><button class="flagbtn mono" data-aid="a">양호</button></div></div>
+    <div class="ai-item"><div class="ai-item-main"><span class="idx mono">b.</span>텍스트·로고·간판 등 문자 요소가 의미 없는 글자로 깨지지 않았는가</div><div class="ai-item-side"><button class="flagbtn mono" data-aid="b">양호</button></div></div>
+    <div class="ai-item"><div class="ai-item-main"><span class="idx mono">c.</span>배경 패턴·질감이 부자연스럽게 반복·대칭되지 않았는가</div><div class="ai-item-side"><button class="flagbtn mono" data-aid="c">양호</button></div></div>
+    <div class="ai-item"><div class="ai-item-main"><span class="idx mono">d.</span>생성형 워터마크나 서명 흔적이 남아있지 않은가</div><div class="ai-item-side"><button class="flagbtn mono" data-aid="d">양호</button></div></div>
+    <div class="ai-item"><div class="ai-item-main"><span class="idx mono">e.</span>오브젝트 경계(이음새)가 자연스럽게 블렌딩되었는가</div><div class="ai-item-side"><button class="flagbtn mono" data-aid="e">양호</button></div></div>
+    <div class="ai-item"><div class="ai-item-main"><span class="idx mono">f.</span>광원·그림자가 06번 합성 규칙과 일치하는가</div><div class="ai-item-side"><button class="flagbtn mono" data-aid="f">양호</button></div></div>
+  </div>
+
+  <div class="section-label reveal">Auto Review &middot; AI 자동 분석</div>
+  <div class="upload-panel reveal">
+    <h3>시안 이미지 업로드</h3>
+    <p class="note">이미지를 올리면 Gemini가 11개 항목과 AI 아티팩트 부록을 기준으로 1차 판정하고, 아래 체크리스트에 자동으로 반영합니다.</p>
+
+    <div class="dropzone" id="dropzone">
+      <div class="dz-icon">＋</div>
+      <div class="dz-text">클릭하거나 이미지를 끌어다 놓으세요</div>
+      <div class="dz-sub">PNG &middot; JPEG &middot; WEBP &middot; GIF, 8MB 이하</div>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    </div>
+
+    <div class="preview-wrap" id="previewWrap">
+      <img class="preview-img" id="previewImg" alt="업로드한 시안 미리보기">
+      <div class="file-meta">
+        <div class="fname" id="fileName"></div>
+        <div class="fsize" id="fileSize"></div>
+        <div class="file-actions">
+          <button class="analyze-btn" id="analyzeBtn">AI 분석 시작</button>
+          <button class="ghost-btn" id="removeBtn">이미지 제거</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-line" id="statusLine"></div>
+
+    <div class="ai-summary-box" id="aiSummaryBox">
+      <b>AI 총평</b>
+      <span id="aiSummary"></span>
+    </div>
+
+    <div class="disclaimer">⚠ AI 판정은 참고용 1차 검수입니다. 이미지는 분석을 위해 이 앱의 서버를 거쳐 Gemini API로 전송되며, 최종 컨펌 여부는 반드시 리뷰어가 직접 확인하고 조정해주세요.</div>
+  </div>
+
+  <div class="section-label reveal">Confirm Slip &middot; 컨펌 체크리스트</div>
+  <div class="slip reveal">
+    <div class="slip-head">
+      <div>
+        <h3>한눈에 보는 컨펌 체크리스트</h3>
+        <p class="note">AI 자동 판정 후에도 항목을 다시 클릭해 직접 조정할 수 있습니다.</p>
+      </div>
+      <button class="reset-btn mono" id="resetBtn">RESET · 전체 초기화</button>
+    </div>
+
+    <div id="rows"></div>
+
+    <div class="slip-summary">
+      <div class="progress-block">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="tally" id="tally">
+          <span><span class="dot pass"></span>통과 <b id="cPass">0</b></span>
+          <span><span class="dot minor"></span>경미 <b id="cMinor">0</b></span>
+          <span><span class="dot major"></span>주요 <b id="cMajor">0</b></span>
+          <span><span class="dot reject"></span>반려 <b id="cReject">0</b></span>
+          <span><span class="dot na"></span>해당없음 <b id="cNa">0</b></span>
+          <span>미평가 <b id="cUnrated">11</b></span>
+        </div>
+        <div class="ai-warn" id="aiWarn">⚠ AI 아티팩트 의심 항목이 있습니다 — 부록을 확인하세요</div>
+      </div>
+      <div class="verdict" id="verdict">
+        <div class="vt" id="verdictText">평가 대기</div>
+        <div class="vs" id="verdictSub">0 / 11 완료</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>본 가이드는 디자이너 셀프 체크 후 팀 리뷰 단계에서 함께 활용하세요.</footer>
+</div>
+
+<script>
+  const ITEMS = [
+    "전략 적합성","위계 및 구조","타이포 · 정렬","정보 정확성","컬러 일관성",
+    "합성 리얼리티","피사체 보정","그래픽 완성도","CTA 및 전환","매체 최적화","최종 디테일"
+  ];
+  const state = {};
+  const aiFlags = {a:false,b:false,c:false,d:false,e:false,f:false};
+
+  // ---------- build checklist rows ----------
+  const rowsEl = document.getElementById('rows');
+  ITEMS.forEach((name,i)=>{
+    const id = i+1;
+    state[id] = null;
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.id = 'row-'+id;
+    row.innerHTML = `
+      <div class="row-top">
+        <div class="row-label"><span class="rn mono">${String(id).padStart(2,'0')}</span><span class="rt">${name}</span></div>
+        <div class="row-btns" data-id="${id}">
+          <button class="stbtn" data-status="pass">통과</button>
+          <button class="stbtn" data-status="minor">경미</button>
+          <button class="stbtn" data-status="major">주요</button>
+          <button class="stbtn" data-status="reject">반려</button>
+          <button class="stbtn" data-status="na">해당없음</button>
+        </div>
+      </div>
+      <div class="row-note" id="note-${id}"></div>`;
+    rowsEl.appendChild(row);
+  });
+
+  rowsEl.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.stbtn');
+    if(!btn) return;
+    const group = btn.closest('.row-btns');
+    const id = group.dataset.id;
+    const status = btn.dataset.status;
+    const already = state[id] === status;
+    state[id] = already ? null : status;
+    group.querySelectorAll('.stbtn').forEach(b=>b.classList.remove('active'));
+    if(!already) btn.classList.add('active');
+    update();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    Object.keys(state).forEach(id=>state[id]=null);
+    Object.keys(aiFlags).forEach(id=>aiFlags[id]=false);
+    rowsEl.querySelectorAll('.stbtn').forEach(b=>b.classList.remove('active'));
+    rowsEl.querySelectorAll('.row-note').forEach(n=>{n.textContent='';n.classList.remove('show');});
+    document.querySelectorAll('.flagbtn').forEach(b=>{b.classList.remove('flagged');b.textContent='양호';});
+    document.getElementById('aiSummaryBox').classList.remove('show');
+    document.getElementById('aiSummary').textContent = '';
+    update();
+  });
+
+  // ---------- appendix flag toggles (manual) ----------
+  document.querySelectorAll('.flagbtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.aid;
+      aiFlags[id] = !aiFlags[id];
+      btn.classList.toggle('flagged', aiFlags[id]);
+      btn.textContent = aiFlags[id] ? '의심' : '양호';
+      update();
+    });
+  });
+
+  function update(){
+    const counts = {pass:0,minor:0,major:0,reject:0,na:0};
+    let rated = 0;
+    Object.values(state).forEach(s=>{ if(s){ counts[s]++; rated++; } });
+    document.getElementById('cPass').textContent = counts.pass;
+    document.getElementById('cMinor').textContent = counts.minor;
+    document.getElementById('cMajor').textContent = counts.major;
+    document.getElementById('cReject').textContent = counts.reject;
+    document.getElementById('cNa').textContent = counts.na;
+    document.getElementById('cUnrated').textContent = 11 - rated;
+    document.getElementById('progressFill').style.width = ((rated/11)*100)+'%';
+
+    const anyFlag = Object.values(aiFlags).some(v=>v);
+    document.getElementById('aiWarn').classList.toggle('show', anyFlag);
+
+    const verdictEl = document.getElementById('verdict');
+    const vt = document.getElementById('verdictText');
+    const vs = document.getElementById('verdictSub');
+    verdictEl.classList.remove('v-pass','v-minor','v-major','v-reject');
+
+    let cls='', text='평가 대기', sub=`${rated} / 11 완료`;
+    if(counts.reject>0){ cls='v-reject'; text='반려'; }
+    else if(counts.major>0){ cls='v-major'; text='주요 수정 필요'; }
+    else if(counts.minor>0){ cls='v-minor'; text='조건부 통과'; }
+    else if(rated===11){ cls='v-pass'; text='최종 통과'; }
+    else { text = rated===0 ? '평가 대기' : '평가 진행 중'; }
+
+    if(cls) verdictEl.classList.add(cls);
+    vt.textContent = text;
+    vs.textContent = sub;
+    verdictEl.classList.remove('pop'); void verdictEl.offsetWidth; verdictEl.classList.add('pop');
+  }
+  update();
+
+  // ---------- image upload & AI analysis (calls our own /api/analyze) ----------
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewImg = document.getElementById('previewImg');
+  const fileNameEl = document.getElementById('fileName');
+  const fileSizeEl = document.getElementById('fileSize');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const removeBtn = document.getElementById('removeBtn');
+  const statusLine = document.getElementById('statusLine');
+  const ALLOWED = ['image/png','image/jpeg','image/webp','image/gif'];
+  const MAX_BYTES = 8*1024*1024;
+  let currentFile = null;
+
+  dropzone.addEventListener('click', ()=>fileInput.click());
+  dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e=>{
+    e.preventDefault(); dropzone.classList.remove('dragover');
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e=>{
+    if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+  });
+  removeBtn.addEventListener('click', ()=>{
+    currentFile = null;
+    fileInput.value = '';
+    previewWrap.classList.remove('show');
+    setStatus('', false);
+  });
+
+  function handleFile(file){
+    if(!ALLOWED.includes(file.type)){
+      setStatus('지원하지 않는 이미지 형식입니다. PNG · JPEG · WEBP · GIF만 가능합니다.', true);
+      return;
+    }
+    if(file.size > MAX_BYTES){
+      setStatus('이미지 용량이 너무 큽니다. 8MB 이하 이미지를 사용해주세요.', true);
+      return;
+    }
+    currentFile = file;
+    fileNameEl.textContent = file.name;
+    fileSizeEl.textContent = (file.size/1024/1024).toFixed(2)+' MB';
+    const reader = new FileReader();
+    reader.onload = ()=>{ previewImg.src = reader.result; previewWrap.classList.add('show'); };
+    reader.readAsDataURL(file);
+    setStatus('', false);
+  }
+
+  function setStatus(msg, isError, isLoading){
+    statusLine.textContent = msg;
+    statusLine.classList.toggle('error', !!isError);
+    statusLine.classList.toggle('loading', !!isLoading);
+  }
+
+  // Downscale + re-encode as JPEG before sending, to keep requests small,
+  // fast, and cheap (Gemini bills partly by image resolution).
+  function prepareImageForApi(file, maxDim, quality){
+    maxDim = maxDim || 1280;
+    quality = quality || 0.82;
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        const img = new Image();
+        img.onload = ()=>{
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if(w > maxDim || h > maxDim){
+            if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+            else{ w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          const base64 = dataUrl.split(',')[1];
+          if(!base64){ reject(new Error('이미지를 변환하지 못했습니다.')); return; }
+          resolve({ base64: base64, mediaType: 'image/jpeg' });
+        };
+        img.onerror = ()=>reject(new Error('이미지를 불러올 수 없습니다. 파일이 손상되었을 수 있습니다.'));
+        img.src = reader.result;
+      };
+      reader.onerror = ()=>reject(new Error('파일을 읽을 수 없습니다.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function analyzeImage(base64, mediaType){
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64, mediaType })
+    });
+    let data;
+    try{
+      data = await response.json();
+    }catch(e){
+      throw new Error('서버 응답을 읽지 못했습니다 (status '+response.status+').');
+    }
+    if(!response.ok){
+      const msg = (data && data.error) ? data.error : ('status '+response.status);
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  function applyResults(result){
+    (result.items || []).forEach(it=>{
+      if(!state.hasOwnProperty(it.id)) return;
+      state[it.id] = it.status;
+      const group = document.querySelector(`.row-btns[data-id="${it.id}"]`);
+      if(group) group.querySelectorAll('.stbtn').forEach(b=>b.classList.toggle('active', b.dataset.status===it.status));
+      const noteEl = document.getElementById('note-'+it.id);
+      if(noteEl){ noteEl.textContent = it.note || ''; noteEl.classList.toggle('show', !!it.note); }
+      const rowEl = document.getElementById('row-'+it.id);
+      if(rowEl){ rowEl.classList.remove('ai-flash'); void rowEl.offsetWidth; rowEl.classList.add('ai-flash'); }
+    });
+    (result.ai_artifacts || []).forEach(a=>{
+      if(!aiFlags.hasOwnProperty(a.id)) return;
+      aiFlags[a.id] = !!a.flag;
+      const btn = document.querySelector(`.flagbtn[data-aid="${a.id}"]`);
+      if(btn){ btn.classList.toggle('flagged', !!a.flag); btn.textContent = a.flag ? '의심' : '양호'; }
+    });
+    const summaryBox = document.getElementById('aiSummaryBox');
+    const summaryEl = document.getElementById('aiSummary');
+    if(result.summary){ summaryEl.textContent = result.summary; summaryBox.classList.add('show'); }
+    update();
+  }
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  analyzeBtn.addEventListener('click', async ()=>{
+    if(!currentFile) return;
+    analyzeBtn.disabled = true;
+    try{
+      const prepared = await prepareImageForApi(currentFile);
+      let lastErr = null;
+      for(let attempt=1; attempt<=2; attempt++){
+        setStatus(attempt===1 ? 'AI가 이미지를 분석하고 있습니다...' : '일시적인 오류로 재시도하고 있습니다...', false, true);
+        try{
+          const result = await analyzeImage(prepared.base64, prepared.mediaType);
+          applyResults(result);
+          setStatus('분석 완료 — 체크리스트에 자동 반영되었습니다. 필요한 항목은 직접 다시 조정하세요.', false, false);
+          lastErr = null;
+          break;
+        }catch(err){
+          lastErr = err;
+          if(attempt < 2) await sleep(1200);
+        }
+      }
+      if(lastErr){
+        console.error(lastErr);
+        const detail = (lastErr && lastErr.message) ? lastErr.message : '알 수 없는 오류';
+        setStatus('분석에 실패했습니다: '+detail+' (다시 시도해주세요)', true, false);
+      }
+    }catch(err){
+      console.error(err);
+      const detail = (err && err.message) ? err.message : '알 수 없는 오류';
+      setStatus('이미지 처리에 실패했습니다: '+detail, true, false);
+    }finally{
+      analyzeBtn.disabled = false;
+    }
+  });
+
+</script>
+</body>
+</html>
