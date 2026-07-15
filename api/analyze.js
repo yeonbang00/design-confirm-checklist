@@ -13,7 +13,7 @@ export const config = {
   },
 };
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const PROMPT = `다음은 광고/디자인 시안 이미지입니다. 아래 11개 항목과 6개 AI 아티팩트 항목을 기준으로 평가하세요.
@@ -84,7 +84,8 @@ export default async function handler(req, res) {
         ],
         generationConfig: {
           responseMimeType: 'application/json',
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048,
+          thinkingLevel: 'low',
         },
       }),
     });
