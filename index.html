@@ -17,7 +17,6 @@
     --num-bg: oklch(93% 0.03 260);
     --num-text: oklch(35% 0.08 260);
     --group-label: oklch(45% 0.05 260);
-    --group-bg: #F7F7F7;
     --popover-bg: oklch(18% 0.01 265);
     --progress-fill: oklch(35% 0.08 260);
     --pass:#2FA360; --minor:#C98A1A; --major:#DD5B28; --reject:#E33B5A; --na:#8A8A86;
@@ -130,12 +129,8 @@
   .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-2); margin-bottom:26px;}
   .legend-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;}
 
-  .group-label{display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px 14px 0;}
-  .group-label span{font-size:11.5px; font-weight:700; letter-spacing:0.06em; color:var(--group-label);}
-  .group-box{border-radius:14px; padding:6px 18px 6px; margin-bottom:16px; background:var(--group-bg);}
-
   .row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 4px; border-bottom:1px solid oklch(91% 0.006 265);}
-  .group-box .row:last-child{border-bottom:none;}
+  #groupsContainer .row:last-child{border-bottom:none;}
   .row.jump-flash{animation:rowflash 1.4s ease;}
   .row-label{display:flex; align-items:baseline; gap:10px; min-width:200px;}
   .row-label .rn{font-size:12px; color:oklch(58% 0.01 265); font-variant-numeric:tabular-nums;}
@@ -382,34 +377,24 @@
 
   // ---------- build checklist groups ----------
   const groupsContainer = document.getElementById('groupsContainer');
-  [1,2,3].forEach(g => {
-    const label = document.createElement('div');
-    label.className = 'group-label';
-    label.innerHTML = `<span>${GROUP_LABELS[g]}</span>`;
-    groupsContainer.appendChild(label);
-
-    const box = document.createElement('div');
-    box.className = 'group-box';
-    ITEMS.filter(it => it.group === g).forEach(it => {
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.id = 'row-' + it.n;
-      row.innerHTML = `
-        <div class="row-label"><span class="rn">${String(it.n).padStart(2,'0')}</span><span class="rt">${it.title}</span></div>
-        <div class="row-btns" data-id="${it.n}">
-          <button class="stbtn" data-status="pass">통과</button>
-          <button class="stbtn" data-status="minor">경미</button>
-          <button class="stbtn" data-status="major">주요</button>
-          <button class="stbtn" data-status="reject">반려</button>
-          <button class="stbtn" data-status="na">해당없음</button>
-        </div>`;
-      box.appendChild(row);
-      const note = document.createElement('div');
-      note.className = 'row-note';
-      note.id = 'note-' + it.n;
-      box.appendChild(note);
-    });
-    groupsContainer.appendChild(box);
+  ITEMS.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.id = 'row-' + it.n;
+    row.innerHTML = `
+      <div class="row-label"><span class="rn">${String(it.n).padStart(2,'0')}</span><span class="rt">${it.title}</span></div>
+      <div class="row-btns" data-id="${it.n}">
+        <button class="stbtn" data-status="pass">통과</button>
+        <button class="stbtn" data-status="minor">경미</button>
+        <button class="stbtn" data-status="major">주요</button>
+        <button class="stbtn" data-status="reject">반려</button>
+        <button class="stbtn" data-status="na">해당없음</button>
+      </div>`;
+    groupsContainer.appendChild(row);
+    const note = document.createElement('div');
+    note.className = 'row-note';
+    note.id = 'note-' + it.n;
+    groupsContainer.appendChild(note);
   });
 
   groupsContainer.addEventListener('click', (e) => {
