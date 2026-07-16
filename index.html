@@ -118,6 +118,14 @@
   .ref-chip.rc-major{color:var(--major); border-color:var(--major);}
   .ref-chip.rc-reject{color:var(--reject); border-color:var(--reject);}
 
+  .comparison-block{display:none; margin-top:18px; padding-top:18px; border-top:1px solid oklch(100% 0 0 / 0.14);}
+  .comparison-block.show{display:block;}
+  .comparison-title{font-size:12px; font-weight:700; letter-spacing:.04em; color:oklch(85% 0.01 85); margin-bottom:12px; text-transform:uppercase;}
+  .comparison-item{margin-bottom:14px;}
+  .comparison-item:last-child{margin-bottom:0;}
+  .ci-label{font-size:12px; font-weight:700; color:oklch(92% 0.008 85); margin-bottom:4px;}
+  .ci-text{font-size:13.5px; line-height:1.75; color:oklch(88% 0.01 85);}
+
   /* ---------- checklist ---------- */
   .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-2); margin-bottom:26px;}
   .legend-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;}
@@ -254,6 +262,18 @@
       <span id="aiSummaryText"></span>
     </div>
     <div class="summary-refs" id="summaryRefs"></div>
+
+    <div class="comparison-block" id="comparisonBlock">
+      <div class="comparison-title">집중비교 결과</div>
+      <div class="comparison-item">
+        <div class="ci-label">닮은 점</div>
+        <div class="ci-text" id="compSimilarities"></div>
+      </div>
+      <div class="comparison-item">
+        <div class="ci-label">부족한 점</div>
+        <div class="ci-text" id="compGaps"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ---------- checklist ---------- -->
@@ -540,6 +560,7 @@
     }
     setStatus('', false);
     document.getElementById('aiSummaryBox').classList.remove('show');
+    document.getElementById('comparisonBlock').classList.remove('show');
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -634,6 +655,15 @@
       });
       refsEl.appendChild(chip);
     });
+
+    const compBlock = document.getElementById('comparisonBlock');
+    if(result.comparison && (result.comparison.similarities || result.comparison.gaps)){
+      document.getElementById('compSimilarities').textContent = result.comparison.similarities || '—';
+      document.getElementById('compGaps').textContent = result.comparison.gaps || '—';
+      compBlock.classList.add('show');
+    } else {
+      compBlock.classList.remove('show');
+    }
 
     update();
   }
