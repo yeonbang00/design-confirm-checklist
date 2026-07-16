@@ -60,9 +60,9 @@ bannerType 필드에 이 중 하나를 한국어로 응답하세요.
 const NO_COMPARISON_INSTRUCTION = `\n\n비교할 참고 배너는 제공되지 않았습니다. comparison 필드는 반드시 null로 응답하세요.`;
 
 function comparisonInstruction(advertiserName) {
-  return `\n\n비교 안내: 이 요청에는 텍스트 뒤에 "${advertiserName}"의 성과가 좋았던 참고 배너 이미지들이 먼저 포함되고, 그 다음 새로 평가할 시안 이미지가 포함됩니다. 새 시안을 참고 배너들과 비교해서 comparison 필드를 채우세요.
-- similarities: 참고 배너들과 공통적으로 잘 지켜진 점 (20단어 이내)
-- gaps: 참고 배너 대비 새 시안에서 부족하거나 다른 점 (20단어 이내)`;
+  return `\n\n비교 안내: 이 요청에는 텍스트 뒤에 "${advertiserName}"의 성과가 좋았던 참고 배너 이미지들이 먼저 포함되고, 그 다음 새로 평가할 시안 이미지가 포함됩니다. 새 시안을 참고 배너들과 비교해서 comparison 필드를 자연스러운 구어체 한국어로, 근거를 들어가며 채우세요. 컬러 톤, 레이아웃 구조, 카피 톤앤매너, CTA 방식, 전체적인 무드 중 실제로 비교한 부분을 구체적으로 짚어서 설명하세요 (예: "컬러 톤이랑 CTA 버튼 배치가 기존 배너들이랑 비슷해서 브랜드 톤은 잘 유지된 것 같다" 같은 어투).
+- similarities: 참고 배너들과 닮은 점과 그렇게 판단한 근거를 2~3문장, 50~70단어 정도로 설명
+- gaps: 참고 배너 대비 부족하거나 다른 점과 그 이유를 2~3문장, 50~70단어 정도로 설명. 가능하면 어떻게 보완하면 좋을지도 짧게 덧붙이세요`;
 }
 
 function schemaInstruction(hasComparison) {
@@ -121,7 +121,7 @@ export default async function handler(req, res) {
         contents: [{ role: 'user', parts }],
         generationConfig: {
           responseMimeType: 'application/json',
-          maxOutputTokens: 3072,
+          maxOutputTokens: 4096,
           thinkingConfig: { thinkingLevel: 'low' },
         },
       }),
