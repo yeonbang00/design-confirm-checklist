@@ -1,14 +1,16 @@
 // POST /api/analyze
-// Body: { base64: string, mediaType: "image/jpeg" | "image/png" | ... }
-// Returns: { items: [...], ai_artifacts: [...], summary: string }
+// Body: { base64: string, mediaType: string, advertiserId?: string }
+// Returns: { items: [...], summary: string, comparison: {...} | null }
 //
 // The Gemini API key lives ONLY in this server-side environment variable.
 // It is never sent to, or reachable from, the browser.
 
+import { ADVERTISERS } from './_referenceBanners.js';
+
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb',
+      sizeLimit: '15mb',
     },
   },
 };
@@ -16,9 +18,11 @@ export const config = {
 const GEMINI_MODEL = 'gemini-3.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-const PROMPT = `다음은 광고/디자인 시안 이미지입니다. 아래 11개 항목과 6개 AI 아티팩트 항목을 기준으로 평가하세요.
+// 19 items = 11 core design/strategy checks + 6 AI-generation artifact checks
+// + 2 agency-delivery checks (logo compliance, mandatory legal/compliance copy).
+// Kept as ONE list so every item shares the same pass/minor/major/reject/na scale.
+const BASE_PROMPT = `다음은 광고대행사가 광고주에게 전달하기 전 최종 검수하는 배너 시안 이미지입니다. 목적은 광고주 전달 후 발생할 수정 요청을 사전에 줄이는 것입니다. 아래 19개 항목을 기준으로 평가하세요.
 
-11개 항목:
 1 전략 적합성 - 캠페인 목적/타깃 톤앤매너 일치, 핵심 메시지 1개로 정리
 2 위계 및 구조 - 헤드라인→서브→CTA 시선 동선, 3초 내 파악 가능 여부
 3 타이포·정렬 - 폰트 2~3종 이내, 정렬 안정성
@@ -30,22 +34,42 @@ const PROMPT = `다음은 광고/디자인 시안 이미지입니다. 아래 11�
 9 CTA 및 전환 - CTA 문구/위치 명확성
 10 매체 최적화 - 세이프존, 모바일 가독성, 크롭 시 잘림 위험
 11 최종 디테일 - 픽셀 정렬, 여백, 오탈자 등 마감
+12 신체 비율 왜곡 - AI 생성/보정 특유의 신체 왜곡 (인물이 없으면 na)
+13 텍스트·로고 렌더링 - 문자·로고가 의미 없이 깨지지 않았는가
+14 배경 패턴 반복 - AI 생성 특유의 부자연스러운 반복/대칭 패턴 여부
+15 워터마크·서명 흔적 - 생성형 워터마크나 스톡 이미지 서명 잔여 여부
+16 오브젝트 경계 이음새 - 합성된 요소의 경계가 자연스럽게 블렌딩되었는가
+17 광원-그림자 방향 일치 - 여러 피사체의 그림자 방향이 서로 모순되지 않는가
+18 로고 사용 규정 - 로고 최소 여백 확보, 변형·왜곡 없이 사용 (로고가 없으면 na)
+19 법적고지·심의 문구 - 금융/대출/의료/주류/게임 등 규제 업종에 필요한 고지·심의 문구 포함 여부 (해당 업종이 아니면 na)
 
-AI 아티팩트 점검:
-a 신체 비율 왜곡 여부 (인물이 없으면 flag는 false)
-b 텍스트/로고 깨짐 여부
-c 배경 패턴 부자연스러운 반복 여부
-d 워터마크/서명 흔적 여부
-e 오브젝트 경계 이음새 여부
-f 광원-그림자 불일치 여부
-
-11개 항목은 pass/minor/major/reject/na 중 하나로 판정하세요. na는 해당 시안에 적용되지 않는 항목에만 사용하세요.
+19개 항목은 pass/minor/major/reject/na 중 하나로 판정하세요. na는 해당 시안에 명백히 적용되지 않는 항목에만 사용하세요 (예: 인물 없는 시안의 12번, 로고 없는 시안의 18번, 비규제 업종의 19번).
 각 항목에 10단어 이내 한국어 메모를 작성하세요.
-AI 아티팩트 6개 항목은 flag(true=문제의심/false=정상)와 6단어 이내 메모를 작성하세요.
 전체 요약은 15단어 이내로 작성하세요.
 
-반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"items":[{"id":1,"status":"pass","note":"..."}],"ai_artifacts":[{"id":"a","flag":false,"note":"..."}],"summary":"..."}`;
+배너 유형 분류: 먼저 이 배너가 다음 중 어떤 유형에 가장 가까운지 판단하세요.
+- 프로모션: 할인·혜택·기간 한정 등을 강조
+- 커머스: 특정 제품 판매, 구매 유도가 핵심
+- 브랜딩: 직접적 판매 목적 없이 브랜드 인지도·이미지 전달이 핵심
+- 이벤트: 행사·캠페인 참여 유도가 핵심
+- 기타: 위에 해당하지 않음
+bannerType 필드에 이 중 하나를 한국어로 응답하세요.
+
+유형별 평가 기준 조정: 배너 유형이 "브랜딩"으로 판단되면, CTA나 구매 유도 문구가 없다는 이유만으로 2번(위계 및 구조)과 9번(CTA 및 전환)을 major나 reject로 판정하지 마세요 — 브랜딩 배너는 CTA 부재가 의도된 디자인입니다. 대신 브랜드 메시지 전달력과 톤 일관성을 기준으로 평가하세요. "프로모션", "커머스", "이벤트" 유형은 기존 기준대로 CTA와 혜택 명확성을 엄격하게 평가하세요.`;
+
+const NO_COMPARISON_INSTRUCTION = `\n\n비교할 참고 배너는 제공되지 않았습니다. comparison 필드는 반드시 null로 응답하세요.`;
+
+function comparisonInstruction(advertiserName) {
+  return `\n\n비교 안내: 이 요청에는 텍스트 뒤에 "${advertiserName}"의 성과가 좋았던 참고 배너 이미지들이 먼저 포함되고, 그 다음 새로 평가할 시안 이미지가 포함됩니다. 새 시안을 참고 배너들과 비교해서 comparison 필드를 채우세요.
+- similarities: 참고 배너들과 공통적으로 잘 지켜진 점 (20단어 이내)
+- gaps: 참고 배너 대비 새 시안에서 부족하거나 다른 점 (20단어 이내)`;
+}
+
+function schemaInstruction(hasComparison) {
+  const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
+  return `\n\n반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
+{"items":[{"id":1,"status":"pass","note":"..."}],"bannerType":"...","summary":"...","comparison":${comparisonSchema}}`;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -59,11 +83,32 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType } = req.body || {};
+  const { base64, mediaType, advertiserId } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
   }
+
+  const advertiser = advertiserId ? ADVERTISERS[advertiserId] : null;
+  const refImages = advertiser && Array.isArray(advertiser.images) ? advertiser.images : [];
+  const hasComparison = refImages.length > 0;
+
+  const promptText =
+    BASE_PROMPT +
+    (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
+    schemaInstruction(hasComparison);
+
+  const parts = [{ text: promptText }];
+
+  if (hasComparison) {
+    parts.push({ text: `[참고 배너 시작 — ${advertiser.name}, ${refImages.length}장]` });
+    for (const img of refImages) {
+      parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+    }
+    parts.push({ text: `[참고 배너 끝. 아래가 평가할 새 시안입니다]` });
+  }
+
+  parts.push({ inlineData: { mimeType: mediaType, data: base64 } });
 
   try {
     const response = await fetch(GEMINI_URL, {
@@ -73,18 +118,10 @@ export default async function handler(req, res) {
         'x-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: PROMPT },
-              { inlineData: { mimeType: mediaType, data: base64 } },
-            ],
-          },
-        ],
+        contents: [{ role: 'user', parts }],
         generationConfig: {
           responseMimeType: 'application/json',
-          maxOutputTokens: 2048,
+          maxOutputTokens: 3072,
           thinkingConfig: { thinkingLevel: 'low' },
         },
       }),
@@ -105,12 +142,11 @@ export default async function handler(req, res) {
     }
 
     const candidate = data.candidates && data.candidates[0];
-    const parts = candidate && candidate.content && candidate.content.parts;
-    const textBlock = (parts || []).map((p) => p.text || '').join('');
+    const responseParts = candidate && candidate.content && candidate.content.parts;
+    const textBlock = (responseParts || []).map((p) => p.text || '').join('');
     const clean = textBlock.replace(/```json|```/g, '').trim();
 
     if (!clean) {
-      // Common cause: the response was blocked by safety filters.
       const finishReason = candidate && candidate.finishReason;
       res.status(502).json({ error: 'AI로부터 빈 응답을 받았습니다' + (finishReason ? ` (사유: ${finishReason})` : '') + '.' });
       return;
