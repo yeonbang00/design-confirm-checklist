@@ -650,7 +650,9 @@
       reader.onload = ()=>{
         const img = new Image();
         img.onload = ()=>{
-          let w = img.naturalWidth, h = img.naturalHeight;
+          const originalWidth = img.naturalWidth;
+          const originalHeight = img.naturalHeight;
+          let w = originalWidth, h = originalHeight;
           if(w > maxDim || h > maxDim){
             if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
             else{ w = Math.round(w * maxDim / h); h = maxDim; }
@@ -662,7 +664,7 @@
           const dataUrl = canvas.toDataURL('image/jpeg', quality);
           const base64 = dataUrl.split(',')[1];
           if(!base64){ reject(new Error('이미지를 변환하지 못했습니다.')); return; }
-          resolve({ base64: base64, mediaType: 'image/jpeg' });
+          resolve({ base64: base64, mediaType: 'image/jpeg', originalWidth: originalWidth, originalHeight: originalHeight });
         };
         img.onerror = ()=>reject(new Error('이미지를 불러올 수 없습니다.'));
         img.src = reader.result;
@@ -672,11 +674,11 @@
     });
   }
 
-  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds){
+  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight){
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [] })
+      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null })
     });
     let data;
     try{ data = await response.json(); }
@@ -776,7 +778,7 @@
       let lastErr = null;
       for(let attempt=1; attempt<=2; attempt++){
         try{
-          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds());
+          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight);
           applyResults(result);
           showDzState('loaded');
           analyzeBtn.textContent = '다시 분석하기';
