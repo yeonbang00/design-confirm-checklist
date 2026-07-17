@@ -239,12 +239,13 @@
         </div>
         <div class="analyzing-label"><span class="dot"></span>AI가 시안을 분석하고 있습니다…</div>
       </div>
-      <div id="dzDone" style="display:none;">
-        <img class="done-img" id="doneImg" alt="업로드한 시안">
+      <div id="dzLoaded" style="display:none;">
+        <img class="done-img" id="loadedImg" alt="업로드한 시안">
         <div class="done-hint">다른 이미지를 올리려면 다시 클릭하세요</div>
       </div>
     </div>
     <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    <button class="btn-primary" id="analyzeBtn" type="button" style="display:none;width:100%;margin-top:16px;padding:14px;border:none;border-radius:12px;background:oklch(35% 0.08 260);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">AI 분석 시작</button>
 
     <div class="disclaimer"><span>⚠</span><span>AI 판정은 참고용 1차 검수입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.</span></div>
     <div class="status-line" id="statusLine" aria-live="polite"></div>
@@ -500,22 +501,25 @@
     })
     .catch(() => {});
 
-  // ---------- upload + auto-analyze ----------
+  // ---------- upload + manual analyze ----------
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
   const dzEmpty = document.getElementById('dzEmpty');
   const dzAnalyzing = document.getElementById('dzAnalyzing');
-  const dzDone = document.getElementById('dzDone');
+  const dzLoaded = document.getElementById('dzLoaded');
   const analyzingImg = document.getElementById('analyzingImg');
-  const doneImg = document.getElementById('doneImg');
+  const loadedImg = document.getElementById('loadedImg');
+  const analyzeBtn = document.getElementById('analyzeBtn');
   const statusLine = document.getElementById('statusLine');
   const ALLOWED = ['image/png','image/jpeg','image/webp','image/gif'];
   const MAX_BYTES = 8*1024*1024;
+  let currentFile = null;
 
   function showDzState(s){
     dzEmpty.style.display = s === 'empty' ? '' : 'none';
     dzAnalyzing.style.display = s === 'analyzing' ? '' : 'none';
-    dzDone.style.display = (s === 'done' || s === 'error') ? '' : 'none';
+    dzLoaded.style.display = (s === 'loaded') ? '' : 'none';
+    analyzeBtn.style.display = (s === 'loaded') ? '' : 'none';
   }
 
   dropzone.addEventListener('click', () => fileInput.click());
@@ -528,6 +532,9 @@
   fileInput.addEventListener('change', e => {
     if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
     fileInput.value = '';
+  });
+  analyzeBtn.addEventListener('click', () => {
+    if(currentFile) runAnalysis(currentFile);
   });
 
   function setStatus(msg, isLoading){
@@ -547,13 +554,14 @@
     setStatus('', false);
     document.getElementById('aiSummaryBox').classList.remove('show');
     document.getElementById('comparisonBlock').classList.remove('show');
+    analyzeBtn.textContent = 'AI 분석 시작';
 
+    currentFile = file;
     const reader = new FileReader();
     reader.onload = () => {
       analyzingImg.src = reader.result;
-      doneImg.src = reader.result;
-      showDzState('analyzing');
-      runAnalysis(file);
+      loadedImg.src = reader.result;
+      showDzState('loaded');
     };
     reader.readAsDataURL(file);
   }
@@ -674,6 +682,8 @@
   }
 
   async function runAnalysis(file){
+    showDzState('analyzing');
+    setStatus('', false);
     try{
       const prepared = await prepareImageForApi(file);
       let lastErr = null;
@@ -681,7 +691,8 @@
         try{
           const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value);
           applyResults(result);
-          showDzState('done');
+          showDzState('loaded');
+          analyzeBtn.textContent = '다시 분석하기';
           setStatus('', false);
           lastErr = null;
           break;
@@ -700,17 +711,17 @@
       }
       if(lastErr){
         console.error(lastErr);
-        showDzState('done');
+        showDzState('loaded');
         const detail = (lastErr && lastErr.message) ? lastErr.message : '알 수 없는 오류';
         if(lastErr.status === 429){
-          setStatus('AI 분석 요청이 일시적으로 몰렸습니다. 잠시 후 이미지를 다시 클릭해 재시도해주세요.', false);
+          setStatus('AI 분석 요청이 일시적으로 몰렸습니다. 잠시 후 다시 시도해주세요.', false);
         } else {
-          setStatus('분석에 실패했습니다: '+detail+' — 이미지를 다시 클릭해 재시도해주세요.', false);
+          setStatus('분석에 실패했습니다: '+detail+' — 다시 시도해주세요.', false);
         }
       }
     }catch(err){
       console.error(err);
-      showDzState('done');
+      showDzState('loaded');
       const detail = (err && err.message) ? err.message : '알 수 없는 오류';
       setStatus('이미지 처리에 실패했습니다: '+detail, false);
     }
