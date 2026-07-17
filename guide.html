@@ -63,9 +63,14 @@
   .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
   .gallery-loading{font-size:12.5px; color:var(--text-3); margin-bottom:8px;}
   .gallery{display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;}
-  .gallery-item{display:block; border-radius:10px; overflow:hidden; border:1px solid var(--card-border); background:oklch(96% 0.008 85); aspect-ratio:1; transition:transform .15s ease, box-shadow .15s ease;}
+  .gallery-item{display:block; border-radius:10px; overflow:hidden; border:1px solid var(--card-border); background:oklch(96% 0.008 85); aspect-ratio:1; transition:transform .15s ease, box-shadow .15s ease; padding:0; cursor:pointer; width:100%;}
   .gallery-item:hover{transform:translateY(-2px); box-shadow:0 6px 16px oklch(20% 0.02 265 / 0.15);}
   .gallery-item img{width:100%; height:100%; object-fit:cover; display:block;}
+
+  .lightbox{display:none; position:fixed; inset:0; background:oklch(10% 0.01 265 / 0.85); z-index:100; align-items:center; justify-content:center; padding:40px;}
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:100%; max-height:100%; border-radius:8px; box-shadow:0 20px 60px oklch(0% 0 0 / 0.4);}
+  .lightbox-close{position:absolute; top:24px; right:28px; background:none; border:none; color:#fff; font-size:32px; line-height:1; cursor:pointer; padding:8px;}
 
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
@@ -82,6 +87,8 @@
     <a href="index.html" class="gnb-link">홈</a>
     <a href="guide.html" class="gnb-link active">브랜드 가이드</a>
     <a href="media-guide.html" class="gnb-link">매체 가이드</a>
+    <a href="production-guide.html" class="gnb-link">제작 가이드</a>
+    <a href="reference-board.html" class="gnb-link">경쟁사 레퍼런스</a>
   </nav>
 
   <h1>브랜드 가이드</h1>
@@ -101,6 +108,11 @@
   <div class="page-footer">
     이 페이지는 참고용입니다. 가이드 내용을 바꾸려면 팀과 상의 후 코드에 반영해주세요.
   </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">&times;</button>
+  <img id="lightboxImg" src="" alt="확대된 참고 배너">
 </div>
 
 <script>
@@ -148,6 +160,22 @@
 
   let currentBrandId = null;
 
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  function openLightbox(src){
+    lightboxImg.src = src;
+    lightbox.classList.add('show');
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('show');
+    lightboxImg.src = '';
+  }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
+
   function renderBrand(id){
     currentBrandId = id;
     const b = brandsData.find(x => x.id === id);
@@ -192,13 +220,13 @@
           return;
         }
         images.forEach((img, i) => {
-          const a = document.createElement('a');
-          a.href = 'data:' + img.mimeType + ';base64,' + img.data;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          a.className = 'gallery-item';
-          a.innerHTML = '<img src="data:' + img.mimeType + ';base64,' + img.data + '" alt="참고 배너 ' + (i + 1) + '" loading="lazy">';
-          galleryEl.appendChild(a);
+          const src = 'data:' + img.mimeType + ';base64,' + img.data;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'gallery-item';
+          btn.innerHTML = '<img src="' + src + '" alt="참고 배너 ' + (i + 1) + '" loading="lazy">';
+          btn.addEventListener('click', () => openLightbox(src));
+          galleryEl.appendChild(btn);
         });
       })
       .catch(() => {
