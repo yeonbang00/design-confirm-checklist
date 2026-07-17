@@ -1,11 +1,12 @@
 // POST /api/analyze
-// Body: { base64: string, mediaType: string, advertiserId?: string }
+// Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[] }
 // Returns: { items: [...], summary: string, comparison: {...} | null }
 //
 // The Gemini API key lives ONLY in this server-side environment variable.
 // It is never sent to, or reachable from, the browser.
 
 import { ADVERTISERS } from './_referenceBanners.js';
+import { MEDIA_GUIDES } from './_mediaGuides.js';
 
 export const config = {
   api: {
@@ -70,6 +71,29 @@ function comparisonInstruction(advertiserName) {
 - gaps: 브랜드 컬러·아이덴티티를 중심으로, 참고 배너 대비 부족하거나 다른 점과 그 이유를 2~3문장, 50~70단어 정도로 설명. 가능하면 어떻게 보완하면 좋을지도 짧게 덧붙이세요`;
 }
 
+function brandGuidelineInstruction(advertiserName, guideline) {
+  return `\n\n${guideline}\n\n(참고: 위 가이드는 "${advertiserName}" 브랜드 전용입니다. 다른 브랜드 시안에는 적용하지 마세요 — 이 요청은 ${advertiserName} 시안이므로 그대로 적용합니다.)`;
+}
+
+function mediaGuidelineInstruction(mediaGuides) {
+  const names = mediaGuides.map((m) => m.name).join(', ');
+  const withGuideline = mediaGuides.filter((m) => m.guideline && m.guideline.trim());
+  const withoutGuideline = mediaGuides.filter((m) => !(m.guideline && m.guideline.trim()));
+
+  let text = `\n\n매체 가이드 안내: 이 시안은 다음 매체에 게재될 예정입니다: ${names}. 10번(매체 최적화) 항목과 전체 요약을 판정할 때 아래 각 매체 기준을 모두 반영하세요. 매체마다 요구사항이 다르면 어떤 매체 기준으로 그렇게 판단했는지 note나 요약에 짧게 언급하세요.`;
+
+  for (const m of withGuideline) {
+    text += `\n\n[${m.name} 소재 등록 기준]\n${m.guideline}`;
+  }
+
+  if (withoutGuideline.length > 0) {
+    const namesWithout = withoutGuideline.map((m) => m.name).join(', ');
+    text += `\n\n다음 매체는 아직 구체적인 소재 등록 기준이 등록되지 않았습니다: ${namesWithout}. 이 매체들에 대해서는 일반적인 세이프존·가독성·크롭 기준으로만 평가하고, 요약에 짧게 언급하세요.`;
+  }
+
+  return text;
+}
+
 function schemaInstruction(hasComparison) {
   const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
   return `\n\n반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
@@ -88,7 +112,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -98,9 +122,18 @@ export default async function handler(req, res) {
   const refImages = advertiser && Array.isArray(advertiser.images) ? advertiser.images : [];
   const hasComparison = refImages.length > 0;
 
+  const hasGuideline = !!(advertiser && advertiser.guideline);
+
+  const selectedMediaGuides = Array.isArray(mediaGuideIds)
+    ? mediaGuideIds.map((id) => MEDIA_GUIDES[id]).filter(Boolean)
+    : [];
+  const hasMediaGuides = selectedMediaGuides.length > 0;
+
   const promptText =
     BASE_PROMPT +
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
+    (hasGuideline ? brandGuidelineInstruction(advertiser.name, advertiser.guideline) : '') +
+    (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides) : '') +
     schemaInstruction(hasComparison);
 
   const parts = [{ text: promptText }];
