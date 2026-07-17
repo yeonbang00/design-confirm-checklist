@@ -1,5 +1,5 @@
 // POST /api/analyze
-// Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[] }
+// Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[], imageWidth?: number, imageHeight?: number }
 // Returns: { items: [...], summary: string, comparison: {...} | null }
 //
 // The Gemini API key lives ONLY in this server-side environment variable.
@@ -75,12 +75,15 @@ function brandGuidelineInstruction(advertiserName, guideline) {
   return `\n\n${guideline}\n\n(참고: 위 가이드는 "${advertiserName}" 브랜드 전용입니다. 다른 브랜드 시안에는 적용하지 마세요 — 이 요청은 ${advertiserName} 시안이므로 그대로 적용합니다.)`;
 }
 
-function mediaGuidelineInstruction(mediaGuides) {
+function mediaGuidelineInstruction(mediaGuides, hasSize) {
   const names = mediaGuides.map((m) => m.name).join(', ');
   const withGuideline = mediaGuides.filter((m) => m.guideline && m.guideline.trim());
   const withoutGuideline = mediaGuides.filter((m) => !(m.guideline && m.guideline.trim()));
+  const sizeLine = hasSize
+    ? `\n\n위에서 안내한 정확한 이미지 크기를 참고하세요. 아래 매체 기준에 사이즈별로 다른 규칙(예: 300x250, 728x90 등 배너 규격별 규칙)이 있다면, 그 크기와 일치하거나 가장 가까운 규격의 규칙만 찾아서 적용하세요. 정확히 일치하는 규격이 없다면 가장 유사한 비율의 규칙을 참고하되, needsCheck에 "정확히 일치하는 사이즈 규정을 찾지 못해 가장 유사한 사이즈 기준으로 참고했다"고 남기세요.`
+    : '';
 
-  let text = `\n\n매체 가이드 안내: 이 시안은 다음 매체에 게재될 예정입니다: ${names}. 10번(매체 최적화) 항목을 판정할 때 아래 각 매체 기준을 모두 반영하세요.
+  let text = `\n\n매체 가이드 안내: 이 시안은 다음 매체에 게재될 예정입니다: ${names}. 10번(매체 최적화) 항목을 판정할 때 아래 각 매체 기준을 모두 반영하세요.${sizeLine}
 
 추가로 mediaGuideReview 필드를 자연스러운 구어체 한국어로 채우세요. 매체가 2개 이상 선택된 경우, 어떤 내용이 어느 매체 기준인지 매체 이름을 언급하며 구분해서 설명하세요.
 - satisfied: 시안이 매체 기준을 충족하는 부분과 그 근거를 2~3문장(40~60단어)으로 설명 (예: "메타(릴스) 기준으로는 로고가 세이프존 안에 잘 들어와 있다")
@@ -99,6 +102,10 @@ function mediaGuidelineInstruction(mediaGuides) {
   }
 
   return text;
+}
+
+function imageSizeInstruction(width, height) {
+  return `\n\n이미지 크기 정보: 업로드된 이미지의 실제 원본 크기는 정확히 ${width} x ${height}px입니다. 이는 프로그램이 파일에서 직접 측정한 정확한 값이니, 이미지를 보고 크기를 다시 추측하지 말고 이 값을 그대로 사용하세요. 10번(매체 최적화) 항목과 매체 가이드 판정 시 이 정확한 크기를 기준으로 삼으세요.`;
 }
 
 function schemaInstruction(hasComparison, hasMediaGuides) {
@@ -120,7 +127,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -137,11 +144,14 @@ export default async function handler(req, res) {
     : [];
   const hasMediaGuides = selectedMediaGuides.length > 0;
 
+  const hasSize = Number.isFinite(imageWidth) && Number.isFinite(imageHeight) && imageWidth > 0 && imageHeight > 0;
+
   const promptText =
     BASE_PROMPT +
+    (hasSize ? imageSizeInstruction(imageWidth, imageHeight) : '') +
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
     (hasGuideline ? brandGuidelineInstruction(advertiser.name, advertiser.guideline) : '') +
-    (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides) : '') +
+    (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides, hasSize) : '') +
     schemaInstruction(hasComparison, hasMediaGuides);
 
   const parts = [{ text: promptText }];
