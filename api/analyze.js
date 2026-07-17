@@ -80,7 +80,12 @@ function mediaGuidelineInstruction(mediaGuides) {
   const withGuideline = mediaGuides.filter((m) => m.guideline && m.guideline.trim());
   const withoutGuideline = mediaGuides.filter((m) => !(m.guideline && m.guideline.trim()));
 
-  let text = `\n\n매체 가이드 안내: 이 시안은 다음 매체에 게재될 예정입니다: ${names}. 10번(매체 최적화) 항목과 전체 요약을 판정할 때 아래 각 매체 기준을 모두 반영하세요. 매체마다 요구사항이 다르면 어떤 매체 기준으로 그렇게 판단했는지 note나 요약에 짧게 언급하세요.`;
+  let text = `\n\n매체 가이드 안내: 이 시안은 다음 매체에 게재될 예정입니다: ${names}. 10번(매체 최적화) 항목을 판정할 때 아래 각 매체 기준을 모두 반영하세요.
+
+추가로 mediaGuideReview 필드를 자연스러운 구어체 한국어로 채우세요. 매체가 2개 이상 선택된 경우, 어떤 내용이 어느 매체 기준인지 매체 이름을 언급하며 구분해서 설명하세요.
+- satisfied: 시안이 매체 기준을 충족하는 부분과 그 근거를 2~3문장(40~60단어)으로 설명 (예: "메타(릴스) 기준으로는 로고가 세이프존 안에 잘 들어와 있다")
+- differs: 시안이 매체 기준과 다르거나 위반하는 부분과 그 이유를 2~3문장(40~60단어)으로 설명. 구체적으로 어느 영역이 어떻게 다른지 짚으세요
+- needsCheck: 이미지만으로는 판단이 애매하거나, 실제 게재 시 추가로 확인이 필요한 부분을 1~2문장(20~40단어)으로 설명 (예: "실제 업로드 시 자동 크롭 여부는 이미지만으로 확인이 어려우니 매체 관리자 화면에서 재확인 필요")`;
 
   for (const m of withGuideline) {
     text += `\n\n[${m.name} 소재 등록 기준]\n${m.guideline}`;
@@ -88,16 +93,17 @@ function mediaGuidelineInstruction(mediaGuides) {
 
   if (withoutGuideline.length > 0) {
     const namesWithout = withoutGuideline.map((m) => m.name).join(', ');
-    text += `\n\n다음 매체는 아직 구체적인 소재 등록 기준이 등록되지 않았습니다: ${namesWithout}. 이 매체들에 대해서는 일반적인 세이프존·가독성·크롭 기준으로만 평가하고, 요약에 짧게 언급하세요.`;
+    text += `\n\n다음 매체는 아직 구체적인 소재 등록 기준이 등록되지 않았습니다: ${namesWithout}. 이 매체들에 대해서는 10번 항목을 일반적인 세이프존·가독성·크롭 기준으로만 평가하고, needsCheck에 "${namesWithout}는 전용 가이드가 아직 없어 일반 기준으로 평가했다"는 점을 포함하세요.`;
   }
 
   return text;
 }
 
-function schemaInstruction(hasComparison) {
+function schemaInstruction(hasComparison, hasMediaGuides) {
   const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
+  const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
   return `\n\n반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"items":[{"id":1,"status":"pass","note":"..."}],"bannerType":"...","summary":"...","comparison":${comparisonSchema}}`;
+{"items":[{"id":1,"status":"pass","note":"..."}],"bannerType":"...","summary":"...","comparison":${comparisonSchema},"mediaGuideReview":${mediaGuideSchema}}`;
 }
 
 export default async function handler(req, res) {
@@ -134,7 +140,7 @@ export default async function handler(req, res) {
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
     (hasGuideline ? brandGuidelineInstruction(advertiser.name, advertiser.guideline) : '') +
     (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides) : '') +
-    schemaInstruction(hasComparison);
+    schemaInstruction(hasComparison, hasMediaGuides);
 
   const parts = [{ text: promptText }];
 
@@ -159,7 +165,7 @@ export default async function handler(req, res) {
         contents: [{ role: 'user', parts }],
         generationConfig: {
           responseMimeType: 'application/json',
-          maxOutputTokens: 4096,
+          maxOutputTokens: 4608,
           thinkingConfig: { thinkingLevel: 'low' },
         },
       }),
