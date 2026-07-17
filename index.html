@@ -73,8 +73,6 @@
   .compare-label{font-size:13px; color:var(--text-2); margin:14px 0 0;}
   .compare-label b{color:oklch(30% 0.03 265); font-size:15px; font-weight:700;}
   .compare-desc{font-size:13px; line-height:1.7; color:oklch(48% 0.02 265); margin-bottom:16px;}
-  .guide-link{display:inline-block; font-size:12.5px; font-weight:600; color:var(--num-text); text-decoration:none; margin:-8px 0 20px;}
-  .guide-link:hover{text-decoration:underline;}
   .select-wrap{position:relative; margin-bottom:24px;}
   .select-wrap select{
     width:100%; appearance:none; background:oklch(99% 0.002 85); border:1px solid oklch(84% 0.015 265);
@@ -140,9 +138,6 @@
   .ci-text{font-size:13.5px; line-height:1.75; color:oklch(88% 0.01 85);}
 
   /* ---------- checklist ---------- */
-  .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-2); margin-bottom:26px;}
-  .legend-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;}
-
   .row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 4px; border-bottom:1px solid oklch(91% 0.006 265);}
   #groupsContainer .row:last-child{border-bottom:none;}
   .row.jump-flash{animation:rowflash 1.4s ease;}
@@ -160,7 +155,7 @@
   .row-note{font-size:12px; color:var(--text-2); margin:-6px 0 10px; padding:8px 10px; background:oklch(97% 0.004 85); border-radius:8px; display:none;}
   .row-note.show{display:block;}
 
-  .checklist-summary{display:flex; align-items:center; justify-content:space-between; margin-top:28px; padding-top:12px; gap:24px; flex-wrap:wrap;}
+  .checklist-summary{display:flex; align-items:center; justify-content:space-between; margin:16px 0 28px; padding-bottom:24px; border-bottom:1px solid oklch(91% 0.006 265); gap:24px; flex-wrap:wrap;}
   .progress-cluster{display:flex; align-items:center; gap:22px; flex-wrap:wrap;}
   .progress-track{width:180px; height:6px; background:oklch(92% 0.008 265); border-radius:100px; overflow:hidden;}
   .progress-fill{height:100%; width:0%; background:var(--progress-fill); border-radius:100px; transition:width .3s ease;}
@@ -186,7 +181,6 @@
   .ref-card:hover .rc-pop, .ref-card:focus-within .rc-pop{display:block;}
   .rc-pop .b{display:flex; gap:6px; font-size:12px; line-height:1.5; color:oklch(94% 0.004 85); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .rc-pop .rj{font-size:11.5px; font-weight:700; color:oklch(68% 0.19 25); margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .rc-info{width:18px; height:18px; border-radius:50%; background:oklch(94% 0.008 265); color:oklch(55% 0.015 265); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;}
 
   .page-footer{text-align:center; font-size:12px; color:oklch(55% 0.015 265); line-height:1.8; padding-top:8px;}
 
@@ -232,7 +226,6 @@
     <div class="card-head"><div class="num-badge">01</div><div class="card-title">시안 이미지 업로드</div></div>
     <div class="compare-label"><b>집중 비교</b> (선택사항)</div>
     <div class="compare-desc">브랜드를 선택하면 그 브랜드의 성과 좋았던 배너들과 나란히 비교해서, 닮은 점과 부족한 점까지 함께 짚어드립니다.<br>아무것도 선택하지 않으면 19개 항목 기준으로 시안 자체를 점검합니다.</div>
-    <a class="guide-link" href="guide.html" target="_blank" rel="noopener">등록된 브랜드 가이드 전체보기 →</a>
 
     <div class="select-wrap">
       <select id="advertiserSelect">
@@ -272,7 +265,7 @@
     <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
     <button class="btn-primary" id="analyzeBtn" type="button" style="display:none;width:100%;margin-top:16px;padding:14px;border:none;border-radius:12px;background:oklch(35% 0.08 260);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">AI 분석 시작</button>
 
-    <div class="disclaimer"><span>⚠</span><span>AI 판정은 참고용 1차 검수입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.</span></div>
+    <div class="disclaimer"><span>⚠</span><span>AI 판정은 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.</span></div>
     <div class="status-line" id="statusLine" aria-live="polite"></div>
   </div>
 
@@ -317,16 +310,6 @@
   <!-- ---------- checklist ---------- -->
   <div class="card checklist-card">
     <div class="card-head"><div class="num-badge">02</div><div class="card-title">컨펌 체크리스트</div></div>
-    <div style="height:14px;"></div>
-    <div class="legend">
-      <span><span class="legend-dot" style="background:var(--pass);"></span>통과</span>
-      <span><span class="legend-dot" style="background:var(--minor);"></span>경미수정</span>
-      <span><span class="legend-dot" style="background:var(--major);"></span>주요수정</span>
-      <span><span class="legend-dot" style="background:var(--reject);"></span>반려</span>
-      <span><span class="legend-dot" style="background:var(--na);"></span>해당없음</span>
-    </div>
-
-    <div id="groupsContainer"></div>
 
     <div class="checklist-summary">
       <div class="progress-cluster">
@@ -348,6 +331,8 @@
         </div>
       </div>
     </div>
+
+    <div id="groupsContainer"></div>
   </div>
 
   <!-- ---------- reference groups ---------- -->
@@ -358,7 +343,8 @@
   </div>
 
   <div class="page-footer">
-    이 체크리스트는 참고용 1차 검수 도구입니다. 최종 컨펌은 팀 리뷰를 거쳐주세요.<br>
+    이 체크리스트는 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
+    이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
     © 2026 choiyeonbang. All rights reserved.
   </div>
 
@@ -469,10 +455,7 @@
       const tagLabel = it.required ? '필수' : '권장';
       card.innerHTML = `
         <span class="rc-title"><span class="rc-num">${String(it.n).padStart(2,'0')}</span>${it.title}</span>
-        <span style="display:flex;align-items:center;gap:6px;">
-          <span class="rc-tag ${tagClass}">${tagLabel}</span>
-          <span class="rc-info" tabindex="0">i</span>
-        </span>
+        <span class="rc-tag ${tagClass}">${tagLabel}</span>
         <div class="rc-pop">
           ${it.bullets.map(b => `<div class="b"><span>·</span><span>${b}</span></div>`).join('')}
           <div class="rj">즉시 반려: ${it.reject}</div>
