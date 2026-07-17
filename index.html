@@ -284,6 +284,22 @@
         <div class="ci-text" id="compGaps"></div>
       </div>
     </div>
+
+    <div class="comparison-block" id="mediaGuideBlock">
+      <div class="comparison-title">매체 가이드 검수 결과</div>
+      <div class="comparison-item">
+        <div class="ci-label">충족되는 점</div>
+        <div class="ci-text" id="mgSatisfied"></div>
+      </div>
+      <div class="comparison-item">
+        <div class="ci-label">다른 점</div>
+        <div class="ci-text" id="mgDiffers"></div>
+      </div>
+      <div class="comparison-item">
+        <div class="ci-label">확인이 필요한 점</div>
+        <div class="ci-text" id="mgNeedsCheck"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ---------- checklist ---------- -->
@@ -613,6 +629,7 @@
     setStatus('', false);
     document.getElementById('aiSummaryBox').classList.remove('show');
     document.getElementById('comparisonBlock').classList.remove('show');
+    document.getElementById('mediaGuideBlock').classList.remove('show');
     analyzeBtn.textContent = 'AI 분석 시작';
 
     currentFile = file;
@@ -735,6 +752,17 @@
       compBlock.classList.add('show');
     } else {
       compBlock.classList.remove('show');
+    }
+
+    const mgBlock = document.getElementById('mediaGuideBlock');
+    const mgr = result.mediaGuideReview;
+    if(mgr && (mgr.satisfied || mgr.differs || mgr.needsCheck)){
+      document.getElementById('mgSatisfied').textContent = mgr.satisfied || '—';
+      document.getElementById('mgDiffers').textContent = mgr.differs || '—';
+      document.getElementById('mgNeedsCheck').textContent = mgr.needsCheck || '—';
+      mgBlock.classList.add('show');
+    } else {
+      mgBlock.classList.remove('show');
     }
 
     update();
