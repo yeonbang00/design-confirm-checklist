@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>디자인 히어로 | 기획안 헬퍼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
+
+  .page{max-width:820px; margin:0 auto; padding:40px 24px 100px;}
+  .site-brand{font-size:13px; font-weight:700; letter-spacing:0.03em; color:var(--num-text); margin-bottom:14px;}
+  .gnb{display:flex; gap:22px; margin-bottom:40px; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:600; text-decoration:none; color:var(--text-3); padding-bottom:4px; border-bottom:2px solid transparent; transition:color .15s ease;}
+  .gnb-link:hover{color:var(--text);}
+  .gnb-link.active{color:var(--text); border-bottom-color:var(--num-text);}
+
+  h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px; max-width:560px;}
+
+  .preview-list{display:flex; flex-direction:column; gap:10px; margin-bottom:28px; padding:20px 22px; background:var(--card); border:1px solid var(--card-border); border-radius:16px;}
+  .preview-item{display:flex; align-items:flex-start; gap:12px; font-size:13.5px; line-height:1.6; color:var(--text-2);}
+  .preview-item b{color:var(--text);}
+  .preview-num{flex-shrink:0; width:20px; height:20px; border-radius:50%; background:var(--num-bg); color:var(--num-text); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px;}
+
+  .card{background:var(--card); border:1px solid var(--card-border); border-radius:20px; padding:32px; margin-bottom:24px;}
+
+  .dropzone{border:1.5px dashed oklch(78% 0.02 265); border-radius:14px; padding:48px 24px; text-align:center; cursor:pointer; background:oklch(98% 0.005 85); transition:border-color .15s ease;}
+  .dropzone.dragover{border-color:oklch(45% 0.08 260);}
+  .dz-icon{font-size:26px; color:oklch(45% 0.03 265); margin-bottom:10px;}
+  .dz-title{font-size:15px; font-weight:600; margin-bottom:6px;}
+  .dz-sub{font-size:12px; color:oklch(55% 0.015 265);}
+
+  .thumb-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:10px; margin-top:18px;}
+  .thumb{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--card-border); aspect-ratio:1; background:oklch(96% 0.008 85);}
+  .thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .thumb-remove{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:oklch(20% 0.02 265 / 0.75); color:#fff; border:none; font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .thumb-remove:hover{background:oklch(30% 0.1 25 / 0.9);}
+
+  .analyze-btn{width:100%; margin-top:18px; padding:14px; border:none; border-radius:12px; background:oklch(35% 0.08 260); color:#fff; font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit;}
+  .analyze-btn:disabled{opacity:0.6; cursor:default;}
+
+  .status-line{font-size:12.5px; color:oklch(50% 0.13 25); margin-top:12px; min-height:16px;}
+  .status-line.loading{color:var(--text-2);}
+  .status-line.loading::after{content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--num-text); margin-left:7px; animation:blinkdot 1s infinite;}
+  @keyframes blinkdot{0%,100%{opacity:.2;} 50%{opacity:1;}}
+
+  .result-label{font-size:12px; font-weight:700; letter-spacing:0.04em; color:var(--num-text); background:var(--num-bg); display:inline-block; border-radius:20px; padding:4px 12px; margin-bottom:12px;}
+  .result-text{font-size:14.5px; line-height:1.85; color:var(--text);}
+  .result-list{margin:0; padding-left:20px;}
+  .result-list li{font-size:14.5px; line-height:1.85; color:var(--text); margin-bottom:4px;}
+  .result-empty{font-size:13px; color:var(--text-3);}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .card{padding:22px 20px;}
+    .gnb{gap:16px;}
+    .dropzone{padding:36px 18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="site-brand">디자인 히어로</div>
+  <nav class="gnb">
+    <a href="index.html" class="gnb-link">홈</a>
+    <a href="guide.html" class="gnb-link">브랜드 가이드</a>
+    <a href="media-guide.html" class="gnb-link">매체 가이드</a>
+    <a href="brief-helper.html" class="gnb-link active">기획안 헬퍼</a>
+    <a href="reference-board.html" class="gnb-link">경쟁사 레퍼런스</a>
+  </nav>
+
+  <h1>기획안 헬퍼</h1>
+  <p class="sub">기획안(PPT) 캡처 이미지를 올리면, 내용을 그대로 요약하는 대신 <b>실제로 배너를 만들 때 필요한 방향</b>을 정리해드려요.</p>
+
+  <div class="preview-list">
+    <div class="preview-item"><span class="preview-num">1</span><div><b>핵심 제작 방향</b> — 이 배너가 전달해야 할 가장 중요한 인상</div></div>
+    <div class="preview-item"><span class="preview-num">2</span><div><b>꼭 들어가야 할 요소</b> — 기획안에 명시된 필수 요소 체크리스트</div></div>
+    <div class="preview-item"><span class="preview-num">3</span><div><b>이렇게 만들면 좋아요</b> — 톤·레이아웃·컬러 등 구체적인 제작 방향</div></div>
+    <div class="preview-item"><span class="preview-num">4</span><div><b>주의할 점</b> — 제작하다가 놓치기 쉬운 실수</div></div>
+    <div class="preview-item"><span class="preview-num">5</span><div><b>기획안에서 더 확인이 필요한 부분</b> — 기획안 자체가 애매하거나 빠진 부분</div></div>
+  </div>
+
+  <div class="card">
+    <div class="dropzone" id="dropzone">
+      <div class="dz-icon">＋</div>
+      <div class="dz-title">이미지를 캡처해서 올려주세요</div>
+      <div class="dz-sub">기획안 슬라이드를 캡처한 이미지, 여러 장 선택 가능 (최대 12장)</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple hidden>
+
+    <div class="thumb-grid" id="thumbGrid"></div>
+
+    <button type="button" class="analyze-btn" id="analyzeBtn" style="display:none;">분석 시작</button>
+    <div class="status-line" id="statusLine"></div>
+  </div>
+
+  <div id="resultSection"></div>
+</div>
+
+<script>
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const thumbGrid = document.getElementById('thumbGrid');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const statusLine = document.getElementById('statusLine');
+  const resultSection = document.getElementById('resultSection');
+
+  const ALLOWED = ['image/png','image/jpeg','image/webp'];
+  const MAX_BYTES = 8*1024*1024;
+  const MAX_FILES = 12;
+  let selectedFiles = [];
+
+  function setStatus(msg, isLoading){
+    statusLine.textContent = msg;
+    statusLine.classList.toggle('loading', !!isLoading);
+  }
+
+  function renderThumbs(){
+    thumbGrid.innerHTML = '';
+    selectedFiles.forEach((entry, i) => {
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      div.innerHTML = '<img src="' + entry.previewUrl + '" alt="캡처 ' + (i+1) + '">' +
+        '<button type="button" class="thumb-remove" aria-label="삭제">&times;</button>';
+      div.querySelector('.thumb-remove').addEventListener('click', () => {
+        selectedFiles.splice(i, 1);
+        renderThumbs();
+      });
+      thumbGrid.appendChild(div);
+    });
+    analyzeBtn.style.display = selectedFiles.length > 0 ? 'block' : 'none';
+  }
+
+  function addFiles(fileList){
+    const files = Array.from(fileList);
+    for(const file of files){
+      if(selectedFiles.length >= MAX_FILES){
+        setStatus('이미지는 최대 ' + MAX_FILES + '장까지 올릴 수 있습니다.', false);
+        break;
+      }
+      if(!ALLOWED.includes(file.type)){
+        setStatus('지원하지 않는 이미지 형식입니다. PNG · JPEG · WEBP만 가능합니다.', false);
+        continue;
+      }
+      if(file.size > MAX_BYTES){
+        setStatus('이미지 용량이 너무 큽니다. 8MB 이하 이미지를 사용해주세요.', false);
+        continue;
+      }
+      selectedFiles.push({ file, previewUrl: URL.createObjectURL(file) });
+    }
+    renderThumbs();
+  }
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('dragover');
+    if(e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener('change', e => {
+    if(e.target.files && e.target.files.length) addFiles(e.target.files);
+    fileInput.value = '';
+  });
+
+  function prepareImage(file, maxDim, quality){
+    maxDim = maxDim || 1280;
+    quality = quality || 0.82;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if(w > maxDim || h > maxDim){
+            if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+            else{ w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          const base64 = dataUrl.split(',')[1];
+          if(!base64){ reject(new Error('이미지를 변환하지 못했습니다.')); return; }
+          resolve({ base64, mediaType: 'image/jpeg' });
+        };
+        img.onerror = () => reject(new Error('이미지를 불러올 수 없습니다.'));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  function renderResult(data){
+    const mustIncludeHtml = (data.mustInclude && data.mustInclude.length)
+      ? '<ul class="result-list">' + data.mustInclude.map(i => '<li>' + escapeHtml(i) + '</li>').join('') + '</ul>'
+      : '<div class="result-empty">기획안에서 명시된 필수 요소를 찾지 못했습니다.</div>';
+
+    resultSection.innerHTML =
+      '<div class="card"><div class="result-label">핵심 제작 방향</div><div class="result-text">' + escapeHtml(data.coreDirection || '—') + '</div></div>' +
+      '<div class="card"><div class="result-label">꼭 들어가야 할 요소</div>' + mustIncludeHtml + '</div>' +
+      '<div class="card"><div class="result-label">이렇게 만들면 좋아요</div><div class="result-text">' + escapeHtml(data.creativeDirection || '—') + '</div></div>' +
+      '<div class="card"><div class="result-label">주의할 점</div><div class="result-text">' + escapeHtml(data.pitfalls || '—') + '</div></div>' +
+      '<div class="card"><div class="result-label">기획안에서 더 확인이 필요한 부분</div><div class="result-text">' + escapeHtml(data.briefGaps || '기획안 내용이 충분히 명확합니다.') + '</div></div>';
+  }
+
+  analyzeBtn.addEventListener('click', async () => {
+    if(selectedFiles.length === 0) return;
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = '분석 중…';
+    setStatus('', false);
+    resultSection.innerHTML = '';
+
+    try{
+      const prepared = await Promise.all(selectedFiles.map(entry => prepareImage(entry.file)));
+
+      let lastErr = null;
+      for(let attempt = 1; attempt <= 3; attempt++){
+        try{
+          const response = await fetch('/api/analyzeBrief', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ images: prepared })
+          });
+          let data;
+          try{ data = await response.json(); }
+          catch(e){
+            const err = new Error('서버 응답을 읽지 못했습니다 (status ' + response.status + ').');
+            err.status = response.status;
+            throw err;
+          }
+          if(!response.ok){
+            const err = new Error((data && data.error) ? data.error : ('status ' + response.status));
+            err.status = response.status;
+            throw err;
+          }
+          renderResult(data);
+          lastErr = null;
+          break;
+        }catch(err){
+          lastErr = err;
+          if(attempt < 3){
+            if(err.status === 429){
+              const match = (err.message || '').match(/retry in\s+([\d.]+)s/i);
+              const wait = Math.ceil((match ? parseFloat(match[1]) : 20) + 2) * 1000;
+              setStatus('요청이 몰려 잠시 대기 중입니다 (' + Math.round(wait/1000) + '초 후 자동 재시도)…', true);
+              await sleep(wait);
+            } else if(err.status === 503 || err.status >= 500){
+              setStatus('AI 서버가 일시적으로 혼잡해 잠시 대기 중입니다 (6초 후 자동 재시도)…', true);
+              await sleep(6000);
+            } else {
+              await sleep(1200);
+            }
+          }
+        }
+      }
+
+      if(lastErr){
+        if(lastErr.status === 429){
+          setStatus('AI 분석 요청이 일시적으로 몰렸습니다. 잠시 후 다시 시도해주세요.', false);
+        } else if(lastErr.status === 503 || lastErr.status >= 500){
+          setStatus('AI 서버가 일시적으로 혼잡합니다 (구글 쪽 문제로, 앱 문제가 아니에요). 잠시 후 다시 시도해주세요.', false);
+        } else {
+          setStatus('분석에 실패했습니다: ' + (lastErr.message || '알 수 없는 오류') + ' — 다시 시도해주세요.', false);
+        }
+      } else {
+        setStatus('', false);
+      }
+    }catch(err){
+      setStatus('이미지 처리에 실패했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류'), false);
+    }finally{
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = '분석 시작';
+    }
+  });
+</script>
+</body>
+</html>
