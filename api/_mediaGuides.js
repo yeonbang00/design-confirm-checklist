@@ -18,13 +18,19 @@
 //     name: '<드롭다운에 표시할 이름>',
 //     note: '<선택 메모>',
 //     guideline: '<프롬프트에 그대로 들어갈 텍스트. 비어있으면 특별한 매체 규정 없이 일반 기준으로만 평가>',
+//     sourceUrl: '<공식 가이드 페이지 URL>' | null,
+//     sourceFile: { fileName: '<파일명.pdf>', mimeType: 'application/pdf', data: '<BASE64>' } | null,
 //   },
 // }
+// sourceUrl과 sourceFile은 둘 다 선택사항이며, 있는 것만 채우면 됩니다
+// (둘 다 있어도 되고, 하나만 있어도 되고, 둘 다 없어도 됩니다).
 
 export const MEDIA_GUIDES = {
   'meta-reels': {
     name: '메타(릴스)',
     note: '릴스(Reels) 이미지 소재 등록 기준 반영됨',
+    sourceUrl: 'https://www.facebook.com/business/help/980593475366490?id=1240182842783684',
+    sourceFile: null,
     guideline: `[메타 릴스(Reels) 이미지 광고 소재 기준]
 ※ 메타 공식 페이지(facebook.com/business/help) 직접 열람이 불가해, 해당 페이지를 인용하는 복수의 신뢰할 수 있는 소스를 교차 확인해 정리한 내용입니다. 세이프존 수치와 비율은 여러 소스에서 일치했지만, 정확한 최신 기준은 담당자가 메타 공식 페이지에서 한 번 더 확인하는 것을 권장합니다.
 
@@ -44,16 +50,22 @@ export const MEDIA_GUIDES = {
   'buzzvil': {
     name: '버즈빌',
     note: '아직 가이드가 등록되지 않았습니다.',
+    sourceUrl: null,
+    sourceFile: null,
     guideline: '',
   },
   'criteo': {
     name: '크리테오',
     note: '아직 가이드가 등록되지 않았습니다.',
+    sourceUrl: null,
+    sourceFile: null,
     guideline: '',
   },
   'naver-brandsearch': {
     name: '네이버 브랜드검색',
     note: '아직 가이드가 등록되지 않았습니다.',
+    sourceUrl: null,
+    sourceFile: null,
     guideline: '',
   },
 };
