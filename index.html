@@ -76,6 +76,12 @@
   }
   .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
 
+  .media-guide-checks{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;}
+  .mg-check{display:flex; align-items:center; gap:8px; border:1px solid oklch(84% 0.015 265); border-radius:10px; padding:10px 14px; font-size:13.5px; color:oklch(28% 0.02 265); cursor:pointer; background:oklch(99% 0.002 85); transition:border-color .15s ease, background .15s ease;}
+  .mg-check input{accent-color:oklch(35% 0.08 260); width:16px; height:16px; cursor:pointer; margin:0;}
+  .mg-check.checked{border-color:oklch(45% 0.08 260); background:oklch(95% 0.025 260);}
+  .mg-check-empty{font-size:12.5px; color:oklch(58% 0.01 265);}
+
   .dropzone{border:1.5px dashed oklch(78% 0.02 265); border-radius:14px; padding:56px 24px; text-align:center; cursor:pointer; background:oklch(98% 0.005 85); transition:border-color .15s ease;}
   .dropzone.dragover{border-color:oklch(45% 0.08 260);}
   .dz-empty .dz-icon{font-size:26px; color:oklch(45% 0.03 265); margin-bottom:10px;}
@@ -220,6 +226,11 @@
       </select>
       <svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1L7 7L13 1" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
     </div>
+
+    <div class="compare-label"><b>매체 가이드</b> (선택사항, 복수 선택 가능)</div>
+    <div class="compare-desc">선택한 매체에 맞는 가이드 기준으로 이미지를 분석합니다. 여러 매체에 동시 게재된다면 모두 선택하세요.</div>
+
+    <div class="media-guide-checks" id="mediaGuideChecks"></div>
 
     <div class="dropzone" id="dropzone">
       <div class="dz-empty" id="dzEmpty">
@@ -501,6 +512,37 @@
     })
     .catch(() => {});
 
+  // ---------- 매체 가이드 list ----------
+  const mediaGuideChecks = document.getElementById('mediaGuideChecks');
+  let mediaGuidesData = [];
+  fetch('/api/mediaGuides')
+    .then(r => r.ok ? r.json() : { mediaGuides: [] })
+    .then(data => {
+      mediaGuidesData = data.mediaGuides || [];
+      if(mediaGuidesData.length === 0){
+        const empty = document.createElement('div');
+        empty.className = 'mg-check-empty';
+        empty.textContent = '등록된 매체가 없습니다.';
+        mediaGuideChecks.appendChild(empty);
+        return;
+      }
+      mediaGuidesData.forEach(m => {
+        const label = document.createElement('label');
+        label.className = 'mg-check';
+        label.innerHTML = `<input type="checkbox" value="${m.id}"><span>${m.name}</span>`;
+        const input = label.querySelector('input');
+        input.addEventListener('change', () => {
+          label.classList.toggle('checked', input.checked);
+        });
+        mediaGuideChecks.appendChild(label);
+      });
+    })
+    .catch(() => {});
+
+  function getSelectedMediaGuideIds(){
+    return Array.from(mediaGuideChecks.querySelectorAll('input:checked')).map(i => i.value);
+  }
+
   // ---------- upload + manual analyze ----------
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
@@ -596,11 +638,11 @@
     });
   }
 
-  async function analyzeImage(base64, mediaType, advertiserId){
+  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds){
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null })
+      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [] })
     });
     let data;
     try{ data = await response.json(); }
@@ -689,7 +731,7 @@
       let lastErr = null;
       for(let attempt=1; attempt<=2; attempt++){
         try{
-          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value);
+          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds());
           applyResults(result);
           showDzState('loaded');
           analyzeBtn.textContent = '다시 분석하기';
