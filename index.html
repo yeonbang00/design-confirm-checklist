@@ -81,6 +81,8 @@
   .mg-check input{accent-color:oklch(35% 0.08 260); width:16px; height:16px; cursor:pointer; margin:0;}
   .mg-check.checked{border-color:oklch(45% 0.08 260); background:oklch(95% 0.025 260);}
   .mg-check-empty{font-size:12.5px; color:oklch(58% 0.01 265);}
+  .mg-badge{font-size:10.5px; font-weight:700; color:oklch(55% 0.13 55); background:oklch(95% 0.05 55); border-radius:20px; padding:2px 8px; white-space:nowrap;}
+  .mg-badge.ready{color:oklch(45% 0.1 145); background:oklch(93% 0.035 145);}
 
   .dropzone{border:1.5px dashed oklch(78% 0.02 265); border-radius:14px; padding:56px 24px; text-align:center; cursor:pointer; background:oklch(98% 0.005 85); transition:border-color .15s ease;}
   .dropzone.dragover{border-color:oklch(45% 0.08 260);}
@@ -515,21 +517,34 @@
   // ---------- 매체 가이드 list ----------
   const mediaGuideChecks = document.getElementById('mediaGuideChecks');
   let mediaGuidesData = [];
+
+  function renderMediaGuideError(msg){
+    mediaGuideChecks.innerHTML = '';
+    const err = document.createElement('div');
+    err.className = 'mg-check-empty';
+    err.textContent = msg;
+    mediaGuideChecks.appendChild(err);
+  }
+
   fetch('/api/mediaGuides')
-    .then(r => r.ok ? r.json() : { mediaGuides: [] })
+    .then(r => {
+      if(!r.ok) throw new Error('status ' + r.status);
+      return r.json();
+    })
     .then(data => {
       mediaGuidesData = data.mediaGuides || [];
       if(mediaGuidesData.length === 0){
-        const empty = document.createElement('div');
-        empty.className = 'mg-check-empty';
-        empty.textContent = '등록된 매체가 없습니다.';
-        mediaGuideChecks.appendChild(empty);
+        renderMediaGuideError('등록된 매체가 없습니다.');
         return;
       }
+      mediaGuideChecks.innerHTML = '';
       mediaGuidesData.forEach(m => {
         const label = document.createElement('label');
         label.className = 'mg-check';
-        label.innerHTML = `<input type="checkbox" value="${m.id}"><span>${m.name}</span>`;
+        label.title = m.note || '';
+        const badgeClass = m.hasGuideline ? 'mg-badge ready' : 'mg-badge';
+        const badgeText = m.hasGuideline ? '가이드 등록됨' : '가이드 미등록';
+        label.innerHTML = `<input type="checkbox" value="${m.id}"><span>${m.name}</span><span class="${badgeClass}">${badgeText}</span>`;
         const input = label.querySelector('input');
         input.addEventListener('change', () => {
           label.classList.toggle('checked', input.checked);
@@ -537,7 +552,9 @@
         mediaGuideChecks.appendChild(label);
       });
     })
-    .catch(() => {});
+    .catch(() => {
+      renderMediaGuideError('매체 가이드 목록을 불러오지 못했습니다. api/mediaGuides.js와 api/_mediaGuides.js가 배포되었는지 확인해주세요.');
+    });
 
   function getSelectedMediaGuideIds(){
     return Array.from(mediaGuideChecks.querySelectorAll('input:checked')).map(i => i.value);
