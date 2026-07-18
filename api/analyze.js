@@ -185,7 +185,8 @@ export default async function handler(req, res) {
   let briefError = null;
   if (Array.isArray(briefImages) && briefImages.length > 0) {
     try {
-      briefDirection = await extractBriefDirection(briefImages, apiKey);
+      const brandContext = hasGuideline ? { name: advertiser.name, guideline: advertiser.guideline } : null;
+      briefDirection = await extractBriefDirection(briefImages, apiKey, brandContext);
     } catch (err) {
       briefError = '기획안 분석에 실패해 부합도 판정 없이 진행했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류');
     }

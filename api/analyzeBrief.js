@@ -1,5 +1,5 @@
 // POST /api/analyzeBrief
-// Body: { images: [{ base64: string, mediaType: string }, ...] }
+// Body: { images: [{ base64: string, mediaType: string }, ...], advertiserId?: string }
 // Returns: { coreDirection, mustInclude, creativeDirection, pitfalls, briefGaps }
 //
 // This is separate from /api/analyze (which grades a FINISHED banner
@@ -9,6 +9,10 @@
 // NOT a restatement/summary of the brief, since the team can already read
 // the brief itself.
 //
+// advertiserId (optional): 기획안이 어느 브랜드용인지 알면, 기획안 속
+// 레퍼런스 이미지(경쟁사/클립아트코리아/핀터레스트 등에서 가져온 스타일
+// 참고용)의 색상·톤이 그 브랜드 공식 가이드와 다른 경우를 짚어준다.
+//
 // The actual prompt + Gemini call lives in _briefAnalysis.js so it can be
 // reused by api/analyze.js (when a brief is uploaded alongside a banner).
 //
@@ -16,6 +20,7 @@
 // It is never sent to, or reachable from, the browser.
 
 import { extractBriefDirection } from './_briefAnalysis.js';
+import { ADVERTISERS } from './_referenceBanners.js';
 
 export const config = {
   api: {
@@ -37,7 +42,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { images } = req.body || {};
+  const { images, advertiserId } = req.body || {};
   if (!Array.isArray(images) || images.length === 0) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -47,8 +52,11 @@ export default async function handler(req, res) {
     return;
   }
 
+  const advertiser = advertiserId ? ADVERTISERS[advertiserId] : null;
+  const brandContext = advertiser ? { name: advertiser.name, guideline: advertiser.guideline } : null;
+
   try {
-    const parsed = await extractBriefDirection(images, apiKey);
+    const parsed = await extractBriefDirection(images, apiKey, brandContext);
     res.status(200).json(parsed);
   } catch (err) {
     const status = (err && err.status) || 500;
