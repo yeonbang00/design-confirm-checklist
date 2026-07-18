@@ -11,6 +11,7 @@
 // It is never sent to, or reachable from, the browser.
 
 import { put } from './_blobPut.js';
+import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 const IMAGE_MODEL = 'gemini-3.1-flash-lite-image';
 const INTERACTIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
@@ -28,6 +29,7 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+  if (rejectIfNotSameOrigin(req, res)) return;
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

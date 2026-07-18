@@ -21,6 +21,7 @@
 
 import { extractBriefDirection } from './_briefAnalysis.js';
 import { ADVERTISERS } from './_referenceBanners.js';
+import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 export const config = {
   api: {
@@ -35,6 +36,7 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+  if (rejectIfNotSameOrigin(req, res)) return;
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
