@@ -22,10 +22,14 @@
 //     guideline: '<프롬프트에 그대로 들어갈 텍스트. 비어있으면 특별한 매체 규정 없이 일반 기준으로만 평가>',
 //     sourceUrl: '<공식 가이드 페이지 URL>' | null,
 //     sourceFile: { fileName: '<파일명.pdf>', mimeType: 'application/pdf', fileUrl: '<Blob URL>' } | null,
+//     specs: [{ label: '<소재 슬롯 이름, 예: 잠금화면 이미지>', size: '<가로 x 세로px>', format: '<JPG, PNG 등>' | null, maxSize: '<용량 제한, 예: 2MB>' | null }] | [],
 //   },
 // }
 // sourceUrl과 sourceFile은 둘 다 선택사항이며, 있는 것만 채우면 됩니다
 // (둘 다 있어도 되고, 하나만 있어도 되고, 둘 다 없어도 됩니다).
+// specs는 매체 가이드 페이지 상단에 눈에 띄는 스펙 카드로 보여주는 용도 —
+// 사이즈·파일형식·용량처럼 숫자로 딱 떨어지는 값만 뽑아서 채우고, 세이프존
+// 같은 서술형 기준은 guideline 텍스트 쪽에 그대로 둡니다.
 
 export const MEDIA_GUIDES = {
   'meta-reels': {
@@ -33,6 +37,9 @@ export const MEDIA_GUIDES = {
     note: '릴스(Reels) 이미지 소재 등록 기준 반영됨',
     sourceUrl: 'https://www.facebook.com/business/help/980593475366490?id=1240182842783684',
     sourceFile: null,
+    specs: [
+      { label: '릴스 이미지', size: '1440 x 2560px 이상 (9:16)', format: null, maxSize: null },
+    ],
     guideline: `[메타 릴스(Reels) 이미지 광고 소재 기준]
 ※ 메타 공식 페이지(facebook.com/business/help) 직접 열람이 불가해, 해당 페이지를 인용하는 복수의 신뢰할 수 있는 소스를 교차 확인해 정리한 내용입니다. 세이프존 수치와 비율은 여러 소스에서 일치했지만, 정확한 최신 기준은 담당자가 메타 공식 페이지에서 한 번 더 확인하는 것을 권장합니다.
 
@@ -54,6 +61,10 @@ export const MEDIA_GUIDES = {
     note: '잠금화면·인앱 소재 등록 기준 반영됨 (라이브커머스 포함)',
     sourceUrl: null,
     sourceFile: { fileName: '버즈빌_CPM_CPC_소재제작가이드.pdf', mimeType: 'application/pdf', fileUrl: 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/media-guides/buzzvil-RSlpOzGDkK1iKVOD6sXvfshbODQHoX.pdf' },
+    specs: [
+      { label: '잠금화면 이미지', size: '1080 x 2340px', format: 'JPG, PNG', maxSize: '2MB' },
+      { label: '인앱 이미지', size: '1200 x 627px (로고 320 x 320px)', format: 'JPG, PNG', maxSize: '2MB' },
+    ],
     guideline: `[버즈빌 CPM/CPC 소재 제작 가이드 (라이브커머스 광고 상품 포함)]
 
 ■ 잠금화면 이미지 소재
@@ -90,6 +101,7 @@ export const MEDIA_GUIDES = {
     note: '아직 가이드가 등록되지 않았습니다.',
     sourceUrl: null,
     sourceFile: null,
+    specs: [],
     guideline: '',
   },
   'naver-brandsearch': {
@@ -97,6 +109,7 @@ export const MEDIA_GUIDES = {
     note: '아직 가이드가 등록되지 않았습니다.',
     sourceUrl: null,
     sourceFile: null,
+    specs: [],
     guideline: '',
   },
 };

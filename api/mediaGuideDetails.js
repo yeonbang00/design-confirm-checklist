@@ -22,6 +22,7 @@ export default function handler(req, res) {
     sourceUrl: m.sourceUrl || null,
     fileName: m.sourceFile ? m.sourceFile.fileName || null : null,
     fileUrl: m.sourceFile ? m.sourceFile.fileUrl || null : null,
+    specs: Array.isArray(m.specs) ? m.specs : [],
   }));
 
   res.status(200).json({ mediaGuides });

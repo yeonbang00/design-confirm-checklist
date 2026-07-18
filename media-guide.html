@@ -58,6 +58,14 @@
   .source-btn:hover{opacity:0.85;}
   .source-btn:disabled{opacity:0.6; cursor:default;}
 
+  .spec-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:22px;}
+  .spec-card{border:1.5px solid var(--num-text); border-radius:14px; padding:16px 18px; background:var(--num-bg);}
+  .spec-card-title{font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px;}
+  .spec-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px; padding:5px 0; border-bottom:1px solid oklch(100% 0 0 / 0.5);}
+  .spec-row:last-child{border-bottom:none;}
+  .spec-row-label{color:var(--text-2);}
+  .spec-row-value{color:var(--text); font-weight:700; text-align:right; font-variant-numeric:tabular-nums;}
+
   .gl-empty{font-size:13.5px; color:var(--text-3); background:oklch(96% 0.008 85); border-radius:10px; padding:16px 18px;}
   .gl-heading{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin:18px 0 10px;}
   .gl-heading:first-child{margin-top:0;}
@@ -176,11 +184,22 @@
       sourceHtml += '</div>';
     }
 
+    let specHtml = '';
+    if(m.specs && m.specs.length){
+      specHtml = '<div class="spec-grid">' + m.specs.map(s => {
+        let rows = '<div class="spec-row"><span class="spec-row-label">사이즈</span><span class="spec-row-value">' + escapeHtml(s.size || '—') + '</span></div>';
+        if(s.format) rows += '<div class="spec-row"><span class="spec-row-label">파일형식</span><span class="spec-row-value">' + escapeHtml(s.format) + '</span></div>';
+        if(s.maxSize) rows += '<div class="spec-row"><span class="spec-row-label">용량 제한</span><span class="spec-row-value">' + escapeHtml(s.maxSize) + '</span></div>';
+        return '<div class="spec-card"><div class="spec-card-title">' + escapeHtml(s.label) + '</div>' + rows + '</div>';
+      }).join('') + '</div>';
+    }
+
     mediaDetail.innerHTML =
       '<div class="brand-card">' +
       '<div class="brand-head"><span class="brand-name">' + escapeHtml(m.name) + '</span></div>' +
       (m.note ? '<div class="brand-note">' + escapeHtml(m.note) + '</div>' : '') +
       sourceHtml +
+      specHtml +
       bodyHtml +
       '</div>';
   }
