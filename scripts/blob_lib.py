@@ -48,19 +48,38 @@ def _load_token() -> str:
     )
 
 
+def _source_max_dimension(src_path: str) -> int:
+    """sips -Z upscales if given a target larger than the source, which we
+    never want — so measure the source first and cap targets to it."""
+    result = subprocess.run(
+        ["sips", "-g", "pixelWidth", "-g", "pixelHeight", src_path],
+        check=True, capture_output=True, text=True,
+    )
+    widths = re.findall(r"pixel(?:Width|Height):\s*(\d+)", result.stdout)
+    return max(int(w) for w in widths)
+
+
 def resize_image(src_path: str) -> tuple[bytes, bytes]:
-    """Resize src_path into (thumb_bytes, full_bytes) JPEGs via macOS `sips`."""
+    """Resize src_path into (thumb_bytes, full_bytes) JPEGs via macOS `sips`.
+
+    Never upscales: if the source is smaller than THUMB_MAX_PX/FULL_MAX_PX,
+    the target is capped to the source's own size.
+    """
+    source_max = _source_max_dimension(src_path)
+    thumb_target = min(THUMB_MAX_PX, source_max)
+    full_target = min(FULL_MAX_PX, source_max)
+
     with tempfile.TemporaryDirectory() as tmp:
         thumb_path = os.path.join(tmp, "thumb.jpg")
         full_path = os.path.join(tmp, "full.jpg")
 
         subprocess.run(
-            ["sips", "-Z", str(THUMB_MAX_PX), "-s", "format", "jpeg",
+            ["sips", "-Z", str(thumb_target), "-s", "format", "jpeg",
              "-s", "formatOptions", str(THUMB_QUALITY), src_path, "--out", thumb_path],
             check=True, capture_output=True,
         )
         subprocess.run(
-            ["sips", "-Z", str(FULL_MAX_PX), "-s", "format", "jpeg",
+            ["sips", "-Z", str(full_target), "-s", "format", "jpeg",
              "-s", "formatOptions", str(FULL_QUALITY), src_path, "--out", full_path],
             check=True, capture_output=True,
         )
