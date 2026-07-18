@@ -69,8 +69,11 @@ export async function extractBriefDirection(images, apiKey, brandContext) {
       contents: [{ role: 'user', parts }],
       generationConfig: {
         responseMimeType: 'application/json',
-        maxOutputTokens: 2560,
-        thinkingConfig: { thinkingLevel: 'low' },
+        // 2560/low였을 때 응답 JSON이 끝부분에서 종종 깨지는 현상이
+        // 실측으로 확인돼(브랜드 가이드 대조까지 들어가면 더 자주),
+        // 여유를 늘림.
+        maxOutputTokens: 4096,
+        thinkingConfig: { thinkingLevel: 'medium' },
       },
     }),
   });
