@@ -226,8 +226,12 @@ export default async function handler(req, res) {
         contents: [{ role: 'user', parts }],
         generationConfig: {
           responseMimeType: 'application/json',
-          maxOutputTokens: 4608,
-          thinkingConfig: { thinkingLevel: 'low' },
+          // 기획안 부합도까지 포함되면 응답 필드가 늘어나 4608으로는
+          // 가끔 끝부분에서 JSON이 끊기는 경우가 있어 여유를 더 둠.
+          maxOutputTokens: hasBrief ? 7168 : 4608,
+          // 기획안 부합도 판정은 방향 텍스트와 시안을 같이 놓고 비교하는
+          // 더 복잡한 추론이라 thinking 여유를 한 단계 올림.
+          thinkingConfig: { thinkingLevel: hasBrief ? 'medium' : 'low' },
         },
       }),
     });

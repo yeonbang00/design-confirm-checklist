@@ -231,9 +231,9 @@
       <a href="index.html" class="gnb-logo"><img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brand/logo-light-gcPEzK4Ez4ul5UoqPEgzduhWnrZSe3.png" alt="디자인 히어로"></a>
       <nav class="gnb">
         <a href="index.html" class="gnb-link active">디자인 체크리스트</a><span class="gnb-sep">|</span>
+        <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a><span class="gnb-sep">|</span>
         <a href="guide.html" class="gnb-link">브랜드 가이드</a><span class="gnb-sep">|</span>
         <a href="media-guide.html" class="gnb-link">매체 가이드</a><span class="gnb-sep">|</span>
-        <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a><span class="gnb-sep">|</span>
         <a href="reference-board.html" class="gnb-link">경쟁사 레퍼런스</a>
       </nav>
     </div>
@@ -252,7 +252,7 @@
   <!-- ---------- upload card ---------- -->
   <div class="card upload-card">
     <div class="card-head"><div class="num-badge">01</div><div class="card-title">시안 이미지 업로드</div></div>
-    <div class="compare-label"><b>집중 비교</b> (선택사항)</div>
+    <div class="compare-label"><b>브랜드 가이드</b> (선택사항)</div>
     <div class="compare-desc">브랜드를 선택하면 그 브랜드의 성과 좋았던 배너들과 나란히 비교해서, 닮은 점과 부족한 점까지 함께 짚어드립니다.<br>아무것도 선택하지 않으면 19개 항목 기준으로 시안 자체를 점검합니다.</div>
 
     <div class="select-wrap">
@@ -335,7 +335,7 @@
     </div>
 
     <div class="comparison-block" id="comparisonBlock">
-      <div class="comparison-title">집중 비교 결과</div>
+      <div class="comparison-title">브랜드 가이드 비교 결과</div>
       <div class="comparison-item">
         <div class="ci-label">닮은 점</div>
         <div class="ci-text" id="compSimilarities"></div>
@@ -565,7 +565,7 @@
   }
   update();
 
-  // ---------- advertiser (집중 비교) list ----------
+  // ---------- advertiser (브랜드 가이드) list ----------
   const advertiserSelect = document.getElementById('advertiserSelect');
   let advertisersData = [];
   fetch('/api/advertisers')
