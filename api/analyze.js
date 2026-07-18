@@ -1,12 +1,18 @@
 // POST /api/analyze
-// Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[], imageWidth?: number, imageHeight?: number }
-// Returns: { items: [...], summary: string, comparison: {...} | null }
+// Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[], imageWidth?: number, imageHeight?: number, briefImages?: [{base64, mediaType}] }
+// Returns: { items: [...], summary: string, comparison: {...} | null, briefAlignment: {...} | null, briefError?: string }
+//
+// briefImages (optional): 기획안(PPT 캡처) 이미지. 있으면 배너 분석 전에 먼저
+// extractBriefDirection()으로 기획 방향을 뽑아내고, 그 방향에 비추어 새
+// briefAlignment 판정을 추가로 채운다. 기획안 추출이 실패해도 배너 분석
+// 자체는 막지 않고 briefError만 채워서 응답한다.
 //
 // The Gemini API key lives ONLY in this server-side environment variable.
 // It is never sent to, or reachable from, the browser.
 
 import { ADVERTISERS } from './_referenceBanners.js';
 import { MEDIA_GUIDES } from './_mediaGuides.js';
+import { extractBriefDirection } from './_briefAnalysis.js';
 
 export const config = {
   api: {
@@ -120,11 +126,28 @@ function imageSizeInstruction(width, height) {
   return `\n\n이미지 크기 정보: 업로드된 이미지의 실제 원본 크기는 정확히 ${width} x ${height}px입니다. 이는 프로그램이 파일에서 직접 측정한 정확한 값이니, 이미지를 보고 크기를 다시 추측하지 말고 이 값을 그대로 사용하세요. 10번(매체 최적화) 항목과 매체 가이드 판정 시 이 정확한 크기를 기준으로 삼으세요.`;
 }
 
-function schemaInstruction(hasComparison, hasMediaGuides) {
+function briefAlignmentInstruction(direction) {
+  const mustIncludeText = (direction.mustInclude && direction.mustInclude.length)
+    ? direction.mustInclude.join(', ')
+    : '명시된 필수 요소 없음';
+  return `\n\n기획안 부합도 안내: 이 시안은 아래 기획 방향을 바탕으로 제작되었습니다.
+- 핵심 방향: ${direction.coreDirection || '명시되지 않음'}
+- 필수 포함 요소: ${mustIncludeText}
+- 제작 방향 제안: ${direction.creativeDirection || '명시되지 않음'}
+
+위 기획 방향에 비추어 이 시안이 얼마나 부합하는지 판단해서 briefAlignment 필드를 채우세요.
+- verdict: 전체적으로 기획 의도에 "aligned"(잘 부합), "partial"(부분적으로 부합, 일부 아쉬움), "misaligned"(기획 의도에서 벗어남) 중 하나
+- summary: 판정 이유를 1문장으로 요약
+- matches: 기획 방향과 부합하는 부분과 근거를 2~3문장으로
+- gaps: 기획 방향에서 벗어나거나 필수 요소가 누락된 부분을 2~3문장으로. 문제 없다면 "기획 의도에서 벗어난 부분이 없습니다"라고만 답하세요.`;
+}
+
+function schemaInstruction(hasComparison, hasMediaGuides, hasBrief) {
   const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
   const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
+  const briefSchema = hasBrief ? `{"verdict":"aligned","summary":"...","matches":"...","gaps":"..."}` : `null`;
   return `\n\n반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"items":[{"id":1,"status":"pass","note":"..."}],"bannerType":"...","summary":"...","comparison":${comparisonSchema},"mediaGuideReview":${mediaGuideSchema}}`;
+{"items":[{"id":1,"status":"pass","note":"..."}],"bannerType":"...","summary":"...","comparison":${comparisonSchema},"mediaGuideReview":${mediaGuideSchema},"briefAlignment":${briefSchema}}`;
 }
 
 export default async function handler(req, res) {
@@ -139,7 +162,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -158,13 +181,25 @@ export default async function handler(req, res) {
 
   const hasSize = Number.isFinite(imageWidth) && Number.isFinite(imageHeight) && imageWidth > 0 && imageHeight > 0;
 
+  let briefDirection = null;
+  let briefError = null;
+  if (Array.isArray(briefImages) && briefImages.length > 0) {
+    try {
+      briefDirection = await extractBriefDirection(briefImages, apiKey);
+    } catch (err) {
+      briefError = '기획안 분석에 실패해 부합도 판정 없이 진행했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류');
+    }
+  }
+  const hasBrief = !!briefDirection;
+
   const promptText =
     BASE_PROMPT +
     (hasSize ? imageSizeInstruction(imageWidth, imageHeight) : '') +
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
     (hasGuideline ? brandGuidelineInstruction(advertiser.name, advertiser.guideline) : '') +
     (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides, hasSize) : '') +
-    schemaInstruction(hasComparison, hasMediaGuides);
+    (hasBrief ? briefAlignmentInstruction(briefDirection) : '') +
+    schemaInstruction(hasComparison, hasMediaGuides, hasBrief);
 
   const parts = [{ text: promptText }];
 
@@ -229,6 +264,7 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (briefError) parsed.briefError = briefError;
     res.status(200).json(parsed);
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : '알 수 없는 서버 오류' });
