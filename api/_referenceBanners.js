@@ -23,17 +23,27 @@
 //     name: '<드롭다운에 표시할 이름>',
 //     note: '<선택 메모>',
 //     guideline: '<선택, 브랜드 텍스트 가이드>',
+//     specs: [{ label: '<예: Primary 컬러>', value: '<예: #FA2993>' }] | [],
 //     images: [
 //       { mimeType: 'image/jpeg', thumbUrl: '<Blob URL>', fullUrl: '<Blob URL>' },
 //       ...
 //     ],
 //   },
 // }
+// specs는 브랜드 가이드 페이지 상단에 눈에 띄는 카드로 보여주는 용도 —
+// 컬러 코드, 로고 여백 px, 사용 비율처럼 숫자·코드로 딱 떨어지는 값만
+// 뽑아서 채우고, 서술형 규칙은 guideline 텍스트 쪽에 그대로 둡니다.
 
 export const ADVERTISERS = {
   'uplus': {
     name: '유플러스',
     note: '성과 좋았던 배너 5건 등록됨',
+    specs: [
+      { label: 'Primary 컬러', value: '#FA2993 (Bright Magenta)' },
+      { label: 'Secondary 컬러', value: '#22171C' },
+      { label: '컬러 사용 비율', value: '전체의 5~10% (포인트로만)' },
+      { label: 'Radius', value: '8px / 20px / 34px / 50%' },
+    ],
     guideline: `[유플러스 브랜드 가이드 — Online Content Design Guideline Dec.2025 Ver 1.0 기반]
 
 항상 엄격하게 적용 (배너 유형과 무관):
@@ -61,12 +71,14 @@ export const ADVERTISERS = {
     name: '브랜드 B',
     note: '아직 기준 배너가 등록되지 않았습니다.',
     guideline: '',
+    specs: [],
     images: [],
   },
   'brand-c': {
     name: '브랜드 C',
     note: '아직 기준 배너가 등록되지 않았습니다.',
     guideline: '',
+    specs: [],
     images: [],
   },
 };

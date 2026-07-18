@@ -19,6 +19,7 @@ export default function handler(req, res) {
     note: a.note || '',
     guideline: a.guideline || '',
     imageCount: (a.images || []).length,
+    specs: Array.isArray(a.specs) ? a.specs : [],
   }));
 
   res.status(200).json({ brands });
