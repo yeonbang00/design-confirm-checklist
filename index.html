@@ -783,11 +783,11 @@
     });
   }
 
-  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages){
+  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes){
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [] })
+      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [], fileSizeBytes: fileSizeBytes || null })
     });
     let data;
     try{ data = await response.json(); }
@@ -915,7 +915,7 @@
       let lastErr = null;
       for(let attempt=1; attempt<=3; attempt++){
         try{
-          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages);
+          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size);
           applyResults(result);
           showDzState('loaded');
           analyzeBtn.textContent = '다시 분석하기';

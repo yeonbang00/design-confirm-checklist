@@ -1,5 +1,5 @@
 // POST /api/analyze
-// Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[], imageWidth?: number, imageHeight?: number, briefImages?: [{base64, mediaType}] }
+// Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[], imageWidth?: number, imageHeight?: number, briefImages?: [{base64, mediaType}], fileSizeBytes?: number }
 // Returns: { items: [...], summary: string, comparison: {...} | null, briefAlignment: {...} | null, briefError?: string }
 //
 // briefImages (optional): 기획안(PPT 캡처) 이미지. 있으면 배너 분석 전에 먼저
@@ -91,6 +91,12 @@ function mediaGuidelineInstruction(mediaGuides, hasSize) {
 
   let text = `\n\n매체 가이드 안내: 이 시안은 다음 매체에 게재될 예정입니다: ${names}. 10번(매체 최적화) 항목을 판정할 때 아래 각 매체 기준을 모두 반영하세요.${sizeLine}
 
+아래 4가지를 우선순위로 확인하세요 — 이 중 1~3번(사이즈·용량·여백)이 특히 중요하니 가장 먼저, 가장 엄격하게 확인하세요:
+1. 사이즈: 매체가 요구하는 정확한 규격(가로x세로)과 일치하는지
+2. 용량: 매체 기준에 파일 용량 제한이 명시돼 있다면, 위 이미지 크기 정보에 안내된 정확한 원본 파일 용량과 비교해서 초과 여부를 판정하세요. 파일 용량 정보가 안내되지 않았거나 매체 기준에 용량 제한이 없다면 이 항목은 판단하지 말고 넘어가세요 (추측 금지)
+3. 텍스트 여백(안전노출영역/세이프존): 텍스트·로고·CTA가 매체 UI 요소와 겹칠 수 있는 여백 구간을 침범하지 않는지
+4. 버튼·광고표시 영역: 매체 시스템이 CTA 버튼이나 "광고"/"Ad" 표시, 계정명·아이콘 등을 소재 위에 자동으로 얹는 경우(매체 기준에 그런 안내가 있다면), 이미지 안에 그와 중복·혼동되는 버튼이나 문구를 넣지 않았는지, 그 자동 생성 영역과 겹치는 자리에 로고·핵심 카피 같은 중요한 정보를 배치하지 않았는지
+
 추가로 mediaGuideReview 필드를 자연스러운 구어체 한국어로 채우세요. 매체가 2개 이상 선택된 경우, 어떤 내용이 어느 매체 기준인지 매체 이름을 언급하며 구분해서 설명하세요.
 - satisfied: 시안이 매체 기준을 충족하는 부분과 그 근거를 2~3문장(40~60단어)으로 설명 (예: "메타(릴스) 기준으로는 로고가 세이프존 안에 잘 들어와 있다")
 - differs: 시안이 매체 기준과 다르거나 위반하는 부분과 그 이유를 2~3문장(40~60단어)으로 설명. 구체적으로 어느 영역이 어떻게 다른지 짚으세요
@@ -122,8 +128,18 @@ async function fetchAsBase64(url) {
   return Buffer.from(buf).toString('base64');
 }
 
-function imageSizeInstruction(width, height) {
-  return `\n\n이미지 크기 정보: 업로드된 이미지의 실제 원본 크기는 정확히 ${width} x ${height}px입니다. 이는 프로그램이 파일에서 직접 측정한 정확한 값이니, 이미지를 보고 크기를 다시 추측하지 말고 이 값을 그대로 사용하세요. 10번(매체 최적화) 항목과 매체 가이드 판정 시 이 정확한 크기를 기준으로 삼으세요.`;
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return null;
+  if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + 'MB';
+  return Math.round(bytes / 1024) + 'KB';
+}
+
+function imageSizeInstruction(width, height, fileSizeBytes) {
+  const sizeLabel = formatFileSize(fileSizeBytes);
+  const capacityLine = sizeLabel
+    ? ` 원본 파일 용량은 정확히 ${sizeLabel}입니다(업로드된 파일에서 직접 측정한 값).`
+    : '';
+  return `\n\n이미지 크기 정보: 업로드된 이미지의 실제 원본 크기는 정확히 ${width} x ${height}px입니다.${capacityLine} 이는 프로그램이 파일에서 직접 측정한 정확한 값이니, 이미지를 보고 크기나 용량을 다시 추측하지 말고 이 값을 그대로 사용하세요. 10번(매체 최적화) 항목과 매체 가이드 판정 시 이 정확한 크기·용량을 기준으로 삼으세요.`;
 }
 
 function briefAlignmentInstruction(direction) {
@@ -162,7 +178,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -195,7 +211,7 @@ export default async function handler(req, res) {
 
   const promptText =
     BASE_PROMPT +
-    (hasSize ? imageSizeInstruction(imageWidth, imageHeight) : '') +
+    (hasSize ? imageSizeInstruction(imageWidth, imageHeight, fileSizeBytes) : '') +
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
     (hasGuideline ? brandGuidelineInstruction(advertiser.name, advertiser.guideline) : '') +
     (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides, hasSize) : '') +
