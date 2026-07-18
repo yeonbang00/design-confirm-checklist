@@ -103,6 +103,10 @@
   .result-list{margin:0; padding-left:20px;}
   .result-list li{font-size:14.5px; line-height:1.85; color:var(--text); margin-bottom:4px;}
   .result-empty{font-size:13px; color:var(--text-3);}
+  .card.coming-soon{border-style:dashed; border-color:var(--num-text); background:oklch(98% 0.008 260); text-align:center;}
+  .coming-soon-icon{font-size:26px; margin-bottom:8px;}
+  .coming-soon-badge{display:inline-block; font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:4px 12px; margin-bottom:10px;}
+  .coming-soon-text{font-size:13px; color:var(--text-3); line-height:1.7; max-width:420px; margin:0 auto;}
 
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
@@ -301,7 +305,8 @@
       '<div class="card"><div class="result-label">꼭 들어가야 할 요소</div>' + mustIncludeHtml + '</div>' +
       '<div class="card"><div class="result-label">이렇게 만들면 좋아요</div><div class="result-text">' + escapeHtml(data.creativeDirection || '—') + '</div></div>' +
       '<div class="card"><div class="result-label">주의할 점</div><div class="result-text">' + escapeHtml(data.pitfalls || '—') + '</div></div>' +
-      '<div class="card"><div class="result-label">기획안에서 더 확인이 필요한 부분</div><div class="result-text">' + escapeHtml(data.briefGaps || '기획안 내용이 충분히 명확합니다.') + '</div></div>';
+      '<div class="card"><div class="result-label">기획안에서 더 확인이 필요한 부분</div><div class="result-text">' + escapeHtml(data.briefGaps || '기획안 내용이 충분히 명확합니다.') + '</div></div>' +
+      '<div class="card coming-soon"><div class="coming-soon-icon">🎨</div><div class="coming-soon-badge">업데이트 예정</div><div class="coming-soon-text">이 기획 방향에 맞는 예시 배너 이미지를 AI가 직접 생성해서 참고용으로 보여드릴 예정이에요.</div></div>';
   }
 
   analyzeBtn.addEventListener('click', async () => {
