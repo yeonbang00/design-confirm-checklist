@@ -1,8 +1,11 @@
 // GET /api/brandImages?id=<brandId>
-// Returns the actual reference banner images (base64) for ONE brand, on
+// Returns the reference banner images (Blob URLs) for ONE brand, on
 // demand. Kept separate from brandGuides.js/advertisers.js so those stay
 // light — this endpoint is only called when the 브랜드 가이드 page actually
 // needs to show images for the brand currently selected in the dropdown.
+// Images live in Vercel Blob Storage (see _referenceBanners.js) so both
+// thumbUrl and fullUrl are returned directly — no separate "full image"
+// endpoint needed since URLs are cheap.
 
 import { ADVERTISERS } from './_referenceBanners.js';
 

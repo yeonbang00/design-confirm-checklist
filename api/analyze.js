@@ -104,6 +104,18 @@ function mediaGuidelineInstruction(mediaGuides, hasSize) {
   return text;
 }
 
+// Reference banner images are stored in Vercel Blob Storage (see
+// _referenceBanners.js) as URLs, not inline base64. Gemini's inlineData
+// needs raw base64, so fetch each one and encode it at request time.
+async function fetchAsBase64(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    throw new Error(`참고 배너 이미지를 불러오지 못했습니다 (${resp.status}): ${url}`);
+  }
+  const buf = await resp.arrayBuffer();
+  return Buffer.from(buf).toString('base64');
+}
+
 function imageSizeInstruction(width, height) {
   return `\n\n이미지 크기 정보: 업로드된 이미지의 실제 원본 크기는 정확히 ${width} x ${height}px입니다. 이는 프로그램이 파일에서 직접 측정한 정확한 값이니, 이미지를 보고 크기를 다시 추측하지 말고 이 값을 그대로 사용하세요. 10번(매체 최적화) 항목과 매체 가이드 판정 시 이 정확한 크기를 기준으로 삼으세요.`;
 }
@@ -158,9 +170,10 @@ export default async function handler(req, res) {
 
   if (hasComparison) {
     parts.push({ text: `[참고 배너 시작 — ${advertiser.name}, ${refImages.length}장]` });
-    for (const img of refImages) {
-      parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
-    }
+    const refImageData = await Promise.all(refImages.map((img) => fetchAsBase64(img.thumbUrl)));
+    refImages.forEach((img, i) => {
+      parts.push({ inlineData: { mimeType: img.mimeType, data: refImageData[i] } });
+    });
     parts.push({ text: `[참고 배너 끝. 아래가 평가할 새 시안입니다]` });
   }
 

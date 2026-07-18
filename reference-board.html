@@ -70,9 +70,6 @@
   .lightbox-inner{max-width:100%; max-height:100%; display:flex; flex-direction:column; align-items:center; gap:14px;}
   .lightbox img{max-width:100%; max-height:75vh; border-radius:8px; box-shadow:0 20px 60px oklch(0% 0 0 / 0.4);}
   .lightbox img[src=""]{display:none;}
-  .lightbox-loading{display:none; color:oklch(90% 0.005 85); font-size:13px;}
-  .lightbox.loading .lightbox-loading{display:block;}
-  .lightbox.loading img{display:none;}
   .lightbox-caption{color:oklch(95% 0.004 85); font-size:13px; text-align:center;}
   .lightbox-close{position:absolute; top:24px; right:28px; background:none; border:none; color:#fff; font-size:32px; line-height:1; cursor:pointer; padding:8px;}
 
@@ -118,7 +115,6 @@
 <div class="lightbox" id="lightbox">
   <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">&times;</button>
   <div class="lightbox-inner">
-    <div class="lightbox-loading" id="lightboxLoading">원본 이미지를 불러오는 중…</div>
     <img id="lightboxImg" src="" alt="확대된 레퍼런스 이미지">
     <div class="lightbox-caption" id="lightboxCaption"></div>
   </div>
@@ -136,28 +132,13 @@
   const lightboxCaption = document.getElementById('lightboxCaption');
   const lightboxClose = document.getElementById('lightboxClose');
 
-  function openLightbox(categoryId, index, thumbSrc, caption){
-    lightboxImg.src = '';
+  function openLightbox(fullSrc, caption){
     lightboxCaption.textContent = caption || '';
     lightbox.classList.add('show');
-    lightbox.classList.add('loading');
-    fetch('/api/referenceImageFull?category=' + encodeURIComponent(categoryId) + '&index=' + index)
-      .then(r => {
-        if(!r.ok) throw new Error('status ' + r.status);
-        return r.json();
-      })
-      .then(data => {
-        lightboxImg.src = 'data:' + data.mimeType + ';base64,' + data.data;
-        lightbox.classList.remove('loading');
-      })
-      .catch(() => {
-        lightboxImg.src = thumbSrc;
-        lightbox.classList.remove('loading');
-      });
+    lightboxImg.src = fullSrc;
   }
   function closeLightbox(){
     lightbox.classList.remove('show');
-    lightbox.classList.remove('loading');
     lightboxImg.src = '';
   }
   lightboxClose.addEventListener('click', closeLightbox);
@@ -221,7 +202,6 @@
         const grid = document.createElement('div');
         grid.className = 'ref-grid';
         items.forEach((item, i) => {
-          const src = 'data:' + item.mimeType + ';base64,' + item.data;
           const caption = (item.brandName || '') + (item.note ? ' · ' + item.note : '');
           const wrap = document.createElement('div');
           wrap.className = 'ref-item';
@@ -229,8 +209,8 @@
           const thumbBtn = document.createElement('button');
           thumbBtn.type = 'button';
           thumbBtn.className = 'ref-thumb';
-          thumbBtn.innerHTML = '<img src="' + src + '" alt="' + escapeHtml(item.brandName || '레퍼런스') + '" loading="lazy">';
-          thumbBtn.addEventListener('click', () => openLightbox(id, i, src, caption));
+          thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '레퍼런스') + '" loading="lazy">';
+          thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
           wrap.appendChild(thumbBtn);
           const capDiv = document.createElement('div');
           capDiv.className = 'ref-caption';
