@@ -3,9 +3,8 @@
 // link/file metadata) for the standalone "매체 가이드" page. mediaGuides.js
 // intentionally keeps its response light (no guideline text) for the
 // analyze-form checkboxes; this endpoint returns the full content for
-// display. PDF file BYTES are not included here — those are fetched
-// on demand from /api/mediaGuideFile so this list stays light even as
-// more platforms and larger PDFs get added.
+// display. PDF files live in Vercel Blob Storage (see _mediaGuides.js) so
+// the URL is returned directly — no separate on-demand endpoint needed.
 
 import { MEDIA_GUIDES } from './_mediaGuides.js';
 
@@ -21,8 +20,8 @@ export default function handler(req, res) {
     note: m.note || '',
     guideline: m.guideline || '',
     sourceUrl: m.sourceUrl || null,
-    hasFile: !!(m.sourceFile && m.sourceFile.data),
     fileName: m.sourceFile ? m.sourceFile.fileName || null : null,
+    fileUrl: m.sourceFile ? m.sourceFile.fileUrl || null : null,
   }));
 
   res.status(200).json({ mediaGuides });

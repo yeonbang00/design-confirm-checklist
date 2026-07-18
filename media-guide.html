@@ -165,13 +165,13 @@
     }
 
     let sourceHtml = '';
-    if(m.sourceUrl || m.hasFile){
+    if(m.sourceUrl || m.fileUrl){
       sourceHtml = '<div class="source-row">';
       if(m.sourceUrl){
         sourceHtml += '<a class="source-btn" href="' + escapeHtml(m.sourceUrl) + '" target="_blank" rel="noopener">공식 가이드 페이지 열기 ↗</a>';
       }
-      if(m.hasFile){
-        sourceHtml += '<button type="button" class="source-btn" id="downloadBtn-' + m.id + '">' + escapeHtml(m.fileName || 'PDF 다운로드') + ' ⬇</button>';
+      if(m.fileUrl){
+        sourceHtml += '<a class="source-btn" href="' + escapeHtml(m.fileUrl) + '" target="_blank" rel="noopener" download="' + escapeHtml(m.fileName || 'guide.pdf') + '">' + escapeHtml(m.fileName || 'PDF 다운로드') + ' ⬇</a>';
       }
       sourceHtml += '</div>';
     }
@@ -183,36 +183,6 @@
       sourceHtml +
       bodyHtml +
       '</div>';
-
-    if(m.hasFile){
-      const btn = document.getElementById('downloadBtn-' + m.id);
-      if(btn) btn.addEventListener('click', () => downloadMediaFile(m.id, btn));
-    }
-  }
-
-  function downloadMediaFile(id, btn){
-    const originalText = btn.textContent;
-    btn.textContent = '다운로드 중…';
-    btn.disabled = true;
-    fetch('/api/mediaGuideFile?id=' + encodeURIComponent(id))
-      .then(r => {
-        if(!r.ok) throw new Error('status ' + r.status);
-        return r.json();
-      })
-      .then(data => {
-        const a = document.createElement('a');
-        a.href = 'data:' + data.mimeType + ';base64,' + data.data;
-        a.download = data.fileName || 'guide.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        btn.textContent = originalText;
-        btn.disabled = false;
-      })
-      .catch(() => {
-        btn.textContent = '다운로드 실패 — 다시 시도';
-        btn.disabled = false;
-      });
   }
 
   mediaSelect.addEventListener('change', () => {

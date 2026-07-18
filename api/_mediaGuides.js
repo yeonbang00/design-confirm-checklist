@@ -9,8 +9,10 @@
 // HOW TO ADD A GUIDELINE:
 // Send Claude the platform's official creative spec (PDF, doc, or pasted
 // text) and say which platform it's for (e.g. "이거 메타 소재 가이드야").
-// Claude will fill in the `guideline` field below — same workflow as the
-// brand guideline and reference banner updates.
+// Claude will fill in the `guideline` field below, and if a PDF was sent,
+// upload it to Vercel Blob Storage (via scripts/blob_lib.py, same as
+// reference images — see api/_referenceLibrary.js) and set `sourceFile`
+// to its URL.
 //
 // Structure:
 // MEDIA_GUIDES = {
@@ -19,7 +21,7 @@
 //     note: '<선택 메모>',
 //     guideline: '<프롬프트에 그대로 들어갈 텍스트. 비어있으면 특별한 매체 규정 없이 일반 기준으로만 평가>',
 //     sourceUrl: '<공식 가이드 페이지 URL>' | null,
-//     sourceFile: { fileName: '<파일명.pdf>', mimeType: 'application/pdf', data: '<BASE64>' } | null,
+//     sourceFile: { fileName: '<파일명.pdf>', mimeType: 'application/pdf', fileUrl: '<Blob URL>' } | null,
 //   },
 // }
 // sourceUrl과 sourceFile은 둘 다 선택사항이며, 있는 것만 채우면 됩니다
@@ -49,10 +51,39 @@ export const MEDIA_GUIDES = {
   },
   'buzzvil': {
     name: '버즈빌',
-    note: '아직 가이드가 등록되지 않았습니다.',
+    note: '잠금화면·인앱 소재 등록 기준 반영됨 (라이브커머스 포함)',
     sourceUrl: null,
-    sourceFile: null,
-    guideline: '',
+    sourceFile: { fileName: '버즈빌_CPM_CPC_소재제작가이드.pdf', mimeType: 'application/pdf', fileUrl: 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/media-guides/buzzvil-RSlpOzGDkK1iKVOD6sXvfshbODQHoX.pdf' },
+    guideline: `[버즈빌 CPM/CPC 소재 제작 가이드 (라이브커머스 광고 상품 포함)]
+
+■ 잠금화면 이미지 소재
+- 이미지 사이즈: 1080 x 2340px (배경을 투명(transparent)으로 설정하면 사용 불가)
+- 파일형식: JPG, PNG / 용량 제한 2MB (저장 시 Quality 100% 기준)
+- 텍스트 소재: 없음 (이미지 안에 별도 텍스트를 넣지 않음)
+- 잠금화면 UI에 겹치지 않도록 상/하단 630px 여백 확보
+- 브랜드를 명확히 인지할 수 있는 로고나 BI/CI 포함 권장
+- 두 가지 이상 내용이 들어가는 편집 지양
+- 광고 이미지 소재 내 CTA 박스나 버튼 삽입 지양
+- 타 캠페인 유형으로 오인될 수 있는 소재 불가 (예: 네이버 퀴즈 검색 유도 등)
+- 기본 UI에 스와이프(화살표) 안내가 이미 있으므로 이미지 내 별도 스와이프 안내 금지
+- 이미지 내 "다운", "내려받기", "인스톨", "Install", "오픈", "설치", "앱" 단어 사용 불가
+
+■ 인앱 이미지/텍스트 소재
+- 이미지 사이즈: 1200 x 627px (배경 투명 설정 시 사용 불가), 로고 사이즈 320 x 320px
+- 파일형식: JPG, PNG / 용량 제한 2MB (저장 시 Quality 100% 기준)
+- 텍스트 소재 글자수 제한: 타이틀 15자 이내(띄어쓰기·특수문자 포함, 이모지 불가), 설명 40자 이내(줄바꿈 불가, 이모지 불가), CTA 7자 이내(이모지 불가, 숫자가 들어가면 문구 뒤쪽에 배치)
+- 타이틀·설명·CTA·이미지 내 "다운", "내려받기", "인스톨", "Install", "오픈", "설치", "앱" 단어 사용 불가
+- 두 가지 이상 내용이 들어가는 편집 지양
+- CTA는 별도 버튼으로 이미 존재하므로 이미지 내 CTA와 혼동될 수 있는 문구 삽입 불가
+- 타 캠페인 유형으로 오인될 수 있는 소재 불가
+- 브랜드를 명확히 인지할 수 있는 로고나 BI/CI 포함 권장
+
+■ 공통 안내 (평가 대상은 아니지만 참고)
+- 랜딩 URL: 잠금화면·인앱 지면 모두 동일한 URL 하나로 진행 가능 (일반 웹 또는 원링크 중 1개). 라이브커머스는 SNS 채널 랜딩 비권장
+- 소재 내 리워드 금액 표기 불가
+- 소재/랜딩 교체는 최소 집행예산 월 500만원 기준 월 2회, 정시 단위로만 적용(분 단위 불가)
+
+이 기준은 10번(매체 최적화) 항목을 판정할 때 반영하세요. 시안이 잠금화면용인지 인앱용인지 이미지 크기·비율로 우선 판단한 뒤, 해당하는 규격(잠금화면 1080x2340 / 인앱 1200x627)과 여백·금지어 기준으로 평가하세요. 어느 쪽인지 이미지만으로 판단하기 애매하면 needsCheck에 "잠금화면/인앱 중 어느 지면용인지 확인 필요"라고 남기세요. 텍스트 글자수 제한(타이틀 15자, 설명 40자, CTA 7자)은 이미지 안에 실제로 삽입된 문구에만 적용하고, 시안에 그런 텍스트 소재가 없다면 이 기준으로 반려하지 마세요.`,
   },
   'criteo': {
     name: '크리테오',
