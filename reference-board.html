@@ -30,11 +30,14 @@
   :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
 
   .page{max-width:960px; margin:0 auto; padding:40px 24px 100px;}
-  .site-brand{display:block; font-size:13px; font-weight:700; letter-spacing:0.03em; color:var(--num-text); margin-bottom:14px; text-decoration:none;}
-  .gnb{display:flex; gap:20px; margin-bottom:40px; flex-wrap:wrap;}
-  .gnb-link{font-size:13.5px; font-weight:600; text-decoration:none; color:var(--text-3); padding-bottom:4px; border-bottom:2px solid transparent; transition:color .15s ease;}
+  .gnb-bar{display:flex; align-items:center; gap:20px; margin-bottom:40px; flex-wrap:wrap;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo img{height:20px; width:auto; display:block;}
+  .gnb{display:flex; align-items:center; gap:0; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:600; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
   .gnb-link:hover{color:var(--text);}
-  .gnb-link.active{color:var(--text); border-bottom-color:var(--num-text);}
+  .gnb-link.active{color:var(--num-text);}
+  .gnb-sep{color:var(--text-3); opacity:0.35; margin:0 12px; font-size:12px;}
 
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
   .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px; max-width:620px;}
@@ -75,7 +78,8 @@
 
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
-    .gnb{gap:14px;}
+    .gnb-bar{gap:12px;}
+    .gnb-sep{margin:0 8px;}
     .select-wrap{max-width:none;}
     .ref-grid{grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px;}
   }
@@ -84,14 +88,16 @@
 <body>
 
 <div class="page">
-  <a href="index.html" class="site-brand">디자인 히어로</a>
-  <nav class="gnb">
-    <a href="index.html" class="gnb-link">디자인 체크리스트</a>
-    <a href="guide.html" class="gnb-link">브랜드 가이드</a>
-    <a href="media-guide.html" class="gnb-link">매체 가이드</a>
-    <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
-    <a href="reference-board.html" class="gnb-link active">경쟁사 레퍼런스</a>
-  </nav>
+  <div class="gnb-bar">
+    <a href="index.html" class="gnb-logo"><img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brand/logo-dark-aQv7KnQfdnikXjQX7xuwRqSxNvw7GG.png" alt="디자인 히어로"></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a><span class="gnb-sep">|</span>
+      <a href="guide.html" class="gnb-link">브랜드 가이드</a><span class="gnb-sep">|</span>
+      <a href="media-guide.html" class="gnb-link">매체 가이드</a><span class="gnb-sep">|</span>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a><span class="gnb-sep">|</span>
+      <a href="reference-board.html" class="gnb-link active">경쟁사 레퍼런스</a>
+    </nav>
+  </div>
 
   <h1>경쟁사 레퍼런스</h1>
   <p class="sub">업종별로 모아둔 경쟁사 배너 레퍼런스예요. 구글 애즈 트랜스페어런시 센터, 메타 광고 라이브러리 등에서 찾은 이미지를 팀이 큐레이션해서 쌓아가는 공간이에요.</p>

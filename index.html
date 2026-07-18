@@ -47,11 +47,14 @@
   .hero-overlay{position:absolute; inset:0; background:linear-gradient(90deg, oklch(15% 0.03 260 / 0.85) 0%, oklch(15% 0.03 260 / 0.55) 45%, oklch(15% 0.03 260 / 0.15) 75%);}
   .hero-inner{max-width:1040px; margin:0 auto; padding:0 24px; position:relative; text-align:left;}
   .beta-badge{display:inline-block; font-size:11.5px; padding:5px 12px; border-radius:100px; border:1px solid oklch(100% 0 0 / 0.18); color:oklch(85% 0.01 85); letter-spacing:0.04em; margin-bottom:20px; position:relative; z-index:1;}
-  .site-brand{display:block; font-size:13px; font-weight:700; letter-spacing:0.03em; color:oklch(88% 0.01 85); margin-bottom:14px; position:relative; z-index:1; text-decoration:none;}
-  .gnb{display:flex; gap:24px; margin:0 0 32px; position:relative; z-index:1;}
-  .gnb-link{font-size:13px; font-weight:600; text-decoration:none; color:oklch(78% 0.015 85); padding-bottom:4px; border-bottom:2px solid transparent; transition:color .15s ease, border-color .15s ease;}
+  .gnb-bar{display:flex; align-items:center; gap:20px; margin:0 0 32px; position:relative; z-index:1;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo img{height:20px; width:auto; display:block;}
+  .gnb{display:flex; align-items:center; gap:0;}
+  .gnb-link{font-size:13px; font-weight:600; text-decoration:none; color:oklch(78% 0.015 85); transition:color .15s ease;}
   .gnb-link:hover{color:oklch(96% 0.005 85);}
-  .gnb-link.active{color:oklch(97% 0.003 85); border-bottom-color:oklch(97% 0.003 85);}
+  .gnb-link.active{color:oklch(97% 0.003 85);}
+  .gnb-sep{color:oklch(78% 0.015 85); opacity:0.35; margin:0 12px; font-size:12px;}
   .hero h1{font-family:'Noto Sans KR',sans-serif; font-weight:700; font-size:48px; letter-spacing:-0.015em; margin:0 0 16px; color:oklch(98% 0.003 85); position:relative; z-index:1;}
   .hero-sub{font-size:14.5px; line-height:1.8; color:oklch(78% 0.015 85); margin:0 0 32px; max-width:620px; font-weight:200; position:relative; z-index:1;}
   .hero-stats{display:flex; align-items:stretch; gap:10px; flex-wrap:wrap; position:relative; z-index:1;}
@@ -224,14 +227,16 @@
 <div class="hero">
   <div class="hero-overlay"></div>
   <div class="hero-inner">
-    <a href="index.html" class="site-brand">디자인 히어로</a>
-    <nav class="gnb">
-      <a href="index.html" class="gnb-link active">디자인 체크리스트</a>
-      <a href="guide.html" class="gnb-link">브랜드 가이드</a>
-      <a href="media-guide.html" class="gnb-link">매체 가이드</a>
-      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
-      <a href="reference-board.html" class="gnb-link">경쟁사 레퍼런스</a>
-    </nav>
+    <div class="gnb-bar">
+      <a href="index.html" class="gnb-logo"><img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brand/logo-light-gcPEzK4Ez4ul5UoqPEgzduhWnrZSe3.png" alt="디자인 히어로"></a>
+      <nav class="gnb">
+        <a href="index.html" class="gnb-link active">디자인 체크리스트</a><span class="gnb-sep">|</span>
+        <a href="guide.html" class="gnb-link">브랜드 가이드</a><span class="gnb-sep">|</span>
+        <a href="media-guide.html" class="gnb-link">매체 가이드</a><span class="gnb-sep">|</span>
+        <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a><span class="gnb-sep">|</span>
+        <a href="reference-board.html" class="gnb-link">경쟁사 레퍼런스</a>
+      </nav>
+    </div>
     <div class="beta-badge">BETA</div>
     <h1>디자인 체크리스트</h1>
     <p class="hero-sub">시안 이미지를 올리면 19개 항목을 자동으로 점검하고, 체크리스트에 바로 반영합니다.<br>AI가 이미지를 보고 프로모션, 브랜딩, 커머스 등 자동 분류하여 점검합니다.</p>
