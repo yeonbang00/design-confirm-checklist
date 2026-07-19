@@ -42,7 +42,7 @@
 //   },
 // }
 
-import { getDynamicBrands } from './_brandListStore.js';
+import { getDynamicBrands, getHiddenCuratedIds } from './_brandListStore.js';
 
 export const ADVERTISERS = {
   'uplus': {
@@ -69,11 +69,14 @@ export const ADVERTISERS = {
 };
 
 // Merges the curated ADVERTISERS above with brands added live from the
-// browser, so every caller sees one list regardless of where a brand's
-// entry actually lives.
+// browser, minus any curated brands hidden via the "삭제" button, so every
+// caller sees one list regardless of where a brand's entry actually lives.
 export async function getAllAdvertisers() {
-  const dynamic = await getDynamicBrands();
-  const merged = { ...ADVERTISERS };
+  const [dynamic, hidden] = await Promise.all([getDynamicBrands(), getHiddenCuratedIds()]);
+  const merged = {};
+  for (const [id, a] of Object.entries(ADVERTISERS)) {
+    if (!hidden.includes(id)) merged[id] = a;
+  }
   for (const b of dynamic) {
     merged[b.id] = { name: b.name, note: b.note, images: b.images || [], isCustom: true };
   }
@@ -82,7 +85,10 @@ export async function getAllAdvertisers() {
 
 export async function getAdvertiser(id) {
   if (!id) return null;
-  if (ADVERTISERS[id]) return ADVERTISERS[id];
+  if (ADVERTISERS[id]) {
+    const hidden = await getHiddenCuratedIds();
+    return hidden.includes(id) ? null : ADVERTISERS[id];
+  }
   const dynamic = await getDynamicBrands();
   const found = dynamic.find(b => b.id === id);
   return found ? { name: found.name, note: found.note, images: found.images || [], isCustom: true } : null;

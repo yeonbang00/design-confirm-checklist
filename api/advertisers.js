@@ -12,15 +12,17 @@
 //
 // DELETE /api/advertisers
 // Body: { id: string, editPassword: string }
-// Removes a brand that was added live (isCustom: true). Curated brands
-// defined in _referenceBanners.js can't be deleted this way — they have
-// real reference images attached and are managed in code, same as before.
+// Removes a brand. Brands added live (isCustom: true) are removed outright.
+// Curated brands defined in _referenceBanners.js (e.g. 유플러스) can't be
+// removed from git at runtime, so deleting one instead hides it — it (and
+// its reference images) stay intact, just filtered out of every list (see
+// _brandListStore.js's hideCuratedBrand()).
 //
 // Both write methods piggyback on this existing route (instead of new
 // endpoint files) to stay under Vercel Hobby's serverless function limit.
 
 import { getAllAdvertisers } from './_referenceBanners.js';
-import { addDynamicBrand, removeDynamicBrand } from './_brandListStore.js';
+import { addDynamicBrand, removeDynamicBrand, hideCuratedBrand } from './_brandListStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 export default async function handler(req, res) {
@@ -93,10 +95,16 @@ export default async function handler(req, res) {
     }
 
     try {
-      const removed = await removeDynamicBrand(id);
-      if (!removed) {
-        res.status(400).json({ error: '삭제할 수 없는 브랜드입니다. 기본 등록된 브랜드는 코드로 관리돼요.' });
+      const advertisersMap = await getAllAdvertisers();
+      const target = advertisersMap[id];
+      if (!target) {
+        res.status(400).json({ error: '존재하지 않는 브랜드입니다.' });
         return;
+      }
+      if (target.isCustom) {
+        await removeDynamicBrand(id);
+      } else {
+        await hideCuratedBrand(id);
       }
       res.status(200).json({ ok: true });
     } catch (err) {

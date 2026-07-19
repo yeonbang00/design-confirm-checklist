@@ -1,6 +1,6 @@
 // Brands added directly from guide.html's "+ 브랜드 추가" UI, layered on
 // top of the curated ADVERTISERS in _referenceBanners.js (see
-// getAllAdvertisers()/getAdvertiser() there). Stored as one JSON list in
+// getAllAdvertisers()/getAdvertiser() there). Stored as one JSON file in
 // Vercel Blob at a fixed, overwritable path, so the app always knows where
 // to find it without a database.
 //
@@ -10,54 +10,85 @@
 // the existing live brand-guide-state flow (api/_brandGuideStore.js) like
 // any other brand.
 //
+// This file also tracks which CURATED brands (the ones hardcoded in
+// _referenceBanners.js, like 유플러스) have been hidden via the "삭제"
+// button. Curated brands can't be deleted from git at runtime, so
+// "deleting" one here just adds its id to hiddenCuratedIds — the brand
+// and its reference images stay intact in Blob/code, they're just filtered
+// out of every list. Un-hiding isn't exposed in the UI (ask Claude to
+// remove the id from this file's stored JSON if a curated brand needs to
+// come back).
+//
 // Protected by the same shared BRAND_GUIDE_EDIT_PASSWORD as guide editing
-// (see api/advertisers.js's POST handler) since adding a brand is also a
-// write action.
+// (see api/advertisers.js's POST/DELETE handlers) since both adding and
+// deleting a brand are write actions.
 
 import { put } from './_blobPut.js';
 
 const BLOB_PUBLIC_BASE = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com';
 const LIST_URL = `${BLOB_PUBLIC_BASE}/brand-list.json`;
 
-export async function getDynamicBrands() {
+async function readStore() {
   try {
     const resp = await fetch(LIST_URL, { cache: 'no-store' });
-    if (!resp.ok) return [];
+    if (!resp.ok) return { brands: [], hiddenCuratedIds: [] };
     const data = await resp.json();
-    return Array.isArray(data.brands) ? data.brands : [];
+    return {
+      brands: Array.isArray(data.brands) ? data.brands : [],
+      hiddenCuratedIds: Array.isArray(data.hiddenCuratedIds) ? data.hiddenCuratedIds : [],
+    };
   } catch (e) {
-    return [];
+    return { brands: [], hiddenCuratedIds: [] };
   }
+}
+
+async function writeStore(store) {
+  const bytes = Buffer.from(JSON.stringify(store), 'utf-8');
+  await put('brand-list.json', bytes, 'application/json', { allowOverwrite: true });
 }
 
 function makeBrandId() {
   return 'custom-' + Math.random().toString(36).slice(2, 10);
 }
 
+export async function getDynamicBrands() {
+  const store = await readStore();
+  return store.brands;
+}
+
+export async function getHiddenCuratedIds() {
+  const store = await readStore();
+  return store.hiddenCuratedIds;
+}
+
 export async function addDynamicBrand(name) {
-  const brands = await getDynamicBrands();
+  const store = await readStore();
   const entry = {
     id: makeBrandId(),
     name,
     note: '아직 기준 배너가 등록되지 않았습니다.',
     images: [],
   };
-  const bytes = Buffer.from(JSON.stringify({ brands: [...brands, entry] }), 'utf-8');
-  await put('brand-list.json', bytes, 'application/json', { allowOverwrite: true });
+  store.brands = [...store.brands, entry];
+  await writeStore(store);
   return entry;
 }
 
-// Only removes brands from this dynamic list — curated brands in
-// _referenceBanners.js (ADVERTISERS) aren't touched here, since they have
-// real reference images attached and are managed in code. The brand's
-// guide-state JSON in Blob is left in place (harmless orphan, not exposed
-// once the brand itself is gone) rather than also deleted, to keep this
-// simple.
+// Removes a brand that was itself added live (isCustom: true).
 export async function removeDynamicBrand(id) {
-  const brands = await getDynamicBrands();
-  if (!brands.some((b) => b.id === id)) return false;
-  const next = brands.filter((b) => b.id !== id);
-  const bytes = Buffer.from(JSON.stringify({ brands: next }), 'utf-8');
-  await put('brand-list.json', bytes, 'application/json', { allowOverwrite: true });
+  const store = await readStore();
+  if (!store.brands.some((b) => b.id === id)) return false;
+  store.brands = store.brands.filter((b) => b.id !== id);
+  await writeStore(store);
+  return true;
+}
+
+// "Deletes" a curated brand (defined in _referenceBanners.js) by hiding it
+// everywhere without touching git or its Blob-hosted reference images.
+export async function hideCuratedBrand(id) {
+  const store = await readStore();
+  if (store.hiddenCuratedIds.includes(id)) return false;
+  store.hiddenCuratedIds = [...store.hiddenCuratedIds, id];
+  await writeStore(store);
   return true;
 }
