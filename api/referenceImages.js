@@ -2,7 +2,7 @@
 // Returns the reference images (with brand name + caption + Blob URLs)
 // for ONE category, on demand. Kept separate from referenceCategories.js
 // so that list stays light — this is only called when someone actually
-// selects a category on the 경쟁사 레퍼런스 page. Images live in Vercel
+// selects a category on the 이미지 레퍼런스 page. Images live in Vercel
 // Blob Storage (see _referenceLibrary.js) so both thumbUrl and fullUrl
 // are returned directly — no separate "full image" endpoint needed since
 // URLs are cheap; the browser only fetches the actual bytes when an

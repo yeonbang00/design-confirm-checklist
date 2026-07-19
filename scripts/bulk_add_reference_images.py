@@ -1,4 +1,4 @@
-"""Bulk-add competitor reference images from a folder.
+"""Bulk-add reference images (competitor ads or NHN's own work) from a folder.
 
 Drop image files named {카테고리}_{브랜드}_{번호}.jpg (e.g. 금융_DB_01.jpg)
 into a folder and run this once — each file is resized, uploaded to Blob,
@@ -6,6 +6,11 @@ and inserted into api/_referenceLibrary.js under the matching category.
 카테고리 must match one of the Korean category names already in
 _referenceLibrary.js (금융, 패션, 화장품/뷰티, 통신, 식품/외식, 쇼핑/커머스,
 여행, 가전/IT, 자동차, 교육, 헬스케어/제약, 부동산, 게임/엔터).
+
+If the image is a material NHN itself produced (not a competitor ad), add
+"NHN" as an extra underscore segment anywhere after the brand, e.g.
+금융_하나카드_NHN_02.jpg — this marks the entry `ownWork: true`, which shows
+a small "NHN" badge on the card in the UI.
 
 Usage: python3 scripts/bulk_add_reference_images.py ~/Desktop/새배너모음/
 """
@@ -72,6 +77,7 @@ def main():
             continue
 
         category_name, brand = parts[0], parts[1]
+        own_work = any(p.strip().upper() == "NHN" for p in parts[2:])
         category_id = name_to_id.get(category_name)
         if not category_id:
             print(f"건너뜀 (알 수 없는 카테고리 '{category_name}'): {fname}")
@@ -79,7 +85,8 @@ def main():
             continue
 
         path = os.path.join(folder, fname)
-        print(f"처리 중: {fname} (카테고리: {category_name} -> {category_id}, 브랜드: {brand})")
+        tag = " [NHN 자체 제작]" if own_work else ""
+        print(f"처리 중: {fname} (카테고리: {category_name} -> {category_id}, 브랜드: {brand}){tag}")
 
         thumb_bytes, full_bytes = resize_image(path)
         slug = slugify(stem)
@@ -89,7 +96,8 @@ def main():
         brand_escaped = brand.replace('"', '\\"')
         new_item = (
             "{ brandName: \"" + brand_escaped + "\", note: \"\", "
-            "mimeType: \"image/jpeg\", thumbUrl: \"" + thumb_url + "\", fullUrl: \"" + full_url + "\" }"
+            "mimeType: \"image/jpeg\", thumbUrl: \"" + thumb_url + "\", fullUrl: \"" + full_url + "\""
+            + (", ownWork: true" if own_work else "") + " }"
         )
 
         text = open(_DATA_FILE, "r").read()

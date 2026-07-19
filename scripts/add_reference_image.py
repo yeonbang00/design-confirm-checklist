@@ -34,6 +34,7 @@ def main():
     parser.add_argument("--brand", required=True, help="브랜드명, e.g. 신한카드")
     parser.add_argument("--note", default="", help="한 줄 메모")
     parser.add_argument("--file", required=True, help="원본 이미지 파일 경로")
+    parser.add_argument("--own-work", action="store_true", help="NHN이 직접 제작한 소재면 지정 (카드에 NHN 배지 표시)")
     args = parser.parse_args()
 
     src = os.path.expanduser(args.file)
@@ -54,7 +55,8 @@ def main():
     brand_escaped = args.brand.replace('"', '\\"')
     new_item = (
         "{ brandName: \"" + brand_escaped + "\", note: \"" + note_escaped + "\", "
-        "mimeType: \"image/jpeg\", thumbUrl: \"" + thumb_url + "\", fullUrl: \"" + full_url + "\" }"
+        "mimeType: \"image/jpeg\", thumbUrl: \"" + thumb_url + "\", fullUrl: \"" + full_url + "\""
+        + (", ownWork: true" if args.own_work else "") + " }"
     )
 
     with open(_DATA_FILE, "r") as f:
