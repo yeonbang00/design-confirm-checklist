@@ -155,9 +155,9 @@
     <div class="dropzone" id="dropzone">
       <div class="dz-icon">＋</div>
       <div class="dz-title">이미지를 캡처해서 올려주세요</div>
-      <div class="dz-sub">기획안 슬라이드를 캡처한 이미지, 여러 장 선택 가능 (최대 12장)</div>
+      <div class="dz-sub">기획안 슬라이드를 캡처한 이미지 1장을 올려주세요</div>
     </div>
-    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple hidden>
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
 
     <div class="scan-container" id="scanContainer">
       <div class="thumb-grid" id="thumbGrid"></div>
@@ -208,7 +208,7 @@
 
   const ALLOWED = ['image/png','image/jpeg','image/webp'];
   const MAX_BYTES = 8*1024*1024;
-  const MAX_FILES = 12;
+  const MAX_FILES = 1;
   let selectedFiles = [];
 
   function setStatus(msg, isLoading){

@@ -38,13 +38,13 @@ export const MEDIA_GUIDES = {
     sourceUrl: 'https://www.facebook.com/business/help/980593475366490?id=1240182842783684',
     sourceFile: null,
     specs: [
-      { label: '릴스 이미지', size: '1440 x 2560px 이상 (9:16)', format: null, maxSize: null },
+      { label: '릴스 이미지', size: '1080 x 1920px (9:16)', format: null, maxSize: null },
     ],
     guideline: `[메타 릴스(Reels) 이미지 광고 소재 기준]
 ※ 메타 공식 페이지(facebook.com/business/help) 직접 열람이 불가해, 해당 페이지를 인용하는 복수의 신뢰할 수 있는 소스를 교차 확인해 정리한 내용입니다. 세이프존 수치와 비율은 여러 소스에서 일치했지만, 정확한 최신 기준은 담당자가 메타 공식 페이지에서 한 번 더 확인하는 것을 권장합니다.
 
 - 화면 비율: 9:16 세로 전체화면 (가로/정사각형 불가)
-- 권장 최소 해상도: 1440 x 2560px
+- 제작 해상도: 1080 x 1920px (팀 실제 제작 기준)
 - 세이프존(반드시 텍스트·로고·CTA를 피해야 하는 영역): 상단 14%, 하단 35%, 좌우 각 6%
   · 상단: 프로필·사운드 아이콘이 겹침
   · 하단: CTA 버튼, 계정명, 설명 텍스트가 겹침 — 특히 하단 35%는 매우 넓으니 주의

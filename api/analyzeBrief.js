@@ -50,8 +50,8 @@ export default async function handler(req, res) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
   }
-  if (images.length > 12) {
-    res.status(400).json({ error: '이미지는 한 번에 최대 12장까지 분석할 수 있습니다.' });
+  if (images.length > 1) {
+    res.status(400).json({ error: '기획안 이미지는 1장만 업로드할 수 있습니다.' });
     return;
   }
 

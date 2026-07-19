@@ -42,6 +42,18 @@ export const CHECKLIST_ITEMS = [
     promptText: '타이틀과 본문의 타이포 계층이 명확해야 하며, 폰트는 2~3종 이내로 통일해야 한다.',
   },
   {
+    id: 'logo_min_size',
+    section: 'vi',
+    label: '로고가 알아보기 어려울 만큼 작게 축소되지 않음',
+    promptText: '로고가 배너 크기 대비 지나치게 작게 축소되어 알아보기 어려운 상태가 아니어야 한다.',
+  },
+  {
+    id: 'logo_consistent_position',
+    section: 'vi',
+    label: '로고 위치가 배너마다 일관됨',
+    promptText: '로고는 배너마다 일관된 위치에 배치되어야 한다.',
+  },
+  {
     id: 'branding_no_cta_penalty',
     section: 'usp',
     label: '브랜딩 유형은 CTA 없어도 반려하지 않음 (톤·메시지 전달력 위주로 평가)',
@@ -58,6 +70,24 @@ export const CHECKLIST_ITEMS = [
     section: 'quality',
     label: '복잡한 콜라주·과도한 장식 지양, 하나의 명확한 톤으로 정리',
     promptText: '복잡한 콜라주나 목적 없는 과도한 장식을 지양하고, 메인 이미지는 하나의 명확한 톤으로 정리되어야 한다.',
+  },
+  {
+    id: 'pixel_alignment',
+    section: 'quality',
+    label: '픽셀 정렬이 정확하고 여백이 고르게 정리됨',
+    promptText: '픽셀 정렬이 정확하고 여백이 고르게 정리되어 있어야 한다.',
+  },
+  {
+    id: 'resolution_sharp',
+    section: 'quality',
+    label: '저해상도로 깨지거나 흐릿하지 않음',
+    promptText: '이미지가 저해상도로 깨지거나 흐릿하지 않고 선명해야 한다.',
+  },
+  {
+    id: 'consistent_radius',
+    section: 'quality',
+    label: '버튼·카드·아이콘 모서리 radius가 일관됨',
+    promptText: '버튼·카드·아이콘 등의 모서리 radius가 일관된 값으로 통일되어 있어야 한다.',
   },
 ];
 
