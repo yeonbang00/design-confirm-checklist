@@ -9,11 +9,18 @@
 // api/_brandListStore.js). Reuses the same shared edit password as guide
 // editing — there's no per-user login on this site, so this is the one
 // check standing between "anyone with the link" and adding brands.
-// Piggybacks on this existing route (instead of a new endpoint file) to
-// stay under Vercel Hobby's serverless function count limit.
+//
+// DELETE /api/advertisers
+// Body: { id: string, editPassword: string }
+// Removes a brand that was added live (isCustom: true). Curated brands
+// defined in _referenceBanners.js can't be deleted this way — they have
+// real reference images attached and are managed in code, same as before.
+//
+// Both write methods piggyback on this existing route (instead of new
+// endpoint files) to stay under Vercel Hobby's serverless function limit.
 
 import { getAllAdvertisers } from './_referenceBanners.js';
-import { addDynamicBrand } from './_brandListStore.js';
+import { addDynamicBrand, removeDynamicBrand } from './_brandListStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 export default async function handler(req, res) {
@@ -24,6 +31,7 @@ export default async function handler(req, res) {
       name: a.name,
       note: a.note || '',
       imageCount: (a.images || []).length,
+      isCustom: !!a.isCustom,
     }));
     res.status(200).json({ advertisers });
     return;
@@ -59,6 +67,38 @@ export default async function handler(req, res) {
       }
       const brand = await addDynamicBrand(trimmed);
       res.status(200).json({ ok: true, brand });
+    } catch (err) {
+      res.status(500).json({ error: err && err.message ? err.message : '알 수 없는 서버 오류' });
+    }
+    return;
+  }
+
+  if (req.method === 'DELETE') {
+    if (rejectIfNotSameOrigin(req, res)) return;
+
+    const expectedPassword = process.env.BRAND_GUIDE_EDIT_PASSWORD;
+    if (!expectedPassword) {
+      res.status(500).json({ error: '서버에 BRAND_GUIDE_EDIT_PASSWORD 환경변수가 설정되어 있지 않습니다.' });
+      return;
+    }
+
+    const { id, editPassword } = req.body || {};
+    if (editPassword !== expectedPassword) {
+      res.status(403).json({ error: '편집 비밀번호가 올바르지 않습니다.' });
+      return;
+    }
+    if (!id) {
+      res.status(400).json({ error: '삭제할 브랜드를 지정해주세요.' });
+      return;
+    }
+
+    try {
+      const removed = await removeDynamicBrand(id);
+      if (!removed) {
+        res.status(400).json({ error: '삭제할 수 없는 브랜드입니다. 기본 등록된 브랜드는 코드로 관리돼요.' });
+        return;
+      }
+      res.status(200).json({ ok: true });
     } catch (err) {
       res.status(500).json({ error: err && err.message ? err.message : '알 수 없는 서버 오류' });
     }

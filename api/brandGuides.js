@@ -26,6 +26,7 @@ export default async function handler(req, res) {
         name: a.name,
         note: a.note || '',
         imageCount: (a.images || []).length,
+        isCustom: !!a.isCustom,
         guideline: state.composedGuideline,
         checklist: state.checklist,
         customFields: state.customFields,

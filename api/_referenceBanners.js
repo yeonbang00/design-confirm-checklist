@@ -75,7 +75,7 @@ export async function getAllAdvertisers() {
   const dynamic = await getDynamicBrands();
   const merged = { ...ADVERTISERS };
   for (const b of dynamic) {
-    merged[b.id] = { name: b.name, note: b.note, images: b.images || [] };
+    merged[b.id] = { name: b.name, note: b.note, images: b.images || [], isCustom: true };
   }
   return merged;
 }
@@ -85,5 +85,5 @@ export async function getAdvertiser(id) {
   if (ADVERTISERS[id]) return ADVERTISERS[id];
   const dynamic = await getDynamicBrands();
   const found = dynamic.find(b => b.id === id);
-  return found ? { name: found.name, note: found.note, images: found.images || [] } : null;
+  return found ? { name: found.name, note: found.note, images: found.images || [], isCustom: true } : null;
 }

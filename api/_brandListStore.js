@@ -46,3 +46,18 @@ export async function addDynamicBrand(name) {
   await put('brand-list.json', bytes, 'application/json', { allowOverwrite: true });
   return entry;
 }
+
+// Only removes brands from this dynamic list — curated brands in
+// _referenceBanners.js (ADVERTISERS) aren't touched here, since they have
+// real reference images attached and are managed in code. The brand's
+// guide-state JSON in Blob is left in place (harmless orphan, not exposed
+// once the brand itself is gone) rather than also deleted, to keep this
+// simple.
+export async function removeDynamicBrand(id) {
+  const brands = await getDynamicBrands();
+  if (!brands.some((b) => b.id === id)) return false;
+  const next = brands.filter((b) => b.id !== id);
+  const bytes = Buffer.from(JSON.stringify({ brands: next }), 'utf-8');
+  await put('brand-list.json', bytes, 'application/json', { allowOverwrite: true });
+  return true;
+}
