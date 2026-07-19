@@ -42,6 +42,13 @@
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
   .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px; max-width:620px;}
 
+  .card{border-radius:14px; border:1px solid var(--card-border); background:var(--card); padding:20px;}
+  .card.coming-soon{border-style:dashed; border-color:var(--num-text); background:oklch(98% 0.008 260); text-align:center;}
+  .upload-coming-soon{margin-bottom:24px;}
+  .coming-soon-icon{font-size:26px; margin-bottom:8px;}
+  .coming-soon-badge{display:inline-block; font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:4px 12px; margin-bottom:10px;}
+  .coming-soon-text{font-size:13px; color:var(--text-3); line-height:1.7; max-width:420px; margin:0 auto;}
+
   .select-wrap{position:relative; margin-bottom:28px; max-width:420px;}
   .select-wrap select{
     width:100%; appearance:none; background:var(--card); border:1px solid oklch(84% 0.015 265);
@@ -101,7 +108,13 @@
   </div>
 
   <h1>이미지 레퍼런스</h1>
-  <p class="sub">업종별로 모아둔 이미지 레퍼런스예요. 구글 애즈 트랜스페어런시 센터, 메타 광고 라이브러리 등에서 찾은 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간이에요. 팀이 제작한 소재는 카드 우측 상단에 <strong>NHN</strong> 표시가 붙어요.</p>
+  <p class="sub">업종별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간이에요. 팀이 제작한 소재는 카드 우측 상단에 <strong>NHN</strong> 표시가 붙어요.</p>
+
+  <div class="card coming-soon upload-coming-soon">
+    <div class="coming-soon-icon">🖼️</div>
+    <div class="coming-soon-badge">업데이트 예정</div>
+    <div class="coming-soon-text">이 사이트를 이용하는 팀원이 직접 이미지를 등록할 수 있는 기능이에요. 유료 플랜 결제 후 업데이트 예정입니다.</div>
+  </div>
 
   <div class="select-wrap">
     <select id="categorySelect">
