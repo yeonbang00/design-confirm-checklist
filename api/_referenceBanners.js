@@ -56,4 +56,14 @@ export const ADVERTISERS = {
     note: '아직 기준 배너가 등록되지 않았습니다.',
     images: [],
   },
+  'db-direct': {
+    name: 'DB다이렉트',
+    note: '아직 기준 배너가 등록되지 않았습니다.',
+    images: [],
+  },
+  'shinsegae-shopping': {
+    name: '신세계쇼핑',
+    note: '아직 기준 배너가 등록되지 않았습니다.',
+    images: [],
+  },
 };
