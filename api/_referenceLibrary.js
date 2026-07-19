@@ -86,7 +86,9 @@ export const REFERENCE_CATEGORIES = {
     ],
   },
   'beauty': { name: "화장품/뷰티", items: [] },
-  'telecom': { name: "통신", items: [] },
+  'telecom': { name: "통신", items: [
+      { brandName: "유플러스", note: "3개 OTT 로고를 입체적으로 배치한 비주얼과 마젠타 그라데이션 타이틀, 하단 소형 조건 안내문구(*) 배치 참고할만함", mimeType: "image/jpeg", thumbUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/telecom/%EC%9C%A0%ED%94%8C%EB%9F%AC%EC%8A%A4-thumb-oD2M3T14etfsDEAdam17dgjkznClUh.jpg", fullUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/telecom/%EC%9C%A0%ED%94%8C%EB%9F%AC%EC%8A%A4-full-ftvFFwH5D9F0i9ZBWH9WRhNaxLFZkf.jpg", ownWork: true },
+    ] },
   'food': { name: "식품/외식", items: [] },
   'travel': {
     name: "여행",
