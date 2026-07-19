@@ -44,12 +44,20 @@
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
   .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px; max-width:560px;}
 
-  .select-wrap{position:relative; margin-bottom:28px; max-width:420px;}
+  .select-wrap{position:relative; margin-bottom:12px; max-width:420px;}
   .select-wrap select{
     width:100%; appearance:none; background:var(--card); border:1px solid oklch(84% 0.015 265);
     border-radius:10px; padding:13px 40px 13px 16px; font-size:14.5px; font-weight:600; color:var(--text); cursor:pointer;
   }
   .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
+
+  .brand-add-row{display:flex; gap:8px; max-width:420px; margin-bottom:6px;}
+  .brand-add-row input{flex:1; padding:11px 14px; border:1px solid oklch(84% 0.015 265); border-radius:10px; font-size:13.5px; font-family:inherit; background:var(--card);}
+  .brand-add-btn{border:none; background:var(--num-bg); color:var(--num-text); border-radius:10px; padding:0 16px; cursor:pointer; font-size:13px; font-weight:700; flex-shrink:0; font-family:inherit; white-space:nowrap;}
+  .brand-add-btn:hover{opacity:0.85;}
+  .brand-add-status{font-size:12px; max-width:420px; min-height:14px; margin-bottom:22px;}
+  .brand-add-status.error{color:var(--danger);}
+  .brand-add-status.ok{color:var(--ok);}
 
   .brand-card{background:var(--card); border:1px solid var(--card-border); border-radius:20px; padding:32px;}
   .brand-head-row{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px;}
@@ -149,6 +157,12 @@
     </select>
     <svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1L7 7L13 1" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
   </div>
+
+  <div class="brand-add-row">
+    <input type="text" id="newBrandInput" placeholder="새 브랜드 이름 (예: 롯데카드)">
+    <button type="button" id="addBrandBtn" class="brand-add-btn">+ 브랜드 추가</button>
+  </div>
+  <div class="brand-add-status" id="brandAddStatus"></div>
 
   <div id="brandDetail">
     <div class="loading-msg">브랜드 가이드를 불러오는 중…</div>
@@ -450,19 +464,62 @@
           brandDetail.innerHTML = '<div class="gl-empty">등록된 브랜드가 없습니다.</div>';
           return;
         }
-        if(brandSelect.options.length <= 1){
-          brandsData.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id;
-            opt.textContent = b.name;
-            brandSelect.appendChild(opt);
-          });
-        }
-        currentBrandId = selectId || brandsData[0].id;
+        // Rebuild every time (not just on first load) so a brand added via
+        // "+ 브랜드 추가" shows up in the dropdown without a page refresh.
+        brandSelect.innerHTML = '<option value="">브랜드를 선택하세요</option>';
+        brandsData.forEach(b => {
+          const opt = document.createElement('option');
+          opt.value = b.id;
+          opt.textContent = b.name;
+          brandSelect.appendChild(opt);
+        });
+        const wanted = selectId || currentBrandId;
+        currentBrandId = (wanted && brandsData.some(b => b.id === wanted)) ? wanted : brandsData[0].id;
         brandSelect.value = currentBrandId;
         render();
       });
   }
+
+  function addNewBrand(){
+    const input = document.getElementById('newBrandInput');
+    const statusEl = document.getElementById('brandAddStatus');
+    const name = input.value.trim();
+    if(!name){
+      statusEl.textContent = '브랜드 이름을 입력해주세요.';
+      statusEl.className = 'brand-add-status error';
+      return;
+    }
+    const password = window.prompt('편집 비밀번호를 입력하세요');
+    if(password === null) return; // cancelled the prompt
+
+    statusEl.textContent = '추가하는 중…';
+    statusEl.className = 'brand-add-status';
+
+    fetch('/api/advertisers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, editPassword: password }),
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if(!ok){
+          statusEl.textContent = data.error || '추가에 실패했습니다.';
+          statusEl.className = 'brand-add-status error';
+          return;
+        }
+        input.value = '';
+        statusEl.textContent = '"' + name + '" 브랜드가 추가됐습니다.';
+        statusEl.className = 'brand-add-status ok';
+        const newId = data.brand && data.brand.id;
+        loadBrandsData(newId);
+      })
+      .catch(() => {
+        statusEl.textContent = '추가 중 오류가 발생했습니다. 다시 시도해주세요.';
+        statusEl.className = 'brand-add-status error';
+      });
+  }
+
+  document.getElementById('addBrandBtn').addEventListener('click', addNewBrand);
 
   function loadChecklistOptions(){
     return fetch('/api/brandGuideChecklistOptions')

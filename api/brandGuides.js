@@ -8,7 +8,7 @@
 // The guide content itself is no longer static — see
 // api/_brandGuideStore.js — so this fetches each brand's live state.
 
-import { ADVERTISERS } from './_referenceBanners.js';
+import { getAllAdvertisers } from './_referenceBanners.js';
 import { getBrandGuideState } from './_brandGuideStore.js';
 
 export default async function handler(req, res) {
@@ -18,7 +18,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const brands = await Promise.all(Object.entries(ADVERTISERS).map(async ([id, a]) => {
+    const advertisersMap = await getAllAdvertisers();
+    const brands = await Promise.all(Object.entries(advertisersMap).map(async ([id, a]) => {
       const state = await getBrandGuideState(id);
       return {
         id,

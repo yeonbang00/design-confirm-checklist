@@ -6,7 +6,7 @@
 // there's no per-user login on this site, so this is the one check standing
 // between "anyone with the link" and overwriting a brand's live guide.
 
-import { ADVERTISERS } from './_referenceBanners.js';
+import { getAdvertiser } from './_referenceBanners.js';
 import { saveBrandGuideState } from './_brandGuideStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   const { id, checklist, customFields, feedbackLog, editPassword } = req.body || {};
 
-  if (!id || !ADVERTISERS[id]) {
+  if (!id || !(await getAdvertiser(id))) {
     res.status(400).json({ error: '알 수 없는 브랜드입니다.' });
     return;
   }

@@ -20,7 +20,7 @@
 // It is never sent to, or reachable from, the browser.
 
 import { extractBriefDirection } from './_briefAnalysis.js';
-import { ADVERTISERS } from './_referenceBanners.js';
+import { getAdvertiser } from './_referenceBanners.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { getBrandGuideState } from './_brandGuideStore.js';
 
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const advertiser = advertiserId ? ADVERTISERS[advertiserId] : null;
+  const advertiser = advertiserId ? await getAdvertiser(advertiserId) : null;
   let brandContext = null;
   if (advertiser) {
     const { composedGuideline } = await getBrandGuideState(advertiserId);

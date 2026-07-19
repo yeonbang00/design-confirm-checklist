@@ -10,7 +10,7 @@
 // The Gemini API key lives ONLY in this server-side environment variable.
 // It is never sent to, or reachable from, the browser.
 
-import { ADVERTISERS } from './_referenceBanners.js';
+import { getAdvertiser } from './_referenceBanners.js';
 import { MEDIA_GUIDES } from './_mediaGuides.js';
 import { extractBriefDirection } from './_briefAnalysis.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
@@ -187,7 +187,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const advertiser = advertiserId ? ADVERTISERS[advertiserId] : null;
+  const advertiser = advertiserId ? await getAdvertiser(advertiserId) : null;
   const refImages = advertiser && Array.isArray(advertiser.images) ? advertiser.images : [];
   const hasComparison = refImages.length > 0;
 

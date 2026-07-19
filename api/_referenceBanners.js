@@ -22,6 +22,14 @@
 // kept in Vercel Blob (see api/_brandGuideStore.js and
 // api/_brandGuideChecklist.js), editable directly from guide.html.
 //
+// Brands can also be added live from guide.html's "+ 브랜드 추가" UI — those
+// don't live here, they're stored in Blob (see api/_brandListStore.js) and
+// layered on top of this curated list by getAllAdvertisers()/getAdvertiser()
+// below, so every caller sees one merged list regardless of where a given
+// brand's entry actually lives. Add a brand here only when you also have
+// real reference images to attach (e.g. via scripts/add_brand_image.py) —
+// otherwise just use the "+ 브랜드 추가" button on the page.
+//
 // Structure:
 // ADVERTISERS = {
 //   '<url-safe-id>': {
@@ -33,6 +41,8 @@
 //     ],
 //   },
 // }
+
+import { getDynamicBrands } from './_brandListStore.js';
 
 export const ADVERTISERS = {
   'uplus': {
@@ -46,16 +56,6 @@ export const ADVERTISERS = {
     { mimeType: 'image/jpeg', thumbUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brands/migrated-009-thumb-VkvqyQV5C4r3VuYbgEEg3fsBz6aJWZ.jpg", fullUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brands/migrated-010-full-GC3XYVbtPll2A5i5AV8GmCny0FuoqC.jpg" },
     ],
   },
-  'brand-b': {
-    name: '브랜드 B',
-    note: '아직 기준 배너가 등록되지 않았습니다.',
-    images: [],
-  },
-  'brand-c': {
-    name: '브랜드 C',
-    note: '아직 기준 배너가 등록되지 않았습니다.',
-    images: [],
-  },
   'db-direct': {
     name: 'DB다이렉트',
     note: '아직 기준 배너가 등록되지 않았습니다.',
@@ -67,3 +67,23 @@ export const ADVERTISERS = {
     images: [],
   },
 };
+
+// Merges the curated ADVERTISERS above with brands added live from the
+// browser, so every caller sees one list regardless of where a brand's
+// entry actually lives.
+export async function getAllAdvertisers() {
+  const dynamic = await getDynamicBrands();
+  const merged = { ...ADVERTISERS };
+  for (const b of dynamic) {
+    merged[b.id] = { name: b.name, note: b.note, images: b.images || [] };
+  }
+  return merged;
+}
+
+export async function getAdvertiser(id) {
+  if (!id) return null;
+  if (ADVERTISERS[id]) return ADVERTISERS[id];
+  const dynamic = await getDynamicBrands();
+  const found = dynamic.find(b => b.id === id);
+  return found ? { name: found.name, note: found.note, images: found.images || [] } : null;
+}

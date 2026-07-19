@@ -7,16 +7,16 @@
 // thumbUrl and fullUrl are returned directly — no separate "full image"
 // endpoint needed since URLs are cheap.
 
-import { ADVERTISERS } from './_referenceBanners.js';
+import { getAdvertiser } from './_referenceBanners.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
   const { id } = req.query || {};
-  const advertiser = id ? ADVERTISERS[id] : null;
+  const advertiser = id ? await getAdvertiser(id) : null;
 
   if (!advertiser) {
     res.status(404).json({ error: '브랜드를 찾을 수 없습니다.' });
