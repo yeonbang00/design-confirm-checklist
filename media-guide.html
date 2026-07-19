@@ -42,12 +42,27 @@
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
   .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px; max-width:560px;}
 
-  .select-wrap{position:relative; margin-bottom:28px; max-width:420px;}
+  .select-wrap{position:relative; margin-bottom:12px; max-width:420px;}
   .select-wrap select{
     width:100%; appearance:none; background:var(--card); border:1px solid oklch(84% 0.015 265);
     border-radius:10px; padding:13px 40px 13px 16px; font-size:14.5px; font-weight:600; color:var(--text); cursor:pointer;
   }
   .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
+
+  .media-add{max-width:420px; margin-bottom:28px;}
+  .media-add-toggle{font-size:12.5px; font-weight:700; color:var(--num-text); background:none; border:none; cursor:pointer; padding:0; font-family:inherit;}
+  .media-add-toggle:hover{opacity:0.8;}
+  .media-add-form{display:none; flex-direction:column; gap:8px; margin-top:10px; padding:16px; border:1px solid var(--card-border); border-radius:12px; background:var(--card);}
+  .media-add-form.show{display:flex;}
+  .media-add-form input[type="text"], .media-add-form input[type="url"]{
+    padding:10px 12px; border:1px solid oklch(84% 0.015 265); border-radius:8px; font-size:13px; font-family:inherit; background:var(--bg);
+  }
+  .media-add-form label{font-size:12px; color:var(--text-2); font-weight:600;}
+  .media-add-btn{align-self:flex-start; border:none; background:var(--num-bg); color:var(--num-text); border-radius:8px; padding:9px 16px; cursor:pointer; font-size:13px; font-weight:700; font-family:inherit;}
+  .media-add-btn:hover{opacity:0.85;}
+  .media-add-status{font-size:12px; min-height:14px;}
+  .media-add-status.error{color:var(--danger, #c0392b);}
+  .media-add-status.ok{color:var(--ok, #2e7d32);}
 
   .brand-card{background:var(--card); border:1px solid var(--card-border); border-radius:20px; padding:32px;}
   .brand-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
@@ -110,12 +125,26 @@
     <svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1L7 7L13 1" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
   </div>
 
+  <div class="media-add">
+    <button type="button" class="media-add-toggle" id="mediaAddToggle">+ 매체 추가</button>
+    <div class="media-add-form" id="mediaAddForm">
+      <label for="newMediaName">매체 이름</label>
+      <input type="text" id="newMediaName" placeholder="예: 데이블">
+      <label for="newMediaUrl">공식 가이드 URL (선택)</label>
+      <input type="url" id="newMediaUrl" placeholder="https://...">
+      <label for="newMediaFile">가이드 PDF 파일 (선택)</label>
+      <input type="file" id="newMediaFile" accept="application/pdf">
+      <button type="button" class="media-add-btn" id="addMediaBtn">추가</button>
+      <div class="media-add-status" id="mediaAddStatus"></div>
+    </div>
+  </div>
+
   <div id="mediaDetail">
     <div class="loading-msg">매체 가이드를 불러오는 중…</div>
   </div>
 
   <div class="page-footer">
-    이 페이지는 참고용입니다. 가이드 내용을 바꾸려면 팀과 상의 후 코드에 반영해주세요.
+    이름/URL/PDF는 팀이 직접 등록할 수 있어요. 실제 사이즈·기준 내용을 채우려면 등록 후 Claude에게 자료를 보내주세요.
   </div>
 </div>
 
@@ -209,29 +238,110 @@
     else mediaDetail.innerHTML = '';
   });
 
-  fetch('/api/mediaGuideDetails')
-    .then(r => {
-      if(!r.ok) throw new Error('status ' + r.status);
-      return r.json();
-    })
-    .then(data => {
-      mediaGuidesData = data.mediaGuides || [];
-      if(mediaGuidesData.length === 0){
-        mediaDetail.innerHTML = '<div class="gl-empty">등록된 매체가 없습니다.</div>';
-        return;
-      }
-      mediaGuidesData.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = m.name;
-        mediaSelect.appendChild(opt);
+  function loadMediaGuidesData(selectId){
+    return fetch('/api/mediaGuideDetails')
+      .then(r => {
+        if(!r.ok) throw new Error('status ' + r.status);
+        return r.json();
+      })
+      .then(data => {
+        mediaGuidesData = data.mediaGuides || [];
+        if(mediaGuidesData.length === 0){
+          mediaDetail.innerHTML = '<div class="gl-empty">등록된 매체가 없습니다.</div>';
+          return;
+        }
+        // Rebuild every time (not just on first load) so a media guide
+        // added via "+ 매체 추가" shows up in the dropdown right away.
+        mediaSelect.innerHTML = '<option value="">매체를 선택하세요</option>';
+        mediaGuidesData.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.id;
+          opt.textContent = m.name;
+          mediaSelect.appendChild(opt);
+        });
+        const wanted = selectId || mediaSelect.value;
+        const target = (wanted && mediaGuidesData.some(m => m.id === wanted)) ? wanted : mediaGuidesData[0].id;
+        mediaSelect.value = target;
+        renderMedia(target);
+      })
+      .catch(() => {
+        mediaDetail.innerHTML = '<div class="gl-empty">매체 가이드를 불러오지 못했습니다. api/mediaGuideDetails.js가 배포되었는지 확인해주세요.</div>';
       });
-      mediaSelect.value = mediaGuidesData[0].id;
-      renderMedia(mediaGuidesData[0].id);
-    })
-    .catch(() => {
-      mediaDetail.innerHTML = '<div class="gl-empty">매체 가이드를 불러오지 못했습니다. api/mediaGuideDetails.js가 배포되었는지 확인해주세요.</div>';
+  }
+
+  const mediaAddToggle = document.getElementById('mediaAddToggle');
+  const mediaAddForm = document.getElementById('mediaAddForm');
+  mediaAddToggle.addEventListener('click', () => {
+    mediaAddForm.classList.toggle('show');
+  });
+
+  function readFileAsBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = String(reader.result).split(',')[1];
+        if(!base64){ reject(new Error('파일을 읽지 못했습니다.')); return; }
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+      reader.readAsDataURL(file);
     });
+  }
+
+  document.getElementById('addMediaBtn').addEventListener('click', () => {
+    const nameInput = document.getElementById('newMediaName');
+    const urlInput = document.getElementById('newMediaUrl');
+    const fileInput = document.getElementById('newMediaFile');
+    const statusEl = document.getElementById('mediaAddStatus');
+
+    const name = nameInput.value.trim();
+    if(!name){
+      statusEl.textContent = '매체 이름을 입력해주세요.';
+      statusEl.className = 'media-add-status error';
+      return;
+    }
+
+    const password = window.prompt('편집 비밀번호를 입력하세요');
+    if(password === null) return; // cancelled the prompt
+
+    statusEl.textContent = '추가하는 중…';
+    statusEl.className = 'media-add-status';
+
+    const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    (file ? readFileAsBase64(file) : Promise.resolve(null))
+      .then(fileBase64 => fetch('/api/mediaGuides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          sourceUrl: urlInput.value.trim(),
+          fileBase64,
+          fileName: file ? file.name : undefined,
+          editPassword: password,
+        }),
+      }))
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if(!ok){
+          statusEl.textContent = data.error || '추가에 실패했습니다.';
+          statusEl.className = 'media-add-status error';
+          return;
+        }
+        nameInput.value = '';
+        urlInput.value = '';
+        fileInput.value = '';
+        statusEl.textContent = '"' + name + '" 매체가 추가됐습니다.';
+        statusEl.className = 'media-add-status ok';
+        const newId = data.mediaGuide && data.mediaGuide.id;
+        loadMediaGuidesData(newId);
+      })
+      .catch(() => {
+        statusEl.textContent = '추가 중 오류가 발생했습니다. 다시 시도해주세요.';
+        statusEl.className = 'media-add-status error';
+      });
+  });
+
+  loadMediaGuidesData();
 </script>
 </body>
 </html>

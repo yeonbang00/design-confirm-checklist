@@ -30,6 +30,14 @@
 // specs는 매체 가이드 페이지 상단에 눈에 띄는 스펙 카드로 보여주는 용도 —
 // 사이즈·파일형식·용량처럼 숫자로 딱 떨어지는 값만 뽑아서 채우고, 세이프존
 // 같은 서술형 기준은 guideline 텍스트 쪽에 그대로 둡니다.
+//
+// 팀원이 media-guide.html의 "+ 매체 추가"로 이름/URL/PDF만 직접 등록할 수도
+// 있습니다 — 이런 항목은 여기 코드에는 없고 Vercel Blob에 라이브 상태로
+// 저장되며(api/_mediaGuideListStore.js), guideline/specs는 비어있는 채로
+// 시작합니다. 실제 기준 내용을 채우려면 위 "HOW TO ADD A GUIDELINE" 절차와
+// 동일하게 PDF나 링크를 Claude에게 보내주세요.
+
+import { getDynamicMediaGuides } from './_mediaGuideListStore.js';
 
 export const MEDIA_GUIDES = {
   'meta-reels': {
@@ -240,3 +248,41 @@ export const MEDIA_GUIDES = {
     guideline: '',
   },
 };
+
+// Merges the curated MEDIA_GUIDES above with media guides added live from
+// the browser (media-guide.html "+ 매체 추가"), so every caller sees one
+// list regardless of where a media guide's entry actually lives.
+export async function getAllMediaGuides() {
+  const dynamic = await getDynamicMediaGuides();
+  const merged = { ...MEDIA_GUIDES };
+  for (const m of dynamic) {
+    merged[m.id] = {
+      name: m.name,
+      note: m.note,
+      sourceUrl: m.sourceUrl,
+      sourceFile: m.sourceFile,
+      specs: m.specs || [],
+      guideline: m.guideline || '',
+      isCustom: true,
+    };
+  }
+  return merged;
+}
+
+export async function getMediaGuide(id) {
+  if (!id) return null;
+  if (MEDIA_GUIDES[id]) return MEDIA_GUIDES[id];
+  const dynamic = await getDynamicMediaGuides();
+  const found = dynamic.find((m) => m.id === id);
+  return found
+    ? {
+        name: found.name,
+        note: found.note,
+        sourceUrl: found.sourceUrl,
+        sourceFile: found.sourceFile,
+        specs: found.specs || [],
+        guideline: found.guideline || '',
+        isCustom: true,
+      }
+    : null;
+}
