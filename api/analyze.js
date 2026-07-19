@@ -14,6 +14,7 @@ import { ADVERTISERS } from './_referenceBanners.js';
 import { MEDIA_GUIDES } from './_mediaGuides.js';
 import { extractBriefDirection } from './_briefAnalysis.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
+import { getBrandGuideState } from './_brandGuideStore.js';
 
 export const config = {
   api: {
@@ -190,7 +191,10 @@ export default async function handler(req, res) {
   const refImages = advertiser && Array.isArray(advertiser.images) ? advertiser.images : [];
   const hasComparison = refImages.length > 0;
 
-  const hasGuideline = !!(advertiser && advertiser.guideline);
+  // Brand guideline text is now live/editable (see _brandGuideStore.js),
+  // not a static field on ADVERTISERS — fetch it fresh for this request.
+  const brandGuidelineText = advertiser ? (await getBrandGuideState(advertiserId)).composedGuideline : '';
+  const hasGuideline = !!brandGuidelineText;
 
   const selectedMediaGuides = Array.isArray(mediaGuideIds)
     ? mediaGuideIds.map((id) => MEDIA_GUIDES[id]).filter(Boolean)
@@ -203,7 +207,7 @@ export default async function handler(req, res) {
   let briefError = null;
   if (Array.isArray(briefImages) && briefImages.length > 0) {
     try {
-      const brandContext = hasGuideline ? { name: advertiser.name, guideline: advertiser.guideline } : null;
+      const brandContext = hasGuideline ? { name: advertiser.name, guideline: brandGuidelineText } : null;
       briefDirection = await extractBriefDirection(briefImages, apiKey, brandContext);
     } catch (err) {
       briefError = '기획안 분석에 실패해 부합도 판정 없이 진행했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류');
@@ -215,7 +219,7 @@ export default async function handler(req, res) {
     BASE_PROMPT +
     (hasSize ? imageSizeInstruction(imageWidth, imageHeight, fileSizeBytes) : '') +
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
-    (hasGuideline ? brandGuidelineInstruction(advertiser.name, advertiser.guideline) : '') +
+    (hasGuideline ? brandGuidelineInstruction(advertiser.name, brandGuidelineText) : '') +
     (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides, hasSize) : '') +
     (hasBrief ? briefAlignmentInstruction(briefDirection) : '') +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief);

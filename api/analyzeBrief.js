@@ -22,6 +22,7 @@
 import { extractBriefDirection } from './_briefAnalysis.js';
 import { ADVERTISERS } from './_referenceBanners.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
+import { getBrandGuideState } from './_brandGuideStore.js';
 
 export const config = {
   api: {
@@ -55,7 +56,11 @@ export default async function handler(req, res) {
   }
 
   const advertiser = advertiserId ? ADVERTISERS[advertiserId] : null;
-  const brandContext = advertiser ? { name: advertiser.name, guideline: advertiser.guideline } : null;
+  let brandContext = null;
+  if (advertiser) {
+    const { composedGuideline } = await getBrandGuideState(advertiserId);
+    if (composedGuideline) brandContext = { name: advertiser.name, guideline: composedGuideline };
+  }
 
   try {
     const parsed = await extractBriefDirection(images, apiKey, brandContext);

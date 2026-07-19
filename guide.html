@@ -16,6 +16,8 @@
     --text-3: oklch(55% 0.015 265);
     --num-bg: oklch(93% 0.03 260);
     --num-text: oklch(35% 0.08 260);
+    --danger: oklch(55% 0.19 25);
+    --ok: oklch(48% 0.12 145);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -50,10 +52,17 @@
   .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
 
   .brand-card{background:var(--card); border:1px solid var(--card-border); border-radius:20px; padding:32px;}
-  .brand-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
+  .brand-head-row{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px;}
+  .brand-head{display:flex; align-items:baseline; flex-wrap:wrap; gap:8px;}
   .brand-name{font-size:19px; font-weight:700;}
   .brand-count{font-size:12px; color:var(--text-3); white-space:nowrap;}
   .brand-note{font-size:13px; color:var(--text-2); margin-bottom:20px;}
+
+  .btn-row{display:flex; gap:8px; flex-shrink:0;}
+  .edit-btn{font-size:12.5px; font-weight:700; color:var(--num-text); background:var(--num-bg); border:none; border-radius:20px; padding:8px 16px; cursor:pointer; white-space:nowrap; font-family:inherit;}
+  .edit-btn:hover{opacity:0.85;}
+  .edit-btn.cancel{color:var(--text-2); background:oklch(93% 0.008 85);}
+  .edit-btn.save{color:#fff; background:var(--num-text);}
 
   .spec-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:22px;}
   .spec-card{border:1.5px solid var(--num-text); border-radius:14px; padding:14px 16px; background:var(--num-bg);}
@@ -63,9 +72,33 @@
   .gl-empty{font-size:13.5px; color:var(--text-3); background:oklch(96% 0.008 85); border-radius:10px; padding:16px 18px;}
   .gl-heading{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin:18px 0 10px;}
   .gl-heading:first-child{margin-top:0;}
-  .gl-p{font-size:14px; line-height:1.8; color:var(--text); margin:0 0 12px;}
-  .gl-list{margin:0 0 14px; padding-left:20px;}
-  .gl-list li{font-size:14px; line-height:1.8; color:var(--text); margin-bottom:4px;}
+
+  .checked-list{margin:0 0 6px; padding-left:20px;}
+  .checked-list li{font-size:14px; line-height:1.9; color:var(--text);}
+
+  .feedback-list{list-style:none; margin:0 0 4px; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .feedback-item{font-size:13px; line-height:1.7; color:var(--text-2); background:oklch(96% 0.008 85); border-radius:10px; padding:10px 14px;}
+  .feedback-date{font-weight:700; color:var(--text); margin-right:6px;}
+
+  .edit-section{margin-bottom:8px;}
+  .edit-section-title{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin-bottom:8px;}
+  .check-row{display:flex; align-items:flex-start; gap:10px; padding:7px 2px; font-size:13.5px; color:var(--text); cursor:pointer;}
+  .check-row input{margin-top:3px; width:16px; height:16px; accent-color:var(--num-text); cursor:pointer; flex-shrink:0;}
+
+  .field-row{display:flex; gap:8px; margin-bottom:8px;}
+  .field-row input{padding:9px 12px; border:1px solid oklch(84% 0.015 265); border-radius:8px; font-size:13px; font-family:inherit; background:var(--card);}
+  .field-row .field-label{flex:0 0 150px;}
+  .field-row .field-value{flex:1;}
+  .field-remove{border:none; background:oklch(95% 0.05 25); color:var(--danger); width:34px; border-radius:8px; cursor:pointer; font-size:16px; flex-shrink:0;}
+  .add-field-btn{font-size:12.5px; color:var(--num-text); background:none; border:1.5px dashed var(--num-text); border-radius:8px; padding:9px 12px; cursor:pointer; width:100%; margin-bottom:18px; font-family:inherit;}
+
+  .feedback-add-row{display:flex; gap:8px; margin-top:10px;}
+  .feedback-add-row input{flex:1; padding:9px 12px; border:1px solid oklch(84% 0.015 265); border-radius:8px; font-size:13px; font-family:inherit; background:var(--card);}
+  .feedback-add-btn{border:none; background:var(--num-bg); color:var(--num-text); border-radius:8px; padding:0 16px; cursor:pointer; font-size:13px; font-weight:700; flex-shrink:0; font-family:inherit;}
+
+  .save-status{font-size:12.5px; margin-top:16px; min-height:16px;}
+  .save-status.error{color:var(--danger);}
+  .save-status.ok{color:var(--ok);}
 
   .page-footer{text-align:center; font-size:12px; color:var(--text-3); line-height:1.8; padding-top:28px;}
 
@@ -88,6 +121,8 @@
     .gnb-bar{gap:14px;}
     .gnb-sep{margin:0 8px;}
     .select-wrap{max-width:none;}
+    .field-row{flex-wrap:wrap;}
+    .field-row .field-label{flex:1 1 100%;}
   }
 </style>
 </head>
@@ -106,7 +141,7 @@
   </div>
 
   <h1>브랜드 가이드</h1>
-  <p class="sub">집중 비교에 등록된 브랜드별 디자인 가이드예요. 여기 내용은 배너를 분석할 때 AI가 참고하는 기준과 그대로 연결돼 있어요.</p>
+  <p class="sub">집중 비교에 등록된 브랜드별 디자인 가이드예요. 체크리스트와 필드는 팀이 직접 편집하면서 계속 고도화할 수 있고, 여기 내용은 배너를 분석할 때 AI가 참고하는 기준과 그대로 연결돼 있어요.</p>
 
   <div class="select-wrap">
     <select id="brandSelect">
@@ -120,7 +155,7 @@
   </div>
 
   <div class="page-footer">
-    이 페이지는 참고용입니다. 가이드 내용을 바꾸려면 팀과 상의 후 코드에 반영해주세요.
+    이 페이지는 팀이 직접 편집합니다. 편집 저장에는 공유 비밀번호가 필요해요.
   </div>
 </div>
 
@@ -131,48 +166,25 @@
 
 <script>
   function escapeHtml(s){
-    return String(s)
+    return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  function renderLines(lines){
-    const introLines = [];
-    const listLines = [];
-    let seenList = false;
-    for(const l of lines){
-      if(l.trim().startsWith('-')){ seenList = true; listLines.push(l); }
-      else if(!seenList){ introLines.push(l); }
-      else { listLines.push(l); }
-    }
-    let html = '';
-    const intro = introLines.join(' ').trim();
-    if(intro) html += '<p class="gl-p">' + escapeHtml(intro) + '</p>';
-    if(listLines.length){
-      html += '<ul class="gl-list">' + listLines.map(l =>
-        '<li>' + escapeHtml(l.trim().replace(/^-\s*/, '')) + '</li>'
-      ).join('') + '</ul>';
-    }
-    return html;
-  }
-
-  function formatGuideline(text){
-    const paragraphs = text.split(/\n\n+/);
-    return paragraphs.map(p => {
-      const lines = p.split('\n');
-      if(lines[0].trim().startsWith('[') && lines[0].trim().endsWith(']')){
-        const header = lines[0].trim().slice(1, -1);
-        return '<div class="gl-heading">' + escapeHtml(header) + '</div>' + renderLines(lines.slice(1));
-      }
-      return renderLines(lines);
-    }).join('');
-  }
+  const SECTIONS = [
+    { key: 'color', title: '브랜드 컬러' },
+    { key: 'vi', title: '브랜드 VI (로고 / 타이포)' },
+    { key: 'usp', title: 'USP 전략 / 배너 유형별 기준' },
+    { key: 'quality', title: '디자인 퀄리티 기준' },
+  ];
 
   const brandSelect = document.getElementById('brandSelect');
   const brandDetail = document.getElementById('brandDetail');
   let brandsData = [];
-
+  let checklistOptions = [];
   let currentBrandId = null;
+  let editMode = false;
+  let editingDraft = null;
 
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImg');
@@ -190,36 +202,200 @@
   lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
 
-  function renderBrand(id){
-    currentBrandId = id;
-    const b = brandsData.find(x => x.id === id);
+  function render(){
+    if(editMode && editingDraft){ renderEdit(); return; }
+    const b = brandsData.find(x => x.id === currentBrandId);
     if(!b){ brandDetail.innerHTML = ''; return; }
+    renderView(b);
+  }
+
+  function renderView(b){
     const countLabel = b.imageCount > 0 ? ('참고 배너 ' + b.imageCount + '장 등록됨') : '참고 배너 없음';
-    let bodyHtml;
-    if(b.guideline && b.guideline.trim()){
-      bodyHtml = formatGuideline(b.guideline);
-    } else {
-      bodyHtml = '<div class="gl-empty">아직 이 브랜드의 가이드가 등록되지 않았습니다.</div>';
-    }
-    const galleryHtml = b.imageCount > 0
-      ? '<div class="gl-heading">참고 배너</div><div class="gallery-loading">이미지를 불러오는 중…</div><div class="gallery" id="gallery-' + b.id + '"></div>'
-      : '';
-    const specHtml = (b.specs && b.specs.length)
-      ? '<div class="spec-grid">' + b.specs.map(s =>
+
+    const checkedLabels = checklistOptions
+      .filter(o => b.checklist && b.checklist[o.id])
+      .map(o => o.label);
+    const checkedHtml = checkedLabels.length
+      ? '<div class="gl-heading">체크된 가이드 기준</div><ul class="checked-list">' + checkedLabels.map(l => '<li>' + escapeHtml(l) + '</li>').join('') + '</ul>'
+      : '<div class="gl-empty">아직 체크된 가이드 기준이 없습니다. "편집"을 눌러 채워보세요.</div>';
+
+    const specHtml = (b.customFields && b.customFields.length)
+      ? '<div class="spec-grid">' + b.customFields.map(s =>
           '<div class="spec-card"><div class="spec-card-label">' + escapeHtml(s.label) + '</div><div class="spec-card-value">' + escapeHtml(s.value) + '</div></div>'
         ).join('') + '</div>'
       : '';
+
+    const feedbackHtml = (b.feedbackLog && b.feedbackLog.length)
+      ? '<div class="gl-heading">광고주 피드백 이력</div><ul class="feedback-list">' + b.feedbackLog.slice().reverse().map(f =>
+          '<li class="feedback-item"><span class="feedback-date">' + escapeHtml(f.date) + '</span>' + escapeHtml(f.text) + '</li>'
+        ).join('') + '</ul>'
+      : '';
+
+    const galleryHtml = b.imageCount > 0
+      ? '<div class="gl-heading">참고 배너</div><div class="gallery-loading">이미지를 불러오는 중…</div><div class="gallery" id="gallery-' + b.id + '"></div>'
+      : '';
+
     brandDetail.innerHTML =
       '<div class="brand-card">' +
-      '<div class="brand-head"><span class="brand-name">' + escapeHtml(b.name) + '</span>' +
-      '<span class="brand-count">' + escapeHtml(countLabel) + '</span></div>' +
+      '<div class="brand-head-row">' +
+        '<div class="brand-head"><span class="brand-name">' + escapeHtml(b.name) + '</span>' +
+        '<span class="brand-count">' + escapeHtml(countLabel) + '</span></div>' +
+        '<div class="btn-row"><button type="button" class="edit-btn" id="editToggleBtn">편집</button></div>' +
+      '</div>' +
       (b.note ? '<div class="brand-note">' + escapeHtml(b.note) + '</div>' : '') +
       specHtml +
-      bodyHtml +
+      checkedHtml +
+      feedbackHtml +
       galleryHtml +
       '</div>';
 
+    document.getElementById('editToggleBtn').addEventListener('click', enterEdit);
     if(b.imageCount > 0) loadBrandImages(b.id);
+  }
+
+  function enterEdit(){
+    const b = brandsData.find(x => x.id === currentBrandId);
+    if(!b) return;
+    // Deep clone so in-progress edits never touch brandsData until saved —
+    // "취소" just discards editingDraft and re-renders from the pristine data.
+    editingDraft = JSON.parse(JSON.stringify(b));
+    if(!editingDraft.checklist) editingDraft.checklist = {};
+    if(!editingDraft.customFields) editingDraft.customFields = [];
+    if(!editingDraft.feedbackLog) editingDraft.feedbackLog = [];
+    editMode = true;
+    render();
+  }
+
+  // Reads the current DOM (checkboxes + custom field rows) back into
+  // editingDraft before any action that re-renders the edit form, so
+  // typed-but-unsaved values in other rows aren't lost.
+  function syncEditStateFromDom(){
+    const checklist = {};
+    document.querySelectorAll('[data-check-id]').forEach(cb => {
+      checklist[cb.dataset.checkId] = cb.checked;
+    });
+    editingDraft.checklist = checklist;
+
+    const rows = document.querySelectorAll('#fieldRows .field-row');
+    editingDraft.customFields = Array.from(rows).map(row => ({
+      label: row.querySelector('.field-label').value,
+      value: row.querySelector('.field-value').value,
+    }));
+  }
+
+  function renderEdit(){
+    const d = editingDraft;
+
+    const checklistHtml = SECTIONS.map(sec => {
+      const items = checklistOptions.filter(o => o.section === sec.key);
+      if(!items.length) return '';
+      const rows = items.map(o => {
+        const checked = !!d.checklist[o.id];
+        return '<label class="check-row"><input type="checkbox" data-check-id="' + escapeHtml(o.id) + '"' + (checked ? ' checked' : '') + '>' + escapeHtml(o.label) + '</label>';
+      }).join('');
+      return '<div class="edit-section"><div class="edit-section-title">' + escapeHtml(sec.title) + '</div>' + rows + '</div>';
+    }).join('');
+
+    const fieldsHtml = d.customFields.map((f, i) =>
+      '<div class="field-row" data-field-index="' + i + '">' +
+        '<input type="text" class="field-label" placeholder="항목명 (예: Primary 컬러)" value="' + escapeHtml(f.label) + '">' +
+        '<input type="text" class="field-value" placeholder="값 (예: #FA2993)" value="' + escapeHtml(f.value) + '">' +
+        '<button type="button" class="field-remove" aria-label="삭제">&times;</button>' +
+      '</div>'
+    ).join('');
+
+    const feedbackHtml = d.feedbackLog.length
+      ? '<ul class="feedback-list">' + d.feedbackLog.slice().reverse().map(f =>
+          '<li class="feedback-item"><span class="feedback-date">' + escapeHtml(f.date) + '</span>' + escapeHtml(f.text) + '</li>'
+        ).join('') + '</ul>'
+      : '<div class="gl-empty">등록된 피드백이 없습니다.</div>';
+
+    brandDetail.innerHTML =
+      '<div class="brand-card">' +
+      '<div class="brand-head-row">' +
+        '<div class="brand-head"><span class="brand-name">' + escapeHtml(d.name) + ' — 편집 중</span></div>' +
+        '<div class="btn-row"><button type="button" class="edit-btn cancel" id="cancelEditBtn">취소</button><button type="button" class="edit-btn save" id="saveEditBtn">저장</button></div>' +
+      '</div>' +
+      '<div class="gl-heading">가이드 기준 체크</div>' +
+      checklistHtml +
+      '<div class="gl-heading">커스텀 필드 (컬러 코드처럼 직접 입력이 필요한 값)</div>' +
+      '<div id="fieldRows">' + fieldsHtml + '</div>' +
+      '<button type="button" class="add-field-btn" id="addFieldBtn">+ 필드 추가</button>' +
+      '<div class="gl-heading">광고주 피드백</div>' +
+      feedbackHtml +
+      '<div class="feedback-add-row"><input type="text" id="newFeedbackInput" placeholder="새 피드백 내용을 입력하고 추가"><button type="button" class="feedback-add-btn" id="addFeedbackBtn">추가</button></div>' +
+      '<div class="save-status" id="saveStatus"></div>' +
+      '</div>';
+
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+      editMode = false;
+      editingDraft = null;
+      render();
+    });
+
+    document.getElementById('addFieldBtn').addEventListener('click', () => {
+      syncEditStateFromDom();
+      editingDraft.customFields.push({ label: '', value: '' });
+      renderEdit();
+    });
+
+    document.getElementById('fieldRows').addEventListener('click', (e) => {
+      const row = e.target.closest('.field-row');
+      if(row && e.target.classList.contains('field-remove')){
+        syncEditStateFromDom();
+        const idx = parseInt(row.dataset.fieldIndex, 10);
+        editingDraft.customFields.splice(idx, 1);
+        renderEdit();
+      }
+    });
+
+    document.getElementById('addFeedbackBtn').addEventListener('click', () => {
+      const input = document.getElementById('newFeedbackInput');
+      const text = input.value.trim();
+      if(!text) return;
+      syncEditStateFromDom();
+      editingDraft.feedbackLog.push({ date: new Date().toISOString().slice(0, 10), text });
+      renderEdit();
+    });
+
+    document.getElementById('saveEditBtn').addEventListener('click', saveDraft);
+  }
+
+  function saveDraft(){
+    syncEditStateFromDom();
+    const password = window.prompt('편집 비밀번호를 입력하세요');
+    if(password === null) return; // cancelled the prompt
+
+    const statusEl = document.getElementById('saveStatus');
+    statusEl.textContent = '저장 중…';
+    statusEl.className = 'save-status';
+
+    fetch('/api/saveBrandGuideState', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: editingDraft.id,
+        checklist: editingDraft.checklist,
+        customFields: editingDraft.customFields.filter(f => f.label && f.value),
+        feedbackLog: editingDraft.feedbackLog,
+        editPassword: password,
+      }),
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if(!ok){
+          statusEl.textContent = data.error || '저장에 실패했습니다.';
+          statusEl.className = 'save-status error';
+          return;
+        }
+        editMode = false;
+        editingDraft = null;
+        loadBrandsData(currentBrandId);
+      })
+      .catch(() => {
+        statusEl.textContent = '저장 중 오류가 발생했습니다. 다시 시도해주세요.';
+        statusEl.className = 'save-status error';
+      });
   }
 
   function loadBrandImages(id){
@@ -256,32 +432,47 @@
   }
 
   brandSelect.addEventListener('change', () => {
-    if(brandSelect.value) renderBrand(brandSelect.value);
+    editMode = false;
+    editingDraft = null;
+    if(brandSelect.value){ currentBrandId = brandSelect.value; render(); }
     else { currentBrandId = null; brandDetail.innerHTML = ''; }
   });
 
-  fetch('/api/brandGuides')
-    .then(r => {
-      if(!r.ok) throw new Error('status ' + r.status);
-      return r.json();
-    })
-    .then(data => {
-      brandsData = data.brands || [];
-      if(brandsData.length === 0){
-        brandDetail.innerHTML = '<div class="gl-empty">등록된 브랜드가 없습니다.</div>';
-        return;
-      }
-      brandsData.forEach(b => {
-        const opt = document.createElement('option');
-        opt.value = b.id;
-        opt.textContent = b.name;
-        brandSelect.appendChild(opt);
+  function loadBrandsData(selectId){
+    return fetch('/api/brandGuides')
+      .then(r => {
+        if(!r.ok) throw new Error('status ' + r.status);
+        return r.json();
+      })
+      .then(data => {
+        brandsData = data.brands || [];
+        if(brandsData.length === 0){
+          brandDetail.innerHTML = '<div class="gl-empty">등록된 브랜드가 없습니다.</div>';
+          return;
+        }
+        if(brandSelect.options.length <= 1){
+          brandsData.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.id;
+            opt.textContent = b.name;
+            brandSelect.appendChild(opt);
+          });
+        }
+        currentBrandId = selectId || brandsData[0].id;
+        brandSelect.value = currentBrandId;
+        render();
       });
-      brandSelect.value = brandsData[0].id;
-      renderBrand(brandsData[0].id);
-    })
+  }
+
+  function loadChecklistOptions(){
+    return fetch('/api/brandGuideChecklistOptions')
+      .then(r => r.json())
+      .then(data => { checklistOptions = data.items || []; });
+  }
+
+  Promise.all([loadChecklistOptions(), loadBrandsData()])
     .catch(() => {
-      brandDetail.innerHTML = '<div class="gl-empty">브랜드 가이드를 불러오지 못했습니다. api/brandGuides.js가 배포되었는지 확인해주세요.</div>';
+      brandDetail.innerHTML = '<div class="gl-empty">브랜드 가이드를 불러오지 못했습니다. API가 배포되었는지 확인해주세요.</div>';
     });
 </script>
 </body>

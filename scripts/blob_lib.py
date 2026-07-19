@@ -92,11 +92,17 @@ def resize_image(src_path: str) -> tuple[bytes, bytes]:
     return thumb_bytes, full_bytes
 
 
-def upload_to_blob(pathname: str, data: bytes, mime_type: str = "image/jpeg") -> str:
-    """Upload raw bytes to Vercel Blob at pathname, return the public URL."""
+def upload_to_blob(pathname: str, data: bytes, mime_type: str = "image/jpeg", allow_overwrite: bool = False) -> str:
+    """Upload raw bytes to Vercel Blob at pathname, return the public URL.
+
+    By default a random suffix is added so repeated uploads never collide
+    (used for images/PDFs). Pass allow_overwrite=True for state files that
+    need a stable, predictable URL (overwrites any existing blob at pathname).
+    """
     token = _load_token()
     url = f"{_BLOB_API_BASE}/?pathname={urllib.parse.quote(pathname)}"
 
+    suffix_header = "x-allow-overwrite: 1" if allow_overwrite else "x-add-random-suffix: 1"
     result = subprocess.run(
         [
             "curl", "-sS", "-X", "PUT", url,
@@ -104,7 +110,7 @@ def upload_to_blob(pathname: str, data: bytes, mime_type: str = "image/jpeg") ->
             "-H", f"authorization: Bearer {token}",
             "-H", f"x-api-version: {_API_VERSION}",
             "-H", f"x-content-type: {mime_type}",
-            "-H", "x-add-random-suffix: 1",
+            "-H", suffix_header,
             "--data-binary", "@-",
             "-w", "\n%{http_code}",
         ],
