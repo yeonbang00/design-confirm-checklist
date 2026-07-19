@@ -6,16 +6,15 @@
 // display. PDF files live in Vercel Blob Storage (see _mediaGuides.js) so
 // the URL is returned directly — no separate on-demand endpoint needed.
 
-import { getAllMediaGuides } from './_mediaGuides.js';
+import { MEDIA_GUIDES } from './_mediaGuides.js';
 
-export default async function handler(req, res) {
+export default function handler(req, res) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
-  const mediaGuidesMap = await getAllMediaGuides();
-  const mediaGuides = Object.entries(mediaGuidesMap).map(([id, m]) => ({
+  const mediaGuides = Object.entries(MEDIA_GUIDES).map(([id, m]) => ({
     id,
     name: m.name,
     note: m.note || '',

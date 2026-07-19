@@ -11,7 +11,7 @@
 // It is never sent to, or reachable from, the browser.
 
 import { getAdvertiser } from './_referenceBanners.js';
-import { getAllMediaGuides } from './_mediaGuides.js';
+import { MEDIA_GUIDES } from './_mediaGuides.js';
 import { extractBriefDirection } from './_briefAnalysis.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { getBrandGuideState } from './_brandGuideStore.js';
@@ -196,9 +196,8 @@ export default async function handler(req, res) {
   const brandGuidelineText = advertiser ? (await getBrandGuideState(advertiserId)).composedGuideline : '';
   const hasGuideline = !!brandGuidelineText;
 
-  const mediaGuidesMap = await getAllMediaGuides();
   const selectedMediaGuides = Array.isArray(mediaGuideIds)
-    ? mediaGuideIds.map((id) => mediaGuidesMap[id]).filter(Boolean)
+    ? mediaGuideIds.map((id) => MEDIA_GUIDES[id]).filter(Boolean)
     : [];
   const hasMediaGuides = selectedMediaGuides.length > 0;
 
