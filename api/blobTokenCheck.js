@@ -1,4 +1,4 @@
-// TEMPORARY diagnostic endpoint — GET /api/_blobTokenCheck
+// TEMPORARY diagnostic endpoint — GET /api/blobTokenCheck
 // Tries a real (tiny, harmless) Blob write using the same _blobPut.js
 // helper saveBrandGuideState.js uses, to verify BLOB_READ_WRITE_TOKEN
 // works in the deployed environment without needing the edit password.

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://api.github.com/repos/yeonbang00/design-confirm-checklist)",
+      "Bash(gh auth *)",
+      "Bash(git config *)",
+      "Bash(which gh *)",
+      "Bash(git ls-remote *)",
+      "Bash(git push *)",
+      "Bash(security find-internet-password *)",
+      "Bash(git --version)",
+      "Read(//usr/local/**)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(awk '{ if \\(length\\($0\\) < 200\\) print NR\": \"$0 }' api/_referenceLibrary.js)",
+      "Bash(awk '{ if \\(length\\($0\\) < 200\\) print NR\": \"$0 }' api/_referenceBanners.js)",
+      "Bash(awk '{ if \\(length\\($0\\) < 200\\) print NR\": \"$0 }' api/_mediaGuides.js)"
+    ]
+  }
+}
