@@ -47,7 +47,7 @@ import { getDynamicBrands, getHiddenCuratedIds } from './_brandListStore.js';
 export const ADVERTISERS = {
   'uplus': {
     name: '유플러스',
-    note: '성과 좋았던 배너 5건 등록됨',
+    note: '성과 좋았던 배너들을 기준으로 등록됨',
     images: [
     { mimeType: 'image/jpeg', thumbUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brands/migrated-001-thumb-yUz1x6kiOuWiOBOwoWh6poLUgUlZ75.jpg", fullUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brands/migrated-002-full-LP2bMrc74URSWUL4RDk6thmS0hzCea.jpg" },
     { mimeType: 'image/jpeg', thumbUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brands/migrated-003-thumb-lv0Zs8GJxWcVFxTfyVxYKUY6SeQv7P.jpg", fullUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brands/migrated-004-full-GDLJ7LxatwXphQXydaXphDjG4kmJ0s.jpg" },
