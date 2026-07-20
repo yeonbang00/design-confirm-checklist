@@ -15,7 +15,7 @@
 // If the image is a material NHN itself produced (not a competitor ad),
 // add "NHN" as an extra underscore segment anywhere after the brand, e.g.
 // 금융_하나카드_NHN_02.jpg — the import script marks it `ownWork: true`,
-// which shows a small "NHN" badge on the card in the UI so team-made work
+// which shows a small "NHN AD" badge on the card in the UI so team-made work
 // is visually distinguishable from competitor references at a glance.
 //
 // Image bytes live in Vercel Blob Storage, not in this file — only the
