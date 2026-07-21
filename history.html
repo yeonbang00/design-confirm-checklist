@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>디자인 히어로 | 히스토리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+    --danger: oklch(55% 0.19 25);
+    --ok: oklch(48% 0.12 145);
+  }
+  *{box-sizing:border-box;}
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
+
+  .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
+  .gnb-bar{display:flex; align-items:center; gap:40px; margin-bottom:40px; flex-wrap:wrap;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo img{height:20px; width:auto; display:block;}
+  .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
+  .gnb-link:hover{color:var(--text);}
+  .gnb-link.active{color:var(--num-text); font-weight:700;}
+
+  h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px;}
+
+  .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
+  .gl-empty{font-size:13.5px; color:var(--text-3); background:oklch(96% 0.008 85); border-radius:10px; padding:20px 18px; line-height:1.7;}
+
+  .history-list{display:flex; flex-direction:column; gap:10px;}
+  .history-item{display:flex; align-items:flex-start; gap:14px; background:var(--card); border:1px solid var(--card-border); border-radius:14px; padding:16px 18px;}
+  .history-main{flex:1; min-width:0;}
+  .history-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:5px;}
+  .history-date{font-size:12px; color:var(--text-3); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .history-category{font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:3px 10px; white-space:nowrap;}
+  .history-desc{font-size:14px; color:var(--text); line-height:1.6;}
+  .history-delete{flex-shrink:0; font-size:12px; font-weight:700; color:var(--danger); background:oklch(95% 0.05 25); border:none; border-radius:8px; padding:7px 12px; cursor:pointer; white-space:nowrap; font-family:inherit;}
+  .history-delete:hover{opacity:0.85;}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar{gap:16px;}
+    .gnb{gap:12px;}
+    .history-item{flex-direction:column;}
+    .history-delete{align-self:flex-end;}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="gnb-bar">
+    <a href="index.html" class="gnb-logo"><img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/brand/logo-dark-aQv7KnQfdnikXjQX7xuwRqSxNvw7GG.png" alt="디자인 히어로"></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <a href="guide.html" class="gnb-link">브랜드 가이드</a>
+      <a href="media-guide.html" class="gnb-link">매체 가이드</a>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      <a href="history.html" class="gnb-link active">히스토리</a>
+    </nav>
+  </div>
+
+  <h1>히스토리</h1>
+  <p class="sub">체크리스트 판정 로직, 브랜드·매체 가이드 등 실질적인 업데이트 내역이에요. 여백·정렬 같은 화면 다듬기는 여기 남기지 않아요.</p>
+
+  <div id="historyList">
+    <div class="loading-msg">히스토리를 불러오는 중…</div>
+  </div>
+</div>
+
+<script>
+  function escapeHtml(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function formatDate(iso){
+    const d = new Date(iso);
+    if(isNaN(d.getTime())) return iso;
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  const historyList = document.getElementById('historyList');
+
+  function render(entries){
+    if(entries.length === 0){
+      historyList.innerHTML = '<div class="gl-empty">아직 등록된 히스토리가 없습니다.</div>';
+      return;
+    }
+    historyList.innerHTML = '<div class="history-list">' + entries.map(e =>
+      '<div class="history-item" data-id="' + escapeHtml(e.id) + '">' +
+        '<div class="history-main">' +
+          '<div class="history-top">' +
+            '<span class="history-date">' + escapeHtml(formatDate(e.date)) + '</span>' +
+            '<span class="history-category">' + escapeHtml(e.category) + '</span>' +
+          '</div>' +
+          '<div class="history-desc">' + escapeHtml(e.description) + '</div>' +
+        '</div>' +
+        '<button type="button" class="history-delete" data-id="' + escapeHtml(e.id) + '">삭제</button>' +
+      '</div>'
+    ).join('') + '</div>';
+  }
+
+  function loadHistory(){
+    return fetch('/api/referenceCategories?feed=history')
+      .then(r => {
+        if(!r.ok) throw new Error('status ' + r.status);
+        return r.json();
+      })
+      .then(data => render(data.entries || []))
+      .catch(() => {
+        historyList.innerHTML = '<div class="gl-empty">히스토리를 불러오지 못했습니다. api/referenceCategories.js가 배포되었는지 확인해주세요.</div>';
+      });
+  }
+
+  historyList.addEventListener('click', (e) => {
+    const btn = e.target.closest('.history-delete');
+    if(!btn) return;
+    const id = btn.dataset.id;
+    if(!window.confirm('이 히스토리 항목을 삭제할까요?')) return;
+    const password = window.prompt('편집 비밀번호를 입력하세요');
+    if(password === null) return;
+
+    btn.disabled = true;
+    btn.textContent = '삭제 중…';
+
+    fetch('/api/referenceCategories', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, editPassword: password }),
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if(!ok){
+          window.alert(data.error || '삭제에 실패했습니다.');
+          btn.disabled = false;
+          btn.textContent = '삭제';
+          return;
+        }
+        loadHistory();
+      })
+      .catch(() => {
+        window.alert('삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
+        btn.disabled = false;
+        btn.textContent = '삭제';
+      });
+  });
+
+  loadHistory();
+</script>
+</body>
+</html>
