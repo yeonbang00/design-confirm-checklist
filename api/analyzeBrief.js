@@ -1,6 +1,6 @@
 // POST /api/analyzeBrief
 // Body: { images: [{ base64: string, mediaType: string }, ...], advertiserId?: string }
-// Returns: { coreDirection, mustInclude, creativeDirection, pitfalls, briefGaps }
+// Returns: { coreDirection, creativeDirection, visualRefs, visualRefReason, pitfalls, briefGaps }
 //
 // This is separate from /api/analyze (which grades a FINISHED banner
 // against 19 checklist items). This endpoint instead reads a planning

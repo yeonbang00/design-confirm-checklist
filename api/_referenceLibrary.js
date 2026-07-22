@@ -221,3 +221,24 @@ export const REFERENCE_CATEGORIES = {
       { brandName: "옹진마켓", note: "보드게임 안주 과자 할인, 다품목 나열형", mimeType: "image/jpeg", thumbUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/food/%EC%98%B9%EC%A7%84%EB%A7%88%EC%BC%93-040-thumb-wCfgW1RmzJoIKsvHiI2Sg6EmSIfgYS.jpg", fullUrl: "https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/food/%EC%98%B9%EC%A7%84%EB%A7%88%EC%BC%93-040-full-rahz8XMeggnUZZtYNlm0vAan5xwg2Q.jpg" },
     ] },
 };
+
+// 기획안 헬퍼의 "비주얼 레퍼런스 추천" 기능에서 사용 — 이미지가 1장 이상
+// 있는 카테고리 목록(Gemini가 고를 수 있는 유효한 id만 프롬프트에 넣기 위함).
+export function listNonEmptyCategories() {
+  return Object.entries(REFERENCE_CATEGORIES)
+    .filter(([, cat]) => cat.items.length > 0)
+    .map(([id, cat]) => ({ id, name: cat.name }));
+}
+
+// 주어진 카테고리에서 최대 count장을 무작위로 골라 반환. 카테고리가
+// 없거나 비어 있으면 빈 배열.
+export function pickReferenceImages(categoryId, count) {
+  const cat = REFERENCE_CATEGORIES[categoryId];
+  if (!cat || !cat.items.length) return [];
+  const shuffled = [...cat.items];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count).map(({ brandName, note, thumbUrl, fullUrl }) => ({ brandName, note, thumbUrl, fullUrl }));
+}

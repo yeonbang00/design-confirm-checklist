@@ -5,14 +5,21 @@
 // - api/analyze.js: when a banner is uploaded together with a brief, to
 //   extract direction first and then judge whether the banner matches it
 
+import { listNonEmptyCategories, pickReferenceImages } from './_referenceLibrary.js';
+
 const GEMINI_MODEL = 'gemini-3.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const VISUAL_REF_COUNT = 3;
+
+function categoryListText() {
+  return listNonEmptyCategories().map((c) => `${c.id}(${c.name})`).join(', ');
+}
 
 const BRIEF_PROMPT_BODY = `다음 이미지는 배너 제작을 위한 기획안(PPT 캡처)입니다. 여러 장이라면 하나의 기획안으로 이어서 읽으세요.
 
 중요: 기획안 내용을 그대로 요약하거나 나열하지 마세요. 어차피 제작자가 기획안 원본을 직접 볼 수 있으니, 내용을 다시 읽어주는 건 의미가 없습니다. 대신 이 기획안을 바탕으로 "배너를 어떻게 만들면 더 잘 만들 수 있을지" 실질적인 제작 방향을 제시하세요. 기획안에 이미 나와 있는 필수 요소(상품명·가격·기간·로고 등)를 다시 나열하는 건 하지 마세요 — 제작자가 원본에서 이미 확인할 수 있는 정보입니다.
 
-다음 4가지를 각각 채우세요. 모두 자연스러운 구어체 한국어로 작성하세요:
+다음을 각각 채우세요. 모두 자연스러운 구어체 한국어로 작성하세요:
 
 - coreDirection: 이 배너가 궁극적으로 무엇을 전달해야 하는지, 제작 시 가장 먼저 잡아야 할 핵심 방향을 1~2문장으로. 단순 목적 나열이 아니라 "이런 인상을 주는 게 핵심이다" 같은 실전 조언 톤으로.
 
@@ -24,24 +31,24 @@ const BRIEF_PROMPT_BODY = `다음 이미지는 배너 제작을 위한 기획안
 [레이아웃 우선순위]
 - (가장 크게·먼저 배치해야 할 요소부터 순서대로 2~4개, 구체적인 배치 제안)
 
-[컬러·비주얼]
-- (컬러 톤, 이미지·그래픽 활용 방향에 대한 구체적 제안 2~3개)
-
 카피 제안 섹션은 기획안에 등장하는 배너 문구(헤드카피·서브카피 등)가 한 줄 배너에 담기엔 너무 길거나, 추상적·모호해서 그대로 쓰기 어려운 경우에만 추가하세요:
 
 [카피 제안]
 - (원본 카피의 어떤 부분이 길거나 추상적인지 짧게 짚고, 기획 의도와 제작 방향은 그대로 유지한 채 배너용으로 간결하게 다듬은 대안 카피를 큰따옴표로 1~2개 제시. 원본의 의미나 소재를 새로 지어내지 말고 표현만 다듬는 카피라이팅에 그치세요)
 
-원본 카피가 이미 배너 길이에 적합하고 명확하다면 [카피 제안] 섹션 자체를 통째로 생략하세요 — 억지로 고칠 카피를 만들어내지 마세요.
+원본 카피가 이미 배너 길이에 적합하고 명확하다면 [카피 제안] 섹션 자체를 통째로 생략하세요 — 억지로 고칠 카피를 만들어내지 마세요. 컬러·비주얼 방향은 creativeDirection에 쓰지 말고 아래 visualRefCategory/visualRefReason으로 대신하세요.
 
-- pitfalls: 이 기획안 특성상 제작자가 실제로 놓치기 쉬운 지점을 배열로 2~4개 작성하세요. 각 항목은 "무엇을 놓치기 쉬운지"와 "왜 그런지 또는 어떻게 방지하는지"를 함께 담아 20~40단어 정도로 구체적으로 쓰세요. "가독성에 유의하세요" 같은 일반론은 금지 — 반드시 이 기획안 내용에 실제로 근거한 지적이어야 합니다.
+- visualRefCategory: 이 기획안의 업종·톤에 가장 잘 맞는 카테고리 하나를 아래 목록에서 정확히 골라 id 그대로 쓰세요 (목록에 없는 값은 절대 쓰지 마세요): ${categoryListText()}
+- visualRefReason: 왜 그 카테고리·톤의 이미지가 이 기획안에 어울리는지 1문장, 30단어 이내로 (예: "미니멀한 톤에 제품 클로즈업 위주 레이아웃이 프리미엄 스킨케어 톤과 잘 맞아요"). 실제 참고 이미지 몇 장이 이 문장과 함께 제공될 예정이니 "찾아보세요"가 아니라 "이런 이유로 이 스타일이 어울립니다"는 어투로 쓰세요. 이 이미지들은 레이아웃·무드 참고용일 뿐이니, 컬러까지 그대로 따라야 한다는 뉘앙스는 넣지 마세요.
+
+- pitfalls: 이 기획안 특성상 제작자가 실제로 놓치기 쉬운 지점 중 가장 중요한 것 2개만 배열로 작성하세요. 각 항목은 "무엇을 놓치기 쉬운지"와 "왜 그런지 또는 어떻게 방지하는지"를 함께 담아 20~40단어 정도로 구체적으로 쓰세요. "가독성에 유의하세요" 같은 일반론은 금지 — 반드시 이 기획안 내용에 실제로 근거한 지적이어야 합니다.
 
 - briefGaps: 위 항목들과는 다른 관점입니다 — "배너를 어떻게 만들지"가 아니라 "이 기획안 자체에 부족하거나 애매한 부분이 있는지"를 짚으세요. 필수 정보 누락(가격·기간·타겟이 불명확함), 상충되는 지시사항, 제작에 필요한데 빠진 정보(사이즈·매체·마감일 등)가 있다면 무엇이 왜 문제인지 구체적으로 2~3문장으로 짚으세요. 기획안이 충분히 명확하고 빠진 게 없다면 "기획안 내용이 충분히 명확합니다"라고만 답하세요. 억지로 문제를 만들어내지 마세요.
 
 기획안에 명시되지 않아 확인이 필요한 부분은 추측해서 채우지 말고, 해당 필드에서 "기획안에 명시되지 않아 담당자 확인 필요"라고 분명히 표시하세요.`;
 
 const BRIEF_SCHEMA = `반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"coreDirection":"...","creativeDirection":"...","pitfalls":["...","..."],"briefGaps":"..."}`;
+{"coreDirection":"...","creativeDirection":"...","visualRefCategory":"...","visualRefReason":"...","pitfalls":["...","..."],"briefGaps":"..."}`;
 
 // 기획안은 팀이 경쟁사 레퍼런스·클립아트코리아·핀터레스트 등에서 스타일
 // 참고 이미지를 긁어와 만드는 경우가 많아서, 정작 그 레퍼런스의 색상/톤이
@@ -58,8 +65,12 @@ ${guideline}
 기획안에 포함된 레퍼런스 이미지(경쟁사 벤치마킹, 클립아트코리아, 핀터레스트 등에서 가져온 스타일 참고용 이미지일 수 있습니다)의 색상·톤이 위 브랜드 공식 가이드와 다르다면, creativeDirection에서 레퍼런스의 색상을 그대로 따르라고 제안하지 마세요. 대신 "레퍼런스는 구도·레이아웃 참고용으로만 쓰고, 컬러는 브랜드 공식 컬러를 우선 적용해야 한다"는 점을 명확히 하세요. 이런 불일치가 있다면 briefGaps에도 예를 들어 "기획안 레퍼런스는 블루 톤이지만 브랜드 공식 컬러는 마젠타라 그대로 적용하면 안 됨"처럼 구체적으로 지적하세요. 레퍼런스와 브랜드 가이드가 일치하거나 레퍼런스에 특정 색상 지정이 없다면 이 지적은 생략하세요.`;
 }
 
-// Calls Gemini with the brief prompt + the given images and returns the
-// parsed {coreDirection, mustInclude, creativeDirection, pitfalls, briefGaps}.
+// Calls Gemini with the brief prompt + the given images and returns
+// {coreDirection, creativeDirection, visualRefs, visualRefReason, pitfalls, briefGaps}.
+// visualRefs is resolved server-side from our own curated reference-image
+// library (api/_referenceLibrary.js) based on the category Gemini picked —
+// this points designers at reference material we've already vetted instead
+// of them grabbing random competitor/Pinterest images.
 // brandContext (optional): { name, guideline } — when the brand this brief
 // is for is known, cross-checks the brief's reference visuals against the
 // brand's official guide (see brandGuidelineCrossCheckInstruction above).
@@ -124,12 +135,18 @@ export async function extractBriefDirection(images, apiKey, brandContext) {
     throw err;
   }
 
+  let parsed;
   try {
-    return JSON.parse(clean);
+    parsed = JSON.parse(clean);
   } catch (e) {
     const err = new Error('AI 응답을 해석하지 못했습니다.');
     err.status = 502;
     err.raw = textBlock;
     throw err;
   }
+
+  const visualRefs = pickReferenceImages(parsed.visualRefCategory, VISUAL_REF_COUNT);
+  delete parsed.visualRefCategory;
+  if (!visualRefs.length) delete parsed.visualRefReason;
+  return { ...parsed, visualRefs };
 }
