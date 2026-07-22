@@ -230,10 +230,22 @@ export function listNonEmptyCategories() {
     .map(([id, cat]) => ({ id, name: cat.name }));
 }
 
+// Gemini가 "beauty" 대신 "beauty(화장품/뷰티)"처럼 프롬프트에 보여준
+// "id(이름)" 표기를 그대로 베껴 쓰는 경우가 있어, 정확히 일치하지 않으면
+// 앞부분이 유효한 id로 시작하는지 한 번 더 확인해 보정한다.
+function resolveCategoryId(raw) {
+  if (!raw) return null;
+  const cleaned = String(raw).trim();
+  if (REFERENCE_CATEGORIES[cleaned]) return cleaned;
+  const lower = cleaned.toLowerCase();
+  return Object.keys(REFERENCE_CATEGORIES).find((id) => lower.startsWith(id)) || null;
+}
+
 // 주어진 카테고리에서 최대 count장을 무작위로 골라 반환. 카테고리가
 // 없거나 비어 있으면 빈 배열.
 export function pickReferenceImages(categoryId, count) {
-  const cat = REFERENCE_CATEGORIES[categoryId];
+  const resolvedId = resolveCategoryId(categoryId);
+  const cat = resolvedId && REFERENCE_CATEGORIES[resolvedId];
   if (!cat || !cat.items.length) return [];
   const shuffled = [...cat.items];
   for (let i = shuffled.length - 1; i > 0; i--) {
