@@ -54,7 +54,7 @@
   .history-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:5px;}
   .history-date{font-size:12px; color:var(--text-3); font-variant-numeric:tabular-nums; white-space:nowrap;}
   .history-category{font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:3px 10px; white-space:nowrap;}
-  .history-desc{font-size:14px; color:var(--text); line-height:1.6;}
+  .history-desc{font-size:14px; color:var(--text); line-height:1.6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .history-delete{flex-shrink:0; font-size:12px; font-weight:700; color:var(--danger); background:oklch(95% 0.05 25); border:none; border-radius:8px; padding:7px 12px; cursor:pointer; white-space:nowrap; font-family:inherit;}
   .history-delete:hover{opacity:0.85;}
 
@@ -118,7 +118,7 @@
             '<span class="history-date">' + escapeHtml(formatDate(e.date)) + '</span>' +
             '<span class="history-category">' + escapeHtml(e.category) + '</span>' +
           '</div>' +
-          '<div class="history-desc">' + escapeHtml(e.description) + '</div>' +
+          '<div class="history-desc" title="' + escapeHtml(e.description) + '">' + escapeHtml(e.description) + '</div>' +
         '</div>' +
         '<button type="button" class="history-delete" data-id="' + escapeHtml(e.id) + '">삭제</button>' +
       '</div>'
