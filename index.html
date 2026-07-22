@@ -19,7 +19,7 @@
     --group-label: oklch(45% 0.05 260);
     --popover-bg: oklch(18% 0.01 265);
     --progress-fill: oklch(35% 0.08 260);
-    --pass:#2FA360; --minor:#C98A1A; --major:#DD5B28; --reject:#E33B5A; --na:#8A8A86;
+    --pass:#2FA360; --needsfix:#C98A1A; --reject:#E33B5A; --na:#8A8A86;
     --must-bg: oklch(94% 0.04 10); --must-text:#E33B5A;
     --should-bg: oklch(93% 0.035 145); --should-text: oklch(45% 0.1 145);
   }
@@ -162,7 +162,7 @@
   .summary-refs{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px;}
   .ref-chip{font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:20px; cursor:pointer; border:1px solid; background:oklch(99% 0.002 85); transition:transform .1s ease;}
   .ref-chip:hover{transform:translateY(-1px);}
-  .ref-chip.rc-major{color:var(--major); border-color:var(--major);}
+  .ref-chip.rc-needsfix{color:var(--needsfix); border-color:var(--needsfix);}
   .ref-chip.rc-reject{color:var(--reject); border-color:var(--reject);}
 
   .comparison-block{display:none; margin-top:18px; padding-top:18px; border-top:1px solid oklch(100% 0 0 / 0.14);}
@@ -175,9 +175,9 @@
 
   .verdict-badge{display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:10px; color:#fff;}
   .verdict-badge.v-aligned{background:var(--pass);}
-  .verdict-badge.v-partial{background:var(--minor);}
+  .verdict-badge.v-partial{background:var(--needsfix);}
   .verdict-badge.v-misaligned{background:var(--reject);}
-  .brief-error-note{font-size:12px; color:var(--minor); margin-top:8px;}
+  .brief-error-note{font-size:12px; color:var(--needsfix); margin-top:8px;}
 
   /* ---------- checklist ---------- */
   .row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 4px; border-bottom:1px solid oklch(91% 0.006 265);}
@@ -190,8 +190,7 @@
   .stbtn{border:1px solid oklch(90% 0.006 265); background:oklch(99% 0.002 85); color:oklch(42% 0.015 265); font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:100px; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;}
   .stbtn:hover{transform:translateY(-2px); box-shadow:0 4px 10px oklch(20% 0.02 265 / 0.15);}
   .stbtn[data-status="pass"].active{background:var(--pass); border-color:var(--pass); color:#fff;}
-  .stbtn[data-status="minor"].active{background:var(--minor); border-color:var(--minor); color:#fff;}
-  .stbtn[data-status="major"].active{background:var(--major); border-color:var(--major); color:#fff;}
+  .stbtn[data-status="needsfix"].active{background:var(--needsfix); border-color:var(--needsfix); color:#fff;}
   .stbtn[data-status="reject"].active{background:var(--reject); border-color:var(--reject); color:#fff;}
   .stbtn[data-status="na"].active{background:var(--na); border-color:var(--na); color:#fff;}
   .row-note{font-size:12px; color:var(--text-2); margin:-6px 0 10px; padding:8px 10px; background:oklch(97% 0.004 85); border-radius:8px; display:none;}
@@ -417,8 +416,7 @@
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         <div class="counts" id="counts">
           <span>통과 <b id="cPass">0</b></span>
-          <span>경미 <b id="cMinor">0</b></span>
-          <span>주요 <b id="cMajor">0</b></span>
+          <span>수정필요 <b id="cNeedsfix">0</b></span>
           <span>반려 <b id="cReject">0</b></span>
           <span>해당없음 <b id="cNa">0</b></span>
           <span>미평가 <b id="cPending">19</b></span>
@@ -494,8 +492,7 @@
   ];
   const STATUS_META = {
     pass:{label:'통과', color:'var(--pass)'},
-    minor:{label:'경미', color:'var(--minor)'},
-    major:{label:'주요', color:'var(--major)'},
+    needsfix:{label:'수정필요', color:'var(--needsfix)'},
     reject:{label:'반려', color:'var(--reject)'},
     na:{label:'해당없음', color:'var(--na)'},
   };
@@ -514,8 +511,7 @@
       <div class="row-label"><span class="rn">${String(it.n).padStart(2,'0')}</span><span class="rt">${it.title}</span></div>
       <div class="row-btns" data-id="${it.n}">
         <button class="stbtn" data-status="pass">통과</button>
-        <button class="stbtn" data-status="minor">경미</button>
-        <button class="stbtn" data-status="major">주요</button>
+        <button class="stbtn" data-status="needsfix">수정필요</button>
         <button class="stbtn" data-status="reject">반려</button>
         <button class="stbtn" data-status="na">해당없음</button>
       </div>`;
@@ -584,12 +580,11 @@
 
   // ---------- checklist summary / verdict ----------
   function update(){
-    const counts = {pass:0,minor:0,major:0,reject:0,na:0};
+    const counts = {pass:0,needsfix:0,reject:0,na:0};
     let done = 0;
     Object.values(state).forEach(s => { if(s){ counts[s]++; done++; } });
     document.getElementById('cPass').textContent = counts.pass;
-    document.getElementById('cMinor').textContent = counts.minor;
-    document.getElementById('cMajor').textContent = counts.major;
+    document.getElementById('cNeedsfix').textContent = counts.needsfix;
     document.getElementById('cReject').textContent = counts.reject;
     document.getElementById('cNa').textContent = counts.na;
     document.getElementById('cPending').textContent = 19 - done;
@@ -598,8 +593,7 @@
     let label = '평가 대기', color = 'oklch(65% 0.008 265)';
     if(done > 0){
       if(counts.reject > 0){ label = '반려 항목 있음'; color = 'var(--reject)'; }
-      else if(counts.major > 0){ label = '주요수정 필요'; color = 'var(--major)'; }
-      else if(counts.minor > 0){ label = '경미수정 필요'; color = 'var(--minor)'; }
+      else if(counts.needsfix > 0){ label = '수정 필요'; color = 'var(--needsfix)'; }
       else if(done === 19){ label = '컨펌 가능'; color = 'var(--pass)'; }
       else { label = '평가 진행 중'; }
     }
@@ -889,7 +883,7 @@
       if(noteEl){ noteEl.textContent = it.note || ''; noteEl.classList.toggle('show', !!it.note); }
     });
 
-    const STATUS_RANK = { reject:4, major:3, minor:2, pass:1, na:0 };
+    const STATUS_RANK = { reject:3, needsfix:2, pass:1, na:0 };
     const findItem = (id) => (result.items || []).find(it => it.id === id);
     const item4 = findItem(4), item11 = findItem(11), item10 = findItem(10);
     const keyChecksBlock = document.getElementById('keyChecksBlock');
@@ -933,10 +927,10 @@
 
     const refsEl = document.getElementById('summaryRefs');
     refsEl.innerHTML = '';
-    (result.items || []).filter(it => it.status === 'reject' || it.status === 'major').forEach(it => {
+    (result.items || []).filter(it => it.status === 'reject' || it.status === 'needsfix').forEach(it => {
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = 'ref-chip ' + (it.status === 'reject' ? 'rc-reject' : 'rc-major');
+      chip.className = 'ref-chip ' + (it.status === 'reject' ? 'rc-reject' : 'rc-needsfix');
       const found = ITEMS.find(x => x.n === it.id);
       const name = found ? found.title : ('항목 ' + it.id);
       chip.textContent = String(it.id).padStart(2,'0') + ' ' + name;
