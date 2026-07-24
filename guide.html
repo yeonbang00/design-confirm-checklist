@@ -95,6 +95,9 @@
   .check-row{display:flex; align-items:flex-start; gap:10px; padding:7px 2px; font-size:13.5px; color:var(--text); cursor:pointer;}
   .check-row input{margin-top:3px; width:16px; height:16px; accent-color:var(--num-text); cursor:pointer; flex-shrink:0;}
 
+  .feedback-edit-row{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
+  .feedback-edit-row .feedback-edit-date{flex:0 0 88px; font-size:12px; font-weight:700; color:var(--text); white-space:nowrap;}
+  .feedback-edit-row .feedback-edit-text{flex:1; padding:9px 12px; border:1px solid oklch(84% 0.015 265); border-radius:8px; font-size:13px; font-family:inherit; background:var(--card);}
   .field-row{display:flex; gap:8px; margin-bottom:8px;}
   .field-row input{padding:9px 12px; border:1px solid oklch(84% 0.015 265); border-radius:8px; font-size:13px; font-family:inherit; background:var(--card);}
   .field-row .field-label{flex:0 0 150px;}
@@ -305,6 +308,12 @@
       label: row.querySelector('.field-label').value,
       value: row.querySelector('.field-value').value,
     }));
+
+    document.querySelectorAll('#feedbackRows .feedback-edit-row').forEach(row => {
+      const idx = parseInt(row.dataset.feedbackIndex, 10);
+      const text = row.querySelector('.feedback-edit-text').value;
+      if(editingDraft.feedbackLog[idx]) editingDraft.feedbackLog[idx].text = text;
+    });
   }
 
   function renderEdit(){
@@ -329,9 +338,14 @@
     ).join('');
 
     const feedbackHtml = d.feedbackLog.length
-      ? '<ul class="feedback-list">' + d.feedbackLog.slice().reverse().map(f =>
-          '<li class="feedback-item"><span class="feedback-date">' + escapeHtml(f.date) + '</span>' + escapeHtml(f.text) + '</li>'
-        ).join('') + '</ul>'
+      ? d.feedbackLog.map((f, i) => i).reverse().map(i => {
+          const f = d.feedbackLog[i];
+          return '<div class="feedback-edit-row" data-feedback-index="' + i + '">' +
+            '<span class="feedback-edit-date">' + escapeHtml(f.date) + '</span>' +
+            '<input type="text" class="feedback-edit-text" value="' + escapeHtml(f.text) + '">' +
+            '<button type="button" class="field-remove" aria-label="삭제">&times;</button>' +
+          '</div>';
+        }).join('')
       : '<div class="gl-empty">등록된 피드백이 없습니다.</div>';
 
     brandDetail.innerHTML =
@@ -341,7 +355,7 @@
         '<div class="btn-row"><button type="button" class="edit-btn cancel" id="cancelEditBtn">취소</button><button type="button" class="edit-btn save" id="saveEditBtn">저장</button></div>' +
       '</div>' +
       '<div class="gl-heading">광고주 피드백</div>' +
-      feedbackHtml +
+      '<div id="feedbackRows">' + feedbackHtml + '</div>' +
       '<div class="feedback-add-row"><input type="text" id="newFeedbackInput" placeholder="새 피드백 내용을 입력하고 추가"><button type="button" class="feedback-add-btn" id="addFeedbackBtn">추가</button></div>' +
       checklistHtml +
       '<div class="gl-heading">커스텀 필드 (컬러 코드처럼 직접 입력이 필요한 값)</div>' +
@@ -379,6 +393,16 @@
       syncEditStateFromDom();
       editingDraft.feedbackLog.push({ date: new Date().toISOString().slice(0, 10), text });
       renderEdit();
+    });
+
+    document.getElementById('feedbackRows').addEventListener('click', (e) => {
+      const row = e.target.closest('.feedback-edit-row');
+      if(row && e.target.classList.contains('field-remove')){
+        syncEditStateFromDom();
+        const idx = parseInt(row.dataset.feedbackIndex, 10);
+        editingDraft.feedbackLog.splice(idx, 1);
+        renderEdit();
+      }
     });
 
     document.getElementById('saveEditBtn').addEventListener('click', saveDraft);
