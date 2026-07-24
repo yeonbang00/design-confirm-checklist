@@ -59,8 +59,8 @@ const BASE_PROMPT = `다음은 광고대행사가 광고주에게 전달하기 �
 - na: 해당 시안에 명백히 적용되지 않는 항목 (예: 인물 없는 시안의 12번, 로고 없는 시안의 18번, 비규제 업종의 19번)
 
 4번(정보 정확성), 10번(매체 최적화), 11번(최종 디테일)은 팀이 가장 중요하게 보는 기준입니다. 4번과 11번을 판정하기 전에, 다른 항목처럼 인상만 보고 넘어가지 말고 반드시 아래 절차를 실행하세요:
-1) 이미지 안에 보이는 모든 한글·숫자 텍스트를 헤드라인부터 가장 작은 글씨까지 빠짐없이 마음속으로 한 글자씩 그대로 옮겨 적어보세요 (건너뛰지 마세요).
-2) 옮겨 적은 각 단어가 실제 존재하는 자연스러운 한국어 단어·표현인지 하나씩 대조하세요. 특히 자음·모음 하나만 다른 유사 글자를 조심하세요 (예: "구매하고"가 "구매햐고"로, "소개"가 "쇼개"로 잘못 표기되는 식 — 획 하나 차이라 스치듯 보면 놓치기 쉽습니다).
+1) textTranscript 필드에 이미지 안에 보이는 모든 한글·숫자 텍스트를 헤드라인부터 가장 작은 글씨까지 하나도 빠짐없이 실제로 옮겨 적으세요 (내부적으로 생각만 하지 말고 반드시 이 필드에 문자 그대로 출력하세요 — 요소마다 줄바꿈으로 구분).
+2) 그렇게 적은 textTranscript를 다시 처음부터 훑으면서, 각 단어가 실제 존재하는 자연스러운 한국어 단어·표현인지 하나씩 대조하세요. 특히 자음·모음 하나만 다른 유사 글자를 조심하세요 (예: "구매하고"가 "구매햐고"로, "소개"가 "쇼개"로 잘못 표기되는 식 — 획 하나 차이라 스치듯 보면 놓치기 쉽습니다).
 3) 가격·날짜·단위·맞춤법 오류도 함께 재확인하세요.
 확신이 서지 않는 글자는 추측하지 말고 메모에 "확인 필요"라고 남기세요. 이 세 항목의 note는 다른 항목보다 더 구체적으로 — 어느 글자·숫자·영역이 문제인지 짚어서 — 작성하세요.
 
@@ -185,7 +185,7 @@ function schemaInstruction(hasComparison, hasMediaGuides, hasBrief) {
   const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
   const briefSchema = hasBrief ? `{"verdict":"aligned","summary":"...","matches":"...","gaps":"..."}` : `null`;
   return `\n\n반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"items":[{"id":1,"status":"pass","note":"..."}],"bannerType":"...","summary":"...","comparison":${comparisonSchema},"mediaGuideReview":${mediaGuideSchema},"briefAlignment":${briefSchema}}`;
+{"textTranscript":"...","items":[{"id":1,"status":"pass","note":"..."}],"bannerType":"...","summary":"...","comparison":${comparisonSchema},"mediaGuideReview":${mediaGuideSchema},"briefAlignment":${briefSchema}}`;
 }
 
 export default async function handler(req, res) {
@@ -270,7 +270,8 @@ export default async function handler(req, res) {
           responseMimeType: 'application/json',
           // 기획안 부합도까지 포함되면 응답 필드가 늘어나 4608으로는
           // 가끔 끝부분에서 JSON이 끊기는 경우가 있어 여유를 더 둠.
-          maxOutputTokens: hasBrief ? 7168 : 4608,
+          // textTranscript 필드가 추가돼 응답 길이가 늘어난 만큼 상향.
+          maxOutputTokens: hasBrief ? 8192 : 5632,
           // 오탈자 확인(4·11번)이 팀 최우선 기준인데, low thinking으로는
           // 19개 항목을 동시에 판정하면서 글자 단위 재확인까지 할 여유가
           // 부족해 실제로 오탈자를 놓치는 사례가 확인됨 — 항상 medium 이상.
