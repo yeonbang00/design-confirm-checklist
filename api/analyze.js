@@ -201,6 +201,19 @@ export default async function handler(req, res) {
     return;
   }
 
+  // TEMP diagnostic: list available Gemini models to find the correct pro model id.
+  if (req.query && req.query.listmodels) {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+      headers: { 'x-goog-api-key': apiKey },
+    });
+    const data = await r.json();
+    const names = ((data.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map((m) => m.name));
+    res.status(200).json({ models: names });
+    return;
+  }
+
   const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
