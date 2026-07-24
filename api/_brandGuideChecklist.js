@@ -89,6 +89,60 @@ export const CHECKLIST_ITEMS = [
     label: '버튼·카드·아이콘 모서리 radius가 일관됨',
     promptText: '버튼·카드·아이콘 등의 모서리 radius가 일관된 값으로 통일되어 있어야 한다.',
   },
+  {
+    id: 'asset_fit_purpose',
+    section: 'asset',
+    label: '사용된 이미지가 배너 목적·메시지와 어울리는 소재로 선택됨',
+    promptText: '사용된 이미지·소재가 배너의 목적과 메시지에 어울리는 것으로 선택되어야 한다.',
+  },
+  {
+    id: 'asset_crop_placement',
+    section: 'asset',
+    label: '이미지 크롭·배치가 어색하지 않고 얼굴·제품·텍스트 공간이 답답하게 잘리거나 눌리지 않음',
+    promptText: '이미지 크롭과 배치가 어색하지 않아야 하며, 얼굴·제품·텍스트가 들어갈 공간이 답답하게 잘리거나 눌려서는 안 된다.',
+  },
+  {
+    id: 'asset_collage_cohesion',
+    section: 'asset',
+    label: '여러 이미지를 합성·콜라주했다면 톤·해상도·스타일이 이질감 없이 어울림',
+    promptText: '여러 이미지를 합성하거나 콜라주했다면 각 이미지의 톤·해상도·스타일이 이질감 없이 어울려야 한다.',
+  },
+  {
+    id: 'asset_overlay_readability',
+    section: 'asset',
+    label: '텍스트·그래픽 오버레이가 이미지를 가리거나 가독성을 해치지 않고 자연스럽게 얹힘',
+    promptText: '텍스트·그래픽 오버레이가 이미지의 중요한 부분을 가리거나 가독성을 해치지 않고 자연스럽게 얹혀 있어야 한다.',
+  },
+  {
+    id: 'asset_correction_natural',
+    section: 'asset',
+    label: '배너 안에서 적용한 색보정·필터·그라데이션 오버레이가 과해서 부자연스럽지 않음',
+    promptText: '배너 제작 시 적용한 색보정·필터·그라데이션 오버레이가 과도해서 부자연스러워 보이지 않아야 한다.',
+  },
+  {
+    id: 'mood_recognizable',
+    section: 'mood',
+    label: '브랜드명을 가려도 우리 브랜드 소재라고 알아볼 수 있는 톤이 유지됨',
+    promptText: '브랜드명이나 로고를 가리고 봐도 이 브랜드의 소재라고 알아볼 수 있을 만큼 일관된 톤이 유지되어야 한다.',
+  },
+  {
+    id: 'mood_graphic_style',
+    section: 'mood',
+    label: '아이콘·배지·버튼 모양·그라데이션 등 그래픽 스타일이 브랜드가 평소 쓰는 룩앤필과 일치함',
+    promptText: '아이콘·배지·버튼 모양·그라데이션 등 배너에 쓰인 그래픽 스타일이 브랜드가 평소 사용하는 룩앤필과 일치해야 한다.',
+  },
+  {
+    id: 'mood_copy_image_match',
+    section: 'mood',
+    label: '카피 톤과 이미지 무드가 서로 어긋나지 않음 (예: 차분한 이미지에 과도하게 들뜬 카피가 붙는 경우 등)',
+    promptText: '카피의 어조와 이미지의 무드가 서로 어긋나지 않아야 한다 (예: 차분하고 고급스러운 이미지에 과도하게 들뜬 카피가 붙는 경우는 지적한다).',
+  },
+  {
+    id: 'mood_seasonal_identity',
+    section: 'mood',
+    label: '시즌·이벤트 그래픽을 넣어도 브랜드 정체성이 묻히지 않음',
+    promptText: '시즌·이벤트성 그래픽 요소를 추가하더라도 브랜드 고유의 정체성이 묻히지 않아야 한다.',
+  },
 ];
 
 function todayIso() {
