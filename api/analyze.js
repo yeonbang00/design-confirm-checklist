@@ -24,7 +24,7 @@ export const config = {
   },
 };
 
-const GEMINI_MODEL = 'gemini-pro-latest'; // TEMP: 오탈자 인식 정확도 테스트용, 테스트 후 되돌릴 예정 (gemini-3.5-pro는 존재하지 않음)
+const GEMINI_MODEL = 'gemini-3.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // 19 items = 11 core design/strategy checks + 6 AI-generation artifact checks
