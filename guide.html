@@ -265,8 +265,8 @@
         '</div>' +
       '</div>' +
       (b.note ? '<div class="brand-note">' + escapeHtml(b.note) + '</div>' : '') +
-      checkedHtml +
       feedbackHtml +
+      checkedHtml +
       specHtml +
       galleryHtml +
       '</div>';
@@ -340,14 +340,13 @@
         '<div class="brand-head"><span class="brand-name">' + escapeHtml(d.name) + ' — 편집 중</span></div>' +
         '<div class="btn-row"><button type="button" class="edit-btn cancel" id="cancelEditBtn">취소</button><button type="button" class="edit-btn save" id="saveEditBtn">저장</button></div>' +
       '</div>' +
-      '<div class="gl-heading">가이드 기준 체크</div>' +
+      '<div class="gl-heading">광고주 피드백</div>' +
+      feedbackHtml +
+      '<div class="feedback-add-row"><input type="text" id="newFeedbackInput" placeholder="새 피드백 내용을 입력하고 추가"><button type="button" class="feedback-add-btn" id="addFeedbackBtn">추가</button></div>' +
       checklistHtml +
       '<div class="gl-heading">커스텀 필드 (컬러 코드처럼 직접 입력이 필요한 값)</div>' +
       '<div id="fieldRows">' + fieldsHtml + '</div>' +
       '<button type="button" class="add-field-btn" id="addFieldBtn">+ 필드 추가</button>' +
-      '<div class="gl-heading">광고주 피드백</div>' +
-      feedbackHtml +
-      '<div class="feedback-add-row"><input type="text" id="newFeedbackInput" placeholder="새 피드백 내용을 입력하고 추가"><button type="button" class="feedback-add-btn" id="addFeedbackBtn">추가</button></div>' +
       '<div class="save-status" id="saveStatus"></div>' +
       '</div>';
 
