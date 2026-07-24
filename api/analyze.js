@@ -24,7 +24,7 @@ export const config = {
   },
 };
 
-const GEMINI_MODEL = 'gemini-3.5-pro'; // TEMP: 오탈자 인식 정확도 테스트용, 테스트 후 되돌릴 예정
+const GEMINI_MODEL = 'gemini-pro-latest'; // TEMP: 오탈자 인식 정확도 테스트용, 테스트 후 되돌릴 예정 (gemini-3.5-pro는 존재하지 않음)
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // 19 items = 11 core design/strategy checks + 6 AI-generation artifact checks
@@ -198,19 +198,6 @@ export default async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     res.status(500).json({ error: '서버에 GEMINI_API_KEY 환경변수가 설정되어 있지 않습니다.' });
-    return;
-  }
-
-  // TEMP diagnostic: list available Gemini models to find the correct pro model id.
-  if (req.query && req.query.listmodels) {
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
-      headers: { 'x-goog-api-key': apiKey },
-    });
-    const data = await r.json();
-    const names = ((data.models || [])
-      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
-      .map((m) => m.name));
-    res.status(200).json({ models: names });
     return;
   }
 
