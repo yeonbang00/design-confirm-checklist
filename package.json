@@ -5,5 +5,8 @@
   "description": "AI 디자인 컨펌 체크리스트 — Gemini API로 시안 이미지를 자동 판정하는 웹앱",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@vercel/edge": "^1.1.1"
   }
 }
