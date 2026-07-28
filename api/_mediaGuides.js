@@ -332,7 +332,7 @@ export const MEDIA_GUIDES = {
 이 기준은 10번(매체 최적화) 항목을 판정할 때 반영하세요. 시안이 네이티브·전면·중간·띠 중 어느 소재 유형에 해당하는지 사이즈로 먼저 판단한 뒤, 해당 유형의 정확한 사이즈·용량 기준과 일치하는지 확인하세요. 텍스트 길이 기준(타이틀 10자, 디스크립션 40자, CTA 6자)은 네이티브 소재에만 적용되니, 이미지 안에 해당 문구가 실제로 삽입되어 있는 경우에만 글자수를 세어 확인하세요.`,
   },
   'naverpay': {
-    name: '네이버페이(도착보장 CPS)',
+    name: '네이버페이(CPS)',
     note: 'AdiSON Offerwall 스마트스토어 광고 — 이벤트 목록/상세, 상단 추천 배너 소재 등록 기준 반영됨',
     sourceUrl: null,
     sourceFile: { fileName: '네이버페이CPS.pdf', mimeType: 'application/pdf', fileUrl: 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/media-guides/naverpay-cps-guide.pdf' },
