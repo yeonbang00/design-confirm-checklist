@@ -63,34 +63,27 @@
 
   .dropzone{border:1.5px dashed oklch(78% 0.02 265); border-radius:14px; padding:48px 24px; text-align:center; cursor:pointer; background:oklch(98% 0.005 85); transition:border-color .15s ease;}
   .dropzone.dragover{border-color:oklch(45% 0.08 260);}
-  .dz-icon{font-size:26px; color:oklch(45% 0.03 265); margin-bottom:10px;}
-  .dz-title{font-size:15px; font-weight:600; margin-bottom:6px;}
-  .dz-sub{font-size:12px; color:oklch(55% 0.015 265);}
+  .dz-empty .dz-icon{font-size:26px; color:oklch(45% 0.03 265); margin-bottom:10px;}
+  .dz-empty .dz-title{font-size:15px; font-weight:600; margin-bottom:6px;}
+  .dz-empty .dz-sub{font-size:12px; color:oklch(55% 0.015 265);}
 
-  .thumb-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:10px; margin-top:18px;}
-  .thumb{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--card-border); aspect-ratio:1; background:oklch(96% 0.008 85);}
-  .thumb img{width:100%; height:100%; object-fit:cover; display:block;}
-  .thumb-remove{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:oklch(20% 0.02 265 / 0.75); color:#fff; border:none; font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .thumb-remove:hover{background:oklch(30% 0.1 25 / 0.9);}
-
-  .scan-container{position:relative;}
-  .scan-container.scanning .thumb-remove{display:none;}
-  .scan-tint{display:none; position:absolute; inset:0; background:oklch(30% 0.09 260 / 0.08); pointer-events:none; border-radius:10px;}
-  .scan-line{display:none; position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, oklch(75% 0.16 145), transparent); box-shadow:0 0 12px 2px oklch(75% 0.16 145 / 0.8); animation:scanline 1.6s ease-in-out infinite; pointer-events:none;}
-  .scan-corner{display:none; position:absolute; width:16px; height:16px; border-color:oklch(75% 0.16 145); animation:scanpulse 1.6s ease-in-out infinite; pointer-events:none;}
-  .sc-tl{top:-6px; left:-6px; border-top:2px solid; border-left:2px solid;}
-  .sc-tr{top:-6px; right:-6px; border-top:2px solid; border-right:2px solid;}
-  .sc-bl{bottom:-6px; left:-6px; border-bottom:2px solid; border-left:2px solid;}
-  .sc-br{bottom:-6px; right:-6px; border-bottom:2px solid; border-right:2px solid;}
-  .scan-container.scanning .scan-tint,
-  .scan-container.scanning .scan-line,
-  .scan-container.scanning .scan-corner{display:block;}
+  .scan-wrap{position:relative; display:inline-block; border-radius:10px; overflow:hidden; box-shadow:0 4px 20px oklch(20% 0.02 265 / 0.12); margin-bottom:16px;}
+  .scan-wrap img{max-height:180px; display:block;}
+  .scan-tint{position:absolute; inset:0; background:oklch(30% 0.09 260 / 0.08); pointer-events:none;}
+  .scan-line{position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, oklch(75% 0.16 145), transparent); box-shadow:0 0 12px 2px oklch(75% 0.16 145 / 0.8); animation:scanline 1.6s ease-in-out infinite;}
+  .scan-corner{position:absolute; width:16px; height:16px; border-color:oklch(75% 0.16 145); animation:scanpulse 1.6s ease-in-out infinite;}
+  .sc-tl{top:8px; left:8px; border-top:2px solid; border-left:2px solid;}
+  .sc-tr{top:8px; right:8px; border-top:2px solid; border-right:2px solid;}
+  .sc-bl{bottom:8px; left:8px; border-bottom:2px solid; border-left:2px solid;}
+  .sc-br{bottom:8px; right:8px; border-bottom:2px solid; border-right:2px solid;}
   @keyframes scanline{0%{top:0%;} 100%{top:100%;}}
   @keyframes scanpulse{0%,100%{opacity:0.35;} 50%{opacity:0.9;}}
 
-  .analyzing-label{display:none; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:600; color:oklch(38% 0.05 260); margin-top:16px;}
-  .analyzing-label.show{display:flex;}
+  .analyzing-label{display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:600; color:oklch(38% 0.05 260);}
   .analyzing-label .dot{width:7px; height:7px; border-radius:50%; background:oklch(70% 0.16 145); animation:scanpulse 1s ease-in-out infinite;}
+
+  .done-img{max-height:220px; border-radius:10px; box-shadow:0 4px 20px oklch(20% 0.02 265 / 0.12); display:block; margin:0 auto;}
+  .done-hint{font-size:12px; color:oklch(52% 0.015 265); margin-top:14px;}
 
   .analyze-btn{width:100%; margin-top:18px; padding:14px; border:none; border-radius:12px; background:oklch(35% 0.08 260); color:#fff; font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit;}
   .analyze-btn:disabled{opacity:0.6; cursor:default;}
@@ -170,22 +163,29 @@
     </div>
 
     <div class="dropzone" id="dropzone">
-      <div class="dz-icon">＋</div>
-      <div class="dz-title">이미지를 캡처해서 올려주세요</div>
-      <div class="dz-sub">기획안 슬라이드를 캡처한 이미지 1장을 올려주세요</div>
+      <div class="dz-empty" id="dzEmpty">
+        <div class="dz-icon">＋</div>
+        <div class="dz-title">이미지를 캡처해서 올려주세요</div>
+        <div class="dz-sub">기획안 슬라이드를 캡처한 이미지 1장을 올려주세요</div>
+      </div>
+      <div id="dzAnalyzing" style="display:none;">
+        <div class="scan-wrap">
+          <img id="analyzingImg" alt="분석 중인 기획안">
+          <div class="scan-tint"></div>
+          <div class="scan-line"></div>
+          <div class="scan-corner sc-tl"></div>
+          <div class="scan-corner sc-tr"></div>
+          <div class="scan-corner sc-bl"></div>
+          <div class="scan-corner sc-br"></div>
+        </div>
+        <div class="analyzing-label"><span class="dot"></span>AI가 기획안을 분석하고 있습니다…</div>
+      </div>
+      <div id="dzLoaded" style="display:none;">
+        <img class="done-img" id="loadedImg" alt="업로드한 기획안">
+        <div class="done-hint">다른 이미지를 올리려면 다시 클릭하세요</div>
+      </div>
     </div>
     <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
-
-    <div class="scan-container" id="scanContainer">
-      <div class="thumb-grid" id="thumbGrid"></div>
-      <div class="scan-tint"></div>
-      <div class="scan-line"></div>
-      <div class="scan-corner sc-tl"></div>
-      <div class="scan-corner sc-tr"></div>
-      <div class="scan-corner sc-bl"></div>
-      <div class="scan-corner sc-br"></div>
-    </div>
-    <div class="analyzing-label" id="analyzingLabel"><span class="dot"></span>AI가 기획안을 분석하고 있습니다…</div>
 
     <button type="button" class="analyze-btn" id="analyzeBtn" style="display:none;">분석 시작</button>
     <div class="status-line" id="statusLine"></div>
@@ -209,12 +209,14 @@
 
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
-  const thumbGrid = document.getElementById('thumbGrid');
+  const dzEmpty = document.getElementById('dzEmpty');
+  const dzAnalyzing = document.getElementById('dzAnalyzing');
+  const dzLoaded = document.getElementById('dzLoaded');
+  const analyzingImg = document.getElementById('analyzingImg');
+  const loadedImg = document.getElementById('loadedImg');
   const analyzeBtn = document.getElementById('analyzeBtn');
   const statusLine = document.getElementById('statusLine');
   const resultSection = document.getElementById('resultSection');
-  const scanContainer = document.getElementById('scanContainer');
-  const analyzingLabel = document.getElementById('analyzingLabel');
 
   const advertiserSelect = document.getElementById('advertiserSelect');
   fetch('/api/advertisers')
@@ -231,48 +233,41 @@
 
   const ALLOWED = ['image/png','image/jpeg','image/webp'];
   const MAX_BYTES = 8*1024*1024;
-  const MAX_FILES = 1;
-  let selectedFiles = [];
+  let currentFile = null;
 
   function setStatus(msg, isLoading){
     statusLine.textContent = msg;
     statusLine.classList.toggle('loading', !!isLoading);
   }
 
-  function renderThumbs(){
-    thumbGrid.innerHTML = '';
-    selectedFiles.forEach((entry, i) => {
-      const div = document.createElement('div');
-      div.className = 'thumb';
-      div.innerHTML = '<img src="' + entry.previewUrl + '" alt="캡처 ' + (i+1) + '">' +
-        '<button type="button" class="thumb-remove" aria-label="삭제">&times;</button>';
-      div.querySelector('.thumb-remove').addEventListener('click', () => {
-        selectedFiles.splice(i, 1);
-        renderThumbs();
-      });
-      thumbGrid.appendChild(div);
-    });
-    analyzeBtn.style.display = selectedFiles.length > 0 ? 'block' : 'none';
+  function showDzState(s){
+    dzEmpty.style.display = s === 'empty' ? '' : 'none';
+    dzAnalyzing.style.display = s === 'analyzing' ? '' : 'none';
+    dzLoaded.style.display = (s === 'loaded') ? '' : 'none';
+    analyzeBtn.style.display = (s === 'loaded') ? 'block' : 'none';
   }
 
-  function addFiles(fileList){
-    const files = Array.from(fileList);
-    for(const file of files){
-      if(selectedFiles.length >= MAX_FILES){
-        setStatus('이미지는 최대 ' + MAX_FILES + '장까지 올릴 수 있습니다.', false);
-        break;
-      }
-      if(!ALLOWED.includes(file.type)){
-        setStatus('지원하지 않는 이미지 형식입니다. PNG · JPEG · WEBP만 가능합니다.', false);
-        continue;
-      }
-      if(file.size > MAX_BYTES){
-        setStatus('이미지 용량이 너무 큽니다. 8MB 이하 이미지를 사용해주세요.', false);
-        continue;
-      }
-      selectedFiles.push({ file, previewUrl: URL.createObjectURL(file) });
+  function handleFile(file){
+    if(!ALLOWED.includes(file.type)){
+      setStatus('지원하지 않는 이미지 형식입니다. PNG · JPEG · WEBP만 가능합니다.', false);
+      return;
     }
-    renderThumbs();
+    if(file.size > MAX_BYTES){
+      setStatus('이미지 용량이 너무 큽니다. 8MB 이하 이미지를 사용해주세요.', false);
+      return;
+    }
+    setStatus('', false);
+    resultSection.innerHTML = '';
+    analyzeBtn.textContent = '분석 시작';
+
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      analyzingImg.src = reader.result;
+      loadedImg.src = reader.result;
+      showDzState('loaded');
+    };
+    reader.readAsDataURL(file);
   }
 
   dropzone.addEventListener('click', () => fileInput.click());
@@ -280,10 +275,10 @@
   dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
   dropzone.addEventListener('drop', e => {
     e.preventDefault(); dropzone.classList.remove('dragover');
-    if(e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
   fileInput.addEventListener('change', e => {
-    if(e.target.files && e.target.files.length) addFiles(e.target.files);
+    if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
     fileInput.value = '';
   });
 
@@ -386,16 +381,13 @@
   }
 
   analyzeBtn.addEventListener('click', async () => {
-    if(selectedFiles.length === 0) return;
-    analyzeBtn.disabled = true;
-    analyzeBtn.textContent = '분석 중…';
+    if(!currentFile) return;
+    showDzState('analyzing');
     setStatus('', false);
     resultSection.innerHTML = '';
-    scanContainer.classList.add('scanning');
-    analyzingLabel.classList.add('show');
 
     try{
-      const prepared = await Promise.all(selectedFiles.map(entry => prepareImage(entry.file)));
+      const prepared = await prepareImage(currentFile);
 
       let lastErr = null;
       for(let attempt = 1; attempt <= 3; attempt++){
@@ -403,7 +395,7 @@
           const response = await fetch('/api/analyzeBrief', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ images: prepared, advertiserId: advertiserSelect.value || null })
+            body: JSON.stringify({ images: [prepared], advertiserId: advertiserSelect.value || null })
           });
           let data;
           try{ data = await response.json(); }
@@ -418,6 +410,9 @@
             throw err;
           }
           renderResult(data);
+          showDzState('loaded');
+          analyzeBtn.textContent = '다시 분석하기';
+          setStatus('', false);
           lastErr = null;
           break;
         }catch(err){
@@ -439,6 +434,7 @@
       }
 
       if(lastErr){
+        showDzState('loaded');
         if(lastErr.status === 429){
           setStatus('AI 분석 요청이 일시적으로 몰렸습니다. 잠시 후 다시 시도해주세요.', false);
         } else if(lastErr.status === 503 || lastErr.status >= 500){
@@ -446,16 +442,10 @@
         } else {
           setStatus('분석에 실패했습니다: ' + (lastErr.message || '알 수 없는 오류') + ' — 다시 시도해주세요.', false);
         }
-      } else {
-        setStatus('', false);
       }
     }catch(err){
+      showDzState('loaded');
       setStatus('이미지 처리에 실패했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류'), false);
-    }finally{
-      analyzeBtn.disabled = false;
-      analyzeBtn.textContent = '분석 시작';
-      scanContainer.classList.remove('scanning');
-      analyzingLabel.classList.remove('show');
     }
   });
 </script>
