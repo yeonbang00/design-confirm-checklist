@@ -19,7 +19,9 @@ const BRIEF_PROMPT_BODY = `다음 이미지는 배너 제작을 위한 기획안
 
 중요: 기획안 내용을 그대로 요약하거나 나열하지 마세요. 어차피 제작자가 기획안 원본을 직접 볼 수 있으니, 내용을 다시 읽어주는 건 의미가 없습니다. 대신 이 기획안을 바탕으로 "배너를 어떻게 만들면 더 잘 만들 수 있을지" 실질적인 제작 방향을 제시하세요. 기획안에 이미 나와 있는 필수 요소(상품명·가격·기간·로고 등)를 다시 나열하는 건 하지 마세요 — 제작자가 원본에서 이미 확인할 수 있는 정보입니다.
 
-다음을 각각 채우세요. 모두 자연스러운 구어체 한국어로 작성하세요:
+가장 먼저 originalCopyTranscript 필드를 채우세요: 기획안에 등장하는 배너 문구(헤드카피·서브카피 등 실제로 배너에 들어갈 문구로 보이는 텍스트)를 이미지에 적힌 그대로 정확히 옮겨 적으세요. 문맥상 "이런 말이겠지"로 자동으로 고쳐 쓰거나 매끄럽게 다듬지 말고, 진짜 눈에 보이는 글자 그대로 옮기세요 (자음·모음 하나 차이로 다른 글자가 되는 경우를 특히 조심하세요 — 스치듯 읽으면 놓치기 쉽습니다). 해당 문구가 명확히 안 보이면 빈 문자열로 두세요. 아래 creativeDirection의 [카피 제안]은 반드시 이 필드에 옮겨 적은 문구를 기준으로 작성하세요 — 기억이나 인상으로 다시 쓰지 마세요.
+
+나머지는 다음을 각각 채우세요. 모두 자연스러운 구어체 한국어로 작성하세요:
 
 - coreDirection: 이 배너가 궁극적으로 무엇을 전달해야 하는지, 제작 시 가장 먼저 잡아야 할 핵심 방향을 1~2문장으로. 단순 목적 나열이 아니라 "이런 인상을 주는 게 핵심이다" 같은 실전 조언 톤으로.
 
@@ -48,7 +50,7 @@ const BRIEF_PROMPT_BODY = `다음 이미지는 배너 제작을 위한 기획안
 기획안에 명시되지 않아 확인이 필요한 부분은 추측해서 채우지 말고, 해당 필드에서 "기획안에 명시되지 않아 담당자 확인 필요"라고 분명히 표시하세요.`;
 
 const BRIEF_SCHEMA = `반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"coreDirection":"...","creativeDirection":"...","visualRefCategory":"...","visualRefReason":"...","pitfalls":["...","..."],"briefGaps":"..."}`;
+{"originalCopyTranscript":"...","coreDirection":"...","creativeDirection":"...","visualRefCategory":"...","visualRefReason":"...","pitfalls":["...","..."],"briefGaps":"..."}`;
 
 // 기획안은 팀이 경쟁사 레퍼런스·클립아트코리아·핀터레스트 등에서 스타일
 // 참고 이미지를 긁어와 만드는 경우가 많아서, 정작 그 레퍼런스의 색상/톤이
@@ -100,9 +102,12 @@ export async function extractBriefDirection(images, apiKey, brandContext) {
         responseMimeType: 'application/json',
         // 2560/low였을 때 응답 JSON이 끝부분에서 종종 깨지는 현상이
         // 실측으로 확인돼(브랜드 가이드 대조까지 들어가면 더 자주),
-        // 여유를 늘림.
-        maxOutputTokens: 4096,
-        thinkingConfig: { thinkingLevel: 'medium' },
+        // 여유를 늘림. originalCopyTranscript 필드 추가로 조금 더 늘림.
+        maxOutputTokens: 4608,
+        // PPT 캡처는 텍스트 밀도가 높아 정확히 읽어야 하는 부담이 커서
+        // (analyze.js에서 확인된 "자동교정하며 읽는" 문제와 같은 리스크),
+        // medium보다 여유를 둠.
+        thinkingConfig: { thinkingLevel: 'high' },
       },
     }),
   });
