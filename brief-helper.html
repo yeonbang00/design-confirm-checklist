@@ -153,7 +153,7 @@
 
   <div class="preview-list">
     <div class="preview-item"><span class="preview-num">1</span><div><b>핵심 제작 방향</b> — 이 배너가 전달해야 할 가장 중요한 인상</div></div>
-    <div class="preview-item"><span class="preview-num">2</span><div><b>카피·비주얼 제안</b> — 기획안 레퍼런스를 그대로 따르지 않는 독립적인 비주얼 제안, 필요시 카피 제안까지</div></div>
+    <div class="preview-item"><span class="preview-num">2</span><div><b>카피·비주얼 추가제안</b> — 기획안 레퍼런스에는 없는 새로운 비주얼 아이디어, 필요시 카피 제안까지</div></div>
     <div class="preview-item"><span class="preview-num">3</span><div><b>비주얼 레퍼런스 추천</b> — 업종·톤에 맞는, 이미 검증된 우리 레퍼런스 이미지</div></div>
     <div class="preview-item"><span class="preview-num">4</span><div><b>주의할 점</b> — 제작하다가 놓치기 쉬운 실수</div></div>
     <div class="preview-item"><span class="preview-num">5</span><div><b>기획안에서 더 확인이 필요한 부분</b> — 기획안 자체가 애매하거나 빠진 부분이 있을 때만 표시</div></div>
@@ -379,7 +379,7 @@
     resultSection.innerHTML =
       '<div class="card coming-soon"><div class="coming-soon-icon">🎨</div><div class="coming-soon-badge">업데이트 예정</div><div class="coming-soon-text">이 기획 방향에 맞는 예시 배너 이미지를 AI가 직접 생성해서 참고용으로 보여드릴 예정이에요.</div></div>' +
       '<div class="card"><div class="result-label">핵심 제작 방향</div><div class="result-text">' + escapeHtml(data.coreDirection || '—') + '</div></div>' +
-      '<div class="card"><div class="result-label">카피·비주얼 제안</div>' + formatDirection(data.creativeDirection) + '</div>' +
+      '<div class="card"><div class="result-label">카피·비주얼 추가제안</div>' + formatDirection(data.creativeDirection) + '</div>' +
       visualRefCard +
       '<div class="card"><div class="result-label">주의할 점</div>' + pitfallsHtml + '</div>' +
       briefGapsCard;
