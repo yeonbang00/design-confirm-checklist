@@ -199,6 +199,13 @@
     <div class="status-line" id="statusLine"></div>
   </div>
 
+  <div class="card" id="genBannerCard" style="display:none;">
+    <div class="result-label">예시 배너 생성</div>
+    <div class="gen-banner-desc">이 기획안 내용에 맞는 참고용 러프 시안을 AI가 자동으로 생성해요. 실제 카피·로고 없이 톤·무드·레이아웃 참고용으로만 활용하세요 — 완성 배너는 계속 디자이너가 만듭니다.</div>
+    <div class="gen-banner-result" id="genBannerResult"></div>
+    <button type="button" class="gen-banner-btn" id="genBannerBtn" style="display:none;">다시 생성하기</button>
+  </div>
+
   <div id="resultSection"></div>
 
   <div class="page-footer">
@@ -242,6 +249,7 @@
   const ALLOWED = ['image/png','image/jpeg','image/webp'];
   const MAX_BYTES = 8*1024*1024;
   let currentFile = null;
+  let latestPreparedImage = null;
 
   function setStatus(msg, isLoading){
     statusLine.textContent = msg;
@@ -355,20 +363,7 @@
     }).join('');
   }
 
-  let latestBriefData = null;
-
-  function buildBannerPrompt(data){
-    const parts = [
-      '광고 배너 디자인의 러프 목업 이미지를 만들어줘.',
-      data.coreDirection ? ('핵심 방향: ' + data.coreDirection) : '',
-      data.creativeDirection ? ('세부 방향: ' + data.creativeDirection.replace(/[[\]]/g, '').replace(/\n+/g, ' ')) : '',
-      '실제 상품명·가격·정확한 문구는 넣지 말고, 텍스트는 최소화하거나 의미 없는 더미 텍스트만 사용해. 완성된 배너가 아니라 톤·무드·레이아웃 구도를 보여주는 참고용 러프 시안으로 만들어줘.',
-    ];
-    return parts.filter(Boolean).join('\n\n');
-  }
-
   function renderResult(data){
-    latestBriefData = data;
     const pitfallsHtml = (data.pitfalls && data.pitfalls.length)
       ? '<ul class="result-list">' + data.pitfalls.map(i => '<li>' + escapeHtml(i) + '</li>').join('') + '</ul>'
       : '<div class="result-empty">특별히 놓치기 쉬운 지점을 찾지 못했습니다.</div>';
@@ -393,10 +388,6 @@
       : '<div class="card"><div class="result-label">기획안에서 더 확인이 필요한 부분</div><div class="result-text">' + escapeHtml(gapsText) + '</div></div>';
 
     resultSection.innerHTML =
-      '<div class="card" id="genBannerCard"><div class="result-label">예시 배너 생성</div>' +
-      '<div class="gen-banner-desc">이 기획 방향에 맞는 참고용 러프 시안을 AI가 자동으로 생성해요. 실제 카피·로고 없이 톤·무드·레이아웃 참고용으로만 활용하세요 — 완성 배너는 계속 디자이너가 만듭니다.</div>' +
-      '<button type="button" class="gen-banner-btn" id="genBannerBtn">예시 배너 생성하기</button>' +
-      '<div class="gen-banner-result" id="genBannerResult"></div></div>' +
       '<div class="card"><div class="result-label">핵심 제작 방향</div><div class="result-text">' + escapeHtml(data.coreDirection || '—') + '</div></div>' +
       '<div class="card"><div class="result-label">카피·비주얼 추가제안</div>' + formatDirection(data.creativeDirection) + '</div>' +
       visualRefCard +
@@ -412,6 +403,11 @@
 
     try{
       const prepared = await prepareImage(currentFile);
+      // 예시 배너 생성은 텍스트 분석 결과를 기다리지 않고 업로드된 기획안
+      // 이미지 자체를 바로 참조해서 만들 수 있으므로, 분석 요청과 동시에
+      // 병렬로 시작해서 전체 대기 시간을 줄임(직렬로 이어 붙이지 않음).
+      latestPreparedImage = prepared;
+      runBannerGeneration();
 
       let lastErr = null;
       for(let attempt = 1; attempt <= 3; attempt++){
@@ -437,7 +433,6 @@
           showDzState('loaded');
           analyzeBtn.textContent = '다시 분석하기';
           setStatus('', false);
-          runBannerGeneration();
           lastErr = null;
           break;
         }catch(err){
@@ -474,20 +469,23 @@
     }
   });
 
-  async function runBannerGeneration(){
-    if(!latestBriefData) return;
-    const btn = document.getElementById('genBannerBtn');
-    const resultBox = document.getElementById('genBannerResult');
-    if(!btn || !resultBox) return;
+  const genBannerCard = document.getElementById('genBannerCard');
+  const genBannerBtn = document.getElementById('genBannerBtn');
+  const genBannerResult = document.getElementById('genBannerResult');
 
-    btn.disabled = true;
-    resultBox.innerHTML = '<div class="gen-banner-loading"><span class="dot"></span>AI가 참고용 러프 시안을 생성하고 있습니다…</div>';
+  async function runBannerGeneration(){
+    if(!latestPreparedImage) return;
+
+    genBannerCard.style.display = '';
+    genBannerBtn.style.display = 'none';
+    genBannerBtn.disabled = true;
+    genBannerResult.innerHTML = '<div class="gen-banner-loading"><span class="dot"></span>AI가 참고용 러프 시안을 생성하고 있습니다…</div>';
 
     try{
       const response = await fetch('/api/generateExampleBanner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: buildBannerPrompt(latestBriefData) })
+        body: JSON.stringify({ base64: latestPreparedImage.base64, mediaType: latestPreparedImage.mediaType })
       });
       let data;
       try{ data = await response.json(); }
@@ -497,21 +495,19 @@
       if(!response.ok){
         throw new Error((data && data.error) ? data.error : ('status ' + response.status));
       }
-      resultBox.innerHTML =
+      genBannerResult.innerHTML =
         '<div class="gen-banner-img-wrap"><span class="gen-banner-badge">참고용 러프 시안</span>' +
         '<img src="' + escapeHtml(data.imageUrl) + '" alt="AI가 생성한 참고용 러프 배너"></div>' +
         '<div class="gen-banner-note">AI가 생성한 참고용 이미지입니다 — 실제 카피·로고와 다를 수 있으니 톤·무드·레이아웃 참고 용도로만 활용하세요.</div>';
-      btn.textContent = '다시 생성하기';
     }catch(err){
-      resultBox.innerHTML = '<div class="gen-banner-error">생성에 실패했습니다: ' + escapeHtml(err && err.message ? err.message : '알 수 없는 오류') + '</div>';
+      genBannerResult.innerHTML = '<div class="gen-banner-error">생성에 실패했습니다: ' + escapeHtml(err && err.message ? err.message : '알 수 없는 오류') + '</div>';
     }finally{
-      btn.disabled = false;
+      genBannerBtn.disabled = false;
+      genBannerBtn.style.display = '';
     }
   }
 
-  resultSection.addEventListener('click', (e) => {
-    if(e.target.closest('#genBannerBtn')) runBannerGeneration();
-  });
+  genBannerBtn.addEventListener('click', runBannerGeneration);
 </script>
 </body>
 </html>
