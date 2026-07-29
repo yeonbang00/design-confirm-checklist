@@ -7,7 +7,7 @@
 // briefAlignment 판정을 추가로 채운다. 기획안 추출이 실패해도 배너 분석
 // 자체는 막지 않고 briefError만 채워서 응답한다.
 //
-// The Gemini API key lives ONLY in this server-side environment variable.
+// The OpenAI API key lives ONLY in this server-side environment variable.
 // It is never sent to, or reachable from, the browser.
 
 import { getAdvertiser } from './_referenceBanners.js';
@@ -15,6 +15,7 @@ import { MEDIA_GUIDES } from './_mediaGuides.js';
 import { extractBriefDirection } from './_briefAnalysis.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { getBrandGuideState } from './_brandGuideStore.js';
+import { callOpenAI } from './_openaiClient.js';
 
 export const config = {
   api: {
@@ -23,9 +24,6 @@ export const config = {
     },
   },
 };
-
-const GEMINI_MODEL = 'gemini-3.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // 19 items = 11 core design/strategy checks + 6 AI-generation artifact checks
 // + 2 agency-delivery checks (logo compliance, mandatory legal/compliance copy).
@@ -212,9 +210,9 @@ export default async function handler(req, res) {
   }
   if (rejectIfNotSameOrigin(req, res)) return;
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: '서버에 GEMINI_API_KEY 환경변수가 설정되어 있지 않습니다.' });
+    res.status(500).json({ error: '서버에 OPENAI_API_KEY 환경변수가 설정되어 있지 않습니다.' });
     return;
   }
 
@@ -261,78 +259,38 @@ export default async function handler(req, res) {
     (hasBrief ? briefAlignmentInstruction(briefDirection) : '') +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief);
 
-  const parts = [{ text: promptText }];
-
+  // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
+  // 마지막이 새 시안"이라고 안내하므로 images 배열도 그 순서를 그대로 지켜야 함.
+  const images = [];
   if (hasComparison) {
-    parts.push({ text: `[참고 배너 시작 — ${advertiser.name}, ${refImages.length}장]` });
     const refImageData = await Promise.all(refImages.map((img) => fetchAsBase64(img.thumbUrl)));
     refImages.forEach((img, i) => {
-      parts.push({ inlineData: { mimeType: img.mimeType, data: refImageData[i] } });
+      images.push({ mediaType: img.mimeType, base64: refImageData[i] });
     });
-    parts.push({ text: `[참고 배너 끝. 아래가 평가할 새 시안입니다]` });
   }
-
-  parts.push({ inlineData: { mimeType: mediaType, data: base64 } });
+  images.push({ mediaType, base64 });
 
   try {
-    const response = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          // 기획안 부합도까지 포함되면 응답 필드가 늘어나 4608으로는
-          // 가끔 끝부분에서 JSON이 끊기는 경우가 있어 여유를 더 둠.
-          // textTranscript 필드가 추가돼 응답 길이가 늘어난 만큼 상향.
-          maxOutputTokens: hasBrief ? 8192 : 5632,
-          // 오탈자 확인(4·11번)이 팀 최우선 기준인데, low thinking으로는
-          // 19개 항목을 동시에 판정하면서 글자 단위 재확인까지 할 여유가
-          // 부족해 실제로 오탈자를 놓치는 사례가 확인됨 — 항상 medium 이상.
-          thinkingConfig: { thinkingLevel: hasBrief ? 'high' : 'medium' },
-        },
-      }),
+    const parsed = await callOpenAI({
+      apiKey,
+      promptText,
+      images,
+      // reasoning 모델은 눈에 보이는 JSON 출력뿐 아니라 내부 reasoning
+      // 토큰도 이 예산 안에서 함께 소비되므로, 기존 Gemini 대비 여유를 넉넉히 둠
+      // (실제 사용량만큼만 과금되므로 상한을 넉넉히 잡아도 비용은 늘지 않음).
+      maxOutputTokens: hasBrief ? 16000 : 12000,
+      // 오탈자 확인(4·11번)이 팀 최우선 기준인데, effort가 낮으면 19개
+      // 항목을 동시에 판정하면서 글자 단위 재확인까지 할 여유가 부족해
+      // 실제로 오탈자를 놓치는 사례가 확인됨 — 항상 medium 이상.
+      reasoningEffort: hasBrief ? 'high' : 'medium',
     });
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (e) {
-      res.status(502).json({ error: '서버 응답을 읽지 못했습니다 (status ' + response.status + ').' });
-      return;
-    }
-
-    if (!response.ok) {
-      const msg = (data && data.error && data.error.message) ? data.error.message : ('status ' + response.status);
-      res.status(response.status).json({ error: 'Gemini API 오류: ' + msg });
-      return;
-    }
-
-    const candidate = data.candidates && data.candidates[0];
-    const responseParts = candidate && candidate.content && candidate.content.parts;
-    const textBlock = (responseParts || []).map((p) => p.text || '').join('');
-    const clean = textBlock.replace(/```json|```/g, '').trim();
-
-    if (!clean) {
-      const finishReason = candidate && candidate.finishReason;
-      res.status(502).json({ error: 'AI로부터 빈 응답을 받았습니다' + (finishReason ? ` (사유: ${finishReason})` : '') + '.' });
-      return;
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(clean);
-    } catch (e) {
-      res.status(502).json({ error: 'AI 응답을 해석하지 못했습니다.', raw: textBlock });
-      return;
-    }
 
     if (briefError) parsed.briefError = briefError;
     res.status(200).json(parsed);
   } catch (err) {
-    res.status(500).json({ error: err && err.message ? err.message : '알 수 없는 서버 오류' });
+    const status = (err && err.status) || 500;
+    const body = { error: err && err.message ? err.message : '알 수 없는 서버 오류' };
+    if (err && err.raw) body.raw = err.raw;
+    res.status(status).json(body);
   }
 }

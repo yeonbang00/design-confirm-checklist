@@ -13,10 +13,10 @@
 // 레퍼런스 이미지(경쟁사/클립아트코리아/핀터레스트 등에서 가져온 스타일
 // 참고용)의 색상·톤이 그 브랜드 공식 가이드와 다른 경우를 짚어준다.
 //
-// The actual prompt + Gemini call lives in _briefAnalysis.js so it can be
+// The actual prompt + OpenAI call lives in _briefAnalysis.js so it can be
 // reused by api/analyze.js (when a brief is uploaded alongside a banner).
 //
-// The Gemini API key lives ONLY in this server-side environment variable.
+// The OpenAI API key lives ONLY in this server-side environment variable.
 // It is never sent to, or reachable from, the browser.
 
 import { extractBriefDirection } from './_briefAnalysis.js';
@@ -39,9 +39,9 @@ export default async function handler(req, res) {
   }
   if (rejectIfNotSameOrigin(req, res)) return;
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: '서버에 GEMINI_API_KEY 환경변수가 설정되어 있지 않습니다.' });
+    res.status(500).json({ error: '서버에 OPENAI_API_KEY 환경변수가 설정되어 있지 않습니다.' });
     return;
   }
 

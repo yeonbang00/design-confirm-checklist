@@ -6,9 +6,8 @@
 //   extract direction first and then judge whether the banner matches it
 
 import { listNonEmptyCategories, pickReferenceImages } from './_referenceLibrary.js';
+import { callOpenAI } from './_openaiClient.js';
 
-const GEMINI_MODEL = 'gemini-3.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const VISUAL_REF_COUNT = 3;
 
 function categoryListText() {
@@ -64,10 +63,10 @@ ${guideline}
 기획안에 포함된 레퍼런스 이미지(경쟁사 벤치마킹, 클립아트코리아, 핀터레스트 등에서 가져온 스타일 참고용 이미지일 수 있습니다)의 색상·톤이 위 브랜드 공식 가이드와 다르다면, creativeDirection에서 레퍼런스의 색상을 그대로 따르라고 제안하지 마세요. 대신 "레퍼런스는 구도·레이아웃 참고용으로만 쓰고, 컬러는 브랜드 공식 컬러를 우선 적용해야 한다"는 점을 명확히 하세요. 이런 불일치가 있다면 briefGaps에도 예를 들어 "기획안 레퍼런스는 블루 톤이지만 브랜드 공식 컬러는 마젠타라 그대로 적용하면 안 됨"처럼 구체적으로 지적하세요. 레퍼런스와 브랜드 가이드가 일치하거나 레퍼런스에 특정 색상 지정이 없다면 이 지적은 생략하세요.`;
 }
 
-// Calls Gemini with the brief prompt + the given images and returns
+// Calls OpenAI with the brief prompt + the given images and returns
 // {coreDirection, creativeDirection, visualRefs, visualRefReason, pitfalls, briefGaps}.
 // visualRefs is resolved server-side from our own curated reference-image
-// library (api/_referenceLibrary.js) based on the category Gemini picked —
+// library (api/_referenceLibrary.js) based on the category the AI picked —
 // this points designers at reference material we've already vetted instead
 // of them grabbing random competitor/Pinterest images.
 // brandContext (optional): { name, guideline } — when the brand this brief
@@ -81,71 +80,17 @@ export async function extractBriefDirection(images, apiKey, brandContext) {
     (hasBrandGuideline ? brandGuidelineCrossCheckInstruction(brandContext.name, brandContext.guideline) : '') +
     '\n\n' + BRIEF_SCHEMA;
 
-  const parts = [{ text: promptText }];
-  for (const img of images) {
-    if (!img || !img.base64 || !img.mediaType) continue;
-    parts.push({ inlineData: { mimeType: img.mediaType, data: img.base64 } });
-  }
-
-  const response = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
-    },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        // 2560/low였을 때 응답 JSON이 끝부분에서 종종 깨지는 현상이
-        // 실측으로 확인돼(브랜드 가이드 대조까지 들어가면 더 자주),
-        // 여유를 늘림. originalCopyTranscript 필드 추가로 조금 더 늘림.
-        maxOutputTokens: 4608,
-        // PPT 캡처는 텍스트 밀도가 높아 정확히 읽어야 하는 부담이 커서
-        // (analyze.js에서 확인된 "자동교정하며 읽는" 문제와 같은 리스크),
-        // medium보다 여유를 둠.
-        thinkingConfig: { thinkingLevel: 'high' },
-      },
-    }),
+  // reasoning 모델은 눈에 보이는 JSON 출력뿐 아니라 내부 reasoning 토큰도
+  // 이 예산 안에서 함께 소비되므로 여유 있게 잡음(실사용량만큼만 과금).
+  // PPT 캡처는 텍스트 밀도가 높아 정확히 읽어야 하는 부담이 커서(자동교정하며
+  // 읽는 문제 리스크), reasoning effort는 medium보다 여유를 둔 high로.
+  const parsed = await callOpenAI({
+    apiKey,
+    promptText,
+    images,
+    maxOutputTokens: 10000,
+    reasoningEffort: 'high',
   });
-
-  let data;
-  try {
-    data = await response.json();
-  } catch (e) {
-    const err = new Error('서버 응답을 읽지 못했습니다 (status ' + response.status + ').');
-    err.status = response.status;
-    throw err;
-  }
-
-  if (!response.ok) {
-    const msg = (data && data.error && data.error.message) ? data.error.message : ('status ' + response.status);
-    const err = new Error('Gemini API 오류: ' + msg);
-    err.status = response.status;
-    throw err;
-  }
-
-  const candidate = data.candidates && data.candidates[0];
-  const responseParts = candidate && candidate.content && candidate.content.parts;
-  const textBlock = (responseParts || []).map((p) => p.text || '').join('');
-  const clean = textBlock.replace(/```json|```/g, '').trim();
-
-  if (!clean) {
-    const finishReason = candidate && candidate.finishReason;
-    const err = new Error('AI로부터 빈 응답을 받았습니다' + (finishReason ? ` (사유: ${finishReason})` : '') + '.');
-    err.status = 502;
-    throw err;
-  }
-
-  let parsed;
-  try {
-    parsed = JSON.parse(clean);
-  } catch (e) {
-    const err = new Error('AI 응답을 해석하지 못했습니다.');
-    err.status = 502;
-    err.raw = textBlock;
-    throw err;
-  }
 
   const visualRefs = pickReferenceImages(parsed.visualRefCategory, VISUAL_REF_COUNT);
   delete parsed.visualRefCategory;
