@@ -33,7 +33,7 @@
 
 export const MEDIA_GUIDES = {
   'meta-reels': {
-    name: '메타(릴스)',
+    name: '메타(릴스 및 스토리)',
     note: '릴스(Reels) 이미지 소재 등록 기준 반영됨',
     sourceUrl: 'https://www.facebook.com/business/help/980593475366490?id=1240182842783684',
     sourceFile: null,
