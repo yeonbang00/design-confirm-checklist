@@ -148,7 +148,7 @@
   .ai-summary-head .dot{width:8px; height:8px; border-radius:50%; background:oklch(65% 0.008 265);}
   .ai-summary-head span:last-child{font-size:15px; font-weight:700; letter-spacing:0.01em;}
   .ai-summary-body{font-size:14.5px; line-height:1.8; color:oklch(92% 0.008 85);}
-  .banner-type-badge{display:none; font-size:11px; font-weight:700; color:oklch(97% 0.005 85); background:oklch(100% 0 0 / 0.14); border:1px solid oklch(100% 0 0 / 0.28); border-radius:20px; padding:3px 10px; margin-right:8px; vertical-align:middle;}
+  .banner-type-badge{display:none; font-size:11px; font-weight:700; color:oklch(97% 0.005 85); background:oklch(100% 0 0 / 0.14); border:1px solid oklch(100% 0 0 / 0.28); border-radius:20px; padding:3px 10px; margin-right:8px; vertical-align:middle; cursor:help;}
   .banner-type-badge.show{display:inline-block;}
   .key-checks{display:none; margin-top:22px; padding-top:22px; border-top:1px solid oklch(100% 0 0 / 0.16);}
   .key-checks.show{display:block;}
@@ -497,6 +497,7 @@
     na:{label:'해당없음', color:'var(--na)'},
   };
   const GROUP_LABELS = {1:'전략 · 디자인 기본기', 2:'AI 생성 아티팩트', 3:'광고주 전달 전 필수 확인'};
+  const BANNER_TYPE_LEGEND = '배너 유형 정의\n프로모션: 할인·혜택·기간 한정 등을 강조\n커머스: 특정 제품 판매, 구매 유도가 핵심\n브랜딩: 직접적 판매 목적 없이 브랜드 인지도·이미지 전달이 핵심\n이벤트: 행사·캠페인 참여 유도가 핵심\n기타: 위에 해당하지 않음';
 
   const state = {};
   ITEMS.forEach(it => state[it.n] = null);
@@ -919,7 +920,8 @@
     const badgeEl = document.getElementById('bannerTypeBadge');
     if(result.summary){ summaryEl.textContent = result.summary; summaryBox.classList.add('show'); }
     if(result.bannerType){
-      badgeEl.textContent = '감지된 유형: ' + result.bannerType;
+      badgeEl.textContent = '감지된 유형: ' + result.bannerType + ' ⓘ';
+      badgeEl.title = BANNER_TYPE_LEGEND;
       badgeEl.classList.add('show');
     } else {
       badgeEl.classList.remove('show');
