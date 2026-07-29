@@ -73,6 +73,7 @@
   .gl-p{font-size:14px; line-height:1.8; color:var(--text); margin:0 0 12px;}
   .gl-list{margin:0 0 14px; padding-left:20px;}
   .gl-list li{font-size:14px; line-height:1.8; color:var(--text); margin-bottom:4px;}
+  .gl-list li.gl-warn{color:#E33B5A; font-weight:700;}
 
   .page-footer{text-align:center; font-size:12px; color:var(--text-3); line-height:1.8; padding-top:28px;}
 
@@ -141,9 +142,12 @@
     const intro = introLines.join(' ').trim();
     if(intro) html += '<p class="gl-p">' + escapeHtml(intro) + '</p>';
     if(listLines.length){
-      html += '<ul class="gl-list">' + listLines.map(l =>
-        '<li>' + escapeHtml(l.trim().replace(/^-\s*/, '')) + '</li>'
-      ).join('') + '</ul>';
+      html += '<ul class="gl-list">' + listLines.map(l => {
+        const trimmed = l.trim();
+        const isWarn = trimmed.startsWith('-!');
+        const content = trimmed.replace(/^-!?\s*/, '');
+        return '<li' + (isWarn ? ' class="gl-warn"' : '') + '>' + escapeHtml(content) + '</li>';
+      }).join('') + '</ul>';
     }
     return html;
   }

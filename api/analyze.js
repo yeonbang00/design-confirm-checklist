@@ -148,7 +148,7 @@ function mediaGuidelineInstruction(mediaGuides, hasSize) {
 아래 매체 기준에 세이프존 비율·여백 등 공간적 위치 기준이 포함되어 있다면, 이는 이미지의 정확한 픽셀 측정이 아니라 대략적인 위치 판단이라는 점을 감안하세요. 요소가 기준 경계를 명확하고 크게 벗어난 경우에만 위반(수정필요 이상)으로 판정하고, 경계에 살짝 걸치거나 침범 정도를 이미지만으로 확신하기 어려운 경우에는 반려로 단정하지 말고 needsCheck로 돌리세요. 애매한 경우 과도하게 반려로 판정하지 마세요.`;
 
   for (const m of withGuideline) {
-    text += `\n\n[${m.name} 소재 등록 기준]\n${m.guideline}`;
+    text += `\n\n[${m.name} 소재 등록 기준]\n${m.guideline.replace(/^-!\s*/gm, '- ')}`;
   }
 
   if (withoutGuideline.length > 0) {
