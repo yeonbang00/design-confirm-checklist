@@ -1023,7 +1023,7 @@
         if(lastErr.status === 429){
           setStatus('AI 분석 요청이 일시적으로 몰렸습니다. 잠시 후 다시 시도해주세요.', false);
         } else if(lastErr.status === 503 || lastErr.status >= 500){
-          setStatus('AI 서버가 일시적으로 혼잡합니다 (구글 쪽 문제로, 앱 문제가 아니에요). 잠시 후 다시 시도해주세요.', false);
+          setStatus('AI 서버가 일시적으로 혼잡합니다 (OpenAI 쪽 문제로, 앱 문제가 아니에요). 잠시 후 다시 시도해주세요.', false);
         } else {
           setStatus('분석에 실패했습니다: '+detail+' — 다시 시도해주세요.', false);
         }
