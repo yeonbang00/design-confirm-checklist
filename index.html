@@ -150,7 +150,7 @@
   .ai-summary-body{font-size:14.5px; line-height:1.8; color:oklch(92% 0.008 85);}
   .banner-type-badge{display:none; font-size:11px; font-weight:700; color:oklch(97% 0.005 85); background:oklch(100% 0 0 / 0.14); border:1px solid oklch(100% 0 0 / 0.28); border-radius:20px; padding:3px 10px; margin-right:8px; vertical-align:middle;}
   .banner-type-badge.show{display:inline-block;}
-  .key-checks{display:none; margin-bottom:22px; padding-bottom:22px; border-bottom:1px solid oklch(100% 0 0 / 0.16);}
+  .key-checks{display:none; margin-top:22px; padding-top:22px; border-top:1px solid oklch(100% 0 0 / 0.16);}
   .key-checks.show{display:block;}
   .kc-title{font-size:12px; font-weight:700; letter-spacing:.04em; color:oklch(85% 0.01 85); margin-bottom:12px; text-transform:uppercase;}
   .kc-row{display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;}
@@ -337,6 +337,12 @@
 
   <!-- ---------- AI summary ---------- -->
   <div class="ai-summary" id="aiSummaryBox">
+    <div class="ai-summary-head"><span class="dot" id="summaryDot"></span><span>AI 총평</span></div>
+    <div class="ai-summary-body">
+      <span class="banner-type-badge" id="bannerTypeBadge"></span>
+      <span id="aiSummaryText"></span>
+    </div>
+    <div class="summary-refs" id="summaryRefs"></div>
     <div class="key-checks" id="keyChecksBlock">
       <div class="kc-title">핵심 확인</div>
       <div class="kc-row">
@@ -354,12 +360,6 @@
         </div>
       </div>
     </div>
-    <div class="ai-summary-head"><span class="dot" id="summaryDot"></span><span>AI 총평</span></div>
-    <div class="ai-summary-body">
-      <span class="banner-type-badge" id="bannerTypeBadge"></span>
-      <span id="aiSummaryText"></span>
-    </div>
-    <div class="summary-refs" id="summaryRefs"></div>
 
     <div class="comparison-block" id="briefAlignmentBlock">
       <div class="comparison-title">기획 부합도</div>
