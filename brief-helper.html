@@ -152,7 +152,7 @@
   <p class="sub">기획안(PPT) 캡처 이미지를 올리면, 배너를 만들 때 필요한 방향을 정리해드려요.</p>
 
   <div class="preview-list">
-    <div class="preview-item"><span class="preview-num">1</span><div><b>예시 배너 생성</b> — 버튼을 누르면 AI가 참고용 러프 시안을 만들어드려요 (완성 배너 아님)</div></div>
+    <div class="preview-item"><span class="preview-num">1</span><div><b>예시 배너 생성</b> — 분석과 함께 AI가 참고용 러프 시안을 자동으로 만들어드려요 (완성 배너 아님)</div></div>
     <div class="preview-item"><span class="preview-num">2</span><div><b>핵심 제작 방향</b> — 이 배너가 전달해야 할 가장 중요한 인상</div></div>
     <div class="preview-item"><span class="preview-num">3</span><div><b>카피·비주얼 추가제안</b> — 기획안 레퍼런스에는 없는 새로운 비주얼 아이디어, 필요시 카피 제안까지</div></div>
     <div class="preview-item"><span class="preview-num">4</span><div><b>비주얼 레퍼런스 추천</b> — 업종·톤에 맞는, 이미 검증된 우리 레퍼런스 이미지</div></div>
@@ -394,7 +394,7 @@
 
     resultSection.innerHTML =
       '<div class="card" id="genBannerCard"><div class="result-label">예시 배너 생성</div>' +
-      '<div class="gen-banner-desc">이 기획 방향에 맞는 참고용 러프 시안을 AI가 생성해봐요. 실제 카피·로고 없이 톤·무드·레이아웃 참고용으로만 활용하세요 — 완성 배너는 계속 디자이너가 만듭니다.</div>' +
+      '<div class="gen-banner-desc">이 기획 방향에 맞는 참고용 러프 시안을 AI가 자동으로 생성해요. 실제 카피·로고 없이 톤·무드·레이아웃 참고용으로만 활용하세요 — 완성 배너는 계속 디자이너가 만듭니다.</div>' +
       '<button type="button" class="gen-banner-btn" id="genBannerBtn">예시 배너 생성하기</button>' +
       '<div class="gen-banner-result" id="genBannerResult"></div></div>' +
       '<div class="card"><div class="result-label">핵심 제작 방향</div><div class="result-text">' + escapeHtml(data.coreDirection || '—') + '</div></div>' +
@@ -437,6 +437,7 @@
           showDzState('loaded');
           analyzeBtn.textContent = '다시 분석하기';
           setStatus('', false);
+          runBannerGeneration();
           lastErr = null;
           break;
         }catch(err){
@@ -473,11 +474,12 @@
     }
   });
 
-  resultSection.addEventListener('click', async (e) => {
-    const btn = e.target.closest('#genBannerBtn');
-    if(!btn || !latestBriefData) return;
-
+  async function runBannerGeneration(){
+    if(!latestBriefData) return;
+    const btn = document.getElementById('genBannerBtn');
     const resultBox = document.getElementById('genBannerResult');
+    if(!btn || !resultBox) return;
+
     btn.disabled = true;
     resultBox.innerHTML = '<div class="gen-banner-loading"><span class="dot"></span>AI가 참고용 러프 시안을 생성하고 있습니다…</div>';
 
@@ -505,6 +507,10 @@
     }finally{
       btn.disabled = false;
     }
+  }
+
+  resultSection.addEventListener('click', (e) => {
+    if(e.target.closest('#genBannerBtn')) runBannerGeneration();
   });
 </script>
 </body>
