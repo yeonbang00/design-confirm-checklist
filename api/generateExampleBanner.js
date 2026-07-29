@@ -59,7 +59,9 @@ export default async function handler(req, res) {
     form.append('model', IMAGE_MODEL);
     form.append('image', new Blob([Buffer.from(base64, 'base64')], { type: mediaType }), 'brief.jpg');
     form.append('prompt', FIXED_PROMPT);
-    form.append('size', '1024x1024');
+    // OpenAI 이미지 API는 가로·세로가 16의 배수인 크기만 허용해서(1080은
+    // 16으로 안 나눠떨어짐) 1080에 가장 가까운 유효 값인 1088을 사용.
+    form.append('size', '1088x1088');
     // 참고용 러프 시안이라 최고화질까지는 필요 없어 medium으로 비용 절감.
     form.append('quality', 'medium');
     form.append('n', '1');
