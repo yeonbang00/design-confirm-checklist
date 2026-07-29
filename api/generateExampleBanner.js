@@ -1,12 +1,16 @@
 // POST /api/generateExampleBanner
-// Body: { prompt: string }
+// Body: { base64: string, mediaType: string, prompt: string }
 // Returns: { imageUrl: string, mimeType: string } | { error: string }
 //
-// Generates a REFERENCE example banner image from a text prompt — built
-// client-side (brief-helper.html) from the 기획안 direction extracted by
-// /api/analyzeBrief (coreDirection/creativeDirection), so this is called
-// AFTER that analysis finishes, not in parallel with it. Uploads the
-// result to Vercel Blob Storage and returns the URL — same storage
+// Generates a REFERENCE example banner image using OpenAI's image EDIT
+// (reference-conditioned) endpoint — fed both the actual uploaded 기획안
+// screenshot (so the brief's own reference imagery/composition gets
+// reflected, not ignored) AND a text prompt built client-side
+// (brief-helper.html) from the 기획안 direction extracted by
+// /api/analyzeBrief (originalCopyTranscript/coreDirection/creativeDirection,
+// so the brief's actual copy isn't ignored either). Called AFTER that
+// analysis finishes (needs its output), not in parallel with it. Uploads
+// the result to Vercel Blob Storage and returns the URL — same storage
 // pattern as reference banners/PDFs.
 //
 // Scope note: even though the prompt asks for an actual polished banner
@@ -22,12 +26,12 @@ import { put } from './_blobPut.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 const IMAGE_MODEL = 'gpt-image-2';
-const IMAGES_URL = 'https://api.openai.com/v1/images/generations';
+const IMAGES_EDIT_URL = 'https://api.openai.com/v1/images/edits';
 
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '1mb',
+      sizeLimit: '20mb',
     },
   },
 };
@@ -45,29 +49,30 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { prompt } = req.body || {};
-  if (!prompt || typeof prompt !== 'string') {
-    res.status(400).json({ error: '프롬프트가 없습니다.' });
+  const { base64, mediaType, prompt } = req.body || {};
+  if (!base64 || !mediaType || !prompt || typeof prompt !== 'string') {
+    res.status(400).json({ error: '이미지 또는 프롬프트 데이터가 없습니다.' });
     return;
   }
 
   try {
-    const response = await fetch(IMAGES_URL, {
+    const form = new FormData();
+    form.append('model', IMAGE_MODEL);
+    form.append('image', new Blob([Buffer.from(base64, 'base64')], { type: mediaType }), 'brief.jpg');
+    form.append('prompt', prompt);
+    // OpenAI 이미지 API는 가로·세로가 16의 배수인 크기만 허용해서(1080은
+    // 16으로 안 나눠떨어짐) 1080에 가장 가까운 유효 값인 1088을 사용.
+    form.append('size', '1088x1088');
+    // 참고용 이미지라 최고화질까지는 필요 없어 medium으로 비용 절감.
+    form.append('quality', 'medium');
+    form.append('n', '1');
+
+    const response = await fetch(IMAGES_EDIT_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model: IMAGE_MODEL,
-        prompt,
-        // OpenAI 이미지 API는 가로·세로가 16의 배수인 크기만 허용해서(1080은
-        // 16으로 안 나눠떨어짐) 1080에 가장 가까운 유효 값인 1088을 사용.
-        size: '1088x1088',
-        // 참고용 이미지라 최고화질까지는 필요 없어 medium으로 비용 절감.
-        quality: 'medium',
-        n: 1,
-      }),
+      body: form,
     });
 
     let data;
@@ -90,11 +95,11 @@ export default async function handler(req, res) {
       return;
     }
 
-    const mimeType = 'image/png';
+    const outputMimeType = 'image/png';
     const bytes = Buffer.from(imageB64, 'base64');
-    const url = await put(`generated/example-${Date.now()}.png`, bytes, mimeType);
+    const url = await put(`generated/example-${Date.now()}.png`, bytes, outputMimeType);
 
-    res.status(200).json({ imageUrl: url, mimeType });
+    res.status(200).json({ imageUrl: url, mimeType: outputMimeType });
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : '알 수 없는 서버 오류' });
   }

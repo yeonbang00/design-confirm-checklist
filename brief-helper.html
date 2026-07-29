@@ -249,6 +249,7 @@
   const MAX_BYTES = 8*1024*1024;
   let currentFile = null;
   let latestBriefData = null;
+  let latestPreparedImage = null;
 
   function setStatus(msg, isLoading){
     statusLine.textContent = msg;
@@ -403,6 +404,7 @@
 
     try{
       const prepared = await prepareImage(currentFile);
+      latestPreparedImage = prepared;
 
       let lastErr = null;
       let data = null;
@@ -479,16 +481,17 @@
 
   function buildBannerPrompt(data){
     const parts = [
-      '아래 방향에 맞는 광고 배너 디자인을 실제로 만들어줘. 러프 스케치나 단순 목업이 아니라 레이아웃·타이포·컬러·카피까지 갖춘, 실제로 쓸 수 있는 수준의 배너로 만들어줘.',
+      '첨부된 기획안(PPT 캡처) 이미지 속 레퍼런스 이미지·구성·분위기를 적극적으로 참고하고, 아래 실제 카피와 방향을 반영해서 광고 배너 디자인을 실제로 만들어줘. 러프 스케치나 단순 목업이 아니라 레이아웃·타이포·컬러·카피까지 갖춘, 실제로 쓸 수 있는 수준의 배너로 만들어줘.',
+      data.originalCopyTranscript ? ('기획안 실제 카피(가능한 그대로 반영): ' + data.originalCopyTranscript.replace(/\n+/g, ' / ')) : '',
       data.coreDirection ? ('핵심 방향: ' + data.coreDirection) : '',
-      data.creativeDirection ? ('세부 방향: ' + data.creativeDirection.replace(/[[\]]/g, '').replace(/\n+/g, ' ')) : '',
+      data.creativeDirection ? ('추가 방향: ' + data.creativeDirection.replace(/[[\]]/g, '').replace(/\n+/g, ' ')) : '',
       '1:1 정사각형 비율로 만들어줘.',
     ];
     return parts.filter(Boolean).join('\n\n');
   }
 
   async function runBannerGeneration(){
-    if(!latestBriefData) return;
+    if(!latestBriefData || !latestPreparedImage) return;
 
     genBannerCard.style.display = '';
     genBannerBtn.style.display = 'none';
@@ -499,7 +502,11 @@
       const response = await fetch('/api/generateExampleBanner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: buildBannerPrompt(latestBriefData) })
+        body: JSON.stringify({
+          base64: latestPreparedImage.base64,
+          mediaType: latestPreparedImage.mediaType,
+          prompt: buildBannerPrompt(latestBriefData)
+        })
       });
       let data;
       try{ data = await response.json(); }
