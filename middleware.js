@@ -44,7 +44,7 @@ function loginPageHtml(nextPath, showError) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>디자인 히어로 | 접근 확인</title>
+<title>AdCheck | 접근 확인</title>
 <style>
   body{margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:oklch(97.5% 0.006 85); font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;}
   .box{background:#fff; border:1px solid oklch(89% 0.015 265); border-radius:20px; padding:40px 36px; width:320px; box-shadow:0 12px 30px oklch(20% 0.02 265 / 0.08); box-sizing:border-box;}
@@ -57,7 +57,7 @@ function loginPageHtml(nextPath, showError) {
 </head>
 <body>
   <div class="box">
-    <h1>디자인 히어로</h1>
+    <h1>AdCheck</h1>
     <p>팀 공유 비밀번호를 입력해주세요.</p>
     <form method="POST" action="${LOGIN_PATH}">
       <input type="hidden" name="next" value="${escapeHtml(nextPath)}">
