@@ -33,7 +33,7 @@
 
 export const MEDIA_GUIDES = {
   'meta-image': {
-    name: '메타(이미지 광고)',
+    name: '메타(1080x1080)',
     note: 'Facebook 비즈니스 둘러보기 등 피드형 이미지 광고 소재 등록 기준',
     sourceUrl: null,
     sourceFile: null,
