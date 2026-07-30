@@ -16,6 +16,7 @@ import { extractBriefDirection } from './_briefAnalysis.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { getBrandGuideState } from './_brandGuideStore.js';
 import { callOpenAI } from './_openaiClient.js';
+import { runOcr, formatOcrForPrompt } from './_clovaOcr.js';
 
 export const config = {
   api: {
@@ -260,6 +261,11 @@ export default async function handler(req, res) {
 
   const hasSize = Number.isFinite(imageWidth) && Number.isFinite(imageHeight) && imageWidth > 0 && imageHeight > 0;
 
+  // 3번(타이포·정렬) 판정용 정밀 좌표 — 텍스트 분석/기획안 추출과 동시에
+  // 병렬로 실행해서 대기 시간을 늘리지 않음. CLOVA_OCR_* 환경변수가 없거나
+  // 실패해도 null만 반환하고 아래 로직은 그대로 AI 시각 판단으로 넘어감.
+  const ocrPromise = runOcr(base64, mediaType);
+
   let briefDirection = null;
   let briefError = null;
   if (Array.isArray(briefImages) && briefImages.length > 0) {
@@ -272,6 +278,9 @@ export default async function handler(req, res) {
   }
   const hasBrief = !!briefDirection;
 
+  const ocrFields = await ocrPromise;
+  const ocrInstruction = ocrFields ? formatOcrForPrompt(ocrFields) : '';
+
   const promptText =
     BASE_PROMPT +
     (hasSize ? imageSizeInstruction(imageWidth, imageHeight, fileSizeBytes) : '') +
@@ -279,6 +288,7 @@ export default async function handler(req, res) {
     (hasGuideline ? brandGuidelineInstruction(advertiser.name, brandGuidelineText) : '') +
     (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides, hasSize) : '') +
     (hasBrief ? briefAlignmentInstruction(briefDirection) : '') +
+    ocrInstruction +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief);
 
   // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
