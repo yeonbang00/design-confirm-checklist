@@ -53,15 +53,24 @@ export async function runOcr(base64, mediaType) {
 // NOT try to cluster words into lines or guess which elements should align
 // with which — the AI can see the actual image and decide that; this just
 // supplies ground-truth coordinates it can't measure itself.
-export function formatOcrForPrompt(fields) {
+//
+// scaleX/scaleY: OCR runs on the (possibly downscaled) image actually sent
+// for analysis, but safe-zone px thresholds elsewhere in the prompt are
+// expressed in the ORIGINAL upload's dimensions — pass origWidth/analyzedWidth
+// (and same for height) here so the reported coordinates land in the same
+// coordinate space as those thresholds. Default 1 (no rescaling) when the
+// caller doesn't know both sizes.
+export function formatOcrForPrompt(fields, scaleX, scaleY) {
   if (!fields || !fields.length) return '';
+  scaleX = Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1;
+  scaleY = Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1;
   const lines = fields.slice(0, 60).map((f) => {
     const text = (f.inferText || '').trim();
     if (!text) return null;
     const verts = (f.boundingPoly && f.boundingPoly.vertices) || [];
     if (!verts.length) return null;
-    const xs = verts.map((v) => v.x);
-    const ys = verts.map((v) => v.y);
+    const xs = verts.map((v) => v.x * scaleX);
+    const ys = verts.map((v) => v.y * scaleY);
     const left = Math.round(Math.min(...xs));
     const right = Math.round(Math.max(...xs));
     const top = Math.round(Math.min(...ys));
@@ -72,7 +81,7 @@ export function formatOcrForPrompt(fields) {
   }).filter(Boolean);
   if (!lines.length) return '';
 
-  return `\n\nOCR 측정 텍스트 위치 (정확한 픽셀 좌표, 참고용 — 이미지를 직접 측정한 값이니 시각적 추측보다 신뢰하세요):
+  return `\n\nOCR 측정 텍스트 위치 (원본 이미지 픽셀 기준으로 환산된 정확한 좌표, 참고용 — 이미지를 직접 측정한 값이니 시각적 추측보다 신뢰하세요. 위에 안내된 "실제 원본 크기"와 동일한 좌표계입니다):
 ${lines.join('\n')}
 
 3번(타이포·정렬) 판정 시 이 좌표를 활용하세요: 위아래로 쌓인 제목·부제목처럼 서로 정렬이 의도된 것으로 보이는 텍스트들의 가로중심(중앙정렬 의도) 또는 좌측 좌표(좌측정렬 의도)를 비교해서 정확히 몇 px 차이나는지 계산하세요. 아래 기준을 엄격하게 적용하세요:

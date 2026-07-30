@@ -239,7 +239,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -279,7 +279,15 @@ export default async function handler(req, res) {
   const hasBrief = !!briefDirection;
 
   const ocrFields = await ocrPromise;
-  const ocrInstruction = ocrFields ? formatOcrForPrompt(ocrFields) : '';
+  // 클라이언트가 업로드 전 이미지를 리사이즈해서 보내기 때문에(긴 변 최대
+  // 1280px), OCR이 실제로 측정하는 이미지 크기(analyzedWidth/Height)와
+  // 원본 크기(imageWidth/Height)가 다를 수 있음 — 이 배율을 곱해서 OCR
+  // 좌표를 원본 기준 픽셀로 환산하지 않으면, 세이프존 px 기준(원본 기준으로
+  // 계산된 값)과 직접 비교했을 때 틀린 값이 나옴.
+  const hasAnalyzedSize = Number.isFinite(analyzedWidth) && Number.isFinite(analyzedHeight) && analyzedWidth > 0 && analyzedHeight > 0;
+  const scaleX = (hasSize && hasAnalyzedSize) ? imageWidth / analyzedWidth : 1;
+  const scaleY = (hasSize && hasAnalyzedSize) ? imageHeight / analyzedHeight : 1;
+  const ocrInstruction = ocrFields ? formatOcrForPrompt(ocrFields, scaleX, scaleY) : '';
 
   const promptText =
     BASE_PROMPT +
