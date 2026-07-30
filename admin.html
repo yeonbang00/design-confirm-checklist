@@ -59,6 +59,8 @@
     <div class="gate-err" id="gateErr"></div>
   </div>
 
+  <button type="button" class="btn btn-revoke" id="refreshBtn" style="display:none; margin-bottom:8px;">새로고침</button>
+
   <div class="section" id="pendingSection">
     <div class="section-title">승인 대기</div>
     <div id="pendingList"></div>
@@ -94,6 +96,9 @@
   const approvedList = document.getElementById('approvedList');
   const rejectedList = document.getElementById('rejectedList');
   const statusLine = document.getElementById('statusLine');
+  const refreshBtn = document.getElementById('refreshBtn');
+
+  let currentUsers = [];
 
   function formatDate(iso){
     if(!iso) return '';
@@ -150,7 +155,9 @@
       pendingSection.classList.add('show');
       approvedSection.classList.add('show');
       rejectedSection.classList.add('show');
-      renderUsers(data.users || []);
+      refreshBtn.style.display = '';
+      currentUsers = data.users || [];
+      renderUsers(currentUsers);
       return true;
     }catch(err){
       gateErr.textContent = '서버에 연결하지 못했습니다.';
@@ -163,6 +170,8 @@
     gateErr.textContent = '';
     await loadUsers();
   });
+
+  refreshBtn.addEventListener('click', () => { loadUsers(); });
 
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('.btn[data-action]');
@@ -183,7 +192,20 @@
         btn.disabled = false;
         return;
       }
-      await loadUsers();
+      // 방금 처리한 결과를 직접 로컬 상태에 반영해서 즉시 다시 그림 —
+      // 서버(Blob storage)에 방금 쓴 내용을 곧바로 다시 읽으면 캐시
+      // 지연으로 옛날 상태가 보일 수 있어서, 재조회 대신 이렇게 처리.
+      const user = currentUsers.find((u) => u.id === id);
+      if(user){
+        if(action === 'approve'){
+          user.status = 'approved';
+          user.approvedAt = new Date().toISOString();
+        } else {
+          user.status = 'rejected';
+          user.approvedAt = null;
+        }
+      }
+      renderUsers(currentUsers);
     }catch(err){
       statusLine.textContent = '서버에 연결하지 못했습니다.';
       btn.disabled = false;
