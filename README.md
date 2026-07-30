@@ -30,7 +30,7 @@
 | `OPENAI_API_KEY` | 배너/기획안 분석용 OpenAI API 키 (GPT-5.6 Sol) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob Storage 읽기/쓰기 (Blob Storage를 프로젝트에 연결하면 자동 생성됨) |
 | `BRAND_GUIDE_EDIT_PASSWORD` | 브랜드/매체 가이드 저장, 히스토리 삭제 등 편집 작업에 쓰는 팀 공유 비밀번호 |
-| `SITE_ACCESS_PASSWORD` | 사이트 전체(페이지+API) 접근 게이트 비밀번호 — 설정 안 하면 게이트 없이 열린 상태로 동작 |
+| `ADMIN_PASSWORD` | `admin.html`(가입 승인 관리 페이지) 접근 비밀번호 — 사이트 로그인과 별개 |
 | `CLOVA_OCR_INVOKE_URL` | 3번(타이포·정렬) 픽셀 정밀 측정용 네이버 클로바 OCR Invoke URL — 선택사항, 없으면 OCR 없이 AI 시각 판단만 사용 |
 | `CLOVA_OCR_SECRET_KEY` | 위 클로바 OCR 도메인의 Secret Key — 선택사항 |
 
@@ -41,12 +41,19 @@
 1. https://vercel.com 가입 (GitHub 계정으로 가능)
 2. 이 저장소를 Vercel 프로젝트로 연결 ("Add New Project" → 저장소 선택)
 3. 프로젝트에 Blob Storage 추가 (Storage 탭 → Create → Blob) → `BLOB_READ_WRITE_TOKEN`이 자동으로 채워짐
-4. "Environment Variables"에 위 표의 나머지 3개 값 추가
+4. "Environment Variables"에 위 표의 나머지 값 추가
 5. Deploy → 몇 분 뒤 `https://프로젝트명.vercel.app` 같은 URL 생성됨
 
 ## 사이트 접근
 
-`SITE_ACCESS_PASSWORD`가 설정돼 있으면, 처음 접속 시 비밀번호를 입력해야 페이지와 API 모두 사용할 수 있습니다 (`middleware.js`). 한 번 통과하면 30일간 쿠키로 기억되어 재입력이 필요 없습니다.
+사이트 전체(페이지+API)는 개별 계정 로그인이 필요합니다 (`middleware.js`).
+
+1. 처음 접속하면 로그인/가입 신청 화면이 뜹니다. "가입 신청" 탭에서 이름·이메일·비밀번호로 신청하면 "승인 대기" 상태가 됩니다.
+2. 관리자가 `/admin.html`(`ADMIN_PASSWORD`로 보호됨, GNB에 노출 안 됨)에서 대기 목록을 보고 승인/거절합니다.
+3. 승인되면 그 계정으로 로그인 가능 — 통과하면 30일간 쿠키로 기억되어 재입력이 필요 없습니다.
+4. 관리자는 이미 승인된 계정도 `/admin.html`에서 "권한 해제"할 수 있고, 해제 즉시 그 계정의 기존 세션도 무효화됩니다.
+
+계정 데이터는 Vercel Blob Storage의 `users.json`에 저장됩니다(비밀번호는 PBKDF2로 해시해서 저장, 평문 저장 안 함).
 
 ## 체크리스트 구성
 
@@ -68,7 +75,8 @@ Vercel Hobby 플랜은 **서버리스 함수를 정확히 12개까지만** 허�
 
 - **"서버에 OPENAI_API_KEY 환경변수가 설정되어 있지 않습니다"** → Vercel 환경변수 설정을 확인하고 재배포하세요.
 - **분석이 계속 실패함** → 화면에 뜨는 에러 문구를 그대로 확인하세요. OpenAI API 자체 오류 메시지가 그대로 노출되도록 만들어져 있어서, 원인(권한/쿼터/이미지 형식 등)을 바로 알 수 있습니다.
-- **비밀번호를 넣어도 사이트에 못 들어감** → `SITE_ACCESS_PASSWORD` 값이 정확한지, 최근에 값을 바꿨다면 재배포했는지 확인하세요.
+- **로그인이 안 됨** → 계정이 아직 "승인 대기" 상태인지 확인하세요 (`/admin.html`에서 승인 필요). 승인된 계정인데도 안 되면 이메일·비밀번호 오타를 먼저 확인하세요.
+- **`/admin.html`에서 비밀번호를 넣어도 안 들어가짐** → `ADMIN_PASSWORD` 값이 정확한지, 최근에 값을 바꿨다면 재배포했는지 확인하세요.
 
 ## 파일 구조
 
@@ -80,9 +88,10 @@ Vercel Hobby 플랜은 **서버리스 함수를 정확히 12개까지만** 허�
 ├─ media-guide.html          # 매체 가이드
 ├─ reference-board.html      # 이미지 레퍼런스
 ├─ history.html               # 히스토리
-├─ middleware.js             # 사이트 전체 접근 게이트
+├─ admin.html                # 가입 승인 관리 (ADMIN_PASSWORD로 보호, GNB에 노출 안 됨)
+├─ middleware.js             # 사이트 전체 접근 게이트 (로그인/가입/관리자 승인 로직 포함)
 ├─ api/
-│  ├─ analyze.js                       # 배너 분석 (체크리스트 + 비교 + 매체가이드 + 기획부합도)
+│  ├─ analyze.js                       # 배너 분석 (체크리스트 + 비교 + 매체가이드 + 기획부합도 + OCR)
 │  ├─ analyzeBrief.js                  # 기획안 헬퍼 분석
 │  ├─ advertisers.js                   # 광고주(브랜드) 목록 조회/추가/삭제
 │  ├─ brandGuides.js                   # 브랜드 가이드 조회
@@ -92,8 +101,8 @@ Vercel Hobby 플랜은 **서버리스 함수를 정확히 12개까지만** 허�
 │  ├─ mediaGuides.js / mediaGuideDetails.js  # 매체 가이드 조회
 │  ├─ referenceCategories.js           # 이미지 레퍼런스 카테고리 + 히스토리 조회/삭제
 │  ├─ referenceImages.js               # 이미지 레퍼런스 이미지 조회
-│  ├─ generateExampleBanner.js         # (미사용) AI 예시 배너 생성 — 어느 페이지에서도 호출되지 않음
-│  └─ _*.js                            # 라우팅되지 않는 헬퍼 모듈 (프롬프트, 저장소, 검증 로직 등)
+│  ├─ generateExampleBanner.js         # 기획안 헬퍼의 예시 배너 생성 (gpt-image-2)
+│  └─ _*.js                            # 라우팅되지 않는 헬퍼 모듈 (프롬프트, 저장소, 검증 로직, OpenAI/OCR 호출 등)
 ├─ scripts/                  # 이미지 대량 업로드 등 Claude가 사용하는 유지보수 스크립트
 ├─ package.json
 └─ README.md

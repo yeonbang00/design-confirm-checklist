@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+    --danger: oklch(55% 0.19 25);
+    --ok: oklch(48% 0.12 145);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif; line-height:1.6; word-break:keep-all;}
+  .page{max-width:760px; margin:0 auto; padding:40px 24px 100px;}
+  h1{font-size:20px; font-weight:800; margin:0 0 6px;}
+  .sub{font-size:13.5px; color:var(--text-2); margin:0 0 28px;}
+
+  .gate-card{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:28px; max-width:340px;}
+  .gate-card input{width:100%; padding:12px 14px; border:1px solid var(--card-border); border-radius:10px; font-size:14px; box-sizing:border-box; margin-bottom:12px; font-family:inherit;}
+  .gate-card button{width:100%; padding:12px; border:none; border-radius:10px; background:var(--num-text); color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;}
+  .gate-err{color:var(--danger); font-size:12.5px; margin:-4px 0 12px;}
+
+  .section{display:none; margin-top:32px;}
+  .section.show{display:block;}
+  .section-title{font-size:14px; font-weight:700; color:var(--text-2); margin:0 0 14px;}
+  .user-row{background:var(--card); border:1px solid var(--card-border); border-radius:14px; padding:16px 18px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .user-info{font-size:13.5px;}
+  .user-name{font-weight:700; margin-right:6px;}
+  .user-email{color:var(--text-2);}
+  .user-date{font-size:12px; color:var(--text-3); margin-top:2px;}
+  .user-actions{display:flex; gap:8px; flex-shrink:0;}
+  .btn{padding:8px 14px; border-radius:8px; border:none; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;}
+  .btn-approve{background:var(--ok); color:#fff;}
+  .btn-reject{background:var(--danger); color:#fff;}
+  .btn-revoke{background:oklch(90% 0.01 265); color:var(--text);}
+  .empty{font-size:13px; color:var(--text-3); padding:16px 0;}
+  .status-line{font-size:12.5px; color:var(--danger); margin-top:12px; min-height:14px;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>AdCheck 관리자</h1>
+  <p class="sub">가입 신청 승인/거절 및 계정 관리 페이지입니다.</p>
+
+  <div class="gate-card" id="gateCard">
+    <input type="password" id="adminPassword" placeholder="관리자 비밀번호" autofocus>
+    <button type="button" id="unlockBtn">확인</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+
+  <div class="section" id="pendingSection">
+    <div class="section-title">승인 대기</div>
+    <div id="pendingList"></div>
+  </div>
+
+  <div class="section" id="approvedSection">
+    <div class="section-title">승인됨</div>
+    <div id="approvedList"></div>
+  </div>
+
+  <div class="section" id="rejectedSection">
+    <div class="section-title">거절됨</div>
+    <div id="rejectedList"></div>
+  </div>
+
+  <div class="status-line" id="statusLine"></div>
+</div>
+
+<script>
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  let adminPassword = '';
+  const gateCard = document.getElementById('gateCard');
+  const gateErr = document.getElementById('gateErr');
+  const pendingSection = document.getElementById('pendingSection');
+  const approvedSection = document.getElementById('approvedSection');
+  const rejectedSection = document.getElementById('rejectedSection');
+  const pendingList = document.getElementById('pendingList');
+  const approvedList = document.getElementById('approvedList');
+  const rejectedList = document.getElementById('rejectedList');
+  const statusLine = document.getElementById('statusLine');
+
+  function formatDate(iso){
+    if(!iso) return '';
+    return iso.slice(0, 10);
+  }
+
+  function renderUsers(users){
+    const pending = users.filter(u => u.status === 'pending');
+    const approved = users.filter(u => u.status === 'approved');
+    const rejected = users.filter(u => u.status === 'rejected');
+
+    pendingList.innerHTML = pending.length ? pending.map(u =>
+      '<div class="user-row">' +
+        '<div class="user-info"><span class="user-name">' + escapeHtml(u.name) + '</span><span class="user-email">' + escapeHtml(u.email) + '</span>' +
+        '<div class="user-date">신청일 ' + formatDate(u.createdAt) + '</div></div>' +
+        '<div class="user-actions">' +
+          '<button type="button" class="btn btn-approve" data-id="' + escapeHtml(u.id) + '" data-action="approve">승인</button>' +
+          '<button type="button" class="btn btn-reject" data-id="' + escapeHtml(u.id) + '" data-action="reject">거절</button>' +
+        '</div></div>'
+    ).join('') : '<div class="empty">대기 중인 신청이 없습니다.</div>';
+
+    approvedList.innerHTML = approved.length ? approved.map(u =>
+      '<div class="user-row">' +
+        '<div class="user-info"><span class="user-name">' + escapeHtml(u.name) + '</span><span class="user-email">' + escapeHtml(u.email) + '</span>' +
+        '<div class="user-date">승인일 ' + formatDate(u.approvedAt) + '</div></div>' +
+        '<div class="user-actions">' +
+          '<button type="button" class="btn btn-revoke" data-id="' + escapeHtml(u.id) + '" data-action="revoke">권한 해제</button>' +
+        '</div></div>'
+    ).join('') : '<div class="empty">승인된 사용자가 없습니다.</div>';
+
+    rejectedList.innerHTML = rejected.length ? rejected.map(u =>
+      '<div class="user-row">' +
+        '<div class="user-info"><span class="user-name">' + escapeHtml(u.name) + '</span><span class="user-email">' + escapeHtml(u.email) + '</span></div>' +
+        '<div class="user-actions">' +
+          '<button type="button" class="btn btn-approve" data-id="' + escapeHtml(u.id) + '" data-action="approve">승인으로 전환</button>' +
+        '</div></div>'
+    ).join('') : '<div class="empty">거절된 사용자가 없습니다.</div>';
+  }
+
+  async function loadUsers(){
+    statusLine.textContent = '';
+    try{
+      const response = await fetch('/_gate/admin/pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await response.json();
+      if(!response.ok){
+        gateErr.textContent = data.error || '비밀번호가 올바르지 않습니다.';
+        return false;
+      }
+      gateCard.style.display = 'none';
+      pendingSection.classList.add('show');
+      approvedSection.classList.add('show');
+      rejectedSection.classList.add('show');
+      renderUsers(data.users || []);
+      return true;
+    }catch(err){
+      gateErr.textContent = '서버에 연결하지 못했습니다.';
+      return false;
+    }
+  }
+
+  document.getElementById('unlockBtn').addEventListener('click', async () => {
+    adminPassword = document.getElementById('adminPassword').value;
+    gateErr.textContent = '';
+    await loadUsers();
+  });
+
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.btn[data-action]');
+    if(!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    btn.disabled = true;
+    statusLine.textContent = '';
+    try{
+      const response = await fetch('/_gate/admin/decide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, userId: id, action })
+      });
+      const data = await response.json();
+      if(!response.ok){
+        statusLine.textContent = data.error || '처리에 실패했습니다.';
+        btn.disabled = false;
+        return;
+      }
+      await loadUsers();
+    }catch(err){
+      statusLine.textContent = '서버에 연결하지 못했습니다.';
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
