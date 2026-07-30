@@ -77,7 +77,8 @@
   .content{max-width:1040px; margin:-84px auto 0; padding:0 24px 100px; position:relative;}
   .card{background:var(--card); border:1px solid var(--card-border); border-radius:24px; padding:40px; margin-bottom:36px;}
   .card.upload-card{box-shadow:0 24px 60px oklch(20% 0.05 260 / 0.16);}
-  .card.checklist-card, .card.ref-card-outer{box-shadow:0 8px 30px oklch(20% 0.02 265 / 0.06);}
+  .card.checklist-card, .card.ref-card-outer{box-shadow:0 8px 30px oklch(20% 0.02 265 / 0.06); display:none;}
+  .card.checklist-card.show, .card.ref-card-outer.show{display:block;}
   .card-head{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
   .num-badge{width:28px; height:28px; border-radius:50%; background:var(--num-bg); color:var(--num-text); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;}
   .card-title{font-size:17px; font-weight:700;}
@@ -732,6 +733,8 @@
     document.getElementById('comparisonBlock').classList.remove('show');
     document.getElementById('mediaGuideBlock').classList.remove('show');
     document.getElementById('briefAlignmentBlock').classList.remove('show');
+    document.querySelector('.checklist-card').classList.remove('show');
+    document.querySelector('.ref-card-outer').classList.remove('show');
     analyzeBtn.textContent = 'AI 분석 시작';
 
     currentFile = file;
@@ -875,6 +878,8 @@
   }
 
   function applyResults(result){
+    document.querySelector('.checklist-card').classList.add('show');
+    document.querySelector('.ref-card-outer').classList.add('show');
     (result.items || []).forEach(it=>{
       if(!state.hasOwnProperty(it.id)) return;
       state[it.id] = it.status;
