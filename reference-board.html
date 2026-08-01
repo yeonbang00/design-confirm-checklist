@@ -39,6 +39,14 @@
   .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
   .gnb-link:hover{color:var(--text);}
   .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
+  .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
+  .gnb-dropdown-menu{position:absolute; top:calc(100% + 12px); left:0; background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:6px; min-width:150px; box-shadow:0 10px 28px oklch(20% 0.02 265 / 0.12); display:none; flex-direction:column; z-index:30;}
+  .gnb-dropdown-menu.open{display:flex;}
+  .gnb-dropdown-item{display:block; padding:9px 12px; border-radius:8px; font-size:13.5px; text-decoration:none; color:var(--text-3);}
+  .gnb-dropdown-item:hover{background:var(--bg); color:var(--text);}
+  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700; background:var(--num-bg);}
 
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
   .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px;}
@@ -102,8 +110,15 @@
     <nav class="gnb">
       <a href="index.html" class="gnb-link">디자인 체크리스트</a>
       <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
-      <a href="guide.html" class="gnb-link">브랜드 가이드</a>
-      <a href="media-guide.html" class="gnb-link">매체 가이드</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
+        <div class="gnb-dropdown-menu">
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+          <a href="font-guide.html" class="gnb-dropdown-item">폰트가이드</a>
+        </div>
+      </div>
       <a href="reference-board.html" class="gnb-link active">이미지 레퍼런스</a>
       <a href="history.html" class="gnb-link">히스토리</a>
       <a href="roadmap.html" class="gnb-link">업데이트 예정</a>
@@ -140,6 +155,21 @@
 </div>
 
 <script>
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+
   function escapeHtml(s){
     return String(s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')

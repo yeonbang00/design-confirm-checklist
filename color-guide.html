@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 컬러 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+    --danger: oklch(55% 0.19 25);
+    --ok: oklch(48% 0.12 145);
+  }
+  *{box-sizing:border-box;}
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
+
+  .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
+  .gnb-bar{display:flex; align-items:center; gap:40px; margin-bottom:40px; flex-wrap:wrap;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
+  .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
+  .gnb-link:hover{color:var(--text);}
+  .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
+  .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
+  .gnb-dropdown-menu{position:absolute; top:calc(100% + 12px); left:0; background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:6px; min-width:150px; box-shadow:0 10px 28px oklch(20% 0.02 265 / 0.12); display:none; flex-direction:column; z-index:30;}
+  .gnb-dropdown-menu.open{display:flex;}
+  .gnb-dropdown-item{display:block; padding:9px 12px; border-radius:8px; font-size:13.5px; text-decoration:none; color:var(--text-3);}
+  .gnb-dropdown-item:hover{background:var(--bg); color:var(--text);}
+  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700; background:var(--num-bg);}
+
+  h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 32px;}
+
+  .section-block{margin-bottom:44px;}
+  .section-heading{font-size:16px; font-weight:700; margin:0 0 6px;}
+  .section-note{font-size:13px; color:var(--text-3); margin:0 0 18px; line-height:1.7;}
+
+  .palette-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
+  .palette-card{background:var(--card); border:1px solid var(--card-border); border-radius:16px; overflow:hidden;}
+  .palette-swatch{display:flex; height:64px;}
+  .palette-swatch span{flex:1;}
+  .palette-body{padding:14px 16px;}
+  .palette-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
+  .palette-hex{font-size:11.5px; color:var(--text-3); font-variant-numeric:tabular-nums; margin-bottom:6px;}
+  .palette-desc{font-size:12.5px; color:var(--text-2); line-height:1.6;}
+
+  .gradient-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
+  .gradient-card{border-radius:16px; overflow:hidden; border:1px solid var(--card-border);}
+  .gradient-swatch{height:80px;}
+  .gradient-body{padding:14px 16px; background:var(--card);}
+  .gradient-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
+  .gradient-hex{font-size:11.5px; color:var(--text-3); font-variant-numeric:tabular-nums; margin-bottom:6px;}
+  .gradient-desc{font-size:12.5px; color:var(--text-2); line-height:1.6;}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar{gap:16px;}
+    .gnb{gap:12px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="gnb-bar">
+    <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">가이드</button>
+        <div class="gnb-dropdown-menu">
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item active">컬러가이드</a>
+          <a href="font-guide.html" class="gnb-dropdown-item">폰트가이드</a>
+        </div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">업데이트 예정</a>
+    </nav>
+  </div>
+
+  <h1>컬러 가이드</h1>
+  <p class="sub">눈에 잘 띄는 배색 조합, 업종·시즌별로 자주 쓰이는 컬러, 자주 쓰이는 그라데이션을 정리했습니다. 브랜드 컬러가 정해진 시안이라면 브랜드 가이드가 항상 우선이고, 이 페이지는 브랜드 컬러가 없거나 시즌·테마 배너를 만들 때 참고용입니다.</p>
+
+  <div class="section-block">
+    <div class="section-heading">눈에 잘 띄는 배색 조합</div>
+    <div class="section-note">배경/포인트 컬러 대비가 강해 시선을 빠르게 끄는 조합입니다. 할인·이벤트처럼 즉각적인 주목이 필요한 배너에 어울립니다.</div>
+    <div class="palette-grid">
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#FFD400;"></span><span style="background:#111111;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">옐로우 × 블랙</div>
+          <div class="palette-hex">#FFD400 · #111111</div>
+          <div class="palette-desc">가장 강한 시인성 조합 중 하나. 세일·할인 배너에 자주 쓰임.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#E63946;"></span><span style="background:#FFFFFF;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">레드 × 화이트</div>
+          <div class="palette-hex">#E63946 · #FFFFFF</div>
+          <div class="palette-desc">긴급함·할인율 강조에 효과적. 식품·이벤트 배너와 잘 맞음.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#B4FF39;"></span><span style="background:#0D0D0D;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">네온그린 × 블랙</div>
+          <div class="palette-hex">#B4FF39 · #0D0D0D</div>
+          <div class="palette-desc">테크·게임처럼 힙하고 강렬한 톤이 필요할 때.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#FF3EA5;"></span><span style="background:#7B2FF7;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">핫핑크 × 퍼플</div>
+          <div class="palette-hex">#FF3EA5 · #7B2FF7</div>
+          <div class="palette-desc">트렌디하고 젊은 톤. 뷰티·MZ 타겟 캠페인에 어울림.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#FF7A00;"></span><span style="background:#0B2545;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">오렌지 × 딥블루</div>
+          <div class="palette-hex">#FF7A00 · #0B2545</div>
+          <div class="palette-desc">보색 대비로 주목도가 높으면서도 과하지 않은 조합.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">업종·시즌별 자주 쓰는 컬러</div>
+    <div class="section-note">브랜드 컬러가 있어도 시즌 컨셉이 뚜렷한 배너(여름, 크리스마스 등)는 이 계열을 우선해도 괜찮습니다.</div>
+    <div class="palette-grid">
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#0077B6;"></span><span style="background:#FFD60A;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">여름 (바다)</div>
+          <div class="palette-hex">#0077B6 · #FFD60A</div>
+          <div class="palette-desc">시원한 블루 배경 + 옐로우 포인트로 여름 캠페인에 자주 사용.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#B3001B;"></span><span style="background:#1B4332;"></span><span style="background:#C9A227;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">크리스마스·연말</div>
+          <div class="palette-hex">#B3001B · #1B4332 · #C9A227</div>
+          <div class="palette-desc">레드·그린에 골드 포인트를 더한 전통적인 연말 조합.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#F7CAD0;"></span><span style="background:#C8B6FF;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">뷰티·코스메틱</div>
+          <div class="palette-hex">#F7CAD0 · #C8B6FF</div>
+          <div class="palette-desc">파스텔 핑크·라벤더 조합으로 부드럽고 화사한 인상.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#0A2647;"></span><span style="background:#205295;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">금융·보험</div>
+          <div class="palette-hex">#0A2647 · #205295</div>
+          <div class="palette-desc">네이비·블루 계열로 신뢰감과 안정감을 전달.</div>
+        </div>
+      </div>
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:#D62828;"></span><span style="background:#F77F00;"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">푸드·배달</div>
+          <div class="palette-hex">#D62828 · #F77F00</div>
+          <div class="palette-desc">레드·오렌지 계열이 식욕을 자극하고 주문 전환에 효과적.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">자주 쓰이는 그라데이션</div>
+    <div class="section-note">배경을 단색보다 입체적으로 보이게 하고 싶을 때 참고할 조합입니다.</div>
+    <div class="gradient-grid">
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, #FF7A00, #FF3EA5, #7B2FF7);"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">선셋 그라데이션</div>
+          <div class="gradient-hex">#FF7A00 → #FF3EA5 → #7B2FF7</div>
+          <div class="gradient-desc">따뜻하고 화사한 인상. 이벤트·라이프스타일 배너에 어울림.</div>
+        </div>
+      </div>
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, #0B2545, #1E6091);"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">블루 그라데이션</div>
+          <div class="gradient-hex">#0B2545 → #1E6091</div>
+          <div class="gradient-desc">신뢰감·테크 느낌. 금융·IT·B2B 배너에 자주 쓰임.</div>
+        </div>
+      </div>
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, #7B2FF7, #FF3EA5);"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">퍼플-핑크 그라데이션</div>
+          <div class="gradient-hex">#7B2FF7 → #FF3EA5</div>
+          <div class="gradient-desc">트렌디한 톤. MZ 타겟·뷰티·엔터테인먼트 배너와 잘 맞음.</div>
+        </div>
+      </div>
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, #004E64, #00A896);"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">그린-틸 그라데이션</div>
+          <div class="gradient-hex">#004E64 → #00A896</div>
+          <div class="gradient-desc">자연·헬스·웰니스 느낌. 차분하면서도 생기 있는 인상.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

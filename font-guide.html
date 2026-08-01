@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 폰트 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+    --danger: oklch(55% 0.19 25);
+    --ok: oklch(48% 0.12 145);
+  }
+  *{box-sizing:border-box;}
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
+
+  .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
+  .gnb-bar{display:flex; align-items:center; gap:40px; margin-bottom:40px; flex-wrap:wrap;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
+  .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
+  .gnb-link:hover{color:var(--text);}
+  .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
+  .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
+  .gnb-dropdown-menu{position:absolute; top:calc(100% + 12px); left:0; background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:6px; min-width:150px; box-shadow:0 10px 28px oklch(20% 0.02 265 / 0.12); display:none; flex-direction:column; z-index:30;}
+  .gnb-dropdown-menu.open{display:flex;}
+  .gnb-dropdown-item{display:block; padding:9px 12px; border-radius:8px; font-size:13.5px; text-decoration:none; color:var(--text-3);}
+  .gnb-dropdown-item:hover{background:var(--bg); color:var(--text);}
+  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700; background:var(--num-bg);}
+
+  h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 20px;}
+
+  .finder-banner{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:18px 22px; margin-bottom:36px;}
+  .finder-text{font-size:13.5px; color:var(--text-2); line-height:1.7;}
+  .finder-text b{color:var(--text);}
+  .finder-link{flex-shrink:0; font-size:13px; font-weight:700; color:#fff; background:var(--num-text); border-radius:10px; padding:10px 16px; text-decoration:none; white-space:nowrap;}
+  .finder-link:hover{opacity:0.9;}
+
+  .section-block{margin-bottom:40px;}
+  .section-heading{font-size:16px; font-weight:700; margin:0 0 6px;}
+  .section-note{font-size:13px; color:var(--text-3); margin:0 0 16px; line-height:1.7;}
+
+  .font-list{display:flex; flex-direction:column; gap:10px;}
+  .font-item{display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--card); border:1px solid var(--card-border); border-radius:14px; padding:14px 18px; flex-wrap:wrap;}
+  .font-name{font-size:14.5px; font-weight:700;}
+  .font-desc{font-size:12.5px; color:var(--text-2); margin-top:3px;}
+  .font-source{flex-shrink:0; font-size:11.5px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:4px 10px; white-space:nowrap;}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar{gap:16px;}
+    .gnb{gap:12px;}
+    .finder-banner{flex-direction:column; align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="gnb-bar">
+    <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">가이드</button>
+        <div class="gnb-dropdown-menu">
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+          <a href="font-guide.html" class="gnb-dropdown-item active">폰트가이드</a>
+        </div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">업데이트 예정</a>
+    </nav>
+  </div>
+
+  <h1>폰트 가이드</h1>
+  <p class="sub">눈누(noonnu.cc)에서 상업적 이용이 가능한 무료 폰트와, 자주 쓰는 산돌 폰트를 스타일별로 정리했습니다.</p>
+
+  <div class="finder-banner">
+    <div class="finder-text">배너 시안에 어떤 폰트가 쓰였는지 궁금하다면, <b>산돌 폰트파인더</b>에 이미지를 올려서 직접 확인할 수 있습니다.</div>
+    <a class="finder-link" href="https://www.sandollcloud.com/font-finder-image" target="_blank" rel="noopener">산돌 폰트파인더 열기 ↗</a>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">고딕(산세리프) 계열</div>
+    <div class="section-note">가독성이 좋고 무난해서 본문·CTA 등 어디에든 쓰기 좋은 스타일입니다.</div>
+    <div class="font-list">
+      <div class="font-item">
+        <div><div class="font-name">Pretendard</div><div class="font-desc">가변 폰트, 굵기 조절이 자유로워 헤드라인부터 본문까지 두루 사용</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">SUIT</div><div class="font-desc">깔끔하고 현대적인 인상, 최근 배너 디자인에서 많이 쓰이는 편</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">지마켓 산스 (Gmarket Sans)</div><div class="font-desc">굵고 안정적인 인상, 커머스·할인 배너 헤드라인에 자주 사용</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">카카오 스몰 산스</div><div class="font-desc">부드럽고 친근한 인상, 톤이 가벼운 브랜드에 어울림</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">스포카 한 산스 Neo</div><div class="font-desc">균형 잡힌 무난한 고딕, 정보성 텍스트가 많은 배너에 적합</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">손글씨체 계열</div>
+    <div class="section-note">친근하고 캐주얼한 느낌이 필요할 때. 본문보다는 짧은 강조 문구·포인트 카피에 어울립니다.</div>
+    <div class="font-list">
+      <div class="font-item">
+        <div><div class="font-name">배달의민족 연성체 / 한나체</div><div class="font-desc">캐주얼하고 개성 있는 손글씨 느낌, 이벤트·프로모션 배너에 자주 사용</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">온글잎 시리즈 (박다현체·류이체 등)</div><div class="font-desc">실제 손글씨에 가까운 필기체, 감성적인 톤이 필요할 때</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">여기어때 잘난체</div><div class="font-desc">개성 있고 통통 튀는 인상, 짧은 강조 카피에 적합</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">나눔손글씨 시리즈</div><div class="font-desc">다양한 필체 스타일 보유, 무료로 폭넓게 활용 가능</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">세리프(명조) 계열</div>
+    <div class="section-note">고급스럽고 차분한 느낌이 필요할 때. 뷰티·프리미엄·리빙 브랜드에 자주 쓰입니다.</div>
+    <div class="font-list">
+      <div class="font-item">
+        <div><div class="font-name">마루부리 (Maru Buri)</div><div class="font-desc">부드러운 곡선의 명조, 감성적이고 고급스러운 톤</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">리디바탕 (RIDIBatang)</div><div class="font-desc">가독성 좋은 정통 명조, 본문용으로도 활용 가능</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+      <div class="font-item">
+        <div><div class="font-name">조선일보명조</div><div class="font-desc">신문체 느낌의 클래식한 명조, 신뢰감 있는 톤이 필요할 때</div></div>
+        <span class="font-source">눈누</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">산돌 폰트</div>
+    <div class="section-note">산돌구름은 대부분 유료 구독 서비스입니다(일부 무료 폰트 포함). 팀에서 자주 쓰는 폰트가 있다면 이 목록에 추가할 수 있으니 알려주세요.</div>
+    <div class="font-list">
+      <div class="font-item">
+        <div><div class="font-name">산돌구름 폰트 파인더로 둘러보기</div><div class="font-desc">카테고리·스타일별로 산돌 보유 폰트를 검색하고 미리볼 수 있음</div></div>
+        <a class="font-source" href="https://www.sandollcloud.com/font-finder" target="_blank" rel="noopener" style="text-decoration:none;">바로가기 ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+</script>
+</body>
+</html>
