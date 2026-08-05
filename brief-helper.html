@@ -32,7 +32,8 @@
   :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
 
   .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
-  .gnb-bar{display:flex; align-items:center; gap:40px; margin-bottom:28px; padding:10px 0; position:sticky; top:0; background:var(--bg); box-shadow:0 4px 16px oklch(20% 0.02 265 / 0.06); z-index:100; flex-wrap:wrap;}
+  .gnb-bar{position:sticky; top:0; background:var(--bg); box-shadow:0 4px 16px oklch(20% 0.02 265 / 0.06); z-index:100;}
+  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:10px 24px; flex-wrap:wrap;}
   .gnb-logo{display:flex; align-items:center;}
   .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
   .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
@@ -135,7 +136,7 @@
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
     .card{padding:22px 20px;}
-    .gnb-bar{gap:14px;}
+    .gnb-bar-inner{gap:14px;}
     .gnb{gap:12px;}
     .dropzone{padding:36px 18px;}
   }
@@ -143,8 +144,8 @@
 </head>
 <body>
 
-<div class="page">
-  <div class="gnb-bar">
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
     <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
     <nav class="gnb">
       <a href="index.html" class="gnb-link">디자인 체크리스트</a>
@@ -162,6 +163,9 @@
       <a href="roadmap.html" class="gnb-link">업데이트 예정</a>
     </nav>
   </div>
+</div>
+
+<div class="page">
 
   <h1>기획안 헬퍼</h1>
   <p class="sub">기획안(PPT) 캡처 이미지를 올리면, 배너를 만들 때 필요한 방향을 정리해드립니다.</p>
