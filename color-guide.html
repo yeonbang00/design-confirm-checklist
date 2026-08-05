@@ -34,7 +34,7 @@
   :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
 
   .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
-  .gnb-bar{display:flex; align-items:center; gap:40px; margin-bottom:28px; padding:10px 0; position:sticky; top:0; background:var(--bg); border-bottom:1px solid var(--card-border); z-index:100; flex-wrap:wrap;}
+  .gnb-bar{display:flex; align-items:center; gap:40px; margin-bottom:28px; padding:10px 0; position:sticky; top:0; background:var(--bg); box-shadow:0 4px 16px oklch(20% 0.02 265 / 0.06); z-index:100; flex-wrap:wrap;}
   .gnb-logo{display:flex; align-items:center;}
   .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
   .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
@@ -59,7 +59,7 @@
   .section-note{font-size:13px; color:var(--text-3); margin:0 0 18px; line-height:1.7;}
 
   .palette-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
-  .palette-card{background:var(--card); border:1px solid var(--card-border); border-radius:16px; overflow:hidden;}
+  .palette-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; overflow:hidden;}
   .palette-swatch{display:flex; height:64px;}
   .palette-swatch span{flex:1;}
   .palette-body{padding:14px 16px;}
@@ -68,7 +68,7 @@
   .palette-desc{font-size:12.5px; color:var(--text-2); line-height:1.6;}
 
   .gradient-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
-  .gradient-card{border-radius:16px; overflow:hidden; border:1px solid var(--card-border);}
+  .gradient-card{border-radius:16px; overflow:hidden; box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08);}
   .gradient-swatch{height:80px;}
   .gradient-body{padding:14px 16px; background:var(--card);}
   .gradient-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
