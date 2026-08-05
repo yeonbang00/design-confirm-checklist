@@ -57,7 +57,8 @@
   @keyframes heroFloat3{0%{transform:translate(0,0) scale(1);} 100%{transform:translate(-110px,-120px) scale(1.2);}}
   .hero-inner{max-width:1040px; margin:0 auto; padding:0 24px; position:relative; text-align:left;}
   .beta-badge{display:inline-flex; align-items:center; height:22px; font-size:11.5px; padding:0 12px; border-radius:100px; border:1px solid oklch(100% 0 0 / 0.18); color:oklch(85% 0.01 85); letter-spacing:0.04em; margin-left:auto; position:relative; z-index:1; flex-shrink:0;}
-  .gnb-bar{display:flex; align-items:center; gap:40px; margin:0 0 32px; position:relative; z-index:1;}
+  .gnb-bar{position:sticky; top:0; background:oklch(14% 0.035 260); border-bottom:1px solid oklch(100% 0 0 / 0.1); z-index:100;}
+  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:10px 24px;}
   .gnb-logo{display:flex; align-items:center;}
   .gnb-logo-text{font-size:17px; font-weight:800; color:oklch(97% 0.005 85); letter-spacing:-0.01em;}
   .gnb{display:flex; align-items:center; gap:24px;}
@@ -239,7 +240,7 @@
     .hero{padding:28px 0 130px;}
     .hero-inner{padding:0 16px;}
     .hero h1{font-size:32px;}
-    .gnb-bar{gap:16px; flex-wrap:wrap;}
+    .gnb-bar-inner{gap:16px; flex-wrap:wrap;}
     .gnb{gap:14px; flex-wrap:wrap;}
     .beta-badge{margin-left:0;}
     .content{padding:0 16px 70px;}
@@ -255,6 +256,28 @@
 </head>
 <body>
 
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link active">디자인 체크리스트</a>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
+        <div class="gnb-dropdown-menu">
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">업데이트 예정</a>
+    </nav>
+    <div class="beta-badge">BETA</div>
+  </div>
+</div>
+
 <div class="hero">
   <div class="hero-bg" aria-hidden="true">
     <div class="hero-blob b1"></div>
@@ -263,25 +286,6 @@
     <div class="hero-grid"></div>
   </div>
   <div class="hero-inner">
-    <div class="gnb-bar">
-      <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
-      <nav class="gnb">
-        <a href="index.html" class="gnb-link active">디자인 체크리스트</a>
-        <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
-        <div class="gnb-dropdown">
-          <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
-          <div class="gnb-dropdown-menu">
-            <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
-            <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
-            <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
-          </div>
-        </div>
-        <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
-        <a href="history.html" class="gnb-link">히스토리</a>
-        <a href="roadmap.html" class="gnb-link">업데이트 예정</a>
-      </nav>
-      <div class="beta-badge">BETA</div>
-    </div>
     <h1>디자인 체크리스트</h1>
     <p class="hero-sub">시안 이미지를 올리면 19개 항목을 자동으로 점검하고, 체크리스트에 바로 반영합니다.<br>AI가 이미지를 보고 퍼포먼스, 브랜딩, 기타 3가지로 자동 분류하여 점검합니다.<br>AI의 시각 판단뿐 아니라 OCR로 텍스트 위치를 픽셀 단위로 직접 측정해 대조합니다.</p>
     <div class="hero-stats">
