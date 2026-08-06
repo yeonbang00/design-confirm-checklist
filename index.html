@@ -894,15 +894,15 @@
 
   function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-  // Gemini rate-limit errors include text like "Please retry in 16.09s" — pull that
-  // number out so we can wait the right amount instead of hammering the API again.
-  // 503-class errors ("model is currently experiencing high demand") don't include
-  // a specific wait time, so we just give it a few seconds to recover.
+  // OpenAI rate-limit errors include text like "Please try again in 16.09s" — pull
+  // that number out so we can wait the right amount instead of hammering the API
+  // again. 503-class errors ("model is currently experiencing high demand") don't
+  // include a specific wait time, so we just give it a few seconds to recover.
   function retryDelayMs(err){
     if(!err) return null;
     if(err.status === 429){
       const msg = err.message || '';
-      const match = msg.match(/retry in\s+([\d.]+)s/i);
+      const match = msg.match(/try again in\s+([\d.]+)s/i);
       const seconds = match ? parseFloat(match[1]) : 20;
       return Math.ceil((isNaN(seconds) ? 20 : seconds) + 2) * 1000;
     }
@@ -1063,7 +1063,7 @@
         showDzState('loaded');
         const detail = (lastErr && lastErr.message) ? lastErr.message : '알 수 없는 오류';
         if(lastErr.status === 429){
-          setStatus('AI 분석 요청이 일시적으로 몰렸습니다. 잠시 후 다시 시도해주세요.', false);
+          setStatus('AI 분석 요청이 계속 거절되고 있습니다 ('+detail+') — 일시적 혼잡이 아니라 OpenAI 계정의 사용 한도·결제 문제일 수 있으니 계정을 확인해주세요.', false);
         } else if(lastErr.status === 503 || lastErr.status >= 500){
           setStatus('AI 서버가 일시적으로 혼잡합니다 (OpenAI 쪽 문제로, 앱 문제가 아니에요). 잠시 후 다시 시도해주세요.', false);
         } else {
