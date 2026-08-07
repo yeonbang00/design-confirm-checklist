@@ -861,7 +861,7 @@
           const dataUrl = canvas.toDataURL('image/jpeg', quality);
           const base64 = dataUrl.split(',')[1];
           if(!base64){ reject(new Error('이미지를 변환하지 못했습니다.')); return; }
-          resolve({ base64: base64, mediaType: 'image/jpeg', originalWidth: originalWidth, originalHeight: originalHeight, analyzedWidth: w, analyzedHeight: h });
+          resolve({ base64: base64, mediaType: 'image/jpeg', originalWidth: originalWidth, originalHeight: originalHeight, analyzedWidth: w, analyzedHeight: h, canvas: canvas });
         };
         img.onerror = ()=>reject(new Error('이미지를 불러올 수 없습니다.'));
         img.src = reader.result;
@@ -871,11 +871,103 @@
     });
   }
 
-  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight){
+  // 5번(컬러 일관성)의 텍스트-배경 명도 대비를 실제 픽셀로 계산하기 위한
+  // 헬퍼들. 서버가 아니라 여기(브라우저)에서 계산하는 이유: 이미지 디코딩
+  // 라이브러리를 새로 추가할 필요 없이 캔버스 API만으로 가능하고, 이 환경엔
+  // Node/npm이 없어 서버 쪽 이미지 처리 코드를 미리 테스트할 방법이 없기
+  // 때문. WCAG 공식 상대휘도 계산.
+  function relLuminance(r, g, b){
+    const conv = c => { c/=255; return c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+    return 0.2126*conv(r) + 0.7152*conv(g) + 0.0722*conv(b);
+  }
+  function contrastRatio(l1, l2){
+    const hi = Math.max(l1,l2), lo = Math.min(l1,l2);
+    return (hi+0.05)/(lo+0.05);
+  }
+  // Otsu's method: OCR 박스 안에서 글자(잉크)와 배경 두 덩어리를 밝기 분포로
+  // 자동 분리하는 이진화 임계값을 찾음. 단순 percentile 방식은 글자가 박스
+  // 면적의 일부만 차지할 때(대부분의 실제 OCR 박스가 그렇듯) 배경색만 두 번
+  // 뽑는 오류가 있어서 이 방식을 씀.
+  function otsuThreshold(grayValues){
+    const hist = new Array(256).fill(0);
+    for(const v of grayValues) hist[Math.min(255, Math.max(0, Math.round(v)))]++;
+    const total = grayValues.length;
+    let sum = 0;
+    for(let i=0;i<256;i++) sum += i*hist[i];
+    let sumB=0, wB=0, maxVar=0, threshold=0;
+    for(let i=0;i<256;i++){
+      wB += hist[i];
+      if(wB === 0) continue;
+      const wF = total - wB;
+      if(wF === 0) break;
+      sumB += i*hist[i];
+      const mB = sumB/wB, mF = (sum-sumB)/wF;
+      const varBetween = wB*wF*(mB-mF)*(mB-mF);
+      if(varBetween > maxVar){ maxVar = varBetween; threshold = i; }
+    }
+    return threshold;
+  }
+  function computeContrastFromOcr(canvas, ocrFields){
+    if(!canvas || !ocrFields || !ocrFields.length) return null;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const results = [];
+    for(const f of ocrFields.slice(0, 30)){
+      const text = (f.inferText || '').trim();
+      if(!text) continue;
+      const verts = (f.boundingPoly && f.boundingPoly.vertices) || [];
+      if(verts.length < 4) continue;
+      const xs = verts.map(v=>v.x), ys = verts.map(v=>v.y);
+      const left = Math.max(0, Math.floor(Math.min(...xs)));
+      const right = Math.min(w-1, Math.ceil(Math.max(...xs)));
+      const top = Math.max(0, Math.floor(Math.min(...ys)));
+      const bottom = Math.min(h-1, Math.ceil(Math.max(...ys)));
+      const bw = right-left, bh = bottom-top;
+      if(bw < 3 || bh < 3) continue;
+      let imgData;
+      try{ imgData = ctx.getImageData(left, top, bw, bh); }catch(e){ continue; }
+      const data = imgData.data;
+      const grayValues = [], relLums = [];
+      for(let i=0;i<data.length;i+=4){
+        const r=data[i], g=data[i+1], b=data[i+2];
+        grayValues.push(0.2126*r + 0.7152*g + 0.0722*b);
+        relLums.push(relLuminance(r,g,b));
+      }
+      const t = otsuThreshold(grayValues);
+      let sumDark=0,cntDark=0,sumLight=0,cntLight=0;
+      for(let i=0;i<grayValues.length;i++){
+        if(grayValues[i] <= t){ sumDark += relLums[i]; cntDark++; }
+        else { sumLight += relLums[i]; cntLight++; }
+      }
+      if(cntDark === 0 || cntLight === 0) continue;
+      const ratio = Math.round(contrastRatio(sumDark/cntDark, sumLight/cntLight) * 10) / 10;
+      if(!Number.isFinite(ratio)) continue;
+      results.push({ text, ratio });
+    }
+    return results.length ? results : null;
+  }
+
+  // OCR만 실행하는 경량 요청 — GPT를 호출하지 않아 빠르고 비용이 안 든다.
+  // 실패하면 null만 반환하고(fail-soft), 메인 분석 요청은 서버가 자체
+  // OCR로 대체 처리하니 이 단계가 실패해도 분석 자체는 막히지 않는다.
+  async function fetchOcrFields(base64, mediaType){
+    try{
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64, mediaType, ocrOnly: true })
+      });
+      if(!response.ok) return null;
+      const data = await response.json();
+      return Array.isArray(data.ocrFields) && data.ocrFields.length ? data.ocrFields : null;
+    }catch(e){ return null; }
+  }
+
+  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrFields, contrastFacts){
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [], fileSizeBytes: fileSizeBytes || null, analyzedWidth: analyzedWidth || null, analyzedHeight: analyzedHeight || null })
+      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [], fileSizeBytes: fileSizeBytes || null, analyzedWidth: analyzedWidth || null, analyzedHeight: analyzedHeight || null, precomputedOcrFields: ocrFields || null, contrastFacts: contrastFacts || null })
     });
     let data;
     try{ data = await response.json(); }
@@ -1034,10 +1126,14 @@
       const briefImages = briefFiles.length
         ? await Promise.all(briefFiles.map(entry => prepareImageForApi(entry.file)))
         : [];
+      setStatus('텍스트 위치·명도 대비 분석 중…', true);
+      const ocrFields = await fetchOcrFields(prepared.base64, prepared.mediaType);
+      const contrastFacts = computeContrastFromOcr(prepared.canvas, ocrFields);
+      setStatus('', false);
       let lastErr = null;
       for(let attempt=1; attempt<=3; attempt++){
         try{
-          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight);
+          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight, ocrFields, contrastFacts);
           applyResults(result);
           showDzState('loaded');
           analyzeBtn.textContent = '다시 분석하기';

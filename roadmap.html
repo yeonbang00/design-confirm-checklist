@@ -123,6 +123,14 @@
         </div>
         <div class="roadmap-desc">이미지 속 텍스트 위치를 픽셀 좌표로 직접 측정해서, 3번(타이포·정렬)의 정렬 오차와 10번(매체 최적화)의 세이프존 침범량을 AI의 시각 판단이 아닌 실제 수치로 대조합니다.</div>
       </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-top">
+          <span class="roadmap-title">WCAG 명도 대비 체크</span>
+          <span class="roadmap-status active">사용 중</span>
+        </div>
+        <div class="roadmap-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 직접 읽어 글자·배경 명도 대비를 계산하고, 5번(컬러 일관성) 판정에 근거로 반영합니다. 서버에 새 이미지 처리 라이브러리를 추가하지 않고 캔버스 API만으로 클라이언트에서 계산합니다.</div>
+      </div>
     </div>
   </div>
 
@@ -156,16 +164,6 @@
       <div class="roadmap-desc">18번(로고 사용 규정) 판정 시 이미지 안에 로고가 실제로 있는지, 어디에 있는지를 AI 판단과 별개로 자동 감지해서 보강하는 기능입니다.</div>
       <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 이 기능은 이미 잘 알려진 유명 브랜드 로고 위주로 학습돼 있어서, 우리가 다루는 다양한 광고주의 자사 로고는 인식하지 못할 가능성이 높습니다. 지금 상태로는 붙여도 실효성이 낮아 보류 중입니다.</div>
       <a class="roadmap-link" href="https://cloud.google.com/vision/docs/detecting-logos" target="_blank" rel="noopener">Google Cloud Vision 로고 감지 문서 ↗</a>
-    </div>
-
-    <div class="roadmap-item">
-      <div class="roadmap-top">
-        <span class="roadmap-title">WCAG 명도 대비 체크</span>
-        <span class="roadmap-status">안전한 적용 방법 검토 중</span>
-      </div>
-      <div class="roadmap-desc">OCR로 이미 파악한 텍스트 위치의 실제 색상 대비를 계산해서, 5번(컬러 일관성)의 "대비" 판정을 AI의 주관적 판단이 아닌 수치로 뒷받침하는 기능입니다. 외부 API 비용은 들지 않습니다.</div>
-      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 이미지를 픽셀 단위로 직접 읽어야 해서 새 이미지 처리 라이브러리를 추가해야 하는데, 지금 작업 환경에서 미리 테스트해볼 방법이 없어 검증 없이 핵심 기능(`/api/analyze`)에 바로 넣기엔 리스크가 있다고 판단했습니다. 안전하게 검증할 방법을 마련한 뒤 적용할 예정입니다.</div>
-      <a class="roadmap-link" href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" target="_blank" rel="noopener">WCAG 대비 기준 문서 ↗</a>
     </div>
 
     <div class="roadmap-item">

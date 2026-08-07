@@ -242,6 +242,22 @@ function briefAlignmentInstruction(direction) {
 - gaps: 기획 방향에서 벗어나거나 필수 요소가 누락된 부분을 2~3문장으로. 문제 없다면 "기획 의도에서 벗어난 부분이 없습니다"라고만 답하세요.`;
 }
 
+// contrastFacts: [{ text, ratio }, ...] — 클라이언트가 브라우저 캔버스에서
+// OCR 텍스트 영역의 실제 픽셀을 읽어 Otsu 이진화로 글자/배경을 분리한 뒤
+// WCAG 명도 대비 공식으로 계산한 값. 서버는 이 숫자를 그대로 프롬프트에
+// "사실"로 주입만 하고, 계산 자체는 하지 않는다(이미지 디코딩 라이브러리가
+// 없어도 되도록 클라이언트에서 처리).
+function formatContrastForPrompt(contrastFacts) {
+  const lines = contrastFacts.map((f) => {
+    const flag = Number.isFinite(f.ratio) && f.ratio < 4.5 ? ' — WCAG AA 기준(4.5:1) 미달' : '';
+    return `"${f.text}" — 추정 명도 대비 약 ${f.ratio}:1${flag}`;
+  });
+  return `\n\n브라우저에서 직접 측정한 텍스트별 명도 대비 (텍스트 영역 안의 밝기 분포를 이진화해서 계산한 근사치입니다 — 정확한 픽셀 단위는 아니지만 시각적 추측보다 신뢰할 수 있습니다):
+${lines.join('\n')}
+
+5번(컬러 일관성)을 판정할 때 이 수치를 참고하세요. 4.5:1 미만이면 WCAG 기준상 가독성이 부족한 것으로 보고, 특히 3:1 미만처럼 명확히 낮은 값은 needsfix 이상으로 판정하세요. 다만 이 수치는 근사치이니 애매한 값(3.5~4.5 사이 등)이면 실제로 눈으로 봤을 때도 읽기 불편한지 시각적으로 한 번 더 확인해서 판단하세요.`;
+}
+
 function schemaInstruction(hasComparison, hasMediaGuides, hasBrief) {
   const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
   const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
@@ -263,9 +279,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
+    return;
+  }
+
+  // 클라이언트가 5번(컬러 일관성)의 명도 대비를 직접 계산하려면 먼저 OCR
+  // 텍스트 위치를 알아야 하는데, GPT 호출 없이 OCR 결과만 빠르게 돌려주는
+  // 경량 모드. 새 서버리스 함수를 만들지 않고 기존 엔드포인트에 분기만 추가.
+  if (ocrOnly) {
+    const fields = await runOcr(base64, mediaType);
+    res.status(200).json({ ocrFields: fields || [] });
     return;
   }
 
@@ -288,7 +313,9 @@ export default async function handler(req, res) {
   // 3번(타이포·정렬) 판정용 정밀 좌표 — 텍스트 분석/기획안 추출과 동시에
   // 병렬로 실행해서 대기 시간을 늘리지 않음. CLOVA_OCR_* 환경변수가 없거나
   // 실패해도 null만 반환하고 아래 로직은 그대로 AI 시각 판단으로 넘어감.
-  const ocrPromise = runOcr(base64, mediaType);
+  // 클라이언트가 명도 대비 계산을 위해 이미 ocrOnly 모드로 OCR을 한 번
+  // 호출했다면 그 결과를 그대로 재사용하고, CLOVA OCR을 두 번 호출하지 않음.
+  const ocrPromise = Array.isArray(precomputedOcrFields) ? Promise.resolve(precomputedOcrFields) : runOcr(base64, mediaType);
 
   let briefDirection = null;
   let briefError = null;
@@ -312,6 +339,7 @@ export default async function handler(req, res) {
   const scaleX = (hasSize && hasAnalyzedSize) ? imageWidth / analyzedWidth : 1;
   const scaleY = (hasSize && hasAnalyzedSize) ? imageHeight / analyzedHeight : 1;
   const ocrInstruction = ocrFields ? formatOcrForPrompt(ocrFields, scaleX, scaleY) : '';
+  const contrastInstruction = Array.isArray(contrastFacts) && contrastFacts.length ? formatContrastForPrompt(contrastFacts) : '';
 
   const promptText =
     BASE_PROMPT +
@@ -321,6 +349,7 @@ export default async function handler(req, res) {
     (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides, hasSize) : '') +
     (hasBrief ? briefAlignmentInstruction(briefDirection) : '') +
     ocrInstruction +
+    contrastInstruction +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief);
 
   // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
