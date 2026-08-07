@@ -11,7 +11,9 @@
 | `guide.html` | 브랜드 가이드 — 브랜드별 디자인 기준을 팀이 체크리스트로 직접 편집 |
 | `media-guide.html` | 매체 가이드 — 매체별 소재 등록 규격 참고 |
 | `reference-board.html` | 이미지 레퍼런스 — 업종별 경쟁사·자사 제작 소재 라이브러리 |
+| `color-guide.html` | 컬러 가이드 — 눈에 잘 띄는 배색·시즌별 컬러·그라데이션 참고 자료 |
 | `history.html` | 히스토리 — 체크리스트 판정 로직 등 실질적인 업데이트 내역 기록 |
+| `roadmap.html` | 업데이트 예정 — 사용 중인 기능, 검토했지만 아직/영영 적용 안 한 기능과 이유 |
 
 ## 왜 이렇게 구성했나요
 
@@ -87,7 +89,9 @@ Vercel Hobby 플랜은 **서버리스 함수를 정확히 12개까지만** 허�
 ├─ guide.html                # 브랜드 가이드
 ├─ media-guide.html          # 매체 가이드
 ├─ reference-board.html      # 이미지 레퍼런스
+├─ color-guide.html           # 컬러 가이드
 ├─ history.html               # 히스토리
+├─ roadmap.html               # 업데이트 예정
 ├─ admin.html                # 가입 승인 관리 (ADMIN_PASSWORD로 보호, GNB에 노출 안 됨)
 ├─ middleware.js             # 사이트 전체 접근 게이트 (로그인/가입/관리자 승인 로직 포함)
 ├─ api/
