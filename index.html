@@ -434,7 +434,7 @@
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         <div class="counts" id="counts">
           <span>통과 <b id="cPass">0</b></span>
-          <span>수정필요 <b id="cNeedsfix">0</b></span>
+          <span>검토필요 <b id="cNeedsfix">0</b></span>
           <span>반려 <b id="cReject">0</b></span>
           <span>해당없음 <b id="cNa">0</b></span>
           <span>미평가 <b id="cPending">19</b></span>
@@ -525,7 +525,7 @@
   ];
   const STATUS_META = {
     pass:{label:'통과', color:'var(--pass)'},
-    needsfix:{label:'수정필요', color:'var(--needsfix)'},
+    needsfix:{label:'검토필요', color:'var(--needsfix)'},
     reject:{label:'반려', color:'var(--reject)'},
     na:{label:'해당없음', color:'var(--na)'},
   };
@@ -544,7 +544,7 @@
       <div class="row-label"><span class="rn">${String(it.n).padStart(2,'0')}</span><span class="rt">${it.title}</span></div>
       <div class="row-btns" data-id="${it.n}">
         <button class="stbtn" data-status="pass">통과</button>
-        <button class="stbtn" data-status="needsfix">수정필요</button>
+        <button class="stbtn" data-status="needsfix">검토필요</button>
         <button class="stbtn" data-status="reject">반려</button>
         <button class="stbtn" data-status="na">해당없음</button>
       </div>`;
@@ -626,7 +626,7 @@
     let label = '평가 대기', color = 'oklch(65% 0.008 265)';
     if(done > 0){
       if(counts.reject > 0){ label = '반려 항목 있음'; color = 'var(--reject)'; }
-      else if(counts.needsfix > 0){ label = '수정 필요'; color = 'var(--needsfix)'; }
+      else if(counts.needsfix > 0){ label = '검토 필요'; color = 'var(--needsfix)'; }
       else if(done === 19){ label = '컨펌 가능'; color = 'var(--pass)'; }
       else { label = '평가 진행 중'; }
     }
