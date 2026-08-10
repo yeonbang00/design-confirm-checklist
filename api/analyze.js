@@ -204,7 +204,7 @@ function mediaGuidelineInstruction(mediaGuides, hasSize) {
 
   if (withoutGuideline.length > 0) {
     const namesWithout = withoutGuideline.map((m) => m.name).join(', ');
-    text += `\n\n다음 매체는 아직 구체적인 소재 등록 기준이 등록되지 않았습니다: ${namesWithout}. 이 매체들에 대해서는 10번 항목을 일반적인 세이프존·가독성 기준으로만 평가하고(크롭 위험은 임의로 언급하지 마세요), needsCheck에 "${namesWithout}는 전용 가이드가 아직 없어 일반 기준으로 평가했다"는 점을 포함하세요.`;
+    text += `\n\n다음 매체는 아직 구체적인 소재 등록 기준이 등록되지 않았습니다: ${namesWithout}. 이 매체들에 대해서는 15번 항목을 일반적인 세이프존·가독성 기준으로만 평가하고(크롭 위험은 임의로 언급하지 마세요), needsCheck에 "${namesWithout}는 전용 가이드가 아직 없어 일반 기준으로 평가했다"는 점을 포함하세요.`;
   }
 
   return text;
