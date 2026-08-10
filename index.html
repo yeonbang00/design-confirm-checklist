@@ -159,15 +159,6 @@
   .ai-summary-head .dot{width:8px; height:8px; border-radius:50%; background:oklch(65% 0.008 265);}
   .ai-summary-head span:last-child{font-size:15px; font-weight:700; letter-spacing:0.01em;}
   .ai-summary-body{font-size:14.5px; line-height:1.8; color:oklch(92% 0.008 85);}
-  .key-checks{display:none; margin-top:22px; padding-top:22px; border-top:1px solid oklch(100% 0 0 / 0.16);}
-  .key-checks.show{display:block;}
-  .kc-title{font-size:12px; font-weight:700; letter-spacing:.04em; color:oklch(85% 0.01 85); margin-bottom:12px; text-transform:uppercase;}
-  .kc-row{display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;}
-  .kc-row:last-child{margin-bottom:0;}
-  .kc-dot{width:10px; height:10px; border-radius:50%; flex-shrink:0; background:var(--na); margin-top:5px;}
-  .kc-body{flex:1; min-width:0;}
-  .kc-label{font-size:14px; font-weight:700; color:oklch(97% 0.005 85); display:block; margin-bottom:2px;}
-  .kc-note{font-size:13px; line-height:1.65; color:oklch(88% 0.01 85);}
   .summary-refs{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px;}
   .ref-chip{font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:20px; cursor:pointer; border:1px solid; transition:transform .1s ease;}
   .ref-chip:hover{transform:translateY(-1px);}
@@ -361,23 +352,6 @@
       <span id="aiSummaryText"></span>
     </div>
     <div class="summary-refs" id="summaryRefs"></div>
-    <div class="key-checks" id="keyChecksBlock">
-      <div class="kc-title">핵심 확인</div>
-      <div class="kc-row">
-        <span class="kc-dot" id="kcTypoDot"></span>
-        <div class="kc-body">
-          <span class="kc-label">오탈자 · 정보 정확성</span>
-          <span class="kc-note" id="kcTypoNote"></span>
-        </div>
-      </div>
-      <div class="kc-row">
-        <span class="kc-dot" id="kcMediaDot"></span>
-        <div class="kc-body">
-          <span class="kc-label">매체 가이드 준수</span>
-          <span class="kc-note" id="kcMediaNote"></span>
-        </div>
-      </div>
-    </div>
 
     <div class="comparison-block" id="briefAlignmentBlock">
       <div class="comparison-title">기획 부합도</div>
@@ -792,7 +766,6 @@
     clearSessionState();
     setStatus('', false);
     document.getElementById('aiSummaryBox').classList.remove('show');
-    document.getElementById('keyChecksBlock').classList.remove('show');
     document.getElementById('comparisonBlock').classList.remove('show');
     document.getElementById('mediaGuideBlock').classList.remove('show');
     document.getElementById('briefAlignmentBlock').classList.remove('show');
@@ -1068,37 +1041,6 @@
       const noteEl = document.getElementById('note-'+it.id);
       if(noteEl){ noteEl.textContent = it.note || ''; noteEl.classList.toggle('show', !!it.note); }
     });
-
-    const STATUS_RANK = { reject:3, needsfix:2, pass:1, na:0 };
-    const findItem = (id) => (result.items || []).find(it => it.id === id);
-    const item4 = findItem(4), item11 = findItem(11), item10 = findItem(10);
-    const keyChecksBlock = document.getElementById('keyChecksBlock');
-    if(item4 || item11 || item10){
-      keyChecksBlock.classList.add('show');
-
-      let typoStatus = 'na', typoNote = '';
-      if(item4 && item11){
-        const r4 = STATUS_RANK[item4.status] ?? 0, r11 = STATUS_RANK[item11.status] ?? 0;
-        const worse = r4 >= r11 ? item4 : item11;
-        typoStatus = worse.status;
-        typoNote = (item4.note && item11.note && item4.note !== item11.note)
-          ? [item4.note, item11.note].filter(Boolean).join(' · ')
-          : (worse.note || '');
-      } else if(item4 || item11){
-        const only = item4 || item11;
-        typoStatus = only.status; typoNote = only.note || '';
-      }
-      document.getElementById('kcTypoDot').style.background = 'var(--' + (typoStatus || 'na') + ')';
-      document.getElementById('kcTypoNote').textContent = typoNote || '오탈자·정보 오류가 발견되지 않았습니다.';
-
-      const mgr = result.mediaGuideReview;
-      const mediaStatus = item10 ? item10.status : 'na';
-      const mediaNote = (mgr && mgr.differs) ? mgr.differs : ((item10 && item10.note) || '매체를 선택하면 더 정확한 규격 기준으로 확인할 수 있어요.');
-      document.getElementById('kcMediaDot').style.background = 'var(--' + (mediaStatus || 'na') + ')';
-      document.getElementById('kcMediaNote').textContent = mediaNote;
-    } else {
-      keyChecksBlock.classList.remove('show');
-    }
 
     const summaryBox = document.getElementById('aiSummaryBox');
     const summaryEl = document.getElementById('aiSummaryText');
