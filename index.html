@@ -637,6 +637,28 @@
   }
   update();
 
+  // ---------- 세션 내 분석 상태 유지 ----------
+  // 페이지 간 이동(GNB로 다른 메뉴 갔다 오기) 시 브라우저가 index.html을 통째로
+  // 새로 불러오면서 업로드 이미지·AI 분석 결과·체크리스트 상태가 전부 사라지던
+  // 문제를 막기 위해, 분석 성공 시점의 상태를 sessionStorage에 저장해뒀다가
+  // 페이지가 다시 로드될 때 복원한다. 탭을 닫거나 새 이미지를 올려 다시
+  // 분석하면 초기화된다(영구 저장이 아님).
+  const SESSION_KEY = 'adcheck_analysis_v1';
+  function loadSessionState(){
+    try{
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveSessionState(payload){
+    try{ sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload)); }
+    catch(e){ /* 용량 초과 등으로 저장 실패해도 분석 자체는 계속 진행 */ }
+  }
+  function clearSessionState(){
+    try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+  }
+  const savedSession = loadSessionState();
+
   // ---------- advertiser (브랜드 가이드) list ----------
   const advertiserSelect = document.getElementById('advertiserSelect');
   let advertisersData = [];
@@ -650,6 +672,9 @@
         opt.textContent = a.name + ' 비교';
         advertiserSelect.appendChild(opt);
       });
+      if(savedSession && savedSession.advertiserId){
+        advertiserSelect.value = savedSession.advertiserId;
+      }
     })
     .catch(() => {});
 
@@ -699,6 +724,14 @@
         });
         mediaGuideChecks.appendChild(label);
       });
+      if(savedSession && Array.isArray(savedSession.mediaGuideIds) && savedSession.mediaGuideIds.length){
+        mediaGuideChecks.querySelectorAll('input').forEach(input => {
+          input.checked = savedSession.mediaGuideIds.includes(input.value);
+        });
+        mediaGuideChecks.querySelectorAll('label.mg-check').forEach(lbl => {
+          lbl.classList.toggle('checked', lbl.querySelector('input').checked);
+        });
+      }
     })
     .catch(() => {
       renderMediaGuideError('매체 가이드 목록을 불러오지 못했습니다. api/mediaGuides.js와 api/_mediaGuides.js가 배포되었는지 확인해주세요.');
@@ -758,6 +791,7 @@
       setStatus('이미지 용량이 너무 큽니다. 8MB 이하 이미지를 사용해주세요.', false);
       return;
     }
+    clearSessionState();
     setStatus('', false);
     document.getElementById('aiSummaryBox').classList.remove('show');
     document.getElementById('keyChecksBlock').classList.remove('show');
@@ -776,6 +810,31 @@
       showDzState('loaded');
     };
     reader.readAsDataURL(file);
+  }
+
+  function dataUrlToFile(dataUrl, filename){
+    const [header, base64] = dataUrl.split(',');
+    const mimeMatch = header.match(/data:(.*?);base64/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const bin = atob(base64);
+    const arr = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+    return new File([arr], filename || 'restored.jpg', { type: mime });
+  }
+
+  if(savedSession && savedSession.resultJson && savedSession.previewDataUrl){
+    try{
+      currentFile = dataUrlToFile(savedSession.previewDataUrl, savedSession.fileName);
+      analyzingImg.src = savedSession.previewDataUrl;
+      loadedImg.src = savedSession.previewDataUrl;
+      showDzState('loaded');
+      analyzeBtn.textContent = '다시 분석하기';
+      applyResults(savedSession.resultJson);
+      setStatus('이전 분석 결과를 불러왔습니다.', false);
+    }catch(e){
+      console.error('세션 복원 실패', e);
+      clearSessionState();
+    }
   }
 
   // ---------- optional 기획안 캡처 upload (collapsed by default) ----------
@@ -1123,6 +1182,13 @@
         try{
           const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight, ocrFields, contrastFacts);
           applyResults(result);
+          saveSessionState({
+            resultJson: result,
+            previewDataUrl: 'data:' + prepared.mediaType + ';base64,' + prepared.base64,
+            fileName: file.name,
+            advertiserId: advertiserSelect.value,
+            mediaGuideIds: getSelectedMediaGuideIds(),
+          });
           showDzState('loaded');
           analyzeBtn.textContent = '다시 분석하기';
           setStatus('', false);
