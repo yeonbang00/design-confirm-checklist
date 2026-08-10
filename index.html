@@ -285,7 +285,7 @@
   </div>
   <div class="hero-inner">
     <h1>디자인 체크리스트</h1>
-    <p class="hero-sub">시안 이미지를 올리면 19개 항목을 자동으로 점검하고, 체크리스트에 바로 반영합니다.<br>AI의 시각 판단뿐 아니라 OCR로 텍스트 위치를 픽셀 단위로 직접 측정해 대조합니다.</p>
+    <p class="hero-sub">시안 이미지를 올리면 18개 항목을 자동으로 점검하고, 체크리스트에 바로 반영합니다.<br>AI의 시각 판단뿐 아니라 OCR로 텍스트 위치를 픽셀 단위로 직접 측정해 대조합니다.</p>
     <div class="hero-stats">
       <div class="stat-chip"><div class="stat-num" id="countValue">1</div><div class="stat-label">평가 영역</div></div>
       <div class="stat-chip"><div class="stat-num pulse">AI</div><div class="stat-label">즉시 판정</div></div>
@@ -299,7 +299,7 @@
   <div class="card upload-card">
     <div class="card-head"><div class="num-badge">01</div><div class="card-title">시안 이미지 업로드</div></div>
     <div class="compare-label"><b>브랜드 가이드</b> <span class="optional-tag">(선택사항)</span></div>
-    <div class="compare-desc">브랜드를 선택하면 그 브랜드의 참고 배너들과 나란히 비교해서, 비슷한 점과 다른 점까지 함께 짚어드립니다.<br>아무것도 선택하지 않으면 19개 항목 기준으로 시안 자체를 점검합니다.</div>
+    <div class="compare-desc">브랜드를 선택하면 그 브랜드의 참고 배너들과 나란히 비교해서, 비슷한 점과 다른 점까지 함께 짚어드립니다.<br>아무것도 선택하지 않으면 18개 항목 기준으로 시안 자체를 점검합니다.</div>
 
     <div class="select-wrap">
       <select id="advertiserSelect">
@@ -437,14 +437,14 @@
           <span>검토필요 <b id="cNeedsfix">0</b></span>
           <span>반려 <b id="cReject">0</b></span>
           <span>해당없음 <b id="cNa">0</b></span>
-          <span>미평가 <b id="cPending">19</b></span>
+          <span>미평가 <b id="cPending">18</b></span>
         </div>
       </div>
       <div class="verdict-cluster">
         <span class="verdict-dot" id="verdictDot"></span>
         <div>
           <div class="verdict-label" id="verdictLabel">평가 대기</div>
-          <div class="verdict-sub" id="verdictSub">0 / 19 완료</div>
+          <div class="verdict-sub" id="verdictSub">0 / 18 완료</div>
         </div>
       </div>
     </div>
@@ -454,7 +454,7 @@
 
   <!-- ---------- reference groups ---------- -->
   <div class="card ref-card-outer">
-    <div class="card-head"><div class="num-badge">03</div><div class="card-title" style="font-size:15px;">19개 평가 영역</div></div>
+    <div class="card-head"><div class="num-badge">03</div><div class="card-title" style="font-size:15px;">18개 평가 영역</div></div>
     <div class="ref-hint">항목 위에 마우스를 올리면 세부 기준이 보여요</div>
     <div id="refGroupsContainer"></div>
   </div>
@@ -489,7 +489,7 @@
     {n:2, title:'위계 및 구조', required:true, group:1,
       bullets:['헤드라인→비주얼→CTA 흐름인가','우선순위가 크기로 구분되는가'], reject:'모든 요소가 같은 크기로 나열'},
     {n:3, title:'타이포·정렬', required:true, group:1,
-      bullets:['폰트가 2종 이내로 통일됐는가','정렬 그리드가 일관적인가','강조가 필요한 핵심 정보가 색상·굵기·크기로 구분되는가'], reject:'텍스트가 그리드 밖으로 밀림'},
+      bullets:['폰트가 2종 이내로 통일됐는가','위아래로 쌓인 요소끼리 정렬(중앙/좌측/우측)이 정확히 맞는가','로고·헤드라인·CTA처럼 단독 배치된 요소도 캔버스 중앙에서 좌우로 치우치지 않았는가','CTA 버튼 안 텍스트가 버튼 안에서 고르게 배치됐는가','강조가 필요한 핵심 정보가 색상·굵기·크기로 구분되는가'], reject:'텍스트가 그리드 밖으로 밀림'},
     {n:4, title:'정보 정확성', required:true, group:1,
       bullets:['가격·일정 정보에 오류 없는가','원고와 수치가 일치하는가'], reject:'가격·일정 등 사실관계 오류'},
     {n:5, title:'컬러 일관성', required:false, group:1,
@@ -502,25 +502,23 @@
       bullets:['아이콘·일러스트 마감이 깨끗한가','벡터에 깨짐이 없는가'], reject:'저해상도로 깨지거나 미완성'},
     {n:9, title:'CTA 및 전환', required:true, group:1,
       bullets:['CTA 문구가 행동을 유도하는가','버튼이 눈에 띄는가'], reject:'CTA가 없거나 눈에 띄지 않음'},
-    {n:10, title:'매체 최적화', required:true, group:1,
-      bullets:['매체 규격(사이즈·용량)에 맞는가','안전 여백 안에 배치됐는가'], reject:'규격·용량 초과 또는 요소 잘림'},
-    {n:11, title:'최종 디테일', required:true, group:1,
+    {n:10, title:'여백·간격', required:true, group:1,
       bullets:['요소 간 여백·간격이 고르게 정리됐는가','텍스트 줄바꿈이 어색한 위치에서 끊기지 않는가'], reject:'여백 불균형 또는 어색한 줄바꿈'},
-    {n:12, title:'신체 비율 왜곡', required:false, group:2,
+    {n:11, title:'신체 비율 왜곡', required:false, group:2,
       bullets:['얼굴(이목구비)이 뒤틀리지 않았는가','손가락·팔다리 비율이 정상인가','자세가 물리적으로 가능한가'], reject:'얼굴·신체 비율이 명백히 어긋남'},
-    {n:13, title:'텍스트·로고 렌더링', required:true, group:2,
-      bullets:['생성된 글자가 정확한가','로고 형태가 원본과 일치하는가'], reject:'글자가 깨지거나 로고가 왜곡됨'},
-    {n:14, title:'배경 패턴 반복', required:false, group:2,
+    {n:12, title:'배경 패턴 반복', required:false, group:2,
       bullets:['텍스처가 반복되지 않는가','패턴 경계가 매끄러운가'], reject:'배경이 눈에 띄게 반복됨'},
-    {n:15, title:'워터마크·서명 흔적', required:false, group:2,
+    {n:13, title:'워터마크·서명 흔적', required:false, group:2,
       bullets:['AI 워터마크가 없는가','스톡 이미지 출처 표시가 없는가'], reject:'워터마크·서명이 남아있음'},
-    {n:16, title:'오브젝트 경계 이음새', required:false, group:2,
-      bullets:['합성 경계가 매끄럽게 이어지는가','색 경계가 자연스러운가'], reject:'합성 경계가 뚜렷하게 티남'},
-    {n:17, title:'광원-그림자 방향 일치', required:false, group:2,
+    {n:14, title:'광원-그림자 방향 일치', required:false, group:2,
       bullets:['조명·그림자 방향이 일치하는가','광원이 통일되어 있는가'], reject:'그림자 방향이 서로 어긋남'},
-    {n:18, title:'로고 사용 규정', required:true, group:3,
+    {n:15, title:'매체 최적화', required:true, group:3,
+      bullets:['매체 규격(사이즈·용량)에 맞는가','안전 여백 안에 배치됐는가'], reject:'규격·용량 초과 또는 요소 잘림'},
+    {n:16, title:'텍스트·로고 렌더링', required:true, group:3,
+      bullets:['생성된 글자가 정확한가','로고 형태가 원본과 일치하는가'], reject:'글자가 깨지거나 로고가 왜곡됨'},
+    {n:17, title:'로고 사용 규정', required:true, group:3,
       bullets:['로고가 누락되지 않았는가','로고 최소 여백을 지켰는가','색상·비율을 변경하지 않았는가'], reject:'로고 가이드라인 위반'},
-    {n:19, title:'법적고지·심의 문구', required:false, group:3,
+    {n:18, title:'법적고지·심의 문구', required:false, group:3,
       bullets:['필수 고지사항이 포함됐는가','심의 문구 크기가 기준 이상인가'], reject:'법적 고지·심의 문구 누락'},
   ];
   const STATUS_META = {
@@ -606,7 +604,7 @@
     let n = 1;
     const timer = setInterval(() => {
       n++;
-      if(n >= 19){ el.textContent = '19'; clearInterval(timer); return; }
+      if(n >= 18){ el.textContent = '18'; clearInterval(timer); return; }
       el.textContent = n;
     }, 90);
   })();
@@ -620,18 +618,18 @@
     document.getElementById('cNeedsfix').textContent = counts.needsfix;
     document.getElementById('cReject').textContent = counts.reject;
     document.getElementById('cNa').textContent = counts.na;
-    document.getElementById('cPending').textContent = 19 - done;
-    document.getElementById('progressFill').style.width = ((done/19)*100) + '%';
+    document.getElementById('cPending').textContent = 18 - done;
+    document.getElementById('progressFill').style.width = ((done/18)*100) + '%';
 
     let label = '평가 대기', color = 'oklch(65% 0.008 265)';
     if(done > 0){
       if(counts.reject > 0){ label = '반려 항목 있음'; color = 'var(--reject)'; }
       else if(counts.needsfix > 0){ label = '검토 필요'; color = 'var(--needsfix)'; }
-      else if(done === 19){ label = '컨펌 가능'; color = 'var(--pass)'; }
+      else if(done === 18){ label = '컨펌 가능'; color = 'var(--pass)'; }
       else { label = '평가 진행 중'; }
     }
     document.getElementById('verdictLabel').textContent = label;
-    document.getElementById('verdictSub').textContent = done + ' / 19 완료';
+    document.getElementById('verdictSub').textContent = done + ' / 18 완료';
     document.getElementById('verdictDot').style.background = color;
     document.getElementById('summaryDot').style.background = color;
   }
