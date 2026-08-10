@@ -1108,10 +1108,10 @@
 
     const refsEl = document.getElementById('summaryRefs');
     refsEl.innerHTML = '';
-    (result.items || []).filter(it => it.status === 'reject' || it.status === 'needsfix').forEach(it => {
+    (result.items || []).filter(it => it.status === 'reject').forEach(it => {
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = 'ref-chip ' + (it.status === 'reject' ? 'rc-reject' : 'rc-needsfix');
+      chip.className = 'ref-chip rc-reject';
       const found = ITEMS.find(x => x.n === it.id);
       const name = found ? found.title : ('항목 ' + it.id);
       chip.textContent = String(it.id).padStart(2,'0') + ' ' + name;
