@@ -45,7 +45,7 @@ const BASE_PROMPT = `다음은 광고대행사가 광고주에게 전달하기 �
 11 신체 비율 왜곡 - AI 생성/보정 특유의 얼굴·신체·의상·소품 형태·구조 왜곡, 7번과 달리 형태·비율 자체가 물리적으로 말이 안 되는 경우 (인물이 없으면 na)
 12 배경 패턴 반복 - AI 생성 특유의 부자연스러운 반복/대칭 패턴 여부
 13 워터마크·서명 흔적 - 생성형 워터마크나 스톡 이미지 서명 잔여 여부
-14 광원-그림자 방향 일치 - 여러 피사체의 그림자 방향이 서로 모순되지 않는가
+14 광원-그림자 방향 일치 - 여러 피사체의 그림자 방향이 서로 모순되지 않는가 (그림자를 가진 피사체가 하나뿐이면 na)
 15 매체 최적화 - 세이프존, 모바일 가독성 (일부 매체는 기기별 화면비율에 맞춰 자동으로 크롭될 수 있음 — 해당 매체 기준이 제공된 경우에만 확인)
 16 텍스트·로고 렌더링 - 문자·로고가 의미 없이 깨지지 않았는가, 잘 알려진 제3자 로고는 색상도 정확한지
 17 로고 사용 규정 - 로고 최소 여백 확보, 변형·왜곡 없이 사용, 로고 자체가 누락되지 않았는지
@@ -72,6 +72,10 @@ const BASE_PROMPT = `다음은 광고대행사가 광고주에게 전달하기 �
 주의: 위 노이즈·그레인, 울퉁불퉁한 표면 질감 패턴은 사진 합성이 아니라 처음부터 AI로 생성된 일러스트·3D 그래픽 스타일 배너에서도 똑같이 나타날 수 있습니다. 이런 배너는 6번·7번이 "사진 합성/실사 피사체가 아님" 기준으로 na 처리되지만, 그렇다고 이 문제들을 그냥 넘어가지 마세요 — 6번·7번은 그대로 na로 두고, 대신 8번(그래픽 완성도, 이미지 스타일과 무관하게 항상 평가하는 항목)에서 같은 문제를 지적하세요.
 
 반대로 결함으로 오인하지 말아야 할 경우도 있습니다: 동전·나뭇잎·컨페티 같은 작은 장식 요소가 입체감이나 움직임을 표현하기 위해 의도적으로 모션 블러(흩날리는 느낌의 흐림 효과) 처리된 경우는 결함이 아니니 "흐릿하다/뭉개졌다"고 지적하지 마세요. 이런 의도적 모션 블러는 주요 피사체(제품·인물·로고 등) 자체의 초점이 안 맞거나 이미지가 전반적으로 뭉개진 경우와는 다릅니다 — 후자만 문제로 판정하세요.
+
+6번(합성 리얼리티)과 14번(광원-그림자 방향 일치)은 둘 다 "그림자"를 보지만 서로 다른 질문입니다 — 헷갈리지 말고 구분하세요:
+- 6번은 "합성 퀄리티" 문제입니다: 피사체의 그림자·반사가 배경과 자연스럽게 어우러져서 합성이 티 안 나는지(질감·톤·공간감 포함), 사진 합성이 아니면 na입니다.
+- 14번은 "광원 방향의 일관성" 문제입니다: 이미지 안에 그림자를 가진 피사체가 2개 이상 있을 때, 그 그림자들이 서로 다른 방향의 광원을 가리키며 모순되지 않는지를 봅니다. 그림자를 가진 피사체가 하나뿐이거나 아예 없다면 "비교할 대상"이 없는 것이므로 14번은 na로 판정하세요 — 억지로 pass를 주지 마세요.
 
 4번(정보 정확성), 15번(매체 최적화), 10번(여백·간격)은 팀이 가장 중요하게 보는 기준입니다. 4번을 판정하기 전에, 다른 항목처럼 인상만 보고 넘어가지 말고 반드시 아래 절차를 실행하세요:
 1) textTranscript 필드에 이미지 안에 보이는 모든 한글·숫자 텍스트를 헤드라인부터 가장 작은 글씨까지 하나도 빠짐없이 실제로 옮겨 적으세요 (내부적으로 생각만 하지 말고 반드시 이 필드에 문자 그대로 출력하세요 — 요소마다 줄바꿈으로 구분).
@@ -175,6 +179,13 @@ function brandGuidelineInstruction(advertiserName, guideline) {
   return `\n\n${guideline}\n\n(참고: 위 가이드는 "${advertiserName}" 브랜드 전용입니다. 다른 브랜드 시안에는 적용하지 마세요 — 이 요청은 ${advertiserName} 시안이므로 그대로 적용합니다.)`;
 }
 
+function brandGuideReviewInstruction(advertiserName) {
+  return `\n\n추가로 brandGuideReview 필드를 자연스러운 구어체 한국어로 채우세요 — 위에서 안내된 "${advertiserName}" 브랜드 가이드에 적힌 구체적인 기준(로고 규정, 컬러, 톤앤매너 등)에 이 시안이 얼마나 부합하는지 요약합니다. 참고 배너 이미지와의 시각적 비교(comparison 필드)와는 별개로, 브랜드 가이드 문서에 명시된 기준 자체의 충족 여부를 봅니다.
+- satisfied: 브랜드 가이드 기준을 충족하는 부분과 근거를 2~3문장(40~60단어)으로 설명
+- differs: 브랜드 가이드 기준과 다르거나 위반하는 부분과 그 이유를 2~3문장(40~60단어)으로 설명. 구체적으로 어느 기준이 어떻게 다른지 짚으세요. 위반 사항이 없다면 "브랜드 가이드 기준에서 벗어난 부분이 없습니다"라고만 답하세요.
+- needsCheck: 이미지만으로는 판단이 애매하거나 추가 확인이 필요한 부분을 1~2문장(20~40단어)으로 설명. 없다면 "—"로 답하세요.`;
+}
+
 function mediaGuidelineInstruction(mediaGuides, hasSize) {
   const names = mediaGuides.map((m) => m.name).join(', ');
   const withGuideline = mediaGuides.filter((m) => m.guideline && m.guideline.trim());
@@ -266,12 +277,13 @@ ${lines.join('\n')}
 이 수치를 근거로 지적할 때는 note에 "묻힘"·"안 보임"처럼 육안으로 봐도 명백히 안 보인다는 식으로 쓰지 마세요 — 실제로는 눈에 잘 보이는데 측정치만 기준 미달인 경우도 많습니다(그라데이션 배경처럼 측정이 어려운 경우 특히 그렇습니다). 대신 "WCAG 기준으로 봤을 때 대비가 OO:1로 기준(4.5:1) 미달"처럼, 이게 접근성 기술 기준상의 미달이라는 걸 명확히 밝히는 식으로 표현하세요.`;
 }
 
-function schemaInstruction(hasComparison, hasMediaGuides, hasBrief) {
+function schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline) {
   const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
   const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
   const briefSchema = hasBrief ? `{"verdict":"aligned","summary":"...","matches":"...","gaps":"..."}` : `null`;
+  const brandGuideSchema = hasGuideline ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
   return `\n\n반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"textTranscript":"...","items":[{"id":1,"status":"pass","note":"..."}],"summary":"...","comparison":${comparisonSchema},"mediaGuideReview":${mediaGuideSchema},"briefAlignment":${briefSchema}}`;
+{"textTranscript":"...","items":[{"id":1,"status":"pass","note":"..."}],"summary":"...","comparison":${comparisonSchema},"brandGuideReview":${brandGuideSchema},"mediaGuideReview":${mediaGuideSchema},"briefAlignment":${briefSchema}}`;
 }
 
 export default async function handler(req, res) {
@@ -354,11 +366,12 @@ export default async function handler(req, res) {
     (hasSize ? imageSizeInstruction(imageWidth, imageHeight, fileSizeBytes) : '') +
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
     (hasGuideline ? brandGuidelineInstruction(advertiser.name, brandGuidelineText) : '') +
+    (hasGuideline ? brandGuideReviewInstruction(advertiser.name) : '') +
     (hasMediaGuides ? mediaGuidelineInstruction(selectedMediaGuides, hasSize) : '') +
     (hasBrief ? briefAlignmentInstruction(briefDirection) : '') +
     ocrInstruction +
     contrastInstruction +
-    schemaInstruction(hasComparison, hasMediaGuides, hasBrief);
+    schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline);
 
   // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
   // 마지막이 새 시안"이라고 안내하므로 images 배열도 그 순서를 그대로 지켜야 함.

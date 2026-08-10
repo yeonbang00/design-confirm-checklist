@@ -379,6 +379,22 @@
       </div>
     </div>
 
+    <div class="comparison-block" id="brandGuideReviewBlock">
+      <div class="comparison-title">브랜드 가이드 기준 검수 결과</div>
+      <div class="comparison-item">
+        <div class="ci-label">충족되는 점</div>
+        <div class="ci-text" id="bgSatisfied"></div>
+      </div>
+      <div class="comparison-item">
+        <div class="ci-label">다른 점</div>
+        <div class="ci-text" id="bgDiffers"></div>
+      </div>
+      <div class="comparison-item">
+        <div class="ci-label">확인이 필요한 점</div>
+        <div class="ci-text" id="bgNeedsCheck"></div>
+      </div>
+    </div>
+
     <div class="comparison-block" id="mediaGuideBlock">
       <div class="comparison-title">매체 가이드 검수 결과</div>
       <div class="comparison-item">
@@ -481,7 +497,7 @@
     {n:13, title:'워터마크·서명 흔적', group:2,
       bullets:['AI 워터마크가 없는가','스톡 이미지 출처 표시가 없는가'], reject:'워터마크·서명이 남아있음'},
     {n:14, title:'광원-그림자 방향 일치', group:2,
-      bullets:['조명·그림자 방향이 일치하는가','광원이 통일되어 있는가'], reject:'그림자 방향이 서로 어긋남'},
+      bullets:['그림자를 가진 피사체가 2개 이상일 때, 광원 방향이 서로 모순되지 않는가'], reject:'그림자 방향이 서로 어긋남 (피사체가 하나뿐이면 na)'},
     {n:15, title:'매체 최적화', group:3,
       bullets:['매체 규격(사이즈·용량)에 맞는가','안전 여백 안에 배치됐는가'], reject:'규격·용량 초과 또는 요소 잘림'},
     {n:16, title:'텍스트·로고 렌더링', group:3,
@@ -759,6 +775,7 @@
     setStatus('', false);
     document.getElementById('aiSummaryBox').classList.remove('show');
     document.getElementById('comparisonBlock').classList.remove('show');
+    document.getElementById('brandGuideReviewBlock').classList.remove('show');
     document.getElementById('mediaGuideBlock').classList.remove('show');
     document.getElementById('briefAlignmentBlock').classList.remove('show');
     document.querySelector('.checklist-card').classList.remove('show');
@@ -1081,6 +1098,17 @@
       compBlock.classList.add('show');
     } else {
       compBlock.classList.remove('show');
+    }
+
+    const bgBlock = document.getElementById('brandGuideReviewBlock');
+    const bgr = result.brandGuideReview;
+    if(bgr && (bgr.satisfied || bgr.differs || bgr.needsCheck)){
+      document.getElementById('bgSatisfied').textContent = bgr.satisfied || '—';
+      document.getElementById('bgDiffers').textContent = bgr.differs || '—';
+      document.getElementById('bgNeedsCheck').textContent = bgr.needsCheck || '—';
+      bgBlock.classList.add('show');
+    } else {
+      bgBlock.classList.remove('show');
     }
 
     const mgBlock = document.getElementById('mediaGuideBlock');
