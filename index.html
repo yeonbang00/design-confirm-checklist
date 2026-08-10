@@ -408,7 +408,6 @@
           <span>검토필요 <b id="cNeedsfix">0</b></span>
           <span>반려 <b id="cReject">0</b></span>
           <span>해당없음 <b id="cNa">0</b></span>
-          <span>미평가 <b id="cPending">18</b></span>
         </div>
       </div>
       <div class="verdict-cluster">
@@ -586,7 +585,6 @@
     document.getElementById('cNeedsfix').textContent = counts.needsfix;
     document.getElementById('cReject').textContent = counts.reject;
     document.getElementById('cNa').textContent = counts.na;
-    document.getElementById('cPending').textContent = 18 - done;
     document.getElementById('progressFill').style.width = ((done/18)*100) + '%';
 
     let label = '평가 대기', color = 'oklch(65% 0.008 265)';
