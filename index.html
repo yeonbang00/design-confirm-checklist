@@ -20,8 +20,6 @@
     --popover-bg: oklch(18% 0.01 265);
     --progress-fill: oklch(35% 0.08 260);
     --pass:#2FA360; --needsfix:#E0791C; --reject:#E33B5A; --na:#8A8A86;
-    --must-bg: oklch(94% 0.04 10); --must-text:#E33B5A;
-    --should-bg: oklch(93% 0.035 145); --should-text: oklch(45% 0.1 145);
   }
   *{box-sizing:border-box;}
   html{scrollbar-gutter:stable;}
@@ -215,9 +213,6 @@
   .ref-card{position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid oklch(91% 0.01 265); border-radius:10px; padding:12px 14px; cursor:default;}
   .ref-card .rc-title{font-size:13px;}
   .ref-card .rc-title .rc-num{color:oklch(58% 0.01 265); margin-right:6px;}
-  .rc-tag{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:100px; flex-shrink:0;}
-  .rc-tag.must{background:var(--must-bg); color:var(--must-text);}
-  .rc-tag.should{background:var(--should-bg); color:var(--should-text);}
   .rc-pop{display:none; position:absolute; top:100%; left:0; right:0; margin-top:8px; background:var(--popover-bg); border-radius:12px; padding:16px 18px; z-index:30; box-shadow:0 12px 28px oklch(20% 0.02 265 / 0.28);}
   .ref-card:hover .rc-pop, .ref-card:focus-within .rc-pop{display:block;}
   .rc-pop .b{display:flex; gap:6px; font-size:12px; line-height:1.5; color:oklch(94% 0.004 85); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -458,41 +453,41 @@
   });
 
   const ITEMS = [
-    {n:1, title:'전략 적합성', required:true, group:1,
+    {n:1, title:'전략 적합성', group:1,
       bullets:['목적과 타깃 톤이 일치하는가','여러 혜택 포인트가 하나의 오퍼로 수렴하는가'], reject:'서로 다른 오퍼·캠페인이 동시에 경쟁 또는 컨셉 부재'},
-    {n:2, title:'위계 및 구조', required:true, group:1,
+    {n:2, title:'위계 및 구조', group:1,
       bullets:['헤드라인→비주얼→CTA 흐름인가','우선순위가 크기로 구분되는가'], reject:'모든 요소가 같은 크기로 나열'},
-    {n:3, title:'타이포·정렬', required:true, group:1,
+    {n:3, title:'타이포·정렬', group:1,
       bullets:['폰트가 2종 이내로 통일됐는가','위아래로 쌓인 요소끼리 정렬(중앙/좌측/우측)이 정확히 맞는가','로고·헤드라인·CTA처럼 단독 배치된 요소도 캔버스 중앙에서 좌우로 치우치지 않았는가','CTA 버튼 안 텍스트가 버튼 안에서 고르게 배치됐는가','강조가 필요한 핵심 정보가 색상·굵기·크기로 구분되는가'], reject:'텍스트가 그리드 밖으로 밀림'},
-    {n:4, title:'정보 정확성', required:true, group:1,
+    {n:4, title:'정보 정확성', group:1,
       bullets:['가격·일정 정보에 오류 없는가','원고와 수치가 일치하는가'], reject:'가격·일정 등 사실관계 오류'},
-    {n:5, title:'컬러 일관성', required:false, group:1,
+    {n:5, title:'컬러 일관성', group:1,
       bullets:['브랜드 컬러를 준수했는가','배경-텍스트 대비가 충분한가'], reject:'브랜드 컬러 이탈 또는 저대비'},
-    {n:6, title:'합성 리얼리티', required:false, group:1,
+    {n:6, title:'합성 리얼리티', group:1,
       bullets:['톤·질감이 배경과 어울리는가','그림자·반사가 자연스러운가'], reject:'합성이 티나거나 이질감이 있음'},
-    {n:7, title:'피사체 보정', required:false, group:1,
+    {n:7, title:'피사체 보정', group:1,
       bullets:['보정이 과도하지 않은가','재질 텍스처가 자연스러운가'], reject:'과도한 리터칭으로 왜곡된 피사체'},
-    {n:8, title:'그래픽 완성도', required:false, group:1,
+    {n:8, title:'그래픽 완성도', group:1,
       bullets:['아이콘·일러스트 마감이 깨끗한가','벡터에 깨짐이 없는가'], reject:'저해상도로 깨지거나 미완성'},
-    {n:9, title:'CTA 및 전환', required:true, group:1,
+    {n:9, title:'CTA 및 전환', group:1,
       bullets:['CTA가 있다면 문구가 행동을 유도하는가','CTA가 있다면 버튼이 눈에 띄는가'], reject:'있는 CTA가 텍스트에 묻히는 등 명백히 눈에 안 띔 (CTA 부재 자체는 매체에 따라 정상일 수 있음)'},
-    {n:10, title:'여백·간격', required:true, group:1,
+    {n:10, title:'여백·간격', group:1,
       bullets:['요소 간 여백·간격이 고르게 정리됐는가','텍스트 줄바꿈이 어색한 위치에서 끊기지 않는가'], reject:'여백 불균형 또는 어색한 줄바꿈'},
-    {n:11, title:'신체 비율 왜곡', required:false, group:2,
+    {n:11, title:'신체 비율 왜곡', group:2,
       bullets:['얼굴(이목구비)이 뒤틀리지 않았는가','손가락·팔다리 비율이 정상인가','자세가 물리적으로 가능한가'], reject:'얼굴·신체 비율이 명백히 어긋남'},
-    {n:12, title:'배경 패턴 반복', required:false, group:2,
+    {n:12, title:'배경 패턴 반복', group:2,
       bullets:['텍스처가 반복되지 않는가','패턴 경계가 매끄러운가'], reject:'배경이 눈에 띄게 반복됨'},
-    {n:13, title:'워터마크·서명 흔적', required:false, group:2,
+    {n:13, title:'워터마크·서명 흔적', group:2,
       bullets:['AI 워터마크가 없는가','스톡 이미지 출처 표시가 없는가'], reject:'워터마크·서명이 남아있음'},
-    {n:14, title:'광원-그림자 방향 일치', required:false, group:2,
+    {n:14, title:'광원-그림자 방향 일치', group:2,
       bullets:['조명·그림자 방향이 일치하는가','광원이 통일되어 있는가'], reject:'그림자 방향이 서로 어긋남'},
-    {n:15, title:'매체 최적화', required:true, group:3,
+    {n:15, title:'매체 최적화', group:3,
       bullets:['매체 규격(사이즈·용량)에 맞는가','안전 여백 안에 배치됐는가'], reject:'규격·용량 초과 또는 요소 잘림'},
-    {n:16, title:'텍스트·로고 렌더링', required:true, group:3,
+    {n:16, title:'텍스트·로고 렌더링', group:3,
       bullets:['생성된 글자가 정확한가','로고 형태가 원본과 일치하는가'], reject:'글자가 깨지거나 로고가 왜곡됨'},
-    {n:17, title:'로고 사용 규정', required:true, group:3,
+    {n:17, title:'로고 사용 규정', group:3,
       bullets:['로고가 누락되지 않았는가','로고 최소 여백을 지켰는가','색상·비율을 변경하지 않았는가'], reject:'로고 가이드라인 위반'},
-    {n:18, title:'법적고지·심의 문구', required:false, group:3,
+    {n:18, title:'법적고지·심의 문구', group:3,
       bullets:['필수 고지사항이 포함됐는가','심의 문구 크기가 기준 이상인가'], reject:'법적 고지·심의 문구 누락'},
   ];
   const STATUS_META = {
@@ -553,11 +548,8 @@
     ITEMS.filter(it => it.group === g).forEach(it => {
       const card = document.createElement('div');
       card.className = 'ref-card';
-      const tagClass = it.required ? 'must' : 'should';
-      const tagLabel = it.required ? '필수' : '권장';
       card.innerHTML = `
         <span class="rc-title"><span class="rc-num">${String(it.n).padStart(2,'0')}</span>${it.title}</span>
-        <span class="rc-tag ${tagClass}">${tagLabel}</span>
         <div class="rc-pop">
           ${it.bullets.map(b => `<div class="b"><span>·</span><span>${b}</span></div>`).join('')}
           <div class="rj">즉시 반려: ${it.reject}</div>
