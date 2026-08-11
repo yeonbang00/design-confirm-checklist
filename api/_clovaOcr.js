@@ -60,10 +60,30 @@ export async function runOcr(base64, mediaType) {
 // (and same for height) here so the reported coordinates land in the same
 // coordinate space as those thresholds. Default 1 (no rescaling) when the
 // caller doesn't know both sizes.
+// 텍스트 박스 높이를 "같은 크기로 쓰인 것으로 보이는" 묶음(계층)으로
+// 클러스터링한다 — OCR이 같은 헤드라인도 단어별로 살짝 다른 높이를
+// 보고하는 경우가 있어서, 값이 그냥 다르다고 다른 계층으로 보면 안 된다.
+// 서로 15% 이내로 가까운 높이는 같은 계층으로 묶는다.
+function clusterHeightTiers(heights) {
+  const sorted = [...heights].sort((a, b) => b - a);
+  const tiers = [];
+  for (const h of sorted) {
+    const last = tiers[tiers.length - 1];
+    if (last && h >= last.min * 0.85) {
+      last.heights.push(h);
+      last.min = Math.min(last.min, h);
+    } else {
+      tiers.push({ min: h, max: h, heights: [h] });
+    }
+  }
+  return tiers.map((t) => Math.round(t.heights.reduce((a, b) => a + b, 0) / t.heights.length));
+}
+
 export function formatOcrForPrompt(fields, scaleX, scaleY) {
   if (!fields || !fields.length) return '';
   scaleX = Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1;
   scaleY = Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1;
+  const heights = [];
   const lines = fields.slice(0, 60).map((f) => {
     const text = (f.inferText || '').trim();
     if (!text) return null;
@@ -77,14 +97,23 @@ export function formatOcrForPrompt(fields, scaleX, scaleY) {
     const bottom = Math.round(Math.max(...ys));
     const centerX = Math.round((left + right) / 2);
     const centerY = Math.round((top + bottom) / 2);
+    const height = bottom - top;
+    if (height > 2) heights.push(height);
     return `"${text}" — 좌측 ${left}px, 우측 ${right}px, 상단 ${top}px, 하단 ${bottom}px (가로중심 ${centerX}px, 세로중심 ${centerY}px)`;
   }).filter(Boolean);
   if (!lines.length) return '';
 
+  const tiers = clusterHeightTiers(heights);
+  let hierarchyBlock = '';
+  if (tiers.length >= 2) {
+    const ratio = Math.round((tiers[0] / tiers[1]) * 100) / 100;
+    hierarchyBlock = `\n\n3) 2번(위계 및 구조): 감지된 텍스트 높이를 크기별로 묶으면 가장 큰 계층이 약 ${tiers[0]}px, 두 번째로 큰 계층이 약 ${tiers[1]}px로, 비율은 약 ${ratio}배입니다. 타이포그래피 모듈러 스케일 이론(Major Third=1.25배가 "뚜렷하게 인지되는 최소 크기 단계"로 통용됨)에 따르면, 이 비율이 1.25배 이상이면 크기 차이만으로도 위계가 명확하게 인지될 가능성이 높고, 1.25배 미만이면 크기만으로는 위계가 약하게 느껴질 수 있습니다. 단, 이건 통계적 참고 기준일 뿐입니다 — 색상·굵기·배치로 이미 위계가 명확하다면 크기 비율이 1.25배 미만이어도 문제 삼지 마세요. 반대로 비율이 낮은데 색상·굵기 구분도 없어서 실제로 위계가 흐릿해 보인다면 needsfix 이상으로 판정하고, note에 "가장 큰 텍스트와 다음 텍스트의 높이 비율이 약 ${ratio}배로 낮아 크기만으로는 위계가 약함"처럼 근거를 남기세요.`;
+  }
+
   return `\n\nOCR 측정 텍스트 위치 (원본 이미지 픽셀 기준으로 환산된 정확한 좌표, 참고용 — 이미지를 직접 측정한 값이니 시각적 추측보다 신뢰하세요. 위에 안내된 "실제 원본 크기"와 동일한 좌표계입니다):
 ${lines.join('\n')}
 
-이 좌표를 아래 두 가지 용도로 활용하세요:
+이 좌표를 아래 용도로 활용하세요:
 
 1) 3번(타이포·정렬·여백·명도대비): 아래 세 가지는 서로 다른 종류의 정렬 체크입니다 — 하나만 확인하고 넘어가지 말고 해당되는 요소가 있으면 전부 확인하세요.
 
@@ -111,7 +140,7 @@ note에 어느 요소끼리 몇 px 차이나는지 구체적으로 적으세요 
 
 다) CTA 버튼의 정렬: CTA처럼 도형(배경) 안에 텍스트가 들어간 요소는 위 OCR 좌표가 텍스트 자체의 경계일 뿐, 버튼 도형의 실제 테두리가 아닐 수 있습니다 — 버튼에 좌우 패딩이 있으면 텍스트 좌표만으로 캔버스 여백(나)이나 다른 요소와의 정렬(가)을 계산하면 실제 버튼 위치와 오차가 생깁니다. CTA에 가)·나) 기준을 적용할 때는 OCR 좌표를 출발점으로만 삼고, 반드시 이미지를 직접 보고 버튼 도형 자체의 좌우 여백까지 시각적으로 확인해서 최종 판단하세요.
 
-2) 14번(매체 최적화, 세이프존 등 고정 경계선과 비교할 때): 요소의 중심이 아니라 실제로 경계와 맞닿는 가장자리(상단/하단/좌측/우측 중 침범 방향에 맞는 쪽)로 비교하세요. note·differs에는 좌표를 그대로 나열하지 말고 "OO 요소가 세이프존 경계를 N px 침범"처럼 침범량을 직접 계산해서 알아보기 쉽게 적으세요 (예: "CTA 버튼 하단이 세이프존 경계를 15px 침범"). OCR 자체에도 몇 px 수준의 측정 오차가 있을 수 있으니, 경계선과의 차이가 10px 이내면 명확한 침범으로 단정하지 말고 needsfix나 needsCheck로 낮춰 판정하고, 10px을 넘게 침범한 경우만 확실한 위반(reject 등급)으로 판단하세요.
+2) 14번(매체 최적화, 세이프존 등 고정 경계선과 비교할 때): 요소의 중심이 아니라 실제로 경계와 맞닿는 가장자리(상단/하단/좌측/우측 중 침범 방향에 맞는 쪽)로 비교하세요. note·differs에는 좌표를 그대로 나열하지 말고 "OO 요소가 세이프존 경계를 N px 침범"처럼 침범량을 직접 계산해서 알아보기 쉽게 적으세요 (예: "CTA 버튼 하단이 세이프존 경계를 15px 침범"). OCR 자체에도 몇 px 수준의 측정 오차가 있을 수 있으니, 경계선과의 차이가 10px 이내면 명확한 침범으로 단정하지 말고 needsfix나 needsCheck로 낮춰 판정하고, 10px을 넘게 침범한 경우만 확실한 위반(reject 등급)으로 판단하세요.${hierarchyBlock}
 
 OCR이 텍스트를 잘못 인식했거나 이 좌표만으로 판단하기 애매하면 억지로 판정하지 말고 시각적 판단을 우선하세요.`;
 }

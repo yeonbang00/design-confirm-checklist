@@ -305,6 +305,72 @@ ${lines.join('\n')}
 이 수치를 근거로 지적할 때는 note에 "묻힘"·"안 보임"처럼 육안으로 봐도 명백히 안 보인다는 식으로 쓰지 마세요 — 실제로는 눈에 잘 보이는데 측정치만 기준 미달인 경우도 많습니다(그라데이션 배경처럼 측정이 어려운 경우 특히 그렇습니다). 대신 "WCAG 기준으로 봤을 때 대비가 OO:1로 기준(X:1) 미달"처럼, 이게 접근성 기술 기준상의 미달이라는 걸 명확히 밝히는 식으로 표현하세요.`;
 }
 
+// 브랜드 가이드 텍스트(customFields가 "- 라벨: 값" 줄로 합쳐진 것 포함)에서
+// HEX/RGB 색상 코드를 정규식으로 뽑아낸다. 별도 구조화 입력 필드 없이도
+// 지금처럼 자유 텍스트로 "#FF2e98" 같은 값을 적어둔 것만으로 동작한다.
+function extractBrandColors(guidelineText) {
+  if (!guidelineText) return [];
+  const colors = [];
+  const hexRe = /#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})\b/g;
+  let m;
+  while ((m = hexRe.exec(guidelineText))) {
+    let hex = m[1];
+    if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+    colors.push({
+      hex: '#' + hex.toUpperCase(),
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16),
+    });
+  }
+  const rgbRe = /rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/gi;
+  while ((m = rgbRe.exec(guidelineText))) {
+    const r = Number(m[1]), g = Number(m[2]), b = Number(m[3]);
+    if (r <= 255 && g <= 255 && b <= 255) {
+      colors.push({ hex: '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase(), r, g, b });
+    }
+  }
+  return colors;
+}
+
+// "redmean" 색상 거리 근사식 — 사람 눈의 색상 인지에 맞춰 채널별 가중치를
+// 조정한 저비용 근사치다(완전한 CIE ΔE2000 같은 과학적 표준은 아니고,
+// 그보다 훨씬 간단하면서 단순 유클리드 거리보다는 인지적으로 더 정확한
+// 실무용 근사식 — https://www.compuphase.com/cmetric.htm). 이 값 자체를
+// 절대 기준으로 쓰지 않고, "가깝다/멀다"를 가르는 참고용 임계치로만 쓴다.
+function redmeanDistance(c1, c2) {
+  const rmean = (c1.r + c2.r) / 2;
+  const dr = c1.r - c2.r, dg = c1.g - c2.g, db = c1.b - c2.b;
+  return Math.sqrt((2 + rmean / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rmean) / 256) * db * db);
+}
+
+// dominantColors: 클라이언트가 이미지를 6x6으로 축소해서 뽑은 36개 칸의
+// 평균색 — 정교한 색상 분할이 아니라 "대략 이런 색들이 쓰였다"는 참고용
+// 샘플링이다. brandColors: 브랜드 가이드에서 뽑은 HEX/RGB 목록.
+function formatColorDistanceForPrompt(dominantColors, brandColors) {
+  if (!dominantColors || !dominantColors.length || !brandColors || !brandColors.length) return '';
+  const CLOSE_THRESHOLD = 60; // redmean 스케일에서 "육안으로도 비슷한 색"으로 볼 만한 근사 임계치
+  let closeCount = 0;
+  let minDist = Infinity, minMatch = null;
+  for (const c of dominantColors) {
+    let best = Infinity, bestHex = null;
+    for (const b of brandColors) {
+      const d = redmeanDistance(c, b);
+      if (d < best) { best = d; bestHex = b.hex; }
+    }
+    if (best < CLOSE_THRESHOLD) closeCount++;
+    if (best < minDist) { minDist = best; minMatch = bestHex; }
+  }
+  const pct = Math.round((closeCount / dominantColors.length) * 100);
+  const brandHexList = brandColors.map((c) => c.hex).join(', ');
+
+  return `\n\n브랜드 컬러 샘플링 결과 (참고용 — 이미지를 6x6 격자로 축소해서 각 칸의 평균색을 브랜드 컬러(${brandHexList})와 비교한 근사치입니다. 정교한 영역 분할이 아니라 대략적인 색 분포 참고용입니다):
+- 36개 샘플 중 브랜드 컬러와 육안상 비슷한 색으로 볼 만큼 가까운 샘플: ${closeCount}개 (약 ${pct}%)
+- 가장 가까운 샘플과 브랜드 컬러(${minMatch}) 간 거리: 약 ${Math.round(minDist)}
+
+5번(컬러 일관성)을 판정할 때 이 수치를 참고하세요. 이 샘플링은 이미지 전체를 성기게 나눈 것이라 작은 로고·텍스트 색상이나 정교한 영역 구분은 반영하지 못합니다 — "브랜드 컬러가 전혀 안 보인다"는 근거로는 쓰지 말고, 육안으로 직접 확인한 결과와 같이 참고하세요. 근접 비율이 낮게 나와도(예: 10% 미만) 시즌 컨셉 등으로 브랜드 컬러와 다른 계열을 의도적으로 쓴 것으로 보이면 지적하지 마세요 — 이미 안내된 시즌 컨셉 예외를 그대로 적용합니다. 반대로 브랜드 컬러가 이미지 안에 육안으로도 전혀 안 보이는데 샘플링 결과도 근접 비율이 0%에 가깝다면, 이 두 근거를 함께 note에 언급하며 지적할 수 있습니다.`;
+}
+
 function schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline) {
   const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
   const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
@@ -329,7 +395,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts, dominantColors } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -390,6 +456,10 @@ export default async function handler(req, res) {
   const scaleY = (hasSize && hasAnalyzedSize) ? imageHeight / analyzedHeight : 1;
   const ocrInstruction = ocrFields ? formatOcrForPrompt(ocrFields, scaleX, scaleY) : '';
   const contrastInstruction = Array.isArray(contrastFacts) && contrastFacts.length ? formatContrastForPrompt(contrastFacts) : '';
+  const brandColors = hasGuideline ? extractBrandColors(brandGuidelineText) : [];
+  const colorDistanceInstruction = (Array.isArray(dominantColors) && dominantColors.length && brandColors.length)
+    ? formatColorDistanceForPrompt(dominantColors, brandColors)
+    : '';
 
   const promptText =
     BASE_PROMPT +
@@ -401,6 +471,7 @@ export default async function handler(req, res) {
     (hasBrief ? briefAlignmentInstruction(briefDirection) : '') +
     ocrInstruction +
     contrastInstruction +
+    colorDistanceInstruction +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline);
 
   // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
