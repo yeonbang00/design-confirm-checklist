@@ -307,7 +307,10 @@ ${lines.join('\n')}
 
 // 브랜드 가이드 텍스트(customFields가 "- 라벨: 값" 줄로 합쳐진 것 포함)에서
 // HEX/RGB 색상 코드를 정규식으로 뽑아낸다. 별도 구조화 입력 필드 없이도
-// 지금처럼 자유 텍스트로 "#FF2e98" 같은 값을 적어둔 것만으로 동작한다.
+// 지금 팀이 쓰는 자유 텍스트 표기 그대로 동작하도록 세 가지 패턴을 모두
+// 지원한다: "#FF2e98" 같은 HEX, "rgb(255,46,152)" 같은 표기, 그리고
+// 괄호 없이 "255, 46, 152"처럼 숫자만 적는 표기(팀이 실제로 이 방식을
+// 쓴다고 확인됨).
 function extractBrandColors(guidelineText) {
   if (!guidelineText) return [];
   const colors = [];
@@ -323,14 +326,18 @@ function extractBrandColors(guidelineText) {
       b: parseInt(hex.slice(4, 6), 16),
     });
   }
-  const rgbRe = /rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/gi;
-  while ((m = rgbRe.exec(guidelineText))) {
+  // rgb(...) 래핑 여부와 무관하게 "숫자,숫자,숫자" 형태를 전부 잡는다
+  // (rgb(255,46,152)의 안쪽 숫자도 이 패턴으로 같이 잡히므로 아래에서
+  // hex 기준으로 중복 제거한다).
+  const tripletRe = /(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/g;
+  while ((m = tripletRe.exec(guidelineText))) {
     const r = Number(m[1]), g = Number(m[2]), b = Number(m[3]);
     if (r <= 255 && g <= 255 && b <= 255) {
       colors.push({ hex: '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase(), r, g, b });
     }
   }
-  return colors;
+  const seen = new Set();
+  return colors.filter((c) => (seen.has(c.hex) ? false : (seen.add(c.hex), true)));
 }
 
 // "redmean" 색상 거리 근사식 — 사람 눈의 색상 인지에 맞춰 채널별 가중치를
