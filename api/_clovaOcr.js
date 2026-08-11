@@ -79,11 +79,12 @@ function clusterHeightTiers(heights) {
   return tiers.map((t) => Math.round(t.heights.reduce((a, b) => a + b, 0) / t.heights.length));
 }
 
-export function formatOcrForPrompt(fields, scaleX, scaleY) {
+export function formatOcrForPrompt(fields, scaleX, scaleY, canvasWidth, canvasHeight) {
   if (!fields || !fields.length) return '';
   scaleX = Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1;
   scaleY = Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1;
   const heights = [];
+  let totalTextArea = 0;
   const lines = fields.slice(0, 60).map((f) => {
     const text = (f.inferText || '').trim();
     if (!text) return null;
@@ -99,6 +100,7 @@ export function formatOcrForPrompt(fields, scaleX, scaleY) {
     const centerY = Math.round((top + bottom) / 2);
     const height = bottom - top;
     if (height > 2) heights.push(height);
+    totalTextArea += Math.max(0, right - left) * Math.max(0, bottom - top);
     return `"${text}" — 좌측 ${left}px, 우측 ${right}px, 상단 ${top}px, 하단 ${bottom}px (가로중심 ${centerX}px, 세로중심 ${centerY}px)`;
   }).filter(Boolean);
   if (!lines.length) return '';
@@ -108,6 +110,25 @@ export function formatOcrForPrompt(fields, scaleX, scaleY) {
   if (tiers.length >= 2) {
     const ratio = Math.round((tiers[0] / tiers[1]) * 100) / 100;
     hierarchyBlock = `\n\n3) 2번(위계 및 구조): 감지된 텍스트 높이를 크기별로 묶으면 가장 큰 계층이 약 ${tiers[0]}px, 두 번째로 큰 계층이 약 ${tiers[1]}px로, 비율은 약 ${ratio}배입니다. 타이포그래피 모듈러 스케일 이론(Major Third=1.25배가 "뚜렷하게 인지되는 최소 크기 단계"로 통용됨)에 따르면, 이 비율이 1.25배 이상이면 크기 차이만으로도 위계가 명확하게 인지될 가능성이 높고, 1.25배 미만이면 크기만으로는 위계가 약하게 느껴질 수 있습니다. 단, 이건 통계적 참고 기준일 뿐입니다 — 색상·굵기·배치로 이미 위계가 명확하다면 크기 비율이 1.25배 미만이어도 문제 삼지 마세요. 반대로 비율이 낮은데 색상·굵기 구분도 없어서 실제로 위계가 흐릿해 보인다면 needsfix 이상으로 판정하고, note에 "가장 큰 텍스트와 다음 텍스트의 높이 비율이 약 ${ratio}배로 낮아 크기만으로는 위계가 약함"처럼 근거를 남기세요.`;
+  }
+
+  const hasCanvasSize = Number.isFinite(canvasWidth) && Number.isFinite(canvasHeight) && canvasWidth > 0 && canvasHeight > 0;
+  const smallestHeight = tiers.length ? tiers[tiers.length - 1] : (heights.length ? Math.min(...heights) : null);
+  let densityBlock;
+  if (hasCanvasSize) {
+    const densityPct = Math.round((totalTextArea / (canvasWidth * canvasHeight)) * 1000) / 10;
+    const smallHeightPct = smallestHeight ? Math.round((smallestHeight / canvasHeight) * 1000) / 10 : null;
+    densityBlock = `\n\n4) 3번(타이포·정렬·여백·명도대비)의 텍스트 밀도·절대 크기·로컬 간격:
+
+가) 레이아웃 밀도: 감지된 텍스트 영역의 합이 전체 이미지 면적의 약 ${densityPct}%입니다(OCR 박스 넓이 합계 기준의 참고 수치일 뿐, 실제 여백을 정확히 반영하지는 않으니 이 수치 하나로 기계적으로 판정하지 마세요). 이 수치를 참고하면서 이미지를 직접 보고, 요소 사이 여백이 부족해 실제로 답답해 보이는지 시각적으로 판단하세요. 명백히 답답해 보이는 경우만 needsfix 이상으로 판정하고 note에 "텍스트 밀도가 높고 여백이 부족해 답답해 보임"처럼 적으세요. 단, 리뷰·후기 화면, 신문기사, 시험지·문제풀이, 채팅 대화창처럼(예시일 뿐이며 이 목록에 없는 형식도 같은 논리로 판단하세요) 원래 텍스트가 많이 들어가는 게 자연스러운 컨셉을 재현한 배너라면, 밀도가 높아 보여도 정상으로 보고 지적하지 마세요 — 이런 컨셉인지 먼저 이미지 전체 맥락(구도, 톤, 카피 성격)으로 판단한 뒤 이 기준을 적용하세요.${smallHeightPct !== null ? `
+
+나) 절대 크기: 가장 작은 텍스트 계층의 높이가 이미지 세로 크기의 약 ${smallHeightPct}%입니다(참고 수치). 이 비율이 유난히 작고, 실제로 눈으로 봤을 때도 읽기 불편할 정도로 작아 보인다면 needsfix 이상으로 판정하세요. 단, 위에서 다룬 부가조건·고지성 텍스트(법적고지, 유효기간 등)는 원래 작게 넣는 게 정상이니 이 기준에서 제외하세요.` : ''}
+
+다) 로컬 자간·행간: OCR 좌표로 잴 수 없는 부분이니 이미지를 직접 보고 판단하세요 — 특정 텍스트 블록 안에서 글자끼리 너무 붙어있거나(자간 부족) 줄 사이 간격이 거의 닿을 듯 좁아서(행간 부족) 그 블록만 답답해 보이는 곳이 있는지 확인하세요. 이건 가)의 "이미지 전체 밀도"와는 다른 체크입니다 — 캔버스 전체는 여백이 충분해도 특정 블록 안에서만 자간·행간이 좁아 답답해 보일 수 있습니다. 명백한 경우만 needsfix 이상으로 판정하고, note에 "OO 텍스트 블록의 줄간격/자간이 좁아 답답해 보임"처럼 적으세요.
+
+라) 예외: 위 가)·나)·다)는 디자이너가 배치·타이핑한 배너 카피에만 적용하세요. 제품 패키지·라벨처럼 실제 사물에 인쇄되어 촬영된 문구(예: 제품 성분표, 패키지 설명문구)는 디자이너가 편집할 수 있는 대상이 아니라 사실 그대로 존재하는 원본이니, 작거나 빽빽해 보여도 문제 삼지 마세요.`;
+  } else {
+    densityBlock = `\n\n4) 3번(타이포·정렬·여백·명도대비)의 텍스트 밀도·절대 크기·로컬 간격: 레이아웃/텍스트가 답답해 보이거나 절대적으로 너무 작아 보이는지, 특정 텍스트 블록 안에서 자간·행간이 좁아 그 블록만 답답해 보이는지를 이미지를 직접 보고 판단하세요. 리뷰·후기 화면, 신문기사, 시험지·문제풀이, 채팅 대화창처럼(예시일 뿐이며 이 목록에 없는 형식도 같은 논리로 판단하세요) 원래 텍스트가 많이 들어가는 게 자연스러운 컨셉이면 밀도가 높아 보여도 정상으로 보세요. 단, 제품 패키지·라벨처럼 실제 사물에 인쇄되어 촬영된 문구는 디자이너가 편집할 수 없는 원본이니 작거나 빽빽해 보여도 문제 삼지 마세요. 명백한 경우만 needsfix 이상으로 판정하세요.`;
   }
 
   return `\n\nOCR 측정 텍스트 위치 (원본 이미지 픽셀 기준으로 환산된 정확한 좌표, 참고용 — 이미지를 직접 측정한 값이니 시각적 추측보다 신뢰하세요. 위에 안내된 "실제 원본 크기"와 동일한 좌표계입니다):
@@ -140,7 +161,7 @@ note에 어느 요소끼리 몇 px 차이나는지 구체적으로 적으세요 
 
 다) CTA 버튼의 정렬: CTA처럼 도형(배경) 안에 텍스트가 들어간 요소는 위 OCR 좌표가 텍스트 자체의 경계일 뿐, 버튼 도형의 실제 테두리가 아닐 수 있습니다 — 버튼에 좌우 패딩이 있으면 텍스트 좌표만으로 캔버스 여백(나)이나 다른 요소와의 정렬(가)을 계산하면 실제 버튼 위치와 오차가 생깁니다. CTA에 가)·나) 기준을 적용할 때는 OCR 좌표를 출발점으로만 삼고, 반드시 이미지를 직접 보고 버튼 도형 자체의 좌우 여백까지 시각적으로 확인해서 최종 판단하세요.
 
-2) 14번(매체 최적화, 세이프존 등 고정 경계선과 비교할 때): 요소의 중심이 아니라 실제로 경계와 맞닿는 가장자리(상단/하단/좌측/우측 중 침범 방향에 맞는 쪽)로 비교하세요. note·differs에는 좌표를 그대로 나열하지 말고 "OO 요소가 세이프존 경계를 N px 침범"처럼 침범량을 직접 계산해서 알아보기 쉽게 적으세요 (예: "CTA 버튼 하단이 세이프존 경계를 15px 침범"). OCR 자체에도 몇 px 수준의 측정 오차가 있을 수 있으니, 경계선과의 차이가 10px 이내면 명확한 침범으로 단정하지 말고 needsfix나 needsCheck로 낮춰 판정하고, 10px을 넘게 침범한 경우만 확실한 위반(reject 등급)으로 판단하세요.${hierarchyBlock}
+2) 14번(매체 최적화, 세이프존 등 고정 경계선과 비교할 때): 요소의 중심이 아니라 실제로 경계와 맞닿는 가장자리(상단/하단/좌측/우측 중 침범 방향에 맞는 쪽)로 비교하세요. note·differs에는 좌표를 그대로 나열하지 말고 "OO 요소가 세이프존 경계를 N px 침범"처럼 침범량을 직접 계산해서 알아보기 쉽게 적으세요 (예: "CTA 버튼 하단이 세이프존 경계를 15px 침범"). OCR 자체에도 몇 px 수준의 측정 오차가 있을 수 있으니, 경계선과의 차이가 10px 이내면 명확한 침범으로 단정하지 말고 needsfix나 needsCheck로 낮춰 판정하고, 10px을 넘게 침범한 경우만 확실한 위반(reject 등급)으로 판단하세요.${hierarchyBlock}${densityBlock}
 
 OCR이 텍스트를 잘못 인식했거나 이 좌표만으로 판단하기 애매하면 억지로 판정하지 말고 시각적 판단을 우선하세요.`;
 }

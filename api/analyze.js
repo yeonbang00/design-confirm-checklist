@@ -461,7 +461,7 @@ export default async function handler(req, res) {
   const hasAnalyzedSize = Number.isFinite(analyzedWidth) && Number.isFinite(analyzedHeight) && analyzedWidth > 0 && analyzedHeight > 0;
   const scaleX = (hasSize && hasAnalyzedSize) ? imageWidth / analyzedWidth : 1;
   const scaleY = (hasSize && hasAnalyzedSize) ? imageHeight / analyzedHeight : 1;
-  const ocrInstruction = ocrFields ? formatOcrForPrompt(ocrFields, scaleX, scaleY) : '';
+  const ocrInstruction = ocrFields ? formatOcrForPrompt(ocrFields, scaleX, scaleY, hasSize ? imageWidth : null, hasSize ? imageHeight : null) : '';
   const contrastInstruction = Array.isArray(contrastFacts) && contrastFacts.length ? formatContrastForPrompt(contrastFacts) : '';
   const brandColors = hasGuideline ? extractBrandColors(brandGuidelineText) : [];
   const colorDistanceInstruction = (Array.isArray(dominantColors) && dominantColors.length && brandColors.length)
