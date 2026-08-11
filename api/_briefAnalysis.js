@@ -14,7 +14,7 @@ function categoryListText() {
   return listNonEmptyCategories().map((c) => `${c.id}(${c.name})`).join(', ');
 }
 
-const BRIEF_PROMPT_BODY = `다음 이미지는 배너 제작을 위한 기획안(PPT 캡처)입니다. 여러 장이라면 하나의 기획안으로 이어서 읽으세요.
+const BRIEF_PROMPT_BODY = `다음 이미지는 배너 제작을 위한 기획안(PPT 캡처) 1장입니다.
 
 중요: 기획안 내용을 그대로 요약하거나 나열하지 마세요. 어차피 제작자가 기획안 원본을 직접 볼 수 있으니, 내용을 다시 읽어주는 건 의미가 없습니다. 대신 이 기획안을 바탕으로 "배너를 어떻게 만들면 더 잘 만들 수 있을지" 실질적인 제작 방향을 제시하세요. 기획안에 이미 나와 있는 필수 요소(상품명·가격·기간·로고 등)를 다시 나열하는 건 하지 마세요 — 제작자가 원본에서 이미 확인할 수 있는 정보입니다.
 
@@ -36,6 +36,7 @@ creativeDirection에는 [카피 제안] 헤더도 반드시 포함하세요 — 
 - 원본 카피가 이미 배너 길이에 적합하고 명확해서 고칠 필요가 없다면: 억지로 고칠 카피를 만들어내지 말고, 대신 "원본 카피가 이미 배너 길이에 적합하고 명확해 별도 제안이 필요 없습니다."라고만 쓰세요.
 
 - visualRefCategory: 이 기획안의 업종·톤에 가장 잘 맞는 카테고리 하나를 아래 목록에서 정확히 골라 id 그대로 쓰세요 (목록에 없는 값은 절대 쓰지 마세요): ${categoryListText()}
+- visualRefKeywords: 이 기획안의 톤·스타일을 나타내는 한국어 키워드 2~4개를 배열로 쓰세요(예: ["미니멀","제품 클로즈업","화이트톤"]). 같은 카테고리 안에서도 톤이 다른 이미지들이 섞여 있어서, 이 키워드로 그중 더 가까운 것을 우선 추천하는 데 씁니다 — 업종명을 반복하지 말고 레이아웃·색감·분위기·구도처럼 실제로 이미지에서 구분되는 스타일 키워드 위주로 쓰세요.
 - visualRefReason: 왜 그 카테고리·톤의 이미지가 이 기획안에 어울리는지 1문장, 30단어 이내로 (예: "미니멀한 톤에 제품 클로즈업 위주 레이아웃이 프리미엄 스킨케어 톤과 잘 맞아요"). 실제 참고 이미지 몇 장이 이 문장과 함께 제공될 예정이니 "찾아보세요"가 아니라 "이런 이유로 이 스타일이 어울립니다"는 어투로 쓰세요. 이 이미지들은 레이아웃·무드 참고용일 뿐이니, 컬러까지 그대로 따라야 한다는 뉘앙스는 넣지 마세요.
 
 - pitfalls: 이 기획안 특성상 제작자가 실제로 놓치기 쉬운 지점 중 가장 중요한 것 2개만 배열로 작성하세요. 각 항목은 "무엇을 놓치기 쉬운지"와 "왜 그런지 또는 어떻게 방지하는지"를 함께 담아 20~40단어 정도로 구체적으로 쓰세요. "가독성에 유의하세요" 같은 일반론은 금지 — 반드시 이 기획안 내용에 실제로 근거한 지적이어야 합니다.
@@ -45,7 +46,7 @@ creativeDirection에는 [카피 제안] 헤더도 반드시 포함하세요 — 
 기획안에 명시되지 않아 확인이 필요한 부분은 추측해서 채우지 말고, 해당 필드에서 "기획안에 명시되지 않아 담당자 확인 필요"라고 분명히 표시하세요.`;
 
 const BRIEF_SCHEMA = `반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
-{"originalCopyTranscript":"...","coreDirection":"...","creativeDirection":"...","visualRefCategory":"...","visualRefReason":"...","pitfalls":["...","..."],"briefGaps":"..."}`;
+{"originalCopyTranscript":"...","coreDirection":"...","creativeDirection":"...","visualRefCategory":"...","visualRefKeywords":["...","..."],"visualRefReason":"...","pitfalls":["...","..."],"briefGaps":"..."}`;
 
 // 기획안은 팀이 경쟁사 레퍼런스·클립아트코리아·핀터레스트 등에서 스타일
 // 참고 이미지를 긁어와 만드는 경우가 많아서, 정작 그 레퍼런스의 색상/톤이
@@ -91,8 +92,9 @@ export async function extractBriefDirection(images, apiKey, brandContext) {
     reasoningEffort: 'high',
   });
 
-  const visualRefs = pickReferenceImages(parsed.visualRefCategory, VISUAL_REF_COUNT);
+  const visualRefs = pickReferenceImages(parsed.visualRefCategory, VISUAL_REF_COUNT, parsed.visualRefKeywords);
   delete parsed.visualRefCategory;
+  delete parsed.visualRefKeywords;
   if (!visualRefs.length) delete parsed.visualRefReason;
   return { ...parsed, visualRefs };
 }

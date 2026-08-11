@@ -373,16 +373,54 @@ function resolveCategoryId(raw) {
   return Object.keys(REFERENCE_CATEGORIES).find((id) => lower.startsWith(id)) || null;
 }
 
-// 주어진 카테고리에서 최대 count장을 무작위로 골라 반환. 카테고리가
-// 없거나 비어 있으면 빈 배열.
-export function pickReferenceImages(categoryId, count) {
+// 주어진 카테고리에서 최대 count장을 골라 반환. 카테고리가 없거나
+// 비어 있으면 빈 배열.
+//
+// toneKeywords(선택): AI가 뽑은 톤 키워드(예: ["미니멀","제품 클로즈업"]).
+// 각 아이템의 note에 키워드가 몇 개 들어있는지로 점수를 매겨 높은 순으로
+// 우선 채우고, 점수가 같은 것끼리는 무작위로 섞는다 — 카테고리 안에서도
+// 톤이 조금이라도 더 맞는 이미지가 먼저 뽑히게 하기 위함. 키워드가 없거나
+// 하나도 안 맞으면 기존처럼 카테고리 전체에서 순수 무작위로 뽑는다.
+export function pickReferenceImages(categoryId, count, toneKeywords) {
   const resolvedId = resolveCategoryId(categoryId);
   const cat = resolvedId && REFERENCE_CATEGORIES[resolvedId];
   if (!cat || !cat.items.length) return [];
-  const shuffled = [...cat.items];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+
+  const shuffle = (arr) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const keywords = Array.isArray(toneKeywords)
+    ? toneKeywords.map((k) => String(k).trim()).filter(Boolean)
+    : [];
+
+  let ordered;
+  if (keywords.length) {
+    const scored = cat.items.map((item) => {
+      const note = item.note || '';
+      const score = keywords.reduce((n, k) => n + (note.includes(k) ? 1 : 0), 0);
+      return { item, score };
+    });
+    const maxScore = Math.max(...scored.map((s) => s.score));
+    if (maxScore > 0) {
+      // 점수 내림차순, 동점 그룹 안에서는 무작위
+      const byScore = new Map();
+      for (const s of scored) {
+        if (!byScore.has(s.score)) byScore.set(s.score, []);
+        byScore.get(s.score).push(s.item);
+      }
+      ordered = [...byScore.keys()].sort((a, b) => b - a).flatMap((score) => shuffle(byScore.get(score)));
+    } else {
+      ordered = shuffle(cat.items);
+    }
+  } else {
+    ordered = shuffle(cat.items);
   }
-  return shuffled.slice(0, count).map(({ brandName, note, thumbUrl, fullUrl }) => ({ brandName, note, thumbUrl, fullUrl }));
+
+  return ordered.slice(0, count).map(({ brandName, note, thumbUrl, fullUrl }) => ({ brandName, note, thumbUrl, fullUrl }));
 }
