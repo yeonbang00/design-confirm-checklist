@@ -1,4 +1,4 @@
-// Optional precision layer for 3번(타이포·정렬·여백·간격): Naver CLOVA General OCR gives
+// Optional precision layer for 3번(타이포·정렬·여백·명도대비): Naver CLOVA General OCR gives
 // exact pixel bounding boxes for each detected text element, which lets us
 // hand the AI real px coordinates instead of relying purely on its visual
 // estimate (vision models can't measure exact pixels — see the currency/
@@ -86,7 +86,7 @@ ${lines.join('\n')}
 
 이 좌표를 아래 두 가지 용도로 활용하세요:
 
-1) 3번(타이포·정렬·여백·간격): 아래 세 가지는 서로 다른 종류의 정렬 체크입니다 — 하나만 확인하고 넘어가지 말고 해당되는 요소가 있으면 전부 확인하세요.
+1) 3번(타이포·정렬·여백·명도대비): 아래 세 가지는 서로 다른 종류의 정렬 체크입니다 — 하나만 확인하고 넘어가지 말고 해당되는 요소가 있으면 전부 확인하세요.
 
 가) 요소 간 상대 정렬: 위아래로 쌓인 제목·부제목·CTA 문구처럼 서로 정렬이 의도된 것으로 보이는 요소들을 비교하기 전에, 먼저 이 요소들이 가운데 정렬인지 좌측 정렬인지 우측 정렬인지 시각적으로 판단하세요. 판단한 정렬 방식에 맞는 좌표만 비교하세요:
 - 가운데 정렬로 보이면: 가로중심끼리 비교

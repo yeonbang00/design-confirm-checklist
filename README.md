@@ -33,7 +33,7 @@
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob Storage 읽기/쓰기 (Blob Storage를 프로젝트에 연결하면 자동 생성됨) |
 | `BRAND_GUIDE_EDIT_PASSWORD` | 브랜드/매체 가이드 저장, 히스토리 삭제 등 편집 작업에 쓰는 팀 공유 비밀번호 |
 | `ADMIN_PASSWORD` | `admin.html`(가입 승인 관리 페이지) 접근 비밀번호 — 사이트 로그인과 별개 |
-| `CLOVA_OCR_INVOKE_URL` | 3번(타이포·정렬·여백·간격) 픽셀 정밀 측정용 네이버 클로바 OCR Invoke URL — 선택사항, 없으면 OCR 없이 AI 시각 판단만 사용 |
+| `CLOVA_OCR_INVOKE_URL` | 3번(타이포·정렬·여백·명도대비) 픽셀 정밀 측정용 네이버 클로바 OCR Invoke URL — 선택사항, 없으면 OCR 없이 AI 시각 판단만 사용 |
 | `CLOVA_OCR_SECRET_KEY` | 위 클로바 OCR 도메인의 Secret Key — 선택사항 |
 
 값 자체는 절대 코드나 채팅에 붙여넣지 말고, Vercel 대시보드에 직접 입력하세요.
