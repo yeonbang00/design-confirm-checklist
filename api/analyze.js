@@ -32,6 +32,11 @@ export const config = {
 // item shares the same pass/needsfix/reject/na scale.
 const BASE_PROMPT = `다음은 광고대행사가 광고주에게 전달하기 전 최종 검수하는 배너 시안 이미지입니다. 목적은 광고주 전달 후 발생할 수정 요청을 사전에 줄이는 것입니다. 아래 17개 항목을 기준으로 평가하세요.
 
+판정 전 아래 3가지를 반드시 기억하세요 — 뒤에 나오는 세부 기준을 읽다가도 이 3가지는 절대 놓치지 마세요:
+① 타이포·정렬·여백·명도대비(정렬·여백 관련 부분)·정보 정확성·로고 사용 규정에서 발견된 문제는 크기와 무관하게 무조건 반려입니다.
+② 해당 시안에 명백히 적용되지 않는 항목(예: 인물 없는 시안의 신체 비율 왜곡, 그림자를 가진 피사체가 하나뿐인 시안의 광원-그림자 방향 일치, 비규제 업종의 법적고지·심의 문구)은 억지로 pass를 주지 말고 na로 판정하세요.
+③ 마지막에 안내되는 JSON 스키마를 정확히 지켜서 응답하세요 — 스키마 외의 다른 텍스트나 설명은 포함하지 마세요.
+
 1 전략 적합성 - 캠페인 목적/타깃 톤앤매너 일치, 여러 혜택 포인트가 하나의 오퍼로 수렴하는지 (서로 다른 오퍼·캠페인이 경쟁하지 않는지)
 2 위계 및 구조 - 헤드라인→서브→CTA 시선 동선, 3초 내 파악 가능 여부
 3 타이포·정렬·여백·명도대비 - 폰트 2~3종 이내, 요소 간 상대 정렬과 캔버스 기준 중앙정렬, CTA 도형·내부 텍스트 정렬, 강조가 필요한 핵심 정보의 시각적 구분, 텍스트-배경 명도 대비, 요소 간 여백·간격 일관성, 텍스트 줄바꿈 위치
@@ -305,7 +310,9 @@ function schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline
   const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
   const briefSchema = hasBrief ? `{"verdict":"aligned","summary":"...","matches":"...","gaps":"..."}` : `null`;
   const brandGuideSchema = hasGuideline ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
-  return `\n\n반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
+  return `\n\n판정을 마무리하기 전 다시 한 번 확인하세요: 타이포·정렬·여백·명도대비(정렬·여백 관련 부분)·정보 정확성·로고 사용 규정에서 발견된 문제를 무조건 반려로 처리했는지, na 조건에 억지로 pass를 주지 않았는지 확인하세요.
+
+반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:
 {"textTranscript":"...","items":[{"id":1,"status":"pass","note":"..."}],"summary":"...","comparison":${comparisonSchema},"brandGuideReview":${brandGuideSchema},"mediaGuideReview":${mediaGuideSchema},"briefAlignment":${briefSchema}}`;
 }
 
