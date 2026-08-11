@@ -373,18 +373,25 @@ function resolveCategoryId(raw) {
   return Object.keys(REFERENCE_CATEGORIES).find((id) => lower.startsWith(id)) || null;
 }
 
-// 주어진 카테고리에서 최대 count장을 골라 반환. 카테고리가 없거나
-// 비어 있으면 빈 배열.
+// 최대 count장을 골라 반환. 카테고리가 없거나 비어 있으면 빈 배열.
 //
-// toneKeywords(선택): AI가 뽑은 톤 키워드(예: ["미니멀","제품 클로즈업"]).
-// 각 아이템의 note에 키워드가 몇 개 들어있는지로 점수를 매겨 높은 순으로
-// 우선 채우고, 점수가 같은 것끼리는 무작위로 섞는다 — 카테고리 안에서도
-// 톤이 조금이라도 더 맞는 이미지가 먼저 뽑히게 하기 위함. 키워드가 없거나
-// 하나도 안 맞으면 기존처럼 카테고리 전체에서 순수 무작위로 뽑는다.
-export function pickReferenceImages(categoryId, count, toneKeywords) {
+// 업종(카테고리)이 달라도 컨셉·구도가 비슷하면 레퍼런스로 쓰고 브랜드
+// 컬러만 맞추는 실무 관행이 있어서, 카테고리로 후보를 미리 걸러내지 않고
+// 전체 라이브러리를 대상으로 점수를 매긴다:
+//   점수 = (AI가 고른 업종 카테고리와 같으면 +1) + (conceptKeywords가
+//          note에 포함된 개수만큼 +1씩)
+// 즉 "같은 업종·컨셉 매치 없음"(1점)보다 "다른 업종이어도 컨셉 키워드가
+// 2개 이상 맞음"(2점 이상)이 우선될 수 있다 — 업종은 여러 신호 중 하나일
+// 뿐, 컨셉이 확실히 맞으면 업종 경계를 넘어 추천되도록. 점수가 같은
+// 것끼리는 무작위로 섞는다. count보다 점수 0인 후보가 남으면 그것도
+// 채워서(무작위) 항상 최대 count장을 반환한다.
+export function pickReferenceImages(categoryId, count, conceptKeywords) {
   const resolvedId = resolveCategoryId(categoryId);
-  const cat = resolvedId && REFERENCE_CATEGORIES[resolvedId];
-  if (!cat || !cat.items.length) return [];
+  const targetCat = resolvedId ? REFERENCE_CATEGORIES[resolvedId] : null;
+  const allItems = Object.values(REFERENCE_CATEGORIES).flatMap((c) =>
+    c.items.map((item) => ({ item, sameCategory: c === targetCat }))
+  );
+  if (!allItems.length) return [];
 
   const shuffle = (arr) => {
     const a = [...arr];
@@ -395,32 +402,22 @@ export function pickReferenceImages(categoryId, count, toneKeywords) {
     return a;
   };
 
-  const keywords = Array.isArray(toneKeywords)
-    ? toneKeywords.map((k) => String(k).trim()).filter(Boolean)
+  const keywords = Array.isArray(conceptKeywords)
+    ? conceptKeywords.map((k) => String(k).trim()).filter(Boolean)
     : [];
 
-  let ordered;
-  if (keywords.length) {
-    const scored = cat.items.map((item) => {
-      const note = item.note || '';
-      const score = keywords.reduce((n, k) => n + (note.includes(k) ? 1 : 0), 0);
-      return { item, score };
-    });
-    const maxScore = Math.max(...scored.map((s) => s.score));
-    if (maxScore > 0) {
-      // 점수 내림차순, 동점 그룹 안에서는 무작위
-      const byScore = new Map();
-      for (const s of scored) {
-        if (!byScore.has(s.score)) byScore.set(s.score, []);
-        byScore.get(s.score).push(s.item);
-      }
-      ordered = [...byScore.keys()].sort((a, b) => b - a).flatMap((score) => shuffle(byScore.get(score)));
-    } else {
-      ordered = shuffle(cat.items);
-    }
-  } else {
-    ordered = shuffle(cat.items);
+  const scored = allItems.map(({ item, sameCategory }) => {
+    const note = item.note || '';
+    const keywordScore = keywords.reduce((n, k) => n + (note.includes(k) ? 1 : 0), 0);
+    return { item, score: (sameCategory ? 1 : 0) + keywordScore };
+  });
+
+  const byScore = new Map();
+  for (const s of scored) {
+    if (!byScore.has(s.score)) byScore.set(s.score, []);
+    byScore.get(s.score).push(s.item);
   }
+  const ordered = [...byScore.keys()].sort((a, b) => b - a).flatMap((score) => shuffle(byScore.get(score)));
 
   return ordered.slice(0, count).map(({ brandName, note, thumbUrl, fullUrl }) => ({ brandName, note, thumbUrl, fullUrl }));
 }
