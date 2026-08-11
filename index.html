@@ -940,10 +940,14 @@
     }
     return threshold;
   }
-  function computeContrastFromOcr(canvas, ocrFields){
+  function computeContrastFromOcr(canvas, ocrFields, origHeight){
     if(!canvas || !ocrFields || !ocrFields.length) return null;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
+    // WCAG는 큰 텍스트(대략 24px 이상)에 4.5:1 대신 완화된 3:1 기준을 허용한다.
+    // OCR 박스 높이(bh)를 폰트 크기의 근사치로 쓰고, canvas가 원본보다 축소돼
+    // 있을 수 있으므로 원본 이미지 기준 px로 환산해서 판단한다.
+    const scaleY = (Number.isFinite(origHeight) && origHeight > 0 && h > 0) ? origHeight / h : 1;
     const results = [];
     for(const f of ocrFields.slice(0, 30)){
       const text = (f.inferText || '').trim();
@@ -975,7 +979,7 @@
       if(cntDark === 0 || cntLight === 0) continue;
       const ratio = Math.round(contrastRatio(sumDark/cntDark, sumLight/cntLight) * 10) / 10;
       if(!Number.isFinite(ratio)) continue;
-      results.push({ text, ratio });
+      results.push({ text, ratio, heightPx: Math.round(bh * scaleY) });
     }
     return results.length ? results : null;
   }
@@ -1133,7 +1137,7 @@
         : [];
       setStatus('텍스트 위치·명도 대비 분석 중…', true);
       const ocrFields = await fetchOcrFields(prepared.base64, prepared.mediaType);
-      const contrastFacts = computeContrastFromOcr(prepared.canvas, ocrFields);
+      const contrastFacts = computeContrastFromOcr(prepared.canvas, ocrFields, prepared.originalHeight);
       setStatus('', false);
       let lastErr = null;
       for(let attempt=1; attempt<=3; attempt++){
