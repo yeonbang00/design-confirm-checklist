@@ -114,7 +114,7 @@
           <span class="roadmap-title">GPT-5.6 Sol (OpenAI)</span>
           <span class="roadmap-status active">사용 중</span>
         </div>
-        <div class="roadmap-desc">배너 이미지를 보고 18개 항목 전체를 판정하는 메인 분석 엔진입니다. 구도·색감·합성 리얼리티·AI 생성 특유의 아티팩트 등 시각적으로 판단해야 하는 부분을 전담합니다.</div>
+        <div class="roadmap-desc">배너 이미지를 보고 17개 항목 전체를 판정하는 메인 분석 엔진입니다. 구도·색감·합성 리얼리티·AI 생성 특유의 아티팩트 등 시각적으로 판단해야 하는 부분을 전담합니다.</div>
       </div>
 
       <div class="roadmap-item">
@@ -122,7 +122,7 @@
           <span class="roadmap-title">네이버 클로바 OCR</span>
           <span class="roadmap-status active">사용 중</span>
         </div>
-        <div class="roadmap-desc">이미지 속 텍스트 위치를 픽셀 좌표로 직접 측정해서, 3번(타이포·정렬)의 정렬 오차와 15번(매체 최적화)의 세이프존 침범량을 AI의 시각 판단이 아닌 실제 수치로 대조합니다.</div>
+        <div class="roadmap-desc">이미지 속 텍스트 위치를 픽셀 좌표로 직접 측정해서, 3번(타이포·정렬·여백·간격)의 정렬 오차와 14번(매체 최적화)의 세이프존 침범량을 AI의 시각 판단이 아닌 실제 수치로 대조합니다.</div>
         <a class="roadmap-link" href="https://www.ncloud.com/product/aiService/ocr" target="_blank" rel="noopener">네이버 클로바 OCR 서비스 안내 ↗</a>
       </div>
 
@@ -131,7 +131,7 @@
           <span class="roadmap-title">WCAG 명도 대비 체크</span>
           <span class="roadmap-status active">사용 중</span>
         </div>
-        <div class="roadmap-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 직접 읽어 글자·배경 명도 대비를 계산하고, 5번(컬러 일관성·대비) 판정에 근거로 반영합니다. 서버에 새 이미지 처리 라이브러리를 추가하지 않고 캔버스 API만으로 클라이언트에서 계산합니다.<br><br>판정 기준(WCAG AA): 대비 <b>4.5:1 미만</b>이면 기준 미달로 지적, <b>3:1 미만</b>이면 명확히 낮은 값으로 보고 검토필요 이상으로 판정합니다. 3~4.5 사이는 근사치 특성상 애매한 구간이라 AI가 실제 화면을 한 번 더 시각적으로 확인한 뒤 판단합니다.</div>
+        <div class="roadmap-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 직접 읽어 글자·배경 명도 대비를 계산하고, 3번(타이포·정렬·여백·간격) 판정에 근거로 반영합니다. 서버에 새 이미지 처리 라이브러리를 추가하지 않고 캔버스 API만으로 클라이언트에서 계산합니다.<br><br>판정 기준(WCAG AA): 대비 <b>4.5:1 미만</b>이면 기준 미달로 지적, <b>3:1 미만</b>이면 명확히 낮은 값으로 보고 검토필요 이상으로 판정합니다. 3~4.5 사이는 근사치 특성상 애매한 구간이라 AI가 실제 화면을 한 번 더 시각적으로 확인한 뒤 판단합니다.</div>
         <a class="roadmap-link" href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" target="_blank" rel="noopener">WCAG 2.1 명도 대비 기준 공식 문서 ↗</a>
       </div>
     </div>
@@ -145,7 +145,7 @@
         <span class="roadmap-title">바른한글(나라인포테크) 맞춤법 검사</span>
         <span class="roadmap-status">라이선스 문의 필요</span>
       </div>
-      <div class="roadmap-desc">지금 3번(타이포·정렬)에 OCR로 픽셀 위치를 대조하는 것처럼, 4번(정보 정확성) 오탈자 판정도 AI 시각 판단 대신 사전 기반 맞춤법 엔진으로 대조해서 정확도를 높이는 기능입니다.</div>
+      <div class="roadmap-desc">지금 3번(타이포·정렬·여백·간격)에 OCR로 픽셀 위치를 대조하는 것처럼, 4번(정보 정확성) 오탈자 판정도 AI 시각 판단 대신 사전 기반 맞춤법 엔진으로 대조해서 정확도를 높이는 기능입니다.</div>
       <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 무료 웹 검사기는 비상업 용도로만 제공되고, 상업적으로 쓰려면 나라인포테크에 별도 API 라이선스를 문의해서 가격·조건을 확인해야 합니다.</div>
       <a class="roadmap-link" href="https://nara-speller.co.kr/order/" target="_blank" rel="noopener">구매 문의 페이지 (nara-speller.co.kr) ↗</a>
     </div>
@@ -165,7 +165,7 @@
         <span class="roadmap-title">로고 감지 (Google Cloud Vision Logo Detection)</span>
         <span class="roadmap-status">실효성 검토 중</span>
       </div>
-      <div class="roadmap-desc">17번(로고 사용 규정) 판정 시 이미지 안에 로고가 실제로 있는지, 어디에 있는지를 AI 판단과 별개로 자동 감지해서 보강하는 기능입니다.</div>
+      <div class="roadmap-desc">16번(로고 사용 규정) 판정 시 이미지 안에 로고가 실제로 있는지, 어디에 있는지를 AI 판단과 별개로 자동 감지해서 보강하는 기능입니다.</div>
       <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 이 기능은 이미 잘 알려진 유명 브랜드 로고 위주로 학습돼 있어서, 우리가 다루는 다양한 광고주의 자사 로고는 인식하지 못할 가능성이 높습니다. 지금 상태로는 붙여도 실효성이 낮아 보류 중입니다.</div>
       <a class="roadmap-link" href="https://cloud.google.com/vision/docs/detecting-logos" target="_blank" rel="noopener">Google Cloud Vision 로고 감지 문서 ↗</a>
     </div>
@@ -190,7 +190,7 @@
         <span class="roadmap-status declined">직접 구축 안 함</span>
       </div>
       <div class="roadmap-desc">완성된 대표안(원본 배너)을 매체별 규격(사이즈·세이프존)에 맞춰 AI가 자동으로 리사이즈·재배치해서 여러 버전을 만들어주는 기능. OCR로 텍스트 위치를 읽고 매체 가이드로 목표 규격을 아는 것까지는 지금도 가능하지만, 실제로 카피·로고·색상을 정확히 유지하면서 레이아웃을 재구성하려면 PSD 레이어 편집·AI 배경 아웃페인팅 같은 완전히 다른 차원의 이미지 생성·편집 기능이 필요합니다.</div>
-      <div class="roadmap-blocker"><b>왜 안 하기로 했나:</b> 가장 중요한 이유는, 이미 성숙한 상용 서비스인 ResizeAd조차 스스로 명시한 한계가 뚜렷하다는 점입니다 — <b>카피 문구 자동 생성 안 됨, 원본 디자인 요소 형태 변경 안 됨, 잘린 피사체 AI 보정 안 됨.</b> 이런 경우를 위해 디자이너가 직접 후보정하는 "프리미엄 서비스"(건당 ₩7,000)를 별도로 운영할 정도로, 전담 팀이 만든 제품도 완전 자동화가 안 되는 영역이라는 뜻입니다. 여기에 더해 (1) AdCheck는 지금까지 "검수" 도구로 범위를 지켜왔는데 이 기능은 그 경계를 넘어 "결과물 생성" 쪽으로 들어가고, (2) 이미 인크로스(INCROSS)의 <b>ResizeAd</b>가 PSD 업로드 → 매체·사이즈 선택 → AI 자동 생성 → 구매 방식으로 이 문제를 풀고 있는 상용 서비스라(건당 ₩2,500~1,500), 처음부터 다시 만들 이유가 없다고 판단했습니다.<br><br><b>대신 이렇게 연계 가능:</b> ResizeAd로 만든 베리에이션 결과물을 AdCheck의 18개 체크리스트로 최종 검수하는 방식 — AI가 자동 생성한 소재라 사람 손을 덜 탄 부분(정렬·세이프존·오탈자·로고 규정 등)을 납품 전에 걸러내는 역할로 자연스럽게 연결됩니다.</div>
+      <div class="roadmap-blocker"><b>왜 안 하기로 했나:</b> 가장 중요한 이유는, 이미 성숙한 상용 서비스인 ResizeAd조차 스스로 명시한 한계가 뚜렷하다는 점입니다 — <b>카피 문구 자동 생성 안 됨, 원본 디자인 요소 형태 변경 안 됨, 잘린 피사체 AI 보정 안 됨.</b> 이런 경우를 위해 디자이너가 직접 후보정하는 "프리미엄 서비스"(건당 ₩7,000)를 별도로 운영할 정도로, 전담 팀이 만든 제품도 완전 자동화가 안 되는 영역이라는 뜻입니다. 여기에 더해 (1) AdCheck는 지금까지 "검수" 도구로 범위를 지켜왔는데 이 기능은 그 경계를 넘어 "결과물 생성" 쪽으로 들어가고, (2) 이미 인크로스(INCROSS)의 <b>ResizeAd</b>가 PSD 업로드 → 매체·사이즈 선택 → AI 자동 생성 → 구매 방식으로 이 문제를 풀고 있는 상용 서비스라(건당 ₩2,500~1,500), 처음부터 다시 만들 이유가 없다고 판단했습니다.<br><br><b>대신 이렇게 연계 가능:</b> ResizeAd로 만든 베리에이션 결과물을 AdCheck의 17개 체크리스트로 최종 검수하는 방식 — AI가 자동 생성한 소재라 사람 손을 덜 탄 부분(정렬·세이프존·오탈자·로고 규정 등)을 납품 전에 걸러내는 역할로 자연스럽게 연결됩니다.</div>
       <a class="roadmap-link" href="https://www.resizead.kr" target="_blank" rel="noopener">ResizeAd (인크로스) ↗</a>
     </div>
   </div>
