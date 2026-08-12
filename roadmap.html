@@ -134,22 +134,22 @@
         <div class="roadmap-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 직접 읽어 글자·배경 명도 대비를 계산하고, 3번(타이포·정렬·여백·명도대비) 판정에 근거로 반영합니다. 서버에 새 이미지 처리 라이브러리를 추가하지 않고 캔버스 API만으로 클라이언트에서 계산합니다.<br><br>판정 기준(WCAG AA): 대비 <b>4.5:1 미만</b>이면 기준 미달로 지적, <b>3:1 미만</b>이면 명확히 낮은 값으로 보고 검토필요 이상으로 판정합니다. 3~4.5 사이는 근사치 특성상 애매한 구간이라 AI가 실제 화면을 한 번 더 시각적으로 확인한 뒤 판단합니다.</div>
         <a class="roadmap-link" href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" target="_blank" rel="noopener">WCAG 2.1 명도 대비 기준 공식 문서 ↗</a>
       </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-top">
+          <span class="roadmap-title">바른한글(나라인포테크) 맞춤법 검사</span>
+          <span class="roadmap-status active">사용 중 (개인용)</span>
+        </div>
+        <div class="roadmap-desc">지금 3번(타이포·정렬·여백·명도대비)에 OCR로 픽셀 위치를 대조하는 것처럼, 4번(정보 정확성) 오탈자 판정도 AI 시각 판단 대신 사전 기반 맞춤법 엔진으로 한 번 더 대조합니다.</div>
+        <div class="roadmap-blocker"><b>현재 상태:</b> 개인 비상업용 API 키로 연결되어 있습니다. 팀 차원의 상업적 이용은 나라인포테크에 별도 API 라이선스를 문의해서 가격·조건을 확인한 뒤 추후 업데이트할 예정입니다.</div>
+        <a class="roadmap-link" href="https://nara-speller.co.kr/order/" target="_blank" rel="noopener">구매 문의 페이지 (nara-speller.co.kr) ↗</a>
+      </div>
     </div>
   </div>
 
   <div class="section-block">
   <div class="section-heading">아직 적용하지 않은 기능</div>
   <div class="roadmap-list">
-    <div class="roadmap-item">
-      <div class="roadmap-top">
-        <span class="roadmap-title">바른한글(나라인포테크) 맞춤법 검사</span>
-        <span class="roadmap-status">라이선스 문의 필요</span>
-      </div>
-      <div class="roadmap-desc">지금 3번(타이포·정렬·여백·명도대비)에 OCR로 픽셀 위치를 대조하는 것처럼, 4번(정보 정확성) 오탈자 판정도 AI 시각 판단 대신 사전 기반 맞춤법 엔진으로 대조해서 정확도를 높이는 기능입니다.</div>
-      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 무료 웹 검사기는 비상업 용도로만 제공되고, 상업적으로 쓰려면 나라인포테크에 별도 API 라이선스를 문의해서 가격·조건을 확인해야 합니다.</div>
-      <a class="roadmap-link" href="https://nara-speller.co.kr/order/" target="_blank" rel="noopener">구매 문의 페이지 (nara-speller.co.kr) ↗</a>
-    </div>
-
     <div class="roadmap-item">
       <div class="roadmap-top">
         <span class="roadmap-title">이미지 유사도·표절 검색 (TinEye API)</span>
