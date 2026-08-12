@@ -17,6 +17,7 @@ import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { getBrandGuideState } from './_brandGuideStore.js';
 import { callOpenAI } from './_openaiClient.js';
 import { runOcr, formatOcrForPrompt } from './_clovaOcr.js';
+import { checkSpelling, formatSpellCheckForPrompt } from './_spellChecker.js';
 
 export const config = {
   api: {
@@ -92,7 +93,7 @@ const BASE_PROMPT = `다음은 광고대행사가 광고주에게 전달하기 �
 4번(정보 정확성), 14번(매체 최적화), 3번(타이포·정렬·여백·명도대비)은 팀이 가장 중요하게 보는 기준입니다. 4번을 판정하기 전에, 다른 항목처럼 인상만 보고 넘어가지 말고 반드시 아래 절차를 실행하세요:
 1) textTranscript 필드에 이미지 안에 보이는 모든 한글·숫자 텍스트를 헤드라인부터 가장 작은 글씨까지 하나도 빠짐없이 실제로 옮겨 적으세요 (내부적으로 생각만 하지 말고 반드시 이 필드에 문자 그대로 출력하세요 — 요소마다 줄바꿈으로 구분).
 2) 그렇게 적은 textTranscript를 다시 처음부터 훑으면서, 각 단어가 실제 존재하는 자연스러운 한국어 단어·표현인지 하나씩 대조하세요. 특히 자음·모음 하나만 다른 유사 글자를 조심하세요 (예: "구매하고"가 "구매햐고"로, "소개"가 "쇼개"로 잘못 표기되는 식 — 획 하나 차이라 스치듯 보면 놓치기 쉽습니다).
-3) 가격·날짜·단위·맞춤법 오류도 함께 재확인하세요.
+3) 가격·날짜·단위·맞춤법 오류도 함께 재확인하세요. 아래에 규칙 기반 맞춤법 검사기 결과가 안내되어 있다면(4번 맞춤법 검사기 결과) 이 단계에서 함께 대조하세요 — 단, 그 결과에 달린 주의사항(오탐 가능성)을 반드시 지키세요.
 확신이 서지 않는 글자는 추측하지 말고 메모에 "확인 필요"라고 남기세요. 4번의 note는 다른 항목보다 더 구체적으로 — 어느 글자·숫자·영역이 문제인지 짚어서 — 작성하세요.
 
 3번(타이포·정렬·여백·명도대비)의 여백·간격 부분을 판정할 때는 다음 두 가지를 확인하세요:
@@ -453,6 +454,9 @@ export default async function handler(req, res) {
   const hasBrief = !!briefDirection;
 
   const ocrFields = await ocrPromise;
+  // OCR 결과가 나온 직후 바로 시작 — 아래 동기 작업(포맷팅)이 끝나고 promptText를
+  // 조립하기 직전에 await하므로, 이 API 호출 시간이 그만큼 가려진다.
+  const spellCheckPromise = checkSpelling(ocrFields);
   // 클라이언트가 업로드 전 이미지를 리사이즈해서 보내기 때문에(긴 변 최대
   // 1280px), OCR이 실제로 측정하는 이미지 크기(analyzedWidth/Height)와
   // 원본 크기(imageWidth/Height)가 다를 수 있음 — 이 배율을 곱해서 OCR
@@ -467,6 +471,8 @@ export default async function handler(req, res) {
   const colorDistanceInstruction = (Array.isArray(dominantColors) && dominantColors.length && brandColors.length)
     ? formatColorDistanceForPrompt(dominantColors, brandColors)
     : '';
+  const spellCheckResult = await spellCheckPromise;
+  const spellCheckInstruction = spellCheckResult ? formatSpellCheckForPrompt(spellCheckResult) : '';
 
   const promptText =
     BASE_PROMPT +
@@ -479,6 +485,7 @@ export default async function handler(req, res) {
     ocrInstruction +
     contrastInstruction +
     colorDistanceInstruction +
+    spellCheckInstruction +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline);
 
   // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
