@@ -123,6 +123,9 @@
   .brief-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
   .brief-thumb-remove{position:absolute; top:3px; right:3px; width:19px; height:19px; border-radius:50%; background:oklch(20% 0.02 265 / 0.75); color:#fff; border:none; font-size:12px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   .brief-thumb-remove:hover{background:oklch(30% 0.1 25 / 0.9);}
+  .brief-thumb-pptx{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:6px;}
+  .brief-pptx-icon{font-size:22px;}
+  .brief-pptx-name{font-size:9.5px; color:oklch(45% 0.015 265); word-break:break-all; line-height:1.2; max-height:2.4em; overflow:hidden; text-align:center;}
 
   .dropzone{border:1.5px dashed oklch(78% 0.02 265); border-radius:14px; padding:56px 24px; text-align:center; cursor:pointer; background:oklch(98% 0.005 85); transition:border-color .15s ease;}
   .dropzone.dragover{border-color:oklch(45% 0.08 260);}
@@ -302,13 +305,13 @@
     <div class="media-guide-checks" id="mediaGuideChecks"></div>
 
     <button type="button" class="brief-toggle" id="briefToggle" aria-expanded="false">
-      <span>📎 기획안 캡처 같이 올리기 <span class="optional-tag">(선택사항)</span></span>
+      <span>📎 기획안 같이 올리기 <span class="optional-tag">(선택사항)</span></span>
       <span class="bt-chevron">▾</span>
     </button>
     <div class="brief-panel" id="briefPanel">
-      <div class="compare-desc" style="margin-bottom:10px;">기획안(PPT 캡처)을 같이 올리면, 이 배너가 기획 의도에 맞게 만들어졌는지도 함께 판정해드려요. 이미지 1장만 업로드 가능합니다.</div>
-      <div class="brief-dropzone" id="briefDropzone">클릭하거나 이미지를 끌어다 놓으세요</div>
-      <input type="file" id="briefFileInput" accept="image/png,image/jpeg,image/webp" hidden>
+      <div class="compare-desc" style="margin-bottom:10px;">기획안을 같이 올리면, 이 배너가 기획 의도에 맞게 만들어졌는지도 함께 판정해드려요. 기획안 페이지를 캡처한 이미지 1장을 올리거나, PPT 파일(.pptx)을 그대로 올리면 소재가 여러 개여도 이 배너와 맞는 페이지를 자동으로 찾아서 분석해요.</div>
+      <div class="brief-dropzone" id="briefDropzone">클릭하거나 이미지·PPT 파일을 끌어다 놓으세요</div>
+      <input type="file" id="briefFileInput" accept="image/png,image/jpeg,image/webp,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
       <div class="brief-thumb-grid" id="briefThumbGrid"></div>
     </div>
 
@@ -815,15 +818,18 @@
     }
   }
 
-  // ---------- optional 기획안 캡처 upload (collapsed by default) ----------
+  // ---------- optional 기획안 upload (collapsed by default) — 이미지 캡처 또는 pptx 파일 ----------
   const briefToggle = document.getElementById('briefToggle');
   const briefPanel = document.getElementById('briefPanel');
   const briefDropzone = document.getElementById('briefDropzone');
   const briefFileInput = document.getElementById('briefFileInput');
   const briefThumbGrid = document.getElementById('briefThumbGrid');
   const BRIEF_ALLOWED = ['image/png','image/jpeg','image/webp'];
+  const BRIEF_PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+  const BRIEF_PPTX_MAX_BYTES = 20*1024*1024;
   const BRIEF_MAX_FILES = 1;
   let briefFiles = [];
+  let briefPptxFile = null;
 
   briefToggle.addEventListener('click', () => {
     const open = briefPanel.classList.toggle('open');
@@ -831,8 +837,25 @@
     briefToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
+  function isPptxFile(file){
+    return file.type === BRIEF_PPTX_MIME || file.name.toLowerCase().endsWith('.pptx');
+  }
+
   function renderBriefThumbs(){
     briefThumbGrid.innerHTML = '';
+    if(briefPptxFile){
+      const div = document.createElement('div');
+      div.className = 'brief-thumb brief-thumb-pptx';
+      div.innerHTML = '<span class="brief-pptx-icon">📊</span><span class="brief-pptx-name"></span>' +
+        '<button type="button" class="brief-thumb-remove" aria-label="삭제">&times;</button>';
+      div.querySelector('.brief-pptx-name').textContent = briefPptxFile.name;
+      div.querySelector('.brief-thumb-remove').addEventListener('click', () => {
+        briefPptxFile = null;
+        renderBriefThumbs();
+      });
+      briefThumbGrid.appendChild(div);
+      return;
+    }
     briefFiles.forEach((entry, i) => {
       const div = document.createElement('div');
       div.className = 'brief-thumb';
@@ -849,12 +872,22 @@
   function addBriefFiles(fileList){
     const files = Array.from(fileList);
     for(const file of files){
+      if(isPptxFile(file)){
+        if(file.size > BRIEF_PPTX_MAX_BYTES){
+          setStatus('PPT 파일은 '+Math.round(BRIEF_PPTX_MAX_BYTES/1024/1024)+'MB 이하만 올릴 수 있습니다.', false);
+          continue;
+        }
+        briefFiles = []; // 이미지 캡처 방식과는 상호 배타적
+        briefPptxFile = file;
+        continue;
+      }
+      if(!BRIEF_ALLOWED.includes(file.type)) continue;
+      if(file.size > MAX_BYTES) continue;
+      briefPptxFile = null; // pptx와 상호 배타적
       if(briefFiles.length >= BRIEF_MAX_FILES){
         setStatus('기획안 이미지는 최대 '+BRIEF_MAX_FILES+'장까지 올릴 수 있습니다.', false);
         break;
       }
-      if(!BRIEF_ALLOWED.includes(file.type)) continue;
-      if(file.size > MAX_BYTES) continue;
       briefFiles.push({ file, previewUrl: URL.createObjectURL(file) });
     }
     renderBriefThumbs();
@@ -871,6 +904,19 @@
     if(e.target.files && e.target.files.length) addBriefFiles(e.target.files);
     briefFileInput.value = '';
   });
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result || '').split(',')[1];
+        if(!base64){ reject(new Error('파일을 변환하지 못했습니다.')); return; }
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+      reader.readAsDataURL(file);
+    });
+  }
 
   function prepareImageForApi(file, maxDim, quality){
     maxDim = maxDim || 1280;
@@ -1021,11 +1067,11 @@
     }catch(e){ return null; }
   }
 
-  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrFields, contrastFacts, dominantColors){
+  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrFields, contrastFacts, dominantColors, briefPptx){
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [], fileSizeBytes: fileSizeBytes || null, analyzedWidth: analyzedWidth || null, analyzedHeight: analyzedHeight || null, precomputedOcrFields: ocrFields || null, contrastFacts: contrastFacts || null, dominantColors: dominantColors || null })
+      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [], briefPptx: briefPptx || null, fileSizeBytes: fileSizeBytes || null, analyzedWidth: analyzedWidth || null, analyzedHeight: analyzedHeight || null, precomputedOcrFields: ocrFields || null, contrastFacts: contrastFacts || null, dominantColors: dominantColors || null })
     });
     let data;
     try{ data = await response.json(); }
@@ -1156,6 +1202,9 @@
       const briefImages = briefFiles.length
         ? await Promise.all(briefFiles.map(entry => prepareImageForApi(entry.file)))
         : [];
+      const briefPptx = briefPptxFile
+        ? { base64: await fileToBase64(briefPptxFile), mediaType: BRIEF_PPTX_MIME }
+        : null;
       setStatus('텍스트 위치·명도 대비 분석 중…', true);
       const ocrFields = await fetchOcrFields(prepared.base64, prepared.mediaType);
       const contrastFacts = computeContrastFromOcr(prepared.canvas, ocrFields, prepared.originalHeight);
@@ -1164,7 +1213,7 @@
       let lastErr = null;
       for(let attempt=1; attempt<=3; attempt++){
         try{
-          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight, ocrFields, contrastFacts, dominantColors);
+          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight, ocrFields, contrastFacts, dominantColors, briefPptx);
           applyResults(result);
           saveSessionState({
             resultJson: result,

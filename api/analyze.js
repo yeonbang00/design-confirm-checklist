@@ -18,11 +18,13 @@ import { getBrandGuideState } from './_brandGuideStore.js';
 import { callOpenAI } from './_openaiClient.js';
 import { runOcr, formatOcrForPrompt } from './_clovaOcr.js';
 import { checkSpelling, formatSpellCheckForPrompt } from './_spellChecker.js';
+import { extractSlidesFromPptx, matchSlide } from './_pptxParser.js';
 
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '15mb',
+      // pptx 기획안(임베드 이미지 여러 장 포함)까지 함께 올릴 수 있도록 여유를 둠.
+      sizeLimit: '25mb',
     },
   },
 };
@@ -403,7 +405,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts, dominantColors } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, briefPptx, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts, dominantColors } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -449,6 +451,58 @@ export default async function handler(req, res) {
       briefDirection = await extractBriefDirection(briefImages, apiKey, brandContext);
     } catch (err) {
       briefError = '기획안 분석에 실패해 부합도 판정 없이 진행했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류');
+    }
+  } else if (briefPptx && briefPptx.base64) {
+    // pptx는 (렌더링 없이) 슬라이드 텍스트를 직접 뽑아서, 지금 분석 중인
+    // 배너의 OCR 텍스트와 가장 많이 겹치는 슬라이드를 찾는다 — 자세한 방식은
+    // _pptxParser.js 참고. 매칭에 배너의 OCR 텍스트가 필요하므로, 이 분기에서만
+    // ocrPromise를 앞당겨 await한다(같은 promise라 아래 본문에서 다시
+    // await해도 네트워크 호출이 두 번 일어나지 않음).
+    try {
+      const creativeOcrFields = await ocrPromise;
+      const pptxBuffer = Buffer.from(briefPptx.base64, 'base64');
+      const slides = extractSlidesFromPptx(pptxBuffer);
+      if (!slides.length) {
+        briefError = '기획안 PPT에서 슬라이드를 읽지 못했습니다.';
+      } else {
+        // 슬라이드에 삽입된 이미지마다 OCR을 병렬로 돌려서, PPT 텍스트박스가
+        // 아니라 이미지 안에 그대로 박혀있는 문구도 매칭에 반영한다.
+        const ocrTasks = [];
+        slides.forEach((slide, si) => {
+          slide.images.forEach((img) => {
+            ocrTasks.push(runOcr(img.base64, img.mimeType).then((fields) => ({ si, fields })));
+          });
+        });
+        const ocrResults = await Promise.all(ocrTasks);
+        const imageTextBySlide = slides.map(() => []);
+        for (const { si, fields } of ocrResults) {
+          if (Array.isArray(fields)) {
+            imageTextBySlide[si].push(...fields.map((f) => (f.inferText || '').trim()).filter(Boolean));
+          }
+        }
+        const slidesForMatch = slides.map((slide, si) => ({
+          slideIndex: slide.slideIndex,
+          textPool: [slide.text, ...imageTextBySlide[si]].join(' '),
+          images: slide.images,
+        }));
+
+        const creativeTexts = Array.isArray(creativeOcrFields)
+          ? creativeOcrFields.map((f) => (f.inferText || '').trim()).filter(Boolean)
+          : [];
+        const match = matchSlide(creativeTexts, slidesForMatch);
+
+        if (!match) {
+          briefError = '기획안 PPT에서 이 배너와 일치하는 슬라이드를 찾지 못해 기획 부합도 판정은 건너뛰었습니다.';
+        } else {
+          const matchedImages = match.slide.images
+            .slice(0, 4)
+            .map((img) => ({ base64: img.base64, mediaType: img.mimeType }));
+          const brandContext = hasGuideline ? { name: advertiser.name, guideline: brandGuidelineText } : null;
+          briefDirection = await extractBriefDirection(matchedImages, apiKey, brandContext, match.slide.textPool);
+        }
+      }
+    } catch (err) {
+      briefError = '기획안 PPT 분석에 실패해 부합도 판정 없이 진행했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류');
     }
   }
   const hasBrief = !!briefDirection;

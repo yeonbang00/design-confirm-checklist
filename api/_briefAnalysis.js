@@ -14,9 +14,22 @@ function categoryListText() {
   return listNonEmptyCategories().map((c) => `${c.id}(${c.name})`).join(', ');
 }
 
-const BRIEF_PROMPT_BODY = `다음 이미지는 배너 제작을 위한 기획안(PPT 캡처) 1장입니다.
+// 기획안 입력은 두 갈래로 들어온다: (1) 기획안 헬퍼/기존 흐름 — PPT 페이지를
+// 캡처한 스크린샷 1장, (2) 체크리스트에서 pptx 파일을 직접 올렸을 때 — 텍스트
+// 매칭으로 찾아낸 슬라이드에 삽입된 이미지 여러 장(0장일 수도 있음, 슬라이드에
+// 이미지가 없으면 텍스트만). 이미지 개수·출처에 따라 도입부 문장만 다르게
+// 만들고 나머지 지침은 공유한다.
+function briefIntro(imageCount, hasGroundTruth) {
+  if (imageCount === 0) {
+    return '다음은 배너 제작을 위한 기획안 슬라이드에서 추출한 텍스트입니다 (이미지 없이 텍스트만 제공됩니다).';
+  }
+  if (hasGroundTruth) {
+    return `다음 이미지는 배너 제작을 위한 기획안 슬라이드에 삽입된 참고 이미지입니다 (${imageCount}장, pptx에서 자동으로 찾아낸 슬라이드).`;
+  }
+  return '다음 이미지는 배너 제작을 위한 기획안(PPT 캡처) 1장입니다.';
+}
 
-중요: 기획안 내용을 그대로 요약하거나 나열하지 마세요. 어차피 제작자가 기획안 원본을 직접 볼 수 있으니, 내용을 다시 읽어주는 건 의미가 없습니다. 대신 이 기획안을 바탕으로 "배너를 어떻게 만들면 더 잘 만들 수 있을지" 실질적인 제작 방향을 제시하세요. 기획안에 이미 나와 있는 필수 요소(상품명·가격·기간·로고 등)를 다시 나열하는 건 하지 마세요 — 제작자가 원본에서 이미 확인할 수 있는 정보입니다.
+const BRIEF_PROMPT_REST = `중요: 기획안 내용을 그대로 요약하거나 나열하지 마세요. 어차피 제작자가 기획안 원본을 직접 볼 수 있으니, 내용을 다시 읽어주는 건 의미가 없습니다. 대신 이 기획안을 바탕으로 "배너를 어떻게 만들면 더 잘 만들 수 있을지" 실질적인 제작 방향을 제시하세요. 기획안에 이미 나와 있는 필수 요소(상품명·가격·기간·로고 등)를 다시 나열하는 건 하지 마세요 — 제작자가 원본에서 이미 확인할 수 있는 정보입니다.
 
 가장 먼저 originalCopyTranscript 필드를 채우세요: 기획안에 등장하는 배너 문구(실제로 배너에 들어갈 문구로 보이는 텍스트)를 이미지에 적힌 그대로 정확히 옮겨 적으세요. 문맥상 "이런 말이겠지"로 자동으로 고쳐 쓰거나 매끄럽게 다듬지 말고, 진짜 눈에 보이는 글자 그대로 옮기세요 (자음·모음 하나 차이로 다른 글자가 되는 경우를 특히 조심하세요 — 스치듯 읽으면 놓치기 쉽습니다). 각 줄 맨 앞에 그 문구의 역할을 "메인카피:", "서브카피:", "부가설명:" 중 하나로 반드시 표시하세요 (예: 메인카피: 요금제 하나에 싹 다 담았어요 / 서브카피: 콘텐츠 찾느라 헤맬 필요 없이 / 부가설명: #디즈니+티빙 너겟65 #무약정 #무제한5G). 역할 구분이 애매하면 가장 크고 중심적인 문구를 메인카피로, 그 위아래의 보조 문구를 서브카피로, 해시태그·각주성 문구를 부가설명으로 판단하세요. 배너 문구가 아예 안 보이면 이 필드는 빈 문자열로 두세요. 아래 creativeDirection의 [카피 제안]은 반드시 이 필드에 옮겨 적은 문구와 역할 라벨을 기준으로 작성하세요 — 기억이나 인상으로 다시 쓰지 마세요.
 
@@ -63,6 +76,16 @@ ${guideline}
 기획안에 포함된 레퍼런스 이미지(경쟁사 벤치마킹, 클립아트코리아, 핀터레스트 등에서 가져온 스타일 참고용 이미지일 수 있습니다)의 색상·톤이 위 브랜드 공식 가이드와 다르다면, creativeDirection에서 레퍼런스의 색상을 그대로 따르라고 제안하지 마세요. 대신 "레퍼런스는 구도·레이아웃 참고용으로만 쓰고, 컬러는 브랜드 공식 컬러를 우선 적용해야 한다"는 점을 명확히 하세요. 이런 불일치가 있다면 briefGaps에도 예를 들어 "기획안 레퍼런스는 블루 톤이지만 브랜드 공식 컬러는 마젠타라 그대로 적용하면 안 됨"처럼 구체적으로 지적하세요. 레퍼런스와 브랜드 가이드가 일치하거나 레퍼런스에 특정 색상 지정이 없다면 이 지적은 생략하세요.`;
 }
 
+// pptx 경로에서는 슬라이드 텍스트를 이미지를 눈으로 읽게 하지 않고 XML/OCR로
+// 미리 정확하게 뽑아둔다 — 이 원본을 함께 주면 originalCopyTranscript 단계의
+// 오독 위험이 줄어든다(자음·모음 한 글자 차이 같은 실수를 AI가 이미지만 보고
+// 재현할 필요가 없어짐).
+function groundTruthTextInstruction(text) {
+  return `
+
+참고 — 이 슬라이드에서 실제로 추출된 텍스트입니다(정확한 원본이니, originalCopyTranscript를 작성할 때 이미지로 보이는 내용과 이 목록을 대조해서 오탈자 없이 옮기세요): ${text}`;
+}
+
 // Calls OpenAI with the brief prompt + the given images and returns
 // {coreDirection, creativeDirection, visualRefs, visualRefReason, pitfalls, briefGaps}.
 // visualRefs is resolved server-side from our own curated reference-image
@@ -74,9 +97,11 @@ ${guideline}
 // brand's official guide (see brandGuidelineCrossCheckInstruction above).
 // Throws an Error with a user-facing Korean message on any failure — the
 // error's `.status` is set when it maps cleanly to an HTTP status.
-export async function extractBriefDirection(images, apiKey, brandContext) {
+export async function extractBriefDirection(images, apiKey, brandContext, groundTruthText) {
   const hasBrandGuideline = !!(brandContext && brandContext.guideline);
-  const promptText = BRIEF_PROMPT_BODY +
+  const hasGroundTruth = !!(groundTruthText && groundTruthText.trim());
+  const promptText = briefIntro((images || []).length, hasGroundTruth) + '\n\n' + BRIEF_PROMPT_REST +
+    (hasGroundTruth ? groundTruthTextInstruction(groundTruthText.trim()) : '') +
     (hasBrandGuideline ? brandGuidelineCrossCheckInstruction(brandContext.name, brandContext.guideline) : '') +
     '\n\n' + BRIEF_SCHEMA;
 
