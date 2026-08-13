@@ -80,6 +80,17 @@
 
   .source-note{font-size:11.5px; color:var(--text-3); margin-top:22px; padding-top:16px; border-top:1px solid var(--card-border); line-height:1.8;}
 
+  .btn-type-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px; margin:14px 0 6px;}
+  .btn-type-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:18px; text-align:center;}
+  .btn-mock{display:inline-block; padding:9px 18px; font-size:13px; font-weight:700; font-family:'Noto Sans KR',sans-serif; margin-bottom:12px;}
+  .btn-mock.mock-rect{background:oklch(35% 0.14 260); color:#fff; border-radius:0;}
+  .btn-mock.mock-round{background:oklch(35% 0.14 260); color:#fff; border-radius:999px;}
+  .btn-mock.mock-outline{background:none; border:1.5px solid oklch(35% 0.14 260); color:oklch(35% 0.14 260); border-radius:8px;}
+  .btn-mock.mock-line{background:none; color:oklch(35% 0.14 260); text-decoration:underline; padding:9px 4px;}
+  .btn-mock.mock-circle{background:oklch(35% 0.14 260); color:#fff; border-radius:50%; width:44px; height:44px; padding:0; display:inline-flex; align-items:center; justify-content:center;}
+  .btn-mock.mock-badge{background:oklch(92% 0.16 90); color:oklch(30% 0.05 60); border-radius:40% 60% 55% 45% / 50% 45% 55% 50%; font-weight:800;}
+  .btn-type-label{font-size:12.5px; font-weight:700; color:var(--text);}
+
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
     .gnb-bar-inner{gap:16px;}
@@ -213,6 +224,26 @@
   </div>
 
   <div class="section-block">
+    <div class="section-heading">배너 카피 계층 구조 <span class="principle-tag">사내 제작가이드 기준</span></div>
+    <div class="section-note">사내 퍼포먼스 크리에이티브 제작가이드에서는 배너 카피를 서브카피·메인카피·상세설명 3계층으로 나누고, 계층마다 줄 수(단)를 조합해서 템플릿 유형을 체계적으로 관리합니다. 카피가 길어질 때 "어느 계층을 늘릴지"를 구조적으로 판단하는 데 참고할 수 있습니다.</div>
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="principle-title">서브카피 <span class="principle-tag">0~2단</span></div>
+        <div class="principle-desc">브랜드명·시즌 태그처럼 메인카피 위에 붙는 짧은 보조 문구. 아예 없어도(0단) 되고, 강조할 게 많으면 2단까지도 씁니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">메인카피 <span class="principle-tag">1~2단</span></div>
+        <div class="principle-desc">배너의 핵심 메시지. 1단이 기본이고, 두 가지를 동시에 강조해야 할 때만 2단으로 — 3단 이상은 이 체계에서 다루지 않을 만큼 권장하지 않는 구성입니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">상세설명 <span class="principle-tag">1~2단</span></div>
+        <div class="principle-desc">메인카피를 보충하는 조건·부가정보. 메인카피보다 항상 작고 낮은 강조 수준으로 배치됩니다.</div>
+      </div>
+    </div>
+    <div class="principle-apply" style="margin-top:4px;"><b>적용:</b> 이 3계층 구분은 AdCheck 2번(위계 및 구조)·3번(강조 3요소)의 "어떤 텍스트가 메인이고 어떤 게 보조인지" 판단 기준과 그대로 맞닿아 있습니다.</div>
+  </div>
+
+  <div class="section-block">
     <div class="section-heading">강조 · 시각적 위계</div>
     <div class="principle-grid">
       <div class="principle-card">
@@ -239,8 +270,23 @@
         <div class="principle-title">Fitts's Law</div>
         <div class="principle-desc">타겟(버튼)이 크고 가까울수록 도달해서 클릭하는 데 걸리는 시간이 짧아집니다. CTA 버튼을 작게 만들거나 다른 요소에서 멀리 떨어뜨리면 실제 클릭까지 이어지는 확률이 떨어질 수 있습니다.</div>
       </div>
+      <div class="principle-card">
+        <div class="principle-title">버튼 내부 여백(패딩) 규칙</div>
+        <div class="principle-desc">버튼 텍스트의 세로 여백을 기준 단위(a)로 잡으면, 가로 여백은 보통 그 2배(2a) 정도가 균형 잡혀 보입니다 — 세로 패딩이 8px이면 가로 패딩은 16px 정도. 가로가 긴 버튼일수록 8pt 그리드(8의 배수)에 맞춰 여백을 잡으면 다른 요소들과 정렬이 쉬워집니다.</div>
+      </div>
     </div>
-    <div class="section-note" style="margin-top:14px; margin-bottom:6px;">터치 타겟 최소 크기 기준(공식 문서 기준, 셋 중 하나만 충족하면 되는 게 아니라 플랫폼마다 다른 값이니 참고용으로 가장 엄격한 값을 기준 삼는 게 안전합니다):</div>
+
+    <div class="section-note" style="margin-top:20px; margin-bottom:0;">버튼 스타일 6종 <span class="principle-tag">사내 제작가이드 기준</span> — 형태 자체가 클릭 유도력을 바꾸진 않지만, 배너 톤에 맞는 스타일을 일관되게 쓰는 게 중요합니다.</div>
+    <div class="btn-type-grid">
+      <div class="btn-type-card"><span class="btn-mock mock-rect">자세히 보기</span><div class="btn-type-label">직사각형</div></div>
+      <div class="btn-type-card"><span class="btn-mock mock-round">자세히 보기</span><div class="btn-type-label">라운딩형</div></div>
+      <div class="btn-type-card"><span class="btn-mock mock-outline">자세히 보기</span><div class="btn-type-label">테두리형</div></div>
+      <div class="btn-type-card"><span class="btn-mock mock-line">자세히 보기 →</span><div class="btn-type-label">라인형</div></div>
+      <div class="btn-type-card"><span class="btn-mock mock-circle">GO</span><div class="btn-type-label">원형</div></div>
+      <div class="btn-type-card"><span class="btn-mock mock-badge">참여</span><div class="btn-type-label">기타(뱃지형)</div></div>
+    </div>
+
+    <div class="section-note" style="margin-top:20px; margin-bottom:6px;">터치 타겟 최소 크기 기준(공식 문서 기준, 셋 중 하나만 충족하면 되는 게 아니라 플랫폼마다 다른 값이니 참고용으로 가장 엄격한 값을 기준 삼는 게 안전합니다):</div>
     <table class="spec-table">
       <tr><th>기준</th><th>최소 크기</th><th>출처</th></tr>
       <tr><td>Apple Human Interface Guidelines</td><td>44×44pt</td><td>Apple 공식 HIG</td></tr>
