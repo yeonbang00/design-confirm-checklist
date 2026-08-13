@@ -161,7 +161,10 @@ def aggregate_category_stats(per_image_fields):
     for fields in per_image_fields:
         if not fields:
             continue
-        area = sum(max(0, f["rightPct"] - f["leftPct"]) * max(0, f["bottomPct"] - f["topPct"]) for f in fields)
+        # rightPct-leftPct와 bottomPct-topPct는 각각 0-100 스케일 퍼센트라, 그냥
+        # 곱하면 퍼센트x퍼센트라 100배 부풀려짐(20%*10%=실제 2%인데 200이 나옴).
+        # /100으로 나눠야 "캔버스 면적 대비 실제 %"가 된다.
+        area = sum(max(0, f["rightPct"] - f["leftPct"]) * max(0, f["bottomPct"] - f["topPct"]) for f in fields) / 100
         densities.append(min(area, 100))
         main_tops.append(min(f["topPct"] for f in fields))
         cta_bottoms.append(max(f["bottomPct"] for f in fields))
