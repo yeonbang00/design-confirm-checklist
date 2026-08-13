@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 레이아웃 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+    --warn: oklch(55% 0.15 60);
+  }
+  *{box-sizing:border-box;}
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
+
+  .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
+  .gnb-bar{position:sticky; top:0; background:var(--bg); z-index:100;}
+  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:10px 24px; flex-wrap:wrap;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
+  .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
+  .gnb-link:hover{color:var(--text);}
+  .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
+  .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding:14px; background:var(--bg); width:max-content; display:none; flex-direction:row; gap:20px; z-index:30;}
+  .gnb-dropdown-menu.open{display:flex;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu{display:flex;}
+  .gnb-dropdown-item{display:block; font-size:13.5px; text-decoration:none; white-space:nowrap; color:var(--text-3);}
+  .gnb-dropdown-item:hover{color:var(--text);}
+  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700;}
+
+  h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px;}
+
+  .category-select{font-family:inherit; font-size:14px; padding:10px 14px; border-radius:10px; border:1px solid var(--card-border); background:var(--card); color:var(--text); margin-bottom:28px; min-width:220px;}
+
+  .layout-body{display:flex; gap:32px; flex-wrap:wrap;}
+  .mock-banner-wrap{flex:0 0 240px;}
+  .mock-banner{width:240px; height:300px; border-radius:14px; background:linear-gradient(180deg, oklch(93% 0.01 265), oklch(89% 0.012 265)); position:relative; overflow:hidden; box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.1);}
+  .mock-marker{position:absolute; left:0; right:0; height:2px; background:var(--num-text);}
+  .mock-marker::after{content:attr(data-label); position:absolute; right:8px; top:-20px; font-size:10px; font-weight:700; color:var(--num-text); background:var(--card); padding:2px 6px; border-radius:6px; white-space:nowrap;}
+  .mock-marker.marker-cta::after{top:6px;}
+  .mock-caption{font-size:11px; color:var(--text-3); margin-top:10px; text-align:center; line-height:1.6;}
+
+  .stats-panel{flex:1; min-width:280px;}
+  .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px; margin-bottom:20px;}
+  .stat-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:18px 20px;}
+  .stat-value{font-size:24px; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums;}
+  .stat-label{font-size:12px; color:var(--text-3); margin-top:6px; line-height:1.6;}
+  .stat-range{font-size:10.5px; color:var(--text-3); margin-top:4px; font-variant-numeric:tabular-nums;}
+
+  .caveat{font-size:12.5px; color:var(--text-3); line-height:1.8; padding:14px 16px; background:var(--card); border-radius:12px; margin-top:6px;}
+  .caveat b{color:var(--text-2);}
+  .low-confidence{display:inline-block; margin-top:10px; font-size:11.5px; font-weight:700; color:var(--warn); background:oklch(94% 0.05 60); border-radius:8px; padding:5px 10px;}
+
+  .empty-state{font-size:13.5px; color:var(--text-3); padding:40px 20px; text-align:center;}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar-inner{gap:16px;}
+    .gnb{gap:12px;}
+    .mock-banner-wrap{flex:0 0 100%; max-width:240px; margin:0 auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">가이드</button>
+        <div class="gnb-dropdown-menu">
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+          <a href="design-principles.html" class="gnb-dropdown-item">디자인 원칙</a>
+          <a href="layout-guide.html" class="gnb-dropdown-item active">레이아웃 가이드</a>
+        </div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">업데이트</a>
+    </nav>
+  </div>
+</div>
+
+<div class="page">
+
+  <h1>레이아웃 가이드</h1>
+  <p class="sub">이미지 레퍼런스 라이브러리에 쌓인 실제 경쟁사·자사 배너를 CLOVA OCR로 분석해서, 카테고리별로 텍스트가 흔히 어디에 배치되는지 통계로 뽑았습니다. "정답"이 아니라 "업계에서 흔히 쓰는 배치"이니 참고용으로만 활용하세요 — 브랜드 가이드나 기획 의도와 충돌하면 그쪽이 항상 우선입니다.</p>
+
+  <select class="category-select" id="categorySelect">
+    <option value="">카테고리를 선택하세요</option>
+  </select>
+
+  <div id="content"><div class="empty-state">위에서 카테고리를 선택하면 통계가 보여요.</div></div>
+
+</div>
+
+<script>
+  const LAYOUT_STATS_BASE = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/layout-stats';
+  const categorySelect = document.getElementById('categorySelect');
+  const content = document.getElementById('content');
+  let categoriesData = [];
+
+  function renderStats(stats){
+    if(!stats || !stats.sampleCount){
+      content.innerHTML = '<div class="empty-state">이 카테고리는 아직 통계가 없습니다(레퍼런스가 새로 추가된 뒤 scripts/build_layout_stats.py가 다시 실행되어야 반영됩니다).</div>';
+      return;
+    }
+    const mainTop = stats.mainCopyTopPct ? stats.mainCopyTopPct.median : null;
+    const ctaBottom = stats.ctaBottomPct ? stats.ctaBottomPct.median : null;
+
+    let markers = '';
+    if(mainTop !== null) markers += '<div class="mock-marker" data-label="메인카피 ' + mainTop + '%" style="top:' + mainTop + '%;"></div>';
+    if(ctaBottom !== null) markers += '<div class="mock-marker marker-cta" data-label="CTA/하단 ' + ctaBottom + '%" style="top:' + ctaBottom + '%;"></div>';
+
+    function statCard(label, s, suffix){
+      if(!s) return '';
+      return '<div class="stat-card"><div class="stat-value">' + s.median + suffix + '</div>' +
+        '<div class="stat-label">' + label + '</div>' +
+        '<div class="stat-range">범위 ' + s.min + suffix + ' ~ ' + s.max + suffix + ' (n=' + s.n + ')</div></div>';
+    }
+
+    content.innerHTML =
+      '<div class="layout-body">' +
+        '<div class="mock-banner-wrap">' +
+          '<div class="mock-banner">' + markers + '</div>' +
+          '<div class="mock-caption">가상 배너 위 중앙값 위치 표시(상단 기준 %)</div>' +
+        '</div>' +
+        '<div class="stats-panel">' +
+          '<div class="stats-grid">' +
+            statCard('메인카피 평균 위치 (상단 기준)', stats.mainCopyTopPct, '%') +
+            statCard('CTA/하단 텍스트 평균 위치 (상단 기준)', stats.ctaBottomPct, '%') +
+            statCard('텍스트 밀도 평균', stats.textDensityPct, '%') +
+            statCard('최소 텍스트 크기 평균 (세로 기준)', stats.smallestTextHeightPct, '%') +
+          '</div>' +
+          '<div class="caveat"><b>' + (stats.categoryName || '') + '</b> 카테고리 레퍼런스 ' + stats.sampleCount + '장을 분석한 결과입니다. 팀이 그때그때 스크랩한 경쟁사 광고 모음이라 "옳은 방식"이 아니라 "흔히 쓰이는 방식"을 보여줄 뿐입니다 — 기획 의도나 브랜드 가이드와 충돌하면 이 통계를 무시하세요.' +
+          (stats.reliable ? '' : '<br><span class="low-confidence">⚠ 표본이 ' + stats.sampleCount + '장으로 적어 참고 신뢰도가 낮습니다</span>') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function loadCategoryStats(id){
+    content.innerHTML = '<div class="empty-state">불러오는 중…</div>';
+    fetch(LAYOUT_STATS_BASE + '/' + encodeURIComponent(id) + '.json')
+      .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
+      .then(renderStats)
+      .catch(() => {
+        content.innerHTML = '<div class="empty-state">이 카테고리는 아직 통계가 없습니다(레퍼런스가 새로 추가된 뒤 scripts/build_layout_stats.py가 다시 실행되어야 반영됩니다).</div>';
+      });
+  }
+
+  categorySelect.addEventListener('change', () => {
+    if(!categorySelect.value){ content.innerHTML = '<div class="empty-state">위에서 카테고리를 선택하면 통계가 보여요.</div>'; return; }
+    loadCategoryStats(categorySelect.value);
+  });
+
+  fetch('/api/referenceCategories')
+    .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
+    .then(data => {
+      categoriesData = data.categories || [];
+      categoriesData.forEach(c => {
+        if(!c.count) return;
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name + ' (' + c.count + ')';
+        categorySelect.appendChild(opt);
+      });
+    })
+    .catch(() => {
+      content.innerHTML = '<div class="empty-state">카테고리 목록을 불러오지 못했습니다.</div>';
+    });
+
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

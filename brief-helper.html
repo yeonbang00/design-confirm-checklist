@@ -121,6 +121,12 @@
   .visual-ref-cap{padding:8px 10px;}
   .visual-ref-brand{font-size:12px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:4px;}
   .visual-ref-note{font-size:11.5px; color:var(--text-3); margin-top:2px; line-height:1.5;}
+  .layout-stats-caption{font-size:12.5px; color:var(--text-3); line-height:1.7; margin:0 0 14px;}
+  .layout-stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;}
+  .ls-cell{background:oklch(96% 0.008 85); border-radius:12px; padding:14px 16px;}
+  .ls-value{font-size:19px; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums;}
+  .ls-label{font-size:11.5px; color:var(--text-3); margin-top:4px; line-height:1.5;}
+  .ls-low-confidence{font-size:10.5px; color:oklch(55% 0.15 60); font-weight:700; margin-top:8px;}
   .gen-banner-desc{font-size:13px; color:var(--text-2); line-height:1.7; margin-bottom:14px;}
   .gen-banner-btn{display:block; margin:14px auto 0; padding:11px 20px; border:none; border-radius:10px; background:oklch(35% 0.08 260); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;}
   .gen-banner-btn:disabled{opacity:0.6; cursor:default;}
@@ -156,6 +162,7 @@
           <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
           <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
           <a href="design-principles.html" class="gnb-dropdown-item">디자인 원칙</a>
+          <a href="layout-guide.html" class="gnb-dropdown-item">레이아웃 가이드</a>
         </div>
       </div>
       <a href="brief-helper.html" class="gnb-link active">기획안 헬퍼</a>
@@ -398,6 +405,27 @@
     }).join('');
   }
 
+  // 289장(레퍼런스 라이브러리 전체)을 OCR로 미리 분석해 카테고리별로 집계해둔
+  // 참고 통계(scripts/build_layout_stats.py로 생성). "정답"이 아니라 "이 업종
+  // 경쟁사 소재들이 흔히 어떻게 배치하는지"를 보여주는 참고 데이터.
+  function formatLayoutStats(stats){
+    if(!stats || !stats.sampleCount) return '';
+    const cells = [];
+    if(stats.mainCopyTopPct) cells.push(['메인카피 평균 위치', stats.mainCopyTopPct.median + '% (상단 기준)']);
+    if(stats.ctaBottomPct) cells.push(['CTA/하단 텍스트 평균 위치', stats.ctaBottomPct.median + '% (상단 기준)']);
+    if(stats.textDensityPct) cells.push(['텍스트 밀도 평균', stats.textDensityPct.median + '%']);
+    if(stats.smallestTextHeightPct) cells.push(['최소 텍스트 크기 평균', stats.smallestTextHeightPct.median + '% (세로 기준)']);
+    if(!cells.length) return '';
+    const cellsHtml = cells.map(([label, value]) =>
+      '<div class="ls-cell"><div class="ls-value">' + escapeHtml(String(value)) + '</div><div class="ls-label">' + escapeHtml(label) + '</div></div>'
+    ).join('');
+    return '<div class="card"><div class="result-label">업종 레이아웃 참고 통계</div>' +
+      '<div class="layout-stats-caption">' + escapeHtml(stats.categoryName || '') + ' 카테고리 레퍼런스 ' + stats.sampleCount + '장을 분석한 참고 수치입니다 — "정답"이 아니라 "경쟁사들이 흔히 쓰는 배치"이니 그대로 따라야 하는 기준으로 쓰지 마세요.</div>' +
+      '<div class="layout-stats-grid">' + cellsHtml + '</div>' +
+      (stats.reliable ? '' : '<div class="ls-low-confidence">⚠ 표본이 ' + stats.sampleCount + '장으로 적어 참고 신뢰도가 낮습니다</div>') +
+      '</div>';
+  }
+
   function renderResult(data){
     const pitfallsHtml = (data.pitfalls && data.pitfalls.length)
       ? '<ul class="result-list">' + data.pitfalls.map(i => '<li>' + escapeHtml(i) + '</li>').join('') + '</ul>'
@@ -426,6 +454,7 @@
       '<div class="card"><div class="result-label">핵심 제작 방향</div><div class="result-text">' + escapeHtml(data.coreDirection || '—') + '</div></div>' +
       '<div class="card"><div class="result-label">카피·비주얼 추가제안</div>' + formatDirection(data.creativeDirection) + '</div>' +
       visualRefCard +
+      formatLayoutStats(data.layoutStats) +
       '<div class="card"><div class="result-label">주의할 점</div>' + pitfallsHtml + gapsHtml + '</div>';
   }
 

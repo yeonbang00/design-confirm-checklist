@@ -569,6 +569,7 @@ export default async function handler(req, res) {
     });
 
     if (briefError) parsed.briefError = briefError;
+    if (briefDirection && briefDirection.layoutStats) parsed.layoutStats = briefDirection.layoutStats;
     res.status(200).json(parsed);
   } catch (err) {
     const status = (err && err.status) || 500;

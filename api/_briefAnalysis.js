@@ -7,6 +7,7 @@
 
 import { listNonEmptyCategories, pickReferenceImages } from './_referenceLibrary.js';
 import { callOpenAI } from './_openaiClient.js';
+import { getLayoutStats } from './_layoutStats.js';
 
 const VISUAL_REF_COUNT = 3;
 
@@ -118,8 +119,12 @@ export async function extractBriefDirection(images, apiKey, brandContext, ground
   });
 
   const visualRefs = pickReferenceImages(parsed.visualRefCategory, VISUAL_REF_COUNT, parsed.visualRefKeywords);
+  // AI가 스스로 판단하기 전에는 알 수 없는 업종 카테고리라, 통계도 이 카테고리가
+  // 정해진 "이후"에만 붙일 수 있다 — 그래서 프롬프트에 넣어 판단에 영향을 주는
+  // 대신, 결과에 참고 데이터로만 덧붙인다(visualRefs와 같은 패턴).
+  const layoutStats = await getLayoutStats(parsed.visualRefCategory);
   delete parsed.visualRefCategory;
   delete parsed.visualRefKeywords;
   if (!visualRefs.length) delete parsed.visualRefReason;
-  return { ...parsed, visualRefs };
+  return { ...parsed, visualRefs, layoutStats };
 }
