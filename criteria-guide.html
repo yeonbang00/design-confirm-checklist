@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 영역 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+    --pass: oklch(58% 0.13 145); --needsfix: oklch(63% 0.15 55); --reject: oklch(58% 0.19 15); --na: oklch(60% 0.01 265);
+  }
+  *{box-sizing:border-box;}
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased; word-break:keep-all;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
+
+  .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
+  .gnb-bar{position:sticky; top:0; background:var(--bg); z-index:100;}
+  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:10px 24px; flex-wrap:wrap;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
+  .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
+  .gnb-link:hover{color:var(--text);}
+  .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
+  .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding:14px; background:var(--bg); width:max-content; display:none; flex-direction:row; gap:20px; z-index:30;}
+  .gnb-dropdown-menu.open{display:flex;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu{display:flex;}
+  .gnb-dropdown-item{display:block; font-size:13.5px; text-decoration:none; white-space:nowrap; color:var(--text-3);}
+  .gnb-dropdown-item:hover{color:var(--text);}
+  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700;}
+
+  h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px;}
+
+  .legend-table{width:100%; border-collapse:collapse; font-size:13px; margin:0 0 10px;}
+  .legend-table th, .legend-table td{border:1px solid var(--card-border); padding:8px 12px; text-align:left;}
+  .legend-table th{background:var(--card); font-weight:700; color:var(--text-2); font-size:12px;}
+  .legend-table td{color:var(--text-2);}
+  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle;}
+
+  .m-tag{display:inline-block; font-size:9.5px; font-weight:700; border-radius:4px; padding:2px 7px; margin-left:5px; vertical-align:middle;}
+  .m1{background:oklch(90% 0.08 150); color:oklch(38% 0.1 150);}
+  .m2{background:oklch(90% 0.08 70); color:oklch(45% 0.1 55);}
+  .m3{background:oklch(90% 0.01 265); color:oklch(45% 0.02 265);}
+  .legend-note{font-size:12.5px; color:var(--text-3); line-height:1.8; margin-bottom:36px;}
+
+  .group-title{font-size:19px; font-weight:800; margin:40px 0 4px; padding-top:18px; border-top:2px solid var(--text); color:var(--num-text);}
+  .group-desc{font-size:13px; color:var(--text-3); margin:0 0 18px;}
+
+  .item-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:22px 24px; margin-bottom:16px;}
+  .item-head{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .item-num{font-family:'Noto Sans KR',sans-serif; font-weight:800; font-size:12px; color:#fff; background:var(--num-text); border-radius:6px; padding:3px 8px;}
+  .item-title{font-size:15.5px; font-weight:700;}
+  .item-label{font-size:11px; font-weight:700; color:var(--text-3); margin-bottom:5px;}
+  ul.bullets{margin:0 0 10px; padding-left:18px; font-size:13px; color:var(--text-2); line-height:1.75;}
+  .reject-box{font-size:12.5px; color:oklch(45% 0.18 20); background:oklch(94% 0.04 20); border-radius:8px; padding:8px 12px; margin-bottom:10px;}
+  .evidence-box{font-size:13px; color:var(--text); background:oklch(95% 0.015 260); border-left:3px solid var(--num-text); border-radius:0 10px 10px 0; padding:12px 16px; line-height:1.75;}
+  .evidence-box b{color:var(--num-text);}
+  .evidence-box + .evidence-box{margin-top:8px;}
+
+  .diagram-row{display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;}
+  .diagram-card{flex:1; min-width:170px; background:#fff; border-radius:10px; padding:10px 12px;}
+  .diagram-visual{height:80px; border-radius:8px; margin-bottom:8px; background:oklch(93% 0.01 265);}
+  .diagram-title{font-size:12px; font-weight:700; margin-bottom:2px;}
+  .diagram-desc{font-size:11px; color:var(--text-3); line-height:1.6;}
+
+  .btn-type-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+  .btn-type-mini{background:#fff; border-radius:10px; padding:10px 14px; text-align:center; flex:1; min-width:100px;}
+  .btn-mock{display:inline-block; padding:6px 14px; font-size:11.5px; font-weight:700; margin-bottom:6px;}
+  .btn-mock.mock-rect{background:var(--num-text); color:#fff; border-radius:0;}
+  .btn-mock.mock-round{background:var(--num-text); color:#fff; border-radius:999px;}
+  .btn-mock.mock-outline{background:none; border:1.5px solid var(--num-text); color:var(--num-text); border-radius:6px;}
+  .btn-mock.mock-line{background:none; color:var(--num-text); text-decoration:underline; padding:6px 2px;}
+  .btn-mock.mock-circle{background:var(--num-text); color:#fff; border-radius:50%; width:34px; height:34px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:10px;}
+  .btn-mock.mock-badge{background:oklch(92% 0.16 90); color:oklch(30% 0.05 60); border-radius:40% 60% 55% 45% / 50% 45% 55% 50%; font-weight:800;}
+  .btn-type-label{font-size:10.5px; color:var(--text-3);}
+
+  .spec-table{width:100%; border-collapse:collapse; font-size:12px; margin-top:8px;}
+  .spec-table th, .spec-table td{border:1px solid var(--card-border); padding:7px 10px; text-align:left;}
+  .spec-table th{background:#fff; font-weight:700; color:var(--text-2); font-size:11px;}
+  .spec-table td{color:var(--text-2);}
+
+  .toc{font-size:12.5px; color:var(--text-3); margin-bottom:6px;}
+  .toc a{color:var(--num-text); text-decoration:none; font-weight:600;}
+  .toc a:hover{text-decoration:underline;}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar-inner{gap:16px;}
+    .gnb{gap:12px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">가이드</button>
+        <div class="gnb-dropdown-menu">
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="criteria-guide.html" class="gnb-dropdown-item active">영역가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">업데이트</a>
+    </nav>
+  </div>
+</div>
+
+<div class="page">
+
+  <h1>영역 가이드</h1>
+  <p class="sub">체크리스트 17개 항목이 정확히 뭘 판정하는지, 그 판정 기준이 왜 그렇게 정해졌는지(수치·공식·실제 브랜드 사례)를 한 곳에 모았습니다. 색상 배색·팔레트는 <a href="color-guide.html" style="color:var(--num-text); font-weight:600;">컬러가이드</a>에 따로 있고, 그 외에는 전부 여기 있습니다.</p>
+
+  <table class="legend-table">
+    <tr><th>등급</th><th>의미</th></tr>
+    <tr><td><span class="dot" style="background:var(--pass);"></span>통과</td><td>기준을 충족함</td></tr>
+    <tr><td><span class="dot" style="background:var(--needsfix);"></span>검토 필요</td><td>명확한 위반은 아니지만 확인이 필요함</td></tr>
+    <tr><td><span class="dot" style="background:var(--reject);"></span>반려</td><td>명백한 기준 위반, 반드시 수정 필요</td></tr>
+    <tr><td><span class="dot" style="background:var(--na);"></span>해당 없음</td><td>이미지 구성상 이 항목이 적용되지 않음(예: 인물 없는 시안의 신체 비율 항목)</td></tr>
+  </table>
+  <div class="legend-note">
+    판정 방식 태그 — <span class="m-tag m1">M1</span>수치 기반(OCR·WCAG 등 실측값 대조) <span class="m-tag m2">M2</span>규정 대조(브랜드·매체 가이드라인과 비교) <span class="m-tag m3">M3</span>AI 시각 판단(수치화하지 않고 이미지를 보고 판단) — 대부분 항목은 두 가지 이상이 함께 쓰입니다. 파란 박스(판정 근거)는 "왜 이 기준인지"에 대한 실제 출처가 있는 설명입니다 — 절대 규칙이 아니라 참고 기준이니, 브랜드 가이드나 기획 의도와 충돌하면 그쪽이 우선입니다.
+  </div>
+
+  <!-- ===================== 그룹 1 ===================== -->
+  <div class="group-title">그룹 1 · 전략 · 디자인 기본기</div>
+  <div class="group-desc">크리에이티브 자체의 완성도를 보는 9개 항목입니다.</div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">01</span><span class="item-title">전략 적합성</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>목적과 타깃 톤이 일치하는가</li><li>여러 혜택 포인트가 하나의 오퍼로 수렴하는가</li></ul>
+    <div class="reject-box">즉시 반려: 서로 다른 오퍼·캠페인이 동시에 경쟁 또는 컨셉 부재</div>
+    <div class="evidence-box"><b>Miller's Law(7±2):</b> 사람이 단기기억에 동시에 담을 수 있는 항목은 보통 7±2개 수준입니다. 배너 하나에 혜택 포인트를 5개, 6개씩 나열하면 하나도 기억에 안 남을 수 있어, 강조 포인트는 1~3개로 압축하는 게 이 항목의 실질적 기준입니다.<br><br>기획안(PPT 캡처 또는 pptx)을 함께 업로드하면, 기획안에서 추출한 방향성과 실제 시안이 얼마나 부합하는지까지 함께 대조합니다.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">02</span><span class="item-title">위계 및 구조</span><span class="m-tag m1">M1</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>헤드라인→비주얼→CTA 흐름인가</li><li>우선순위가 크기로 구분되는가</li></ul>
+    <div class="reject-box">즉시 반려: 모든 요소가 같은 크기로 나열</div>
+    <div class="evidence-box"><b>모듈러 스케일(Major Third=1.25배):</b> 타이포그래피에서 1.25배는 "뚜렷하게 인지되는 최소 크기 단계"로 통용되며, Weber의 법칙(크기 차이는 절대값이 아니라 비율로 지각된다는 심리물리학 법칙)이 이를 뒷받침합니다. OCR로 감지한 텍스트 높이를 계층별로 묶어 가장 큰 계층과 다음 계층의 비율을 계산하고, 1.25배 미만이면서 색상·굵기 구분도 없을 때만 위계가 약하다고 판정합니다.</div>
+    <div class="evidence-box"><b>시선 흐름 패턴:</b> 텍스트 밀도·구도에 따라 사람이 화면을 보는 순서가 어느 정도 정형화돼 있습니다.
+      <div class="diagram-row">
+        <div class="diagram-card">
+          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><path d="M 15 20 L 185 20 L 15 55 L 185 55 L 15 90 L 100 90" stroke="oklch(45% 0.12 260)" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="15" cy="20" r="3" fill="oklch(45% 0.12 260)"/></svg></div>
+          <div class="diagram-title">Z 패턴</div>
+          <div class="diagram-desc">텍스트 적고 이미지 중심 — 좌상단→우상단→좌하단→우하단</div>
+        </div>
+        <div class="diagram-card">
+          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><path d="M 15 15 L 185 15 M 15 15 L 15 105 M 15 45 L 140 45 M 15 45 L 15 105 M 15 75 L 100 75" stroke="oklch(45% 0.12 260)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></div>
+          <div class="diagram-title">F 패턴</div>
+          <div class="diagram-desc">텍스트 많음(리뷰·기사형) — 위쪽 넓게, 아래로 갈수록 왼쪽만 짧게</div>
+        </div>
+        <div class="diagram-card">
+          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><circle cx="20" cy="18" r="4" fill="oklch(45% 0.12 260)"/><circle cx="180" cy="18" r="3" fill="oklch(65% 0.02 265)"/><circle cx="20" cy="102" r="3" fill="oklch(65% 0.02 265)"/><circle cx="180" cy="102" r="4" fill="oklch(45% 0.12 260)"/><path d="M 20 18 Q 100 55 180 102" stroke="oklch(45% 0.12 260)" stroke-width="2" fill="none" stroke-dasharray="4 4"/></svg></div>
+          <div class="diagram-title">Gutenberg 다이어그램</div>
+          <div class="diagram-desc">밀도 낮고 요소가 듬성듬성 — 좌상단(로고)→우하단(CTA) 대각선</div>
+        </div>
+      </div>
+    </div>
+    <div class="evidence-box"><b>구도:</b> 삼분할법(화면 3등분 교차점에 핵심 요소 배치), 황금비(비주얼:텍스트 영역 약 1:1.618), 시각적 균형(무게감 상쇄), 비율 그리드(짧은 변을 N등분해 여백 단위로 — 한 브랜드는 SNS 소재에서 18등분 사용).</div>
+    <div class="evidence-box"><b>배너 카피 3계층 구조(사내 제작가이드 기준):</b> 서브카피(0~2단, 브랜드명·시즌 태그) → 메인카피(1~2단, 핵심 메시지) → 상세설명(1~2단, 조건·부가정보) 순으로 위계를 나눕니다. 카드형 메시지(MMS 등)에서는 메인 텍스트 3줄 이하, 서브 텍스트 1줄 이하를 권장 기준으로 둡니다.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">03</span><span class="item-title">타이포·정렬·여백·명도대비</span><span class="m-tag m1">M1</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets">
+      <li>폰트가 2종 이내로 통일됐는가</li>
+      <li>위아래로 쌓인 요소끼리 정렬(중앙/좌측/우측)이 정확히 맞는가</li>
+      <li>로고·헤드라인·CTA처럼 단독 배치된 요소도 캔버스 중앙에서 좌우로 치우치지 않았는가</li>
+      <li>CTA 버튼 안 텍스트가 버튼 안에서 고르게 배치됐는가</li>
+      <li>강조가 필요한 핵심 정보가 색상·굵기·크기로 구분되는가</li>
+      <li>텍스트-배경 명도 대비가 충분한가</li>
+      <li>요소 간 여백·간격이 고르게 정리됐는가</li>
+      <li>텍스트 줄바꿈이 어색한 위치에서 끊기지 않는가</li>
+      <li>레이아웃/텍스트가 답답해 보이거나 절대적으로 너무 작아 보이지 않는가</li>
+    </ul>
+    <div class="reject-box">즉시 반려: 텍스트가 그리드 밖으로 밀림, 여백 불균형, 대비 부족, 텍스트 밀도·자간·행간으로 인한 답답함 등</div>
+    <div class="evidence-box"><b>정렬 오차:</b> CLOVA OCR로 각 텍스트 요소의 실제 픽셀 좌표를 측정해 비교합니다. 0px 차이는 통과, 1~2px은 검토 필요, 3px 이상은 반려 — 단 스트록·그림자 효과나 광학적 정렬(뾰족한 자모와 둥근 자모가 섞였을 때의 미세 조정)이 있으면 예외로 봅니다. 캔버스 중앙정렬은 더 여유 있게 좌우 여백 차이 10px까지 허용합니다.</div>
+    <div class="evidence-box"><b>명도 대비 — WCAG 2.1 AA 기준:</b> 일반 텍스트는 4.5:1 미만, 24px 이상 큰 텍스트는 3:1 미만이면 기준 미달로 판정합니다.</div>
+    <div class="evidence-box"><b>텍스트 밀도·절대 크기:</b> OCR 박스 넓이 합계로 전체 이미지 대비 텍스트 밀도(%)와 가장 작은 텍스트 계층의 세로 비율(%)을 참고 수치로 씁니다. 리뷰형·기사형·시험지형·채팅형처럼 텍스트가 많은 게 자연스러운 컨셉은 예외로 처리하고, 제품에 실제로 인쇄되어 촬영된 문구(성분표 등)는 디자이너가 편집할 수 없는 원본이라 모든 밀도·크기 체크에서 제외합니다. 자간·행간으로 인한 로컬 답답함은 OCR로 잴 수 없어 순수 시각 판단으로 확인합니다.</div>
+    <div class="evidence-box"><b>줄간격(행간) 비율:</b> 본문은 폰트 크기의 1.4~1.6배, 헤드라인처럼 큰 텍스트는 1.1~1.3배가 자연스럽습니다 — 실제로 한 브랜드의 배너 헤드라인 스펙도 44pt에 행간 54pt(1.23배), 27pt에 행간 33pt(1.22배)로 이 범위와 일치합니다. 폰트는 2종 이내로 제한하고 굵기 차이로 위계를 주는 것이 여러 폰트를 섞는 것보다 안정적입니다.</div>
+    <div class="evidence-box"><b>Gestalt 원리:</b> 근접성(가까운 요소는 하나의 그룹으로 인식 — 여백·간격 일관성의 근거) · 유사성(같은 역할의 요소는 같은 스타일로 통일해야 한눈에 전달). 강조는 색상·굵기·크기 3요소 중 최소 하나 이상으로 뚜렷이 구분돼야 시선을 끕니다.</div>
+    <div class="evidence-box"><b>타이포그래피 흔한 실수(실제 브랜드 가이드 금지 규정):</b> 텍스트에 윤곽선·효과를 과도하게 적용 · 배경과 낮은 대비 조합 사용 · 헤드라인에 본문용 서체를 사용 · 행간·자간을 과도하게 적용해 가독성을 해침 · 불필요한 줄바꿈으로 시선을 분산시킴 · 가독성이 떨어지는 정렬을 사용.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">04</span><span class="item-title">정보 정확성</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>가격·일정 정보에 오류 없는가</li><li>원고와 수치가 일치하는가</li></ul>
+    <div class="reject-box">즉시 반려: 가격·일정 등 사실관계 오류</div>
+    <div class="evidence-box"><b>2단계 오탈자 검증 절차:</b> 이미지 속 모든 텍스트를 먼저 그대로 옮겨 적게 한 뒤(textTranscript), 그 내용을 다시 처음부터 훑으며 자음·모음 하나 차이 같은 오탈자를 대조합니다.</div>
+    <div class="evidence-box"><b>규칙 기반 맞춤법 검사기(바른한글/PNU WebSpeller):</b> OCR로 읽은 텍스트를 화면 읽기 순서로 이어붙여 규칙 기반 맞춤법 검사기에 보내고, 감지된 오류를 참고 신호로 함께 제공합니다. 배너 카피가 관행적으로 생략하는 종결 문장부호 오탐은 서버에서 미리 걸러냅니다.</div>
+    <div class="evidence-box"><b>최상급·순위 표현 실증 표기(네이버 광고 심사 기준 참고):</b> "최고", "1위" 등 표현이 있는데 근거(수상 내역, 조사기관 등) 표기가 이미지 안 어디에도 없으면 반려로 판정합니다.</div>
+    <div class="evidence-box"><b>표기 컨벤션:</b> 금액은 "3만 원대"(원 표기 시 띄어쓰기 필수), 물결표는 숫자와 붙여쓰기("~70%"), 말줄임표는 광고 카피 특성상 약식(..)도 허용합니다.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">05</span><span class="item-title">컬러 일관성</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>브랜드 컬러를 준수했는가</li></ul>
+    <div class="reject-box">즉시 반려: 브랜드 컬러 이탈</div>
+    <div class="evidence-box"><b>redmean 색상 거리 공식:</b> 브랜드 가이드 텍스트에서 HEX·RGB 값을 자동 추출하고, 캔버스에서 6×6 그리드로 샘플링한 대표 색상과의 거리를 계산합니다. 정식 CIE ΔE2000이 아닌 경량 근사 공식이라는 한계를 감안해 참고 수치로만 씁니다. 배색 이론·팔레트는 <a href="color-guide.html" style="color:var(--num-text); font-weight:600;">컬러가이드</a> 참고.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">06</span><span class="item-title">합성 리얼리티</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>톤·질감이 배경과 어울리는가</li><li>그림자·반사가 자연스러운가</li><li>누끼(컷아웃) 경계가 매끄럽게 처리됐는가 (헤어 잔여배경, 거친 윤곽선 등)</li></ul>
+    <div class="reject-box">즉시 반려: 합성이 티나거나 이질감이 있음, 누끼 경계에 배경 잔상·거친 윤곽선이 남음</div>
+    <div class="evidence-box"><b>누끼 경계 3종 체크:</b> ① 안티에일리어싱 부족(계단 현상) ② 원래 배경색이 얇게 번져 보이는 할레이션 ③ 헤어 등 세밀한 경계의 배경 잔여물. 사진 합성이 아닌 시안은 이 체크가 자동으로 해당 없음(na) 처리됩니다.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">07</span><span class="item-title">피사체 보정</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>보정이 과도하지 않은가</li><li>재질 텍스처가 자연스러운가</li></ul>
+    <div class="reject-box">즉시 반려: 과도한 리터칭으로 왜곡된 피사체</div>
+    <div class="evidence-box">10번(신체 비율 왜곡)과의 경계: 7번은 질감·보정 품질(형태는 정상이나 표면이 부자연스럽게 매끈함), 10번은 형태·비율(구조 자체가 물리적으로 말이 안 되는 경우)로 구분합니다.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">08</span><span class="item-title">그래픽 완성도</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>아이콘·일러스트 마감이 깨끗한가</li><li>벡터에 깨짐이 없는가</li></ul>
+    <div class="reject-box">즉시 반려: 저해상도로 깨지거나 미완성</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">09</span><span class="item-title">CTA 및 전환</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>CTA가 있다면 문구가 행동을 유도하는가</li><li>CTA가 있다면 버튼이 눈에 띄는가</li></ul>
+    <div class="reject-box">즉시 반려: 있는 CTA가 텍스트에 묻히는 등 명백히 눈에 안 띔 (CTA 부재 자체는 매체에 따라 정상일 수 있음)</div>
+    <div class="evidence-box">메타(Meta)처럼 플랫폼이 CTA 버튼을 소재와 별도로 자동으로 붙여주는 매체가 많아, 이미지 안에 CTA가 아예 없는 것은 반려 사유로 보지 않고 참고 제안으로만 남깁니다.</div>
+    <div class="evidence-box"><b>Hick's Law:</b> 선택지가 많아질수록 결정 시간이 늘어납니다(선택지 수에 로그 비례). CTA는 배너 하나에 하나로 압축하는 게 원칙입니다.<br><br><b>Fitts's Law:</b> 타겟(버튼)이 크고 가까울수록 도달·클릭 시간이 짧아집니다. CTA를 작게 만들거나 다른 요소에서 멀리 떨어뜨리면 클릭까지 이어질 확률이 떨어집니다.</div>
+    <div class="evidence-box"><b>버튼 스타일 6종(사내 제작가이드 기준):</b>
+      <div class="btn-type-row">
+        <div class="btn-type-mini"><span class="btn-mock mock-rect">버튼</span><div class="btn-type-label">직사각형</div></div>
+        <div class="btn-type-mini"><span class="btn-mock mock-round">버튼</span><div class="btn-type-label">라운딩형</div></div>
+        <div class="btn-type-mini"><span class="btn-mock mock-outline">버튼</span><div class="btn-type-label">테두리형</div></div>
+        <div class="btn-type-mini"><span class="btn-mock mock-line">버튼 →</span><div class="btn-type-label">라인형</div></div>
+        <div class="btn-type-mini"><span class="btn-mock mock-circle">GO</span><div class="btn-type-label">원형</div></div>
+        <div class="btn-type-mini"><span class="btn-mock mock-badge">참여</span><div class="btn-type-label">뱃지형</div></div>
+      </div>
+      버튼 내부 여백은 세로 여백(a)의 2배(2a)를 가로 여백으로 잡으면 균형 잡혀 보입니다(8pt 그리드 기준 배수 권장).
+    </div>
+    <div class="evidence-box"><b>터치 타겟 최소 크기(참고 제안 — px 단정 대신 육안 판단):</b>
+      <table class="spec-table">
+        <tr><th>기준</th><th>최소 크기</th></tr>
+        <tr><td>Apple Human Interface Guidelines</td><td>44×44pt</td></tr>
+        <tr><td>Google Material Design</td><td>48×48dp</td></tr>
+        <tr><td>WCAG 2.2 — 2.5.8 Target Size (Minimum)</td><td>24×24 CSS px (법적 하한선)</td></tr>
+      </table>
+      CTA 끝에 화살표(&gt;, →)가 없으면 참고 제안으로 가볍게 덧붙이되 판정 등급은 올리지 않습니다.
+    </div>
+  </div>
+
+  <!-- ===================== 그룹 2 ===================== -->
+  <div class="group-title">그룹 2 · AI 생성 아티팩트</div>
+  <div class="group-desc">AI로 생성·보정한 이미지 특유의 티가 나는 문제를 잡는 4개 항목입니다. 사진 합성이 아닌 시안에는 대부분 해당 없음(na)으로 처리됩니다.</div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">10</span><span class="item-title">신체 비율 왜곡</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>얼굴(이목구비)이 뒤틀리지 않았는가</li><li>손가락·팔다리 비율이 정상인가</li><li>자세가 물리적으로 가능한가</li></ul>
+    <div class="reject-box">즉시 반려: 얼굴·신체 비율이 명백히 어긋남</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">11</span><span class="item-title">배경 패턴 반복</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>텍스처가 반복되지 않는가</li><li>패턴 경계가 매끄러운가</li></ul>
+    <div class="reject-box">즉시 반려: 배경이 눈에 띄게 반복됨</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">12</span><span class="item-title">워터마크·서명 흔적</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>AI 워터마크가 없는가</li><li>스톡 이미지 출처 표시가 없는가</li></ul>
+    <div class="reject-box">즉시 반려: 워터마크·서명이 남아있음</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">13</span><span class="item-title">광원-그림자 방향 일치</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>그림자를 가진 피사체가 2개 이상일 때, 광원 방향이 서로 모순되지 않는가</li></ul>
+    <div class="reject-box">즉시 반려: 그림자 방향이 서로 어긋남 (피사체가 하나뿐이면 해당 없음)</div>
+  </div>
+
+  <!-- ===================== 그룹 3 ===================== -->
+  <div class="group-title">그룹 3 · 광고주 전달 전 필수 확인</div>
+  <div class="group-desc">크리에이티브 품질과 별개로, 매체·브랜드·법적 규정을 지켰는지 반드시 확인해야 하는 4개 항목입니다.</div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">14</span><span class="item-title">매체 최적화</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>매체 규격(사이즈·용량)에 맞는가</li><li>안전 여백 안에 배치됐는가</li></ul>
+    <div class="reject-box">즉시 반려: 규격·용량 초과 또는 요소 잘림</div>
+    <div class="evidence-box">선택한 매체 가이드(구글 GDN, 카울리, 타겟팅게이츠, TNK 등 실제 공식 자료 기반)의 세이프존 좌표와 OCR 실측 좌표를 대조합니다. OCR 측정 오차를 감안해 10px 이내 침범은 확실한 위반으로 단정하지 않습니다.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">15</span><span class="item-title">텍스트·로고 렌더링</span><span class="m-tag m3">M3</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>생성된 글자가 정확한가</li><li>로고 형태가 원본과 일치하는가</li></ul>
+    <div class="reject-box">즉시 반려: 글자가 깨지거나 로고가 왜곡됨</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">16</span><span class="item-title">로고 사용 규정</span><span class="m-tag m2">M2</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>로고가 누락되지 않았는가</li><li>로고 여백이 다른 요소와 부자연스럽게 붙어 보이지 않는가</li><li>색상·비율을 변경하지 않았는가</li></ul>
+    <div class="reject-box">즉시 반려: 로고 가이드라인 위반</div>
+    <div class="evidence-box">광고주별 브랜드 가이드에 등록된 로고 사용 규정과 대조합니다. 등록된 가이드가 없는 광고주는 일반적인 로고 사용 관행(여백, 최소 크기, 왜곡 금지)을 기준으로 판단합니다.</div>
+  </div>
+
+  <div class="item-card">
+    <div class="item-head"><span class="item-num">17</span><span class="item-title">법적고지·심의 문구</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-label">확인 사항</div>
+    <ul class="bullets"><li>필수 고지사항이 포함됐는가</li><li>심의 문구 크기가 기준 이상인가</li></ul>
+    <div class="reject-box">즉시 반려: 법적 고지·심의 문구 누락</div>
+    <div class="evidence-box"><b>대부업법 시행령 기준:</b> 대출·대부업 광고(무담보, 저금리, 즉시대출 등 카피로 판단)는 경고 문구 크기가 시안 내 가장 큰 텍스트의 시각적 1/3 이상이어야 한다는 법적 기준을 적용합니다.</div>
+  </div>
+
+  <!-- ===================== 참고 디자인 시스템 ===================== -->
+  <div class="group-title">참고한 디자인 시스템</div>
+  <div class="group-desc">공개된 디자인 시스템 공식 문서에서, 배너처럼 정적인 카드형 콘텐츠에 적용 가능한 원칙만 발췌했습니다. 각 시스템 전체를 따라야 한다는 뜻은 아닙니다.</div>
+  <div class="item-card">
+    <div class="evidence-box"><b>Material Design:</b> 8dp 기준 그리드, 터치 타겟 48dp, 강조색은 소수만 쓰고 나머지는 중립색으로 절제.</div>
+    <div class="evidence-box"><b>Apple Human Interface Guidelines:</b> 44pt 터치 타겟, 명확한 타이포그래피 위계(Large Title → Title → Headline → Body).</div>
+    <div class="evidence-box"><b>IBM Carbon Design System:</b> 2px 기준 스페이싱 스케일, 명확한 타이포그래피 스케일 테이블을 문서로 공개.</div>
+  </div>
+
+  <div class="legend-note" style="margin-top:20px;">
+    이 페이지의 근거들은 특정 논문·공식 문서에 근거한 것과, 여러 UX 문헌에서 통용되는 경험칙(F/Z패턴, 삼분할법 등)이 섞여 있습니다. 후자는 "업계에서 널리 쓰이는 관행"이지 엄밀한 실험 근거가 있는 법칙은 아니니 참고 기준으로만 활용하세요. 사내 제작가이드·실제 브랜드 사례로 표시된 내용은 특정 프로젝트에서 검증된 값이라 다른 맥락에서는 다를 수 있습니다.
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+</script>
+</body>
+</html>
