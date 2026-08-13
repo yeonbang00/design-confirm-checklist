@@ -76,6 +76,19 @@
   .gradient-hex{font-size:11.5px; color:var(--text-3); font-variant-numeric:tabular-nums; margin-bottom:6px;}
   .gradient-desc{font-size:12.5px; color:var(--text-2); line-height:1.6;}
 
+  .theory-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px;}
+  .theory-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:16px 18px;}
+  .theory-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
+  .theory-desc{font-size:12px; color:var(--text-3); line-height:1.65; margin-bottom:12px;}
+  .theory-swatches{display:flex; gap:6px;}
+  .theory-swatch{flex:1; height:44px; border-radius:8px;}
+
+  .psych-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;}
+  .psych-table th, .psych-table td{border:1px solid var(--card-border); padding:9px 12px; text-align:left; vertical-align:top;}
+  .psych-table th{background:var(--card); font-weight:700; color:var(--text-2); font-size:12px;}
+  .psych-table td{color:var(--text-2);}
+  .psych-chip{display:inline-block; width:14px; height:14px; border-radius:4px; margin-right:6px; vertical-align:middle;}
+
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
     .gnb-bar-inner{gap:16px;}
@@ -96,6 +109,7 @@
           <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
           <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
           <a href="color-guide.html" class="gnb-dropdown-item active">컬러가이드</a>
+          <a href="design-principles.html" class="gnb-dropdown-item">디자인 원칙</a>
         </div>
       </div>
       <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
@@ -109,7 +123,100 @@
 <div class="page">
 
   <h1>컬러 가이드</h1>
-  <p class="sub">눈에 잘 띄는 배색 조합, 업종·시즌별로 자주 쓰이는 컬러, 자주 쓰이는 그라데이션을 정리했습니다. 브랜드 컬러가 정해진 시안이라면 브랜드 가이드가 항상 우선이고, 이 페이지는 브랜드 컬러가 없거나 시즌·테마 배너를 만들 때 참고용입니다.</p>
+  <p class="sub">눈에 잘 띄는 배색 조합, 업종·시즌별로 자주 쓰이는 컬러, 자주 쓰이는 그라데이션을 정리했습니다. 브랜드 컬러가 정해진 시안이라면 브랜드 가이드가 항상 우선이고, 이 페이지는 브랜드 컬러가 없거나 시즌·테마 배너를 만들 때 참고용입니다. 레이아웃·타이포 관련 원칙은 <a href="design-principles.html" style="color:var(--num-text); font-weight:600;">디자인 원칙</a> 페이지에 따로 있습니다.</p>
+
+  <div class="section-block">
+    <div class="section-heading">배색 관계 이론</div>
+    <div class="section-note">색상환(색상 원)에서 두 색이 몇 도(°) 떨어져 있는지에 따라 배색을 6가지로 분류합니다. 아래 예시는 파란색(hue 205°)을 기준으로 각 관계를 실제 색상환 각도로 계산한 값입니다 — 감으로 고른 색이 아니라 수치로 검증 가능한 조합입니다.</div>
+    <div class="theory-grid">
+      <div class="theory-card">
+        <div class="theory-title">보색(Complementary) · 180°</div>
+        <div class="theory-desc">색상환에서 정반대(180°)에 있는 두 색. 대비가 가장 강해 시선을 확실히 끌지만, 넓은 면적에 함께 쓰면 눈이 피로할 수 있어 포인트 컬러로 쓰는 게 안전합니다.</div>
+        <div class="theory-swatches">
+          <span class="theory-swatch" style="background:rgb(29,129,201);"></span>
+          <span class="theory-swatch" style="background:rgb(201,100,29);"></span>
+        </div>
+      </div>
+      <div class="theory-card">
+        <div class="theory-title">유사색(Analogous) · ±30°</div>
+        <div class="theory-desc">색상환에서 서로 인접한(30° 이내) 색들. 대비는 약하지만 조화롭고 차분한 인상을 줍니다. 하나를 메인, 나머지를 보조로 쓰면 자연스럽습니다.</div>
+        <div class="theory-swatches">
+          <span class="theory-swatch" style="background:rgb(34,195,182);"></span>
+          <span class="theory-swatch" style="background:rgb(34,128,195);"></span>
+          <span class="theory-swatch" style="background:rgb(34,48,195);"></span>
+        </div>
+      </div>
+      <div class="theory-card">
+        <div class="theory-title">삼각조화(Triadic) · 120°</div>
+        <div class="theory-desc">색상환을 3등분(120°씩)한 세 색. 보색만큼 강하지 않으면서도 생동감 있는 균형을 줍니다. 세 색을 똑같은 비중으로 쓰기보다 하나를 주색, 둘을 포인트로 쓰는 게 안정적입니다.</div>
+        <div class="theory-swatches">
+          <span class="theory-swatch" style="background:rgb(34,128,195);"></span>
+          <span class="theory-swatch" style="background:rgb(195,34,128);"></span>
+          <span class="theory-swatch" style="background:rgb(128,195,34);"></span>
+        </div>
+      </div>
+      <div class="theory-card">
+        <div class="theory-title">분할보색(Split-Complementary) · 150°/210°</div>
+        <div class="theory-desc">기준색의 보색 대신, 그 보색 양옆의 두 색을 쓰는 방식. 보색만큼 대비가 있으면서도 순수 보색보다는 눈이 덜 피로해 초보자도 실패하기 어려운 조합으로 꼽힙니다.</div>
+        <div class="theory-swatches">
+          <span class="theory-swatch" style="background:rgb(34,128,195);"></span>
+          <span class="theory-swatch" style="background:rgb(195,34,48);"></span>
+          <span class="theory-swatch" style="background:rgb(195,182,34);"></span>
+        </div>
+      </div>
+      <div class="theory-card">
+        <div class="theory-title">단색조(Monochromatic) · 명도만 변화</div>
+        <div class="theory-desc">같은 색상(hue)에서 명도·채도만 바꾼 배색. 절대 안 어긋나는 가장 안전한 조합이라 미니멀·프리미엄 톤에 자주 쓰이지만, 강한 주목도가 필요한 배너에는 약할 수 있습니다.</div>
+        <div class="theory-swatches">
+          <span class="theory-swatch" style="background:rgb(25,70,102);"></span>
+          <span class="theory-swatch" style="background:rgb(41,112,163);"></span>
+          <span class="theory-swatch" style="background:rgb(71,152,209);"></span>
+          <span class="theory-swatch" style="background:rgb(133,186,224);"></span>
+          <span class="theory-swatch" style="background:rgb(194,221,240);"></span>
+        </div>
+      </div>
+      <div class="theory-card">
+        <div class="theory-title">사각조화(Tetradic) · 90°</div>
+        <div class="theory-desc">색상환을 4등분(90°씩)한 네 색. 표현 범위가 가장 넓지만 그만큼 균형 잡기 어려워서, 하나를 주색으로 삼고 나머지는 소량만 포인트로 쓰는 게 안전합니다.</div>
+        <div class="theory-swatches">
+          <span class="theory-swatch" style="background:rgb(40,127,189);"></span>
+          <span class="theory-swatch" style="background:rgb(177,40,189);"></span>
+          <span class="theory-swatch" style="background:rgb(189,102,40);"></span>
+          <span class="theory-swatch" style="background:rgb(53,189,40);"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">색상 심리학 · 웜톤·쿨톤</div>
+    <div class="section-note">아래는 디자인 업계에서 통용되는 일반적인 경향입니다. 문화·맥락에 따라 예외가 많으니 절대 규칙이 아니라 참고로만 쓰세요.</div>
+    <table class="psych-table">
+      <tr><th>색상</th><th>흔한 연상</th><th>자주 쓰이는 업종</th></tr>
+      <tr><td><span class="psych-chip" style="background:rgb(32,82,149);"></span>블루</td><td>신뢰, 안정, 차분함</td><td>금융·보험·B2B</td></tr>
+      <tr><td><span class="psych-chip" style="background:rgb(214,40,40);"></span>레드</td><td>긴급함, 식욕, 열정</td><td>식품·세일·이벤트</td></tr>
+      <tr><td><span class="psych-chip" style="background:rgb(255,181,167);"></span>핑크</td><td>친근함, 부드러움</td><td>뷰티·키즈·라이프스타일</td></tr>
+      <tr><td><span class="psych-chip" style="background:rgb(6,214,160);"></span>그린</td><td>건강, 자연, 성장</td><td>헬스·친환경·식품</td></tr>
+      <tr><td><span class="psych-chip" style="background:rgb(255,195,0);"></span>옐로/골드</td><td>활력, 프리미엄(골드 톤일 때), 주의 환기</td><td>세일·프리미엄·엔터테인먼트</td></tr>
+      <tr><td><span class="psych-chip" style="background:rgb(45,45,45);"></span>블랙</td><td>고급스러움, 절제</td><td>럭셔리·테크·프리미엄</td></tr>
+    </table>
+    <div class="section-note" style="margin-top:14px;"><b style="color:var(--text-2);">웜톤(빨강·주황·노랑 계열)</b>은 따뜻하고 활동적인 인상, <b style="color:var(--text-2);">쿨톤(파랑·초록·보라 계열)</b>은 차분하고 신뢰감 있는 인상을 줍니다. 한 배너 안에서 웜톤·쿨톤을 섞을 땐 어느 한쪽이 배경, 다른 한쪽이 포인트가 되도록 비중을 다르게 두는 게 안정적입니다.</div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">색각이상 고려 배색</div>
+    <div class="section-note">적록색약(가장 흔한 색각이상 유형) 사용자도 서로 구분할 수 있도록 설계된 8색 팔레트입니다 (Okabe & Ito, "Color Universal Design", 2008 — 색채 유니버설 디자인 연구에서 가장 널리 인용되는 팔레트). 여러 항목을 색으로만 구분해야 할 때(예: 그래프, 태그) 참고하세요.</div>
+    <div class="theory-swatches" style="gap:8px;">
+      <span class="theory-swatch" style="background:rgb(0,0,0); height:56px;"></span>
+      <span class="theory-swatch" style="background:rgb(230,159,0); height:56px;"></span>
+      <span class="theory-swatch" style="background:rgb(86,180,233); height:56px;"></span>
+      <span class="theory-swatch" style="background:rgb(0,158,115); height:56px;"></span>
+      <span class="theory-swatch" style="background:rgb(240,228,66); height:56px;"></span>
+      <span class="theory-swatch" style="background:rgb(0,114,178); height:56px;"></span>
+      <span class="theory-swatch" style="background:rgb(213,94,0); height:56px;"></span>
+      <span class="theory-swatch" style="background:rgb(204,121,167); height:56px;"></span>
+    </div>
+  </div>
 
   <div class="section-block">
     <div class="section-heading">눈에 잘 띄는 배색 조합</div>

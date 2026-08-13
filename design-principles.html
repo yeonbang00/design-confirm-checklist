@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 디자인 원칙</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(97.5% 0.006 85);
+    --card: oklch(99.2% 0.002 85);
+    --card-border: oklch(89% 0.015 265);
+    --text: oklch(22% 0.02 265);
+    --text-2: oklch(48% 0.02 265);
+    --text-3: oklch(55% 0.015 265);
+    --num-bg: oklch(93% 0.03 260);
+    --num-text: oklch(35% 0.08 260);
+    --danger: oklch(55% 0.19 25);
+    --ok: oklch(48% 0.12 145);
+  }
+  *{box-sizing:border-box;}
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
+
+  .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
+  .gnb-bar{position:sticky; top:0; background:var(--bg); z-index:100;}
+  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:10px 24px; flex-wrap:wrap;}
+  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
+  .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
+  .gnb-link:hover{color:var(--text);}
+  .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
+  .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding:14px; background:var(--bg); width:max-content; display:none; flex-direction:row; gap:20px; z-index:30;}
+  .gnb-dropdown-menu.open{display:flex;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu{display:flex;}
+  .gnb-dropdown-item{display:block; font-size:13.5px; text-decoration:none; white-space:nowrap; color:var(--text-3);}
+  .gnb-dropdown-item:hover{color:var(--text);}
+  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700;}
+
+  h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 32px;}
+
+  .section-block{margin-bottom:48px;}
+  .section-heading{font-size:18px; font-weight:700; margin:0 0 6px;}
+  .section-note{font-size:13px; color:var(--text-3); margin:0 0 18px; line-height:1.7;}
+
+  .principle-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px;}
+  .principle-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:18px 20px;}
+  .principle-title{font-size:14.5px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px;}
+  .principle-tag{font-size:10px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:2px 9px;}
+  .principle-desc{font-size:13px; color:var(--text-2); line-height:1.75; margin-bottom:8px;}
+  .principle-apply{font-size:12px; color:var(--text-3); line-height:1.7; padding-top:8px; border-top:1px solid var(--card-border);}
+  .principle-apply b{color:var(--text-2);}
+
+  .spec-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;}
+  .spec-table th, .spec-table td{border:1px solid var(--card-border); padding:9px 12px; text-align:left;}
+  .spec-table th{background:var(--card); font-weight:700; color:var(--text-2); font-size:12px;}
+  .spec-table td{color:var(--text-2);}
+
+  .diagram-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:6px;}
+  .diagram-card{flex:1; min-width:220px; background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:16px 18px;}
+  .diagram-visual{height:120px; border-radius:10px; margin-bottom:12px; position:relative; overflow:hidden; background:oklch(93% 0.01 265);}
+  .diagram-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
+  .diagram-desc{font-size:12px; color:var(--text-3); line-height:1.65;}
+
+  .source-note{font-size:11.5px; color:var(--text-3); margin-top:22px; padding-top:16px; border-top:1px solid var(--card-border); line-height:1.8;}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar-inner{gap:16px;}
+    .gnb{gap:12px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">가이드</button>
+        <div class="gnb-dropdown-menu">
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+          <a href="design-principles.html" class="gnb-dropdown-item active">디자인 원칙</a>
+        </div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">업데이트</a>
+    </nav>
+  </div>
+</div>
+
+<div class="page">
+
+  <h1>디자인 원칙</h1>
+  <p class="sub">배너 레이아웃·타이포·강조·버튼 크기를 정할 때 참고할 수 있는, 실제 출처가 있는 원칙들을 정리했습니다. 색상 관련 원칙은 <a href="color-guide.html" style="color:var(--num-text); font-weight:600;">컬러 가이드</a>에 따로 있습니다. 정답이라기보다 "이렇게 하면 대체로 더 잘 읽힌다"는 참고 기준이니, 브랜드 가이드나 매체 특성과 충돌하면 그쪽을 우선하세요.</p>
+
+  <div class="section-block">
+    <div class="section-heading">레이아웃 · 시선 흐름</div>
+    <div class="section-note">사람이 화면을 보는 순서에는 어느 정도 정형화된 패턴이 있습니다. 텍스트 밀도와 구도에 따라 어떤 패턴이 나타나는지가 다릅니다.</div>
+    <div class="diagram-row">
+      <div class="diagram-card">
+        <div class="diagram-visual">
+          <svg viewBox="0 0 200 120" width="100%" height="100%">
+            <path d="M 15 20 L 185 20 L 15 55 L 185 55 L 15 90 L 100 90" stroke="oklch(45% 0.12 260)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <circle cx="15" cy="20" r="3" fill="oklch(45% 0.12 260)"/>
+          </svg>
+        </div>
+        <div class="diagram-title">Z 패턴</div>
+        <div class="diagram-desc">텍스트가 적고 이미지 중심인 화면에서 흔한 흐름 — 좌상단→우상단→좌하단→우하단. 헤드라인은 좌상단, CTA는 우하단에 두면 이 흐름과 잘 맞습니다.</div>
+      </div>
+      <div class="diagram-card">
+        <div class="diagram-visual">
+          <svg viewBox="0 0 200 120" width="100%" height="100%">
+            <path d="M 15 15 L 185 15 M 15 15 L 15 105 M 15 45 L 140 45 M 15 45 L 15 105 M 15 75 L 100 75" stroke="oklch(45% 0.12 260)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="diagram-title">F 패턴</div>
+        <div class="diagram-desc">텍스트가 많은 화면(리뷰형·기사형 등)에서 나타나는 흐름 — 위쪽 가로줄을 넓게 훑고, 아래로 갈수록 왼쪽만 짧게 훑는 형태. 핵심 정보는 왼쪽 위에 배치하는 게 유리합니다.</div>
+      </div>
+      <div class="diagram-card">
+        <div class="diagram-visual">
+          <svg viewBox="0 0 200 120" width="100%" height="100%">
+            <circle cx="20" cy="18" r="4" fill="oklch(45% 0.12 260)"/>
+            <circle cx="180" cy="18" r="3" fill="oklch(65% 0.02 265)"/>
+            <circle cx="20" cy="102" r="3" fill="oklch(65% 0.02 265)"/>
+            <circle cx="180" cy="102" r="4" fill="oklch(45% 0.12 260)"/>
+            <path d="M 20 18 Q 100 55 180 102" stroke="oklch(45% 0.12 260)" stroke-width="2" fill="none" stroke-dasharray="4 4"/>
+          </svg>
+        </div>
+        <div class="diagram-title">Gutenberg 다이어그램</div>
+        <div class="diagram-desc">텍스트 밀도가 낮고 요소가 듬성듬성한 화면에서, 시선이 좌상단(강한 시작점)에서 우하단(강한 종료점)으로 대각선 이동. 로고는 좌상단, CTA는 우하단에 두면 자연스럽게 시선이 도달합니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">구도</div>
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="principle-title">삼분할법(Rule of Thirds)</div>
+        <div class="principle-desc">화면을 가로·세로 3등분한 교차점에 핵심 피사체나 텍스트를 배치하면 정중앙 배치보다 더 자연스럽고 역동적으로 보입니다. 사진 구도 이론에서 온 원칙이지만 배너의 제품컷·인물 배치에도 그대로 적용됩니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">황금비(Golden Ratio, 약 1:1.618)</div>
+        <div class="principle-desc">메인 비주얼과 텍스트 영역의 면적 비율을 1:1.618에 가깝게 나누면 균형 잡힌 인상을 줍니다. 정확히 맞출 필요는 없고, 정확히 반반(1:1)으로 나누는 것보다는 낫다는 정도의 참고 기준입니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">시각적 균형</div>
+        <div class="principle-desc">좌우 대칭이 아니어도, 큰 요소 하나와 작은 요소 여러 개가 서로 "무게감"을 상쇄하면 균형 잡혀 보입니다. 한쪽에만 크고 진한 요소가 몰려 있으면 반대쪽이 허전해 보이는 이유가 이것입니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">정보량 · 인지부하</div>
+    <div class="section-note">배너에 담을 정보의 "양"과 "선택지 개수" 자체에도 사람이 처리할 수 있는 한계가 있습니다.</div>
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="principle-title">Miller's Law <span class="principle-tag">7±2</span></div>
+        <div class="principle-desc">사람이 단기기억에 동시에 담을 수 있는 항목은 보통 7±2개 수준입니다. 배너 하나에 핵심 메시지·혜택 포인트를 5개, 6개씩 나열하면 하나도 기억에 안 남을 수 있습니다.</div>
+        <div class="principle-apply"><b>적용:</b> 배너 하나당 강조 포인트는 1~3개로 압축 — AdCheck 1번(전략 적합성)의 "여러 혜택 포인트가 하나의 오퍼로 수렴하는가"와 같은 맥락입니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">Hick's Law</div>
+        <div class="principle-desc">선택지가 많아질수록 사람이 결정을 내리는 데 걸리는 시간이 늘어납니다(선택지 수에 로그 비례). CTA 버튼이 여러 개거나 문구가 여러 방향을 가리키면 클릭 자체가 늦어지거나 안 일어날 수 있습니다.</div>
+        <div class="principle-apply"><b>적용:</b> 배너 하나에는 CTA를 하나로 — AdCheck 9번(CTA 및 전환)과 연결됩니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">타이포그래피</div>
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="principle-title">모듈러 스케일 <span class="principle-tag">이미 적용 중</span></div>
+        <div class="principle-desc">글자 크기를 일정한 비율(예: 1.25배 = Major Third)로 단계화하면 위계가 안정적으로 느껴집니다. 두 텍스트의 크기 차이가 이 비율보다 작으면 위계가 흐릿하게 느껴질 수 있습니다.</div>
+        <div class="principle-apply"><b>적용:</b> AdCheck 2번(위계 및 구조)에서 OCR로 측정한 텍스트 높이 비율을 이 기준(1.25배)과 대조합니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">줄간격(행간) 비율</div>
+        <div class="principle-desc">본문 줄간격은 보통 폰트 크기의 1.4~1.6배 정도가 읽기 편한 범위로 알려져 있습니다. 이보다 좁으면 답답해 보이고, 헤드라인처럼 큰 텍스트는 상대적으로 더 좁은 비율(1.1~1.3배)도 자연스럽습니다.</div>
+        <div class="principle-apply"><b>적용:</b> AdCheck 3번의 로컬 자간·행간 답답함 체크와 연결됩니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">폰트 페어링</div>
+        <div class="principle-desc">한 배너에 폰트를 2종 이내로 제한하고, 굵기(웨이트) 차이로 위계를 주는 것이 폰트 종류 자체를 여러 개 섞는 것보다 안정적입니다. 세리프+산세리프 조합은 대비가 강해 헤드라인/본문 구분에 자주 쓰입니다.</div>
+        <div class="principle-apply"><b>적용:</b> AdCheck 3번의 "폰트가 2종 이내로 통일됐는가"와 연결됩니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">강조 · 시각적 위계</div>
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="principle-title">Gestalt 원리 — 근접성(Proximity)</div>
+        <div class="principle-desc">가까이 있는 요소들은 하나의 그룹으로 인식됩니다. 관련 없는 요소를 가깝게 붙이면 마치 한 세트처럼 오해되고, 관련 있는 요소를 멀리 떨어뜨리면 연관성이 끊겨 보입니다.</div>
+        <div class="principle-apply"><b>적용:</b> AdCheck 3번의 "요소 간 여백·간격이 고르게 정리됐는가"의 이론적 근거입니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">Gestalt 원리 — 유사성(Similarity)</div>
+        <div class="principle-desc">색상·크기·형태가 비슷한 요소들은 같은 범주로 인식됩니다. 같은 역할(예: 여러 개의 혜택 태그)은 같은 스타일로 통일해야 "같은 종류"라는 게 한눈에 전달됩니다.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">강조의 3요소</div>
+        <div class="principle-desc">핵심 정보를 강조하는 방법은 색상·굵기·크기 세 가지로 압축됩니다. 이 중 최소 하나 이상으로 주변과 뚜렷이 구분되지 않으면, 아무리 "중요한" 정보여도 시선을 끌지 못합니다.</div>
+        <div class="principle-apply"><b>적용:</b> AdCheck 2·3번의 강조 요소 판단 기준과 동일합니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">버튼 · CTA · 터치 타겟</div>
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="principle-title">Fitts's Law</div>
+        <div class="principle-desc">타겟(버튼)이 크고 가까울수록 도달해서 클릭하는 데 걸리는 시간이 짧아집니다. CTA 버튼을 작게 만들거나 다른 요소에서 멀리 떨어뜨리면 실제 클릭까지 이어지는 확률이 떨어질 수 있습니다.</div>
+      </div>
+    </div>
+    <div class="section-note" style="margin-top:14px; margin-bottom:6px;">터치 타겟 최소 크기 기준(공식 문서 기준, 셋 중 하나만 충족하면 되는 게 아니라 플랫폼마다 다른 값이니 참고용으로 가장 엄격한 값을 기준 삼는 게 안전합니다):</div>
+    <table class="spec-table">
+      <tr><th>기준</th><th>최소 크기</th><th>출처</th></tr>
+      <tr><td>Apple Human Interface Guidelines</td><td>44×44pt</td><td>Apple 공식 HIG</td></tr>
+      <tr><td>Google Material Design</td><td>48×48dp</td><td>Material Design 공식 가이드</td></tr>
+      <tr><td>WCAG 2.2 — 2.5.8 Target Size (Minimum)</td><td>24×24 CSS px</td><td>W3C WCAG 2.2, Level AA (법적 최소 기준선 — 권장치가 아니라 하한선)</td></tr>
+    </table>
+    <div class="principle-apply" style="margin-top:10px;"><b>적용:</b> AdCheck 9번(CTA 및 전환)에서 이미 44×44px 기준을 참고 제안으로 쓰고 있습니다.</div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-heading">참고한 디자인 시스템</div>
+    <div class="section-note">아래는 공개된 디자인 시스템 공식 문서에서, 배너처럼 정적인 카드형 콘텐츠에 적용 가능한 원칙만 발췌한 것입니다. 각 시스템 전체를 따라야 한다는 뜻은 아닙니다.</div>
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="principle-title">Material Design</div>
+        <div class="principle-desc">8dp 기준 그리드, 터치 타겟 48dp, 강조색은 전체 팔레트 중 소수만 사용하고 나머지는 중립색으로 절제하는 원칙.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">Apple Human Interface Guidelines</div>
+        <div class="principle-desc">44pt 터치 타겟, 명확한 타이포그래피 위계(Large Title → Title → Headline → Body), 콘텐츠 우선 여백 원칙.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-title">IBM Carbon Design System</div>
+        <div class="principle-desc">2px 기준 스페이싱 스케일(공개 그리드 값), 명확한 타이포그래피 스케일 테이블을 문서로 공개 — 숫자 기반 디자인 시스템의 참고 사례.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="source-note">
+    이 페이지의 원칙들은 특정 논문·공식 문서에 근거한 것과, 여러 UX 문헌에서 통용되는 경험칙(F/Z패턴, 삼분할법 등)이 섞여 있습니다. 후자는 "업계에서 널리 쓰이는 관행"이지 엄밀한 실험 근거가 있는 법칙은 아니니, 절대 기준이 아니라 참고 기준으로 활용하세요.
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+</script>
+</body>
+</html>
