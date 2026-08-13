@@ -190,9 +190,8 @@ function comparisonInstruction(advertiserName) {
 
 참고 배너는 5~10장 내외로 표본이 많지 않습니다. 그러니 참고 배너에 없던 시도를 곧바로 "부족한 점"이나 "잘못된 점"으로 단정하지 마세요 — 참고 배너와 다른 부분은 어디까지나 "다른 점"으로만 서술하고, 그게 브랜드 컬러·아이덴티티에서 확실히 벗어난 경우(예: 브랜드 컬러가 아예 안 쓰였다, 로고가 참고 배너들과 다른 버전이다)에만 우려로 짚어주세요. 새로운 시도 자체는 좋고 나쁨을 판단하지 말고 담담하게 "이런 점이 다르다"고만 전달하세요.
 
-비교 시 가장 먼저, 가장 비중 있게 확인할 것은 브랜드 컬러(참고 배너들에서 반복적으로 쓰인 주요 색상·톤)와 브랜드 아이덴티티(로고 사용 방식, 서체 느낌, 톤앤매너, 무드)가 새 시안에서 일관되게 유지되었는지입니다. 이 두 가지를 반드시 언급한 뒤, 레이아웃 구조, 카피 톤앤매너, CTA 방식 등 나머지 요소는 보조적으로 짚어주세요 (예: "브랜드 컬러인 핑크·블루 톤은 잘 지켜졌고, 참고 배너들과 달리 로고 위치를 하단으로 옮긴 점이 다른데 이건 새로운 시도로 보인다" 같은 어투).
-- similarities: 브랜드 컬러·아이덴티티를 중심으로, 참고 배너들과 비슷한 점과 그렇게 판단한 근거를 2~3문장, 50~70단어 정도로 설명
-- gaps: 브랜드 컬러·아이덴티티를 중심으로, 참고 배너와 다른 점과 그 이유를 2~3문장, 50~70단어 정도로 설명 (표본이 적으니 "부족하다"는 단정 대신 "다르다"는 사실 위주로. 브랜드 컬러·아이덴티티에서 명확히 벗어난 경우에만 보완 방향을 짧게 덧붙이세요)`;
+비교 시 가장 먼저, 가장 비중 있게 확인할 것은 브랜드 컬러(참고 배너들에서 반복적으로 쓰인 주요 색상·톤)와 브랜드 아이덴티티(로고 사용 방식, 서체 느낌, 톤앤매너, 무드)가 새 시안에서 일관되게 유지되었는지입니다.
+- gaps: 브랜드 컬러·아이덴티티를 중심으로, 참고 배너와 다른 점과 그 이유를 2~3문장, 50~70단어 정도로 설명 (표본이 적으니 "부족하다"는 단정 대신 "다르다"는 사실 위주로. 브랜드 컬러·아이덴티티에서 명확히 벗어난 경우에만 보완 방향을 짧게 덧붙이세요). 참고 배너와 다른 점이 전혀 없다면 "참고 배너와 다른 점이 없습니다"라고만 답하세요.`;
 }
 
 function brandGuidelineInstruction(advertiserName, guideline) {
@@ -201,7 +200,6 @@ function brandGuidelineInstruction(advertiserName, guideline) {
 
 function brandGuideReviewInstruction(advertiserName) {
   return `\n\n추가로 brandGuideReview 필드를 자연스러운 구어체 한국어로 채우세요 — 위에서 안내된 "${advertiserName}" 브랜드 가이드에 적힌 구체적인 기준(로고 규정, 컬러, 톤앤매너 등)에 이 시안이 얼마나 부합하는지 요약합니다. 참고 배너 이미지와의 시각적 비교(comparison 필드)와는 별개로, 브랜드 가이드 문서에 명시된 기준 자체의 충족 여부를 봅니다.
-- satisfied: 브랜드 가이드 기준을 충족하는 부분과 근거를 2~3문장(40~60단어)으로 설명
 - differs: 브랜드 가이드 기준과 다르거나 위반하는 부분과 그 이유를 2~3문장(40~60단어)으로 설명. 구체적으로 어느 기준이 어떻게 다른지 짚으세요. 위반 사항이 없다면 "브랜드 가이드 기준에서 벗어난 부분이 없습니다"라고만 답하세요.
 - needsCheck: 이미지만으로는 판단이 애매하거나 추가 확인이 필요한 부분을 1~2문장(20~40단어)으로 설명. 없다면 "—"로 답하세요.`;
 }
@@ -223,8 +221,7 @@ function mediaGuidelineInstruction(mediaGuides, hasSize) {
 4. 버튼·광고표시 영역: 매체 시스템이 CTA 버튼이나 "광고"/"Ad" 표시, 계정명·아이콘 등을 소재 위에 자동으로 얹는 경우(매체 기준에 그런 안내가 있다면), 이미지 안에 그와 중복·혼동되는 버튼이나 문구를 넣지 않았는지, 그 자동 생성 영역과 겹치는 자리에 로고·핵심 카피 같은 중요한 정보를 배치하지 않았는지
 
 추가로 mediaGuideReview 필드를 자연스러운 구어체 한국어로 채우세요. 매체가 2개 이상 선택된 경우, 어떤 내용이 어느 매체 기준인지 매체 이름을 언급하며 구분해서 설명하세요.
-- satisfied: 시안이 매체 기준을 충족하는 부분과 그 근거를 2~3문장(40~60단어)으로 설명 (예: "메타(1080x1920) 기준으로는 로고가 세이프존 안에 잘 들어와 있다")
-- differs: 시안이 매체 기준과 다르거나 위반하는 부분과 그 이유를 2~3문장(40~60단어)으로 설명. 구체적으로 어느 영역이 어떻게 다른지 짚으세요
+- differs: 시안이 매체 기준과 다르거나 위반하는 부분과 그 이유를 2~3문장(40~60단어)으로 설명. 구체적으로 어느 영역이 어떻게 다른지 짚으세요. 위반 사항이 없다면 "매체 기준에서 벗어난 부분이 없습니다"라고만 답하세요.
 - needsCheck: 이미지만으로는 판단이 애매하거나, 실제 게재 시 추가로 확인이 필요한 부분을 1~2문장(20~40단어)으로 설명 (예: "실제 업로드 시 자동 크롭 여부는 이미지만으로 확인이 어려우니 매체 관리자 화면에서 재확인 필요")
 
 아래 매체 기준에 세이프존 비율·여백 등 공간적 위치 기준이 포함되어 있다면, 이는 이미지의 정확한 픽셀 측정이 아니라 대략적인 위치 판단이라는 점을 감안하세요. 요소가 기준 경계를 명확하고 크게 벗어난 경우에만 위반(검토필요 이상)으로 판정하고, 경계에 살짝 걸치거나 침범 정도를 이미지만으로 확신하기 어려운 경우에는 반려로 단정하지 말고 needsCheck로 돌리세요. 애매한 경우 과도하게 반려로 판정하지 마세요.`;
@@ -275,7 +272,6 @@ function briefAlignmentInstruction(direction) {
 위 기획 방향에 비추어 이 시안이 얼마나 부합하는지 판단해서 briefAlignment 필드를 채우세요.
 - verdict: 전체적으로 기획 의도에 "aligned"(잘 부합), "partial"(부분적으로 부합, 일부 아쉬움), "misaligned"(기획 의도에서 벗어남) 중 하나
 - summary: 판정 이유를 1문장으로 요약
-- matches: 기획 방향과 부합하는 부분과 근거를 2~3문장으로
 - gaps: 기획 방향에서 벗어나거나 필수 요소가 누락된 부분을 2~3문장으로. 문제 없다면 "기획 의도에서 벗어난 부분이 없습니다"라고만 답하세요.`;
 }
 
@@ -382,10 +378,10 @@ function formatColorDistanceForPrompt(dominantColors, brandColors) {
 }
 
 function schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline) {
-  const comparisonSchema = hasComparison ? `{"similarities":"...","gaps":"..."}` : `null`;
-  const mediaGuideSchema = hasMediaGuides ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
-  const briefSchema = hasBrief ? `{"verdict":"aligned","summary":"...","matches":"...","gaps":"..."}` : `null`;
-  const brandGuideSchema = hasGuideline ? `{"satisfied":"...","differs":"...","needsCheck":"..."}` : `null`;
+  const comparisonSchema = hasComparison ? `{"gaps":"..."}` : `null`;
+  const mediaGuideSchema = hasMediaGuides ? `{"differs":"...","needsCheck":"..."}` : `null`;
+  const briefSchema = hasBrief ? `{"verdict":"aligned","summary":"...","gaps":"..."}` : `null`;
+  const brandGuideSchema = hasGuideline ? `{"differs":"...","needsCheck":"..."}` : `null`;
   return `\n\n판정을 마무리하기 전 다시 한 번 확인하세요: 타이포·정렬·여백·명도대비(정렬·여백 관련 부분)·정보 정확성·로고 사용 규정에서 발견된 문제를 무조건 반려로 처리했는지, na 조건에 억지로 pass를 주지 않았는지 확인하세요.
 
 반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트나 설명은 포함하지 마세요:

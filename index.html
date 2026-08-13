@@ -369,10 +369,6 @@
         <div class="ci-text" id="briefSummary"></div>
       </div>
       <div class="comparison-item">
-        <div class="ci-label">부합하는 점</div>
-        <div class="ci-text" id="briefMatches"></div>
-      </div>
-      <div class="comparison-item">
         <div class="ci-label">벗어나거나 놓친 점</div>
         <div class="ci-text" id="briefGaps"></div>
       </div>
@@ -387,10 +383,6 @@
     <div class="comparison-block" id="comparisonBlock">
       <div class="comparison-title">브랜드 가이드 비교 결과</div>
       <div class="comparison-item">
-        <div class="ci-label">비슷한 점</div>
-        <div class="ci-text" id="compSimilarities"></div>
-      </div>
-      <div class="comparison-item">
         <div class="ci-label">다른 점</div>
         <div class="ci-text" id="compGaps"></div>
       </div>
@@ -398,10 +390,6 @@
 
     <div class="comparison-block" id="brandGuideReviewBlock">
       <div class="comparison-title">브랜드 가이드 기준 검수 결과</div>
-      <div class="comparison-item">
-        <div class="ci-label">충족되는 점</div>
-        <div class="ci-text" id="bgSatisfied"></div>
-      </div>
       <div class="comparison-item">
         <div class="ci-label">다른 점</div>
         <div class="ci-text" id="bgDiffers"></div>
@@ -414,10 +402,6 @@
 
     <div class="comparison-block" id="mediaGuideBlock">
       <div class="comparison-title">매체 가이드 검수 결과</div>
-      <div class="comparison-item">
-        <div class="ci-label">충족되는 점</div>
-        <div class="ci-text" id="mgSatisfied"></div>
-      </div>
       <div class="comparison-item">
         <div class="ci-label">다른 점</div>
         <div class="ci-text" id="mgDiffers"></div>
@@ -1160,12 +1144,11 @@
     const VERDICT_LABELS = { aligned: '✅ 기획 의도에 부합', partial: '⚠️ 부분적으로 부합', misaligned: '❌ 기획 의도에서 벗어남' };
     const briefBlock = document.getElementById('briefAlignmentBlock');
     const ba = result.briefAlignment;
-    if(ba && (ba.summary || ba.matches || ba.gaps)){
+    if(ba && (ba.summary || ba.gaps)){
       const badge = document.getElementById('briefVerdictBadge');
       badge.textContent = VERDICT_LABELS[ba.verdict] || '기획 부합도';
       badge.className = 'verdict-badge' + (ba.verdict ? ' v-' + ba.verdict : '');
       document.getElementById('briefSummary').textContent = ba.summary || '—';
-      document.getElementById('briefMatches').textContent = ba.matches || '—';
       document.getElementById('briefGaps').textContent = ba.gaps || '—';
       briefBlock.classList.add('show');
     } else {
@@ -1202,8 +1185,7 @@
     }
 
     const compBlock = document.getElementById('comparisonBlock');
-    if(result.comparison && (result.comparison.similarities || result.comparison.gaps)){
-      document.getElementById('compSimilarities').textContent = result.comparison.similarities || '—';
+    if(result.comparison && result.comparison.gaps){
       document.getElementById('compGaps').textContent = result.comparison.gaps || '—';
       compBlock.classList.add('show');
     } else {
@@ -1212,8 +1194,7 @@
 
     const bgBlock = document.getElementById('brandGuideReviewBlock');
     const bgr = result.brandGuideReview;
-    if(bgr && (bgr.satisfied || bgr.differs || bgr.needsCheck)){
-      document.getElementById('bgSatisfied').textContent = bgr.satisfied || '—';
+    if(bgr && (bgr.differs || bgr.needsCheck)){
       document.getElementById('bgDiffers').textContent = bgr.differs || '—';
       document.getElementById('bgNeedsCheck').textContent = bgr.needsCheck || '—';
       bgBlock.classList.add('show');
@@ -1223,8 +1204,7 @@
 
     const mgBlock = document.getElementById('mediaGuideBlock');
     const mgr = result.mediaGuideReview;
-    if(mgr && (mgr.satisfied || mgr.differs || mgr.needsCheck)){
-      document.getElementById('mgSatisfied').textContent = mgr.satisfied || '—';
+    if(mgr && (mgr.differs || mgr.needsCheck)){
       document.getElementById('mgDiffers').textContent = mgr.differs || '—';
       document.getElementById('mgNeedsCheck').textContent = mgr.needsCheck || '—';
       mgBlock.classList.add('show');

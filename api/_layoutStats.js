@@ -18,7 +18,9 @@ const MIN_RELIABLE_SAMPLES = 10;
 export async function getLayoutStats(categoryId) {
   if (!categoryId) return null;
   try {
-    const response = await fetch(`${LAYOUT_STATS_BASE}/${categoryId}.json`);
+    // Blob는 allow_overwrite로 같은 경로에 다시 업로드해도, 그 앞단 CDN이 예전
+    // 응답을 한동안 캐시하고 있을 수 있다 — 캐시 무효화 쿼리로 항상 최신을 받는다.
+    const response = await fetch(`${LAYOUT_STATS_BASE}/${categoryId}.json?v=${Date.now()}`, { cache: 'no-store' });
     if (!response.ok) return null;
     const stats = await response.json();
     if (!stats || !stats.sampleCount) return null;
