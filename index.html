@@ -45,10 +45,7 @@
   @keyframes rowflash { 0%{background:#e3edfb;} 100%{background:transparent;} }
   @keyframes blinkdot { 0%,100%{opacity:.2;} 50%{opacity:1;} }
 
-  /* ---------- hero (Apple product-tile-dark: flat surface, no gradients) ---------- */
-  .hero{position:relative; background:#272729; padding:56px 0 96px; overflow:hidden;}
-  .hero-bg, .hero-blob, .hero-grid{display:none;}
-  .hero-inner{max-width:1040px; margin:0 auto; padding:0 24px; position:relative; text-align:left;}
+  /* ---------- top nav (Apple global-nav: pure black, 44px) ---------- */
   .beta-badge{display:inline-flex; align-items:center; height:22px; font-size:11.5px; padding:0 12px; border-radius:9999px; border:1px solid #444446; color:#cccccc; letter-spacing:0.04em; margin-left:auto; position:relative; z-index:1; flex-shrink:0;}
   .gnb-bar{position:sticky; top:0; background:#000000; z-index:100;}
   .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:0 24px; height:44px;}
@@ -67,86 +64,66 @@
   .gnb-dropdown-item{display:block; font-size:12px; text-decoration:none; white-space:nowrap; color:#cccccc;}
   .gnb-dropdown-item:hover{color:#ffffff;}
   .gnb-dropdown-item.active{color:#ffffff; font-weight:600;}
-  .hero h1{font-family:inherit; font-weight:600; font-size:44px; letter-spacing:-0.28px; margin:0 0 14px; color:#ffffff; position:relative; z-index:1;}
-  .hero-sub{font-size:15px; line-height:1.5; color:#cccccc; margin:0 0 28px; max-width:640px; font-weight:400; position:relative; z-index:1;}
-  .hero-stats{display:flex; align-items:stretch; gap:28px; flex-wrap:wrap; position:relative; z-index:1;}
-  .stat-chip{background:none; border:none; border-left:1px solid #444446; border-radius:0; padding:0 0 0 16px; min-width:auto; animation:chipIn 0.6s ease-out both;}
-  .stat-chip:nth-child(2){animation-delay:0.2s;}
-  .stat-num{font-family:inherit; font-size:21px; font-weight:600; color:#ffffff; font-variant-numeric:tabular-nums; line-height:1.2;}
-  .stat-num.pulse{animation:scanpulse 2.2s ease-in-out infinite;}
-  .stat-label{font-size:12px; color:#cccccc; margin-top:2px;}
+
+  /* ---------- prompt hero (ChatGPT/Gemini-style centered prompt) ---------- */
+  .prompt-hero{padding:110px 24px 64px; text-align:center;}
+  .prompt-hero h1{font-family:inherit; font-weight:600; font-size:32px; letter-spacing:-0.26px; margin:0 0 28px; color:var(--ink);}
+
+  .prompt-bar{position:relative; max-width:680px; margin:0 auto; background:#ffffff; border:1px solid var(--card-border); border-radius:28px; padding:8px 8px 8px 8px; text-align:left;}
+  .prompt-chips{display:flex; flex-wrap:wrap; gap:8px; padding:6px 8px 2px;}
+  .prompt-chip{position:relative; display:flex; align-items:center; gap:6px; background:var(--bg); border:1px solid var(--card-border); border-radius:10px; padding:4px 10px 4px 4px; font-size:11.5px; color:var(--text-2); flex-shrink:0;}
+  .prompt-chip img{width:28px; height:28px; border-radius:6px; object-fit:cover; display:block;}
+  .prompt-chip.analyzing::before{content:''; position:absolute; inset:-2px; border-radius:12px; border:1.5px solid var(--primary); animation:scanpulse 1.2s ease-in-out infinite; pointer-events:none;}
+
+  .prompt-row{display:flex; align-items:center; gap:6px;}
+  .prompt-plus-wrap{position:relative; flex-shrink:0;}
+  .prompt-plus{width:36px; height:36px; border-radius:50%; border:none; background:none; font-size:20px; color:var(--text-2); cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;}
+  .prompt-plus:hover{background:var(--bg);}
+  .prompt-plus-menu{display:none; position:absolute; bottom:calc(100% + 10px); left:0; background:#ffffff; border:1px solid var(--card-border); border-radius:14px; padding:10px; width:280px; z-index:50;}
+  .prompt-plus-menu.open{display:block;}
+  .ppm-section{margin-bottom:10px;}
+  .ppm-section:last-child{margin-bottom:0;}
+  .ppm-label{font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.04em; padding:4px 8px 2px;}
+  .ppm-list{max-height:160px; overflow-y:auto;}
+  .ppm-item{display:block; width:100%; text-align:left; background:none; border:none; padding:8px; font-size:13.5px; color:var(--ink); cursor:pointer; border-radius:8px; font-family:inherit;}
+  .ppm-item:hover{background:var(--bg);}
+  .ppm-item.active{background:#e3edfb; color:var(--primary); font-weight:600;}
+
+  .prompt-input-area{flex:1; background:none; border:none; text-align:left; font-size:14.5px; color:var(--text-3); cursor:pointer; padding:8px 4px; font-family:inherit; min-width:0;}
+  .prompt-attach-ppt{width:36px; height:36px; border:none; background:none; font-size:16px; color:var(--text-3); cursor:pointer; flex-shrink:0; border-radius:50%;}
+  .prompt-attach-ppt:hover{background:var(--bg);}
+  .prompt-send{border:none; background:var(--primary); color:#fff; font-weight:600; font-size:13.5px; padding:10px 20px; border-radius:9999px; cursor:pointer; flex-shrink:0;}
+  .prompt-send:disabled{background:#d2d2d7; cursor:not-allowed;}
+
+  .brief-thumb-grid{display:flex; flex-wrap:wrap; gap:8px;}
+  .brief-thumb{position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--card-border); width:28px; height:28px; background:var(--bg); flex-shrink:0;}
+  .brief-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .brief-thumb-remove{position:absolute; top:-4px; right:-4px; width:15px; height:15px; border-radius:50%; background:rgba(29,29,31,0.75); color:#fff; border:none; font-size:9px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .brief-thumb-remove:hover{background:rgba(29,29,31,0.9);}
+  .brief-thumb-pptx{display:flex; align-items:center; justify-content:center;}
+  .brief-pptx-icon{font-size:14px;}
+  .brief-pptx-name{display:none;}
+
+  .prompt-status{font-size:12.5px; color:var(--reject); margin-top:14px; min-height:16px; text-align:center;}
+  .prompt-status.loading{color:var(--text-2);}
+  .prompt-status.loading::after{content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--primary); margin-left:7px; animation:blinkdot 1s infinite;}
+  .prompt-disclaimer{margin-top:14px; font-size:11.5px; color:var(--text-3); display:flex; align-items:center; justify-content:center; gap:6px;}
 
   /* ---------- content / cards (Apple store-utility-card: hairline, no shadow) ---------- */
-  .content{max-width:1040px; margin:-40px auto 0; padding:0 24px 100px; position:relative;}
+  .content{max-width:1040px; margin:0 auto; padding:0 24px 100px; position:relative;}
   .card{background:var(--card); border:1px solid var(--card-border); box-shadow:none; border-radius:18px; padding:40px; margin-bottom:24px;}
-  .card.upload-card{box-shadow:none;}
-  .card.checklist-card{box-shadow:none; display:none;}
+  .card.checklist-card{box-shadow:none; display:none; position:relative;}
   .card.checklist-card.show{display:block;}
+  .checklist-pending-overlay{display:none; position:absolute; inset:0; align-items:center; justify-content:center; z-index:5; border-radius:18px;}
+  .checklist-card.pending{max-height:280px; overflow:hidden;}
+  .checklist-card.pending .checklist-pending-overlay{display:flex;}
+  .checklist-card.pending .checklist-inner{filter:blur(6px); pointer-events:none; user-select:none;}
+  .checklist-pending-label{font-size:14px; font-weight:600; color:var(--ink); background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:9999px; display:flex; align-items:center; gap:8px; border:1px solid var(--card-border);}
+  .checklist-pending-label .dot{width:7px; height:7px; border-radius:50%; background:var(--primary); animation:scanpulse 1s ease-in-out infinite;}
   .card-head{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
   .num-badge{width:26px; height:26px; border-radius:50%; background:var(--num-bg); color:var(--num-text); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0;}
   .card-title{font-size:17px; font-weight:600; letter-spacing:-0.374px;}
-
-  /* ---------- upload card fields ---------- */
-  .compare-label{font-size:13px; color:var(--text-2); margin:14px 0 0;}
-  .optional-tag{font-size:11.5px; color:var(--text-3); font-weight:400;}
-  .compare-label b{color:var(--ink); font-size:15px; font-weight:600;}
-  .compare-desc{font-size:13px; line-height:1.6; color:var(--text-2); margin-bottom:16px;}
-  .select-wrap{position:relative; margin-bottom:24px;}
-  .select-wrap select{
-    width:100%; appearance:none; background:#ffffff; border:1px solid var(--card-border);
-    border-radius:8px; padding:13px 40px 13px 16px; font-size:14.5px; font-weight:600; color:var(--ink); cursor:pointer;
-  }
-  .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
-
-  .media-guide-checks{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;}
-  .mg-check{display:flex; align-items:center; gap:8px; border:1px solid var(--card-border); border-radius:8px; padding:10px 14px; font-size:13.5px; color:var(--ink); cursor:pointer; background:#ffffff; transition:border-color .15s ease, background .15s ease;}
-  .mg-check input{accent-color:var(--primary); width:16px; height:16px; cursor:pointer; margin:0;}
-  .mg-check.checked{border-color:var(--primary); background:#e3edfb;}
-  .mg-check-empty{font-size:12.5px; color:var(--text-3);}
-  .mg-badge{font-size:10.5px; font-weight:700; color:#9b6a00; background:#fbf0d9; border-radius:9999px; padding:2px 8px; white-space:nowrap;}
-  .mg-badge.ready{color:#1f7a4d; background:#e2f4e9;}
-
-  .brief-toggle{display:flex; align-items:center; gap:8px; background:none; border:1px solid var(--card-border); border-radius:8px; padding:10px 14px; font-size:13.5px; color:var(--text-2); cursor:pointer; margin-bottom:16px; width:100%; text-align:left;}
-  .brief-toggle .bt-chevron{margin-left:auto; transition:transform .15s ease; font-size:11px; color:var(--text-3);}
-  .brief-toggle.open .bt-chevron{transform:rotate(180deg);}
-  .brief-panel{display:none; margin-bottom:20px;}
-  .brief-panel.open{display:block;}
-  .brief-dropzone{border:1px dashed #c7c7cc; border-radius:11px; padding:28px 20px; text-align:center; cursor:pointer; background:var(--bg); transition:border-color .15s ease; font-size:12.5px; color:var(--text-2);}
-  .brief-dropzone.dragover{border-color:var(--primary);}
-  .brief-thumb-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:8px; margin-top:14px;}
-  .brief-thumb{position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--card-border); aspect-ratio:1; background:var(--bg);}
-  .brief-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
-  .brief-thumb-remove{position:absolute; top:3px; right:3px; width:19px; height:19px; border-radius:50%; background:rgba(29,29,31,0.75); color:#fff; border:none; font-size:12px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .brief-thumb-remove:hover{background:rgba(29,29,31,0.9);}
-  .brief-thumb-pptx{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:6px;}
-  .brief-pptx-icon{font-size:22px;}
-  .brief-pptx-name{font-size:9.5px; color:var(--text-2); word-break:break-all; line-height:1.2; max-height:2.4em; overflow:hidden; text-align:center;}
-
-  .dropzone{border:1px dashed #c7c7cc; border-radius:14px; padding:56px 24px; text-align:center; cursor:pointer; background:var(--bg); transition:border-color .15s ease;}
-  .dropzone.dragover{border-color:var(--primary);}
-  .dz-empty .dz-icon{font-size:26px; color:var(--text-3); margin-bottom:10px;}
-  .dz-empty .dz-title{font-size:15px; font-weight:600; margin-bottom:6px;}
-  .dz-empty .dz-sub{font-size:12px; color:var(--text-3);}
-
-  .scan-wrap{position:relative; display:inline-block; border-radius:10px; overflow:hidden; box-shadow:3px 5px 30px rgba(0,0,0,0.22); margin-bottom:16px;}
-  .scan-wrap img{max-height:180px; display:block;}
-  .scan-tint{position:absolute; inset:0; background:rgba(0,102,204,0.08); pointer-events:none;}
-  .scan-line{position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, #2997ff, transparent); box-shadow:0 0 12px 2px rgba(41,151,255,0.8); animation:scanline 1.6s ease-in-out infinite;}
-  .scan-corner{position:absolute; width:16px; height:16px; border-color:#2997ff; animation:scanpulse 1.6s ease-in-out infinite;}
-  .sc-tl{top:8px; left:8px; border-top:2px solid; border-left:2px solid;}
-  .sc-tr{top:8px; right:8px; border-top:2px solid; border-right:2px solid;}
-  .sc-bl{bottom:8px; left:8px; border-bottom:2px solid; border-left:2px solid;}
-  .sc-br{bottom:8px; right:8px; border-bottom:2px solid; border-right:2px solid;}
-  .analyzing-label{display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:600; color:var(--primary);}
-  .analyzing-label .dot{width:7px; height:7px; border-radius:50%; background:#2997ff; animation:scanpulse 1s ease-in-out infinite;}
-
-  .done-img{max-height:220px; border-radius:10px; box-shadow:3px 5px 30px rgba(0,0,0,0.22); display:block; margin:0 auto;}
-  .done-hint{font-size:12px; color:var(--text-3); margin-top:14px;}
-
-  .disclaimer{margin-top:22px; padding-top:22px; border-top:1px solid var(--card-border); font-size:12.5px; color:var(--text-2); display:flex; gap:8px;}
-  .status-line{font-size:12.5px; color:var(--reject); margin-top:12px; min-height:16px;}
-  .status-line.loading{color:var(--text-2);}
-  .status-line.loading::after{content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--primary); margin-left:7px; animation:blinkdot 1s infinite;}
+  .mg-check-empty{font-size:12.5px; color:var(--text-3); padding:8px;}
 
   /* ---------- AI summary (Apple product-tile-dark panel — flat, no gradient) ---------- */
   .ai-summary{display:none; background:#272729; border-radius:18px; padding:32px 40px; margin-bottom:24px; color:#ffffff; box-shadow:none;}
@@ -216,9 +193,9 @@
   .page-footer{text-align:center; font-size:12px; color:var(--text-3); line-height:1.6; padding-top:8px;}
 
   @media (max-width:720px){
-    .hero{padding:28px 0 64px;}
-    .hero-inner{padding:0 16px;}
-    .hero h1{font-size:32px;}
+    .prompt-hero{padding:56px 16px 40px;}
+    .prompt-hero h1{font-size:24px;}
+    .prompt-plus-menu{width:230px;}
     .gnb-bar-inner{gap:16px; flex-wrap:wrap;}
     .gnb{gap:14px; flex-wrap:wrap;}
     .beta-badge{margin-left:0;}
@@ -254,83 +231,55 @@
   </div>
 </div>
 
-<div class="hero">
-  <div class="hero-bg" aria-hidden="true">
-    <div class="hero-blob b1"></div>
-    <div class="hero-blob b2"></div>
-    <div class="hero-blob b3"></div>
-    <div class="hero-grid"></div>
-  </div>
-  <div class="hero-inner">
-    <h1>디자인 체크리스트</h1>
-    <p class="hero-sub">시안 이미지를 올리면 17개 항목을 자동으로 점검하고, 체크리스트에 바로 반영합니다.<br>AI의 시각 판단뿐 아니라 클로바 OCR과 바른한글 맞춤법 검사로 텍스트를 픽셀 단위로 직접 측정해&nbsp;대조합니다.</p>
-    <div class="hero-stats">
-      <div class="stat-chip"><div class="stat-num" id="countValue">1</div><div class="stat-label">평가 영역</div></div>
-      <div class="stat-chip"><div class="stat-num pulse">AI</div><div class="stat-label">즉시 판정</div></div>
-    </div>
-  </div>
-</div>
+<div class="prompt-hero">
+  <h1>어떤 배너를 분석해볼까요?</h1>
 
-<div class="content">
-
-  <!-- ---------- upload card ---------- -->
-  <div class="card upload-card">
-    <div class="card-head"><div class="num-badge">01</div><div class="card-title">시안 이미지 업로드</div></div>
-    <div class="compare-label"><b>브랜드 가이드</b> <span class="optional-tag">(선택사항)</span></div>
-    <div class="compare-desc">브랜드를 선택하면 그 브랜드의 참고 배너들과 나란히 비교해서, 비슷한 점과 다른 점까지 함께 짚어드립니다.<br>아무것도 선택하지 않으면 17개 항목 기준으로 시안 자체를 점검합니다.</div>
-
-    <div class="select-wrap">
-      <select id="advertiserSelect">
-        <option value="">비교 없이 분석</option>
-      </select>
-      <svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1L7 7L13 1" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-    </div>
-
-    <div class="compare-label"><b>매체 가이드</b> <span class="optional-tag">(선택사항)</span></div>
-    <div class="compare-desc">선택한 매체에 맞는 가이드 기준으로 이미지를 분석합니다.</div>
-
-    <div class="media-guide-checks" id="mediaGuideChecks"></div>
-
-    <button type="button" class="brief-toggle" id="briefToggle" aria-expanded="false">
-      <span>📎 기획안 같이 올리기 <span class="optional-tag">(선택사항)</span></span>
-      <span class="bt-chevron">▾</span>
-    </button>
-    <div class="brief-panel" id="briefPanel">
-      <div class="compare-desc" style="margin-bottom:10px;">기획안을 같이 올리면, 이 배너가 기획 의도에 맞게 만들어졌는지도 함께 판정해드려요.<br>기획안 페이지를 캡처한 이미지 1장을 올리거나, PPT 파일(.pptx)을 그대로 올리면 소재가 여러 개여도 이 배너와 맞는 페이지를 자동으로 찾아서 분석해요.</div>
-      <div class="brief-dropzone" id="briefDropzone">클릭하거나 이미지·PPT 파일을 끌어다 놓으세요</div>
-      <input type="file" id="briefFileInput" accept="image/png,image/jpeg,image/webp,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
+  <div class="prompt-bar">
+    <div class="prompt-chips" id="promptChips">
+      <div class="prompt-chip" id="bannerChip" style="display:none;">
+        <img id="loadedImg" alt="업로드한 시안">
+        <span>시안 이미지</span>
+      </div>
       <div class="brief-thumb-grid" id="briefThumbGrid"></div>
     </div>
 
-    <div class="dropzone" id="dropzone">
-      <div class="dz-empty" id="dzEmpty">
-        <div class="dz-icon">＋</div>
-        <div class="dz-title">클릭하거나 이미지를 끌어다 놓으세요</div>
-        <div class="dz-sub">PNG · JPEG · WEBP · GIF, 8MB 이하</div>
-      </div>
-      <div id="dzAnalyzing" style="display:none;">
-        <div class="scan-wrap">
-          <img id="analyzingImg" alt="분석 중인 시안">
-          <div class="scan-tint"></div>
-          <div class="scan-line"></div>
-          <div class="scan-corner sc-tl"></div>
-          <div class="scan-corner sc-tr"></div>
-          <div class="scan-corner sc-bl"></div>
-          <div class="scan-corner sc-br"></div>
+    <div class="prompt-row">
+      <div class="prompt-plus-wrap">
+        <button type="button" class="prompt-plus" id="promptPlusBtn" aria-expanded="false" aria-label="브랜드·매체 가이드 선택">+</button>
+        <div class="prompt-plus-menu" id="promptPlusMenu">
+          <div class="ppm-section">
+            <div class="ppm-label">브랜드가이드</div>
+            <div class="ppm-list" id="ppmAdvertiserList"></div>
+          </div>
+          <div class="ppm-section">
+            <div class="ppm-label">매체가이드</div>
+            <div class="ppm-list" id="ppmMediaList"></div>
+          </div>
         </div>
-        <div class="analyzing-label"><span class="dot"></span>AI가 시안을 분석하고 있습니다…</div>
       </div>
-      <div id="dzLoaded" style="display:none;">
-        <img class="done-img" id="loadedImg" alt="업로드한 시안">
-        <div class="done-hint">다른 이미지를 올리려면 다시 클릭하세요</div>
-      </div>
-    </div>
-    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-    <button class="btn-primary" id="analyzeBtn" type="button" style="display:none;width:100%;margin-top:16px;padding:14px;border:none;border-radius:9999px;background:#0066cc;color:#fff;font-size:16px;font-weight:400;cursor:pointer;">AI 분석 시작</button>
 
-    <div class="disclaimer"><span>⚠</span><span>AI 판정은 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.</span></div>
-    <div class="status-line" id="statusLine" aria-live="polite"></div>
+      <button type="button" class="prompt-input-area" id="dropzone">
+        <span id="promptPlaceholder">배너 이미지를 업로드하세요</span>
+      </button>
+
+      <button type="button" class="prompt-attach-ppt" id="briefDropzone" title="기획안(PPT) 첨부">📎</button>
+      <button type="button" class="prompt-send" id="analyzeBtn" disabled>분석하기</button>
+    </div>
   </div>
+
+  <div class="prompt-status" id="statusLine" aria-live="polite"></div>
+  <div class="prompt-disclaimer"><span>⚠</span><span>AI 판정은 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.</span></div>
+
+  <img id="analyzingImg" alt="" hidden>
+  <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+  <input type="file" id="briefFileInput" accept="image/png,image/jpeg,image/webp,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
+  <select id="advertiserSelect" hidden><option value="">비교 없이 분석</option></select>
+  <div class="media-guide-checks" id="mediaGuideChecks" hidden></div>
+  <button type="button" id="briefToggle" hidden></button>
+  <div id="briefPanel" hidden></div>
+</div>
+
+<div class="content">
 
   <!-- ---------- AI summary ---------- -->
   <div class="ai-summary" id="aiSummaryBox">
@@ -394,28 +343,31 @@
 
   <!-- ---------- checklist ---------- -->
   <div class="card checklist-card">
-    <div class="card-head"><div class="num-badge">02</div><div class="card-title">컨펌 체크리스트</div></div>
+    <div class="checklist-pending-overlay"><div class="checklist-pending-label"><span class="dot"></span>체크 중...</div></div>
+    <div class="checklist-inner">
+      <div class="card-head"><div class="num-badge">02</div><div class="card-title">컨펌 체크리스트</div></div>
 
-    <div class="checklist-summary">
-      <div class="progress-cluster">
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="counts" id="counts">
-          <span>통과 <b id="cPass">0</b></span>
-          <span>검토필요 <b id="cNeedsfix">0</b></span>
-          <span>반려 <b id="cReject">0</b></span>
-          <span>해당없음 <b id="cNa">0</b></span>
+      <div class="checklist-summary">
+        <div class="progress-cluster">
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="counts" id="counts">
+            <span>통과 <b id="cPass">0</b></span>
+            <span>검토필요 <b id="cNeedsfix">0</b></span>
+            <span>반려 <b id="cReject">0</b></span>
+            <span>해당없음 <b id="cNa">0</b></span>
+          </div>
+        </div>
+        <div class="verdict-cluster">
+          <span class="verdict-dot" id="verdictDot"></span>
+          <div>
+            <div class="verdict-label" id="verdictLabel">평가 대기</div>
+            <div class="verdict-sub" id="verdictSub">0 / 17 완료</div>
+          </div>
         </div>
       </div>
-      <div class="verdict-cluster">
-        <span class="verdict-dot" id="verdictDot"></span>
-        <div>
-          <div class="verdict-label" id="verdictLabel">평가 대기</div>
-          <div class="verdict-sub" id="verdictSub">0 / 17 완료</div>
-        </div>
-      </div>
+
+      <div id="groupsContainer"></div>
     </div>
-
-    <div id="groupsContainer"></div>
   </div>
 
   <!-- ---------- criteria guide pointer ---------- -->
@@ -524,17 +476,6 @@
     update();
   });
 
-  // ---------- hero count-up ----------
-  (function countUp(){
-    const el = document.getElementById('countValue');
-    let n = 1;
-    const timer = setInterval(() => {
-      n++;
-      if(n >= 17){ el.textContent = '17'; clearInterval(timer); return; }
-      el.textContent = n;
-    }, 90);
-  })();
-
   // ---------- checklist summary / verdict ----------
   function update(){
     const counts = {pass:0,needsfix:0,reject:0,na:0};
@@ -598,8 +539,9 @@
       if(savedSession && savedSession.advertiserId){
         advertiserSelect.value = savedSession.advertiserId;
       }
+      renderPromptPlusMenu();
     })
-    .catch(() => {});
+    .catch(() => { renderPromptPlusMenu(); });
 
   // ---------- 매체 가이드 list ----------
   const mediaGuideChecks = document.getElementById('mediaGuideChecks');
@@ -655,21 +597,81 @@
           lbl.classList.toggle('checked', lbl.querySelector('input').checked);
         });
       }
+      renderPromptPlusMenu();
     })
     .catch(() => {
       renderMediaGuideError('매체 가이드 목록을 불러오지 못했습니다. api/mediaGuides.js와 api/_mediaGuides.js가 배포되었는지 확인해주세요.');
+      renderPromptPlusMenu();
     });
 
   function getSelectedMediaGuideIds(){
     return Array.from(mediaGuideChecks.querySelectorAll('input:checked')).map(i => i.value);
   }
 
+  // ---------- "+" 메뉴 (브랜드가이드·매체가이드 선택) ----------
+  // 실제 상태는 여전히 숨겨진 advertiserSelect/mediaGuideChecks가 들고 있고,
+  // 이 메뉴는 그 위에 얹은 표시·조작용 레이어일 뿐이다 — 그래서 분석 로직
+  // (advertiserSelect.value, getSelectedMediaGuideIds())은 전혀 안 건드려도 된다.
+  const promptPlusBtn = document.getElementById('promptPlusBtn');
+  const promptPlusMenu = document.getElementById('promptPlusMenu');
+  promptPlusBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    promptPlusMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if(!promptPlusMenu.contains(e.target) && e.target !== promptPlusBtn){
+      promptPlusMenu.classList.remove('open');
+    }
+  });
+
+  function renderPromptPlusMenu(){
+    const advList = document.getElementById('ppmAdvertiserList');
+    advList.innerHTML = '';
+    const noneBtn = document.createElement('button');
+    noneBtn.type = 'button';
+    noneBtn.className = 'ppm-item' + (advertiserSelect.value === '' ? ' active' : '');
+    noneBtn.textContent = '비교 없이 분석';
+    noneBtn.addEventListener('click', () => { advertiserSelect.value = ''; renderPromptPlusMenu(); });
+    advList.appendChild(noneBtn);
+    advertisersData.forEach(a => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ppm-item' + (advertiserSelect.value === a.id ? ' active' : '');
+      btn.textContent = a.name;
+      btn.addEventListener('click', () => { advertiserSelect.value = a.id; renderPromptPlusMenu(); });
+      advList.appendChild(btn);
+    });
+
+    const medList = document.getElementById('ppmMediaList');
+    medList.innerHTML = '';
+    if(mediaGuidesData.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'mg-check-empty';
+      empty.textContent = '등록된 매체가 없습니다.';
+      medList.appendChild(empty);
+    } else {
+      const selectedIds = getSelectedMediaGuideIds();
+      mediaGuidesData.forEach(m => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ppm-item' + (selectedIds.includes(m.id) ? ' active' : '');
+        btn.textContent = m.name + (m.hasGuideline ? ' · 가이드 등록됨' : '');
+        btn.addEventListener('click', () => {
+          const input = mediaGuideChecks.querySelector('input[value="' + m.id + '"]');
+          if(input){ input.checked = !input.checked; input.dispatchEvent(new Event('change')); }
+          renderPromptPlusMenu();
+        });
+        medList.appendChild(btn);
+      });
+    }
+  }
+  renderPromptPlusMenu();
+
   // ---------- upload + manual analyze ----------
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
-  const dzEmpty = document.getElementById('dzEmpty');
-  const dzAnalyzing = document.getElementById('dzAnalyzing');
-  const dzLoaded = document.getElementById('dzLoaded');
+  const bannerChip = document.getElementById('bannerChip');
+  const promptPlaceholder = document.getElementById('promptPlaceholder');
   const analyzingImg = document.getElementById('analyzingImg');
   const loadedImg = document.getElementById('loadedImg');
   const analyzeBtn = document.getElementById('analyzeBtn');
@@ -679,11 +681,18 @@
   let currentFile = null;
 
   function showDzState(s){
-    dzEmpty.style.display = s === 'empty' ? '' : 'none';
-    dzAnalyzing.style.display = s === 'analyzing' ? '' : 'none';
-    dzLoaded.style.display = (s === 'loaded') ? '' : 'none';
-    analyzeBtn.style.display = (s === 'loaded') ? '' : 'none';
+    if(s === 'empty'){
+      bannerChip.style.display = 'none';
+      promptPlaceholder.textContent = '배너 이미지를 업로드하세요';
+      analyzeBtn.disabled = true;
+    } else {
+      bannerChip.style.display = 'flex';
+      promptPlaceholder.textContent = '다른 이미지로 변경';
+      analyzeBtn.disabled = false;
+      bannerChip.classList.toggle('analyzing', s === 'analyzing');
+    }
   }
+  showDzState('empty');
 
   dropzone.addEventListener('click', () => fileInput.click());
   dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
@@ -722,7 +731,7 @@
     document.getElementById('mediaGuideBlock').classList.remove('show');
     document.getElementById('briefAlignmentBlock').classList.remove('show');
     document.getElementById('layoutStatsBlock').classList.remove('show');
-    document.querySelector('.checklist-card').classList.remove('show');
+    document.querySelector('.checklist-card').classList.remove('show', 'pending');
     analyzeBtn.textContent = 'AI 분석 시작';
 
     currentFile = file;
@@ -1052,6 +1061,7 @@
 
   function applyResults(result){
     document.querySelector('.checklist-card').classList.add('show');
+    document.querySelector('.checklist-card').classList.remove('pending');
     (result.items || []).forEach(it=>{
       if(!state.hasOwnProperty(it.id)) return;
       state[it.id] = it.status;
@@ -1159,6 +1169,7 @@
 
   async function runAnalysis(file){
     showDzState('analyzing');
+    document.querySelector('.checklist-card').classList.add('show', 'pending');
     setStatus('', false);
     try{
       const prepared = await prepareImageForApi(file);
@@ -1207,6 +1218,7 @@
       if(lastErr){
         console.error(lastErr);
         showDzState('loaded');
+        document.querySelector('.checklist-card').classList.remove('show', 'pending');
         const detail = (lastErr && lastErr.message) ? lastErr.message : '알 수 없는 오류';
         if(lastErr.status === 429){
           setStatus('AI 분석 요청이 계속 거절되고 있습니다 ('+detail+') — 일시적 혼잡이 아니라 OpenAI 계정의 사용 한도·결제 문제일 수 있으니 계정을 확인해주세요.', false);
@@ -1219,6 +1231,7 @@
     }catch(err){
       console.error(err);
       showDzState('loaded');
+      document.querySelector('.checklist-card').classList.remove('show', 'pending');
       const detail = (err && err.message) ? err.message : '알 수 없는 오류';
       setStatus('이미지 처리에 실패했습니다: '+detail, false);
     }
