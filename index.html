@@ -85,8 +85,8 @@
   .content{max-width:1040px; margin:-84px auto 0; padding:0 24px 100px; position:relative;}
   .card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:24px; padding:40px; margin-bottom:36px;}
   .card.upload-card{box-shadow:0 24px 60px oklch(20% 0.05 260 / 0.16);}
-  .card.checklist-card, .card.ref-card-outer{box-shadow:0 8px 30px oklch(20% 0.02 265 / 0.06); display:none;}
-  .card.checklist-card.show, .card.ref-card-outer.show{display:block;}
+  .card.checklist-card{box-shadow:0 8px 30px oklch(20% 0.02 265 / 0.06); display:none;}
+  .card.checklist-card.show{display:block;}
   .card-head{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
   .num-badge{width:28px; height:28px; border-radius:50%; background:var(--num-bg); color:var(--num-text); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;}
   .card-title{font-size:17px; font-weight:700;}
@@ -214,20 +214,9 @@
   .verdict-label{font-size:14px; font-weight:700;}
   .verdict-sub{font-size:12px; color:oklch(52% 0.015 265);}
 
-  /* ---------- reference groups ---------- */
-  .ref-hint{font-size:12.5px; color:oklch(50% 0.015 265); margin-bottom:22px;}
-  .ref-group-label{font-size:11.5px; font-weight:700; letter-spacing:0.08em; color:var(--group-label); text-transform:uppercase; margin-bottom:10px;}
-  .ref-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px;}
-  .ref-grid:last-child{margin-bottom:0;}
-  .ref-card{position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid oklch(91% 0.01 265); border-radius:10px; padding:12px 14px; cursor:default;}
-  .ref-card .rc-title{font-size:13px;}
-  .ref-card .rc-title .rc-num{color:oklch(58% 0.01 265); margin-right:6px;}
-  .rc-pop{display:none; position:absolute; top:100%; left:0; right:0; margin-top:8px; background:var(--popover-bg); border-radius:12px; padding:16px 18px; z-index:30; box-shadow:0 12px 28px oklch(20% 0.02 265 / 0.28);}
-  .ref-card:hover .rc-pop, .ref-card:focus-within .rc-pop{display:block;}
-  .rc-pop .b{display:flex; align-items:flex-start; gap:6px; font-size:12px; line-height:1.5; color:oklch(94% 0.004 85); margin-bottom:5px;}
-  .rc-pop .b span:first-child{flex-shrink:0;}
-  .rc-pop .b span:last-child{min-width:0; flex:1; word-break:keep-all; overflow-wrap:break-word;}
-  .rc-pop .rj{font-size:11.5px; font-weight:700; color:oklch(68% 0.19 25); margin-top:5px;}
+  .criteria-pointer{font-size:12.5px; color:oklch(50% 0.015 265); text-align:center; padding:8px 0 4px;}
+  .criteria-pointer a{color:oklch(50% 0.12 265); font-weight:600; text-decoration:none;}
+  .criteria-pointer a:hover{text-decoration:underline;}
 
   .page-footer{text-align:center; font-size:12px; color:oklch(55% 0.015 265); line-height:1.8; padding-top:8px;}
 
@@ -240,12 +229,8 @@
     .beta-badge{margin-left:0;}
     .content{padding:0 16px 70px;}
     .card{padding:26px 20px;}
-    .ref-grid{grid-template-columns:1fr;}
     .checklist-summary{flex-direction:column; align-items:stretch;}
     .verdict-cluster{justify-content:center;}
-    .rc-pop{position:static; display:block; margin-top:10px; box-shadow:none;}
-    .ref-card:hover .rc-pop, .ref-card:focus-within .rc-pop{display:none;}
-    .ref-card.open .rc-pop{display:block;}
   }
 </style>
 </head>
@@ -438,12 +423,8 @@
     <div id="groupsContainer"></div>
   </div>
 
-  <!-- ---------- reference groups ---------- -->
-  <div class="card ref-card-outer">
-    <div class="card-head"><div class="num-badge">03</div><div class="card-title" style="font-size:15px;">17개 평가 영역</div><a href="criteria-guide.html" style="margin-left:auto; font-size:12.5px; font-weight:600; color:oklch(50% 0.12 265); text-decoration:none;">자세히 보기 ↗</a></div>
-    <div class="ref-hint">항목 위에 마우스를 올리면 세부 기준이 보여요</div>
-    <div id="refGroupsContainer"></div>
-  </div>
+  <!-- ---------- criteria guide pointer ---------- -->
+  <div class="criteria-pointer">17개 항목 기준으로 점검합니다 — <a href="criteria-guide.html">영역가이드에서 자세히 보기 ↗</a></div>
 
   <div class="page-footer">
     이 체크리스트는 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
@@ -511,8 +492,6 @@
     reject:{label:'반려', color:'var(--reject)'},
     na:{label:'해당없음', color:'var(--na)'},
   };
-  const GROUP_LABELS = {1:'전략 · 디자인 기본기', 2:'AI 생성 아티팩트', 3:'광고주 전달 전 필수 확인'};
-
   const state = {};
   ITEMS.forEach(it => state[it.n] = null);
 
@@ -548,35 +527,6 @@
     group.querySelectorAll('.stbtn').forEach(b=>b.classList.remove('active'));
     if(!already) btn.classList.add('active');
     update();
-  });
-
-  // ---------- build reference groups ----------
-  const refGroupsContainer = document.getElementById('refGroupsContainer');
-  [1,2,3].forEach(g => {
-    const label = document.createElement('div');
-    label.className = 'ref-group-label';
-    label.textContent = GROUP_LABELS[g];
-    refGroupsContainer.appendChild(label);
-
-    const grid = document.createElement('div');
-    grid.className = 'ref-grid';
-    ITEMS.filter(it => it.group === g).forEach(it => {
-      const card = document.createElement('div');
-      card.className = 'ref-card';
-      card.innerHTML = `
-        <span class="rc-title"><span class="rc-num">${String(it.n).padStart(2,'0')}</span>${it.title}</span>
-        <div class="rc-pop">
-          ${it.bullets.map(b => `<div class="b"><span>·</span><span>${b}</span></div>`).join('')}
-          <div class="rj">즉시 반려: ${it.reject}</div>
-        </div>`;
-      card.addEventListener('click', () => {
-        if(window.matchMedia('(hover: hover)').matches) return;
-        document.querySelectorAll('.ref-card.open').forEach(c => { if(c!==card) c.classList.remove('open'); });
-        card.classList.toggle('open');
-      });
-      grid.appendChild(card);
-    });
-    refGroupsContainer.appendChild(grid);
   });
 
   // ---------- hero count-up ----------
@@ -778,7 +728,6 @@
     document.getElementById('briefAlignmentBlock').classList.remove('show');
     document.getElementById('layoutStatsBlock').classList.remove('show');
     document.querySelector('.checklist-card').classList.remove('show');
-    document.querySelector('.ref-card-outer').classList.remove('show');
     analyzeBtn.textContent = 'AI 분석 시작';
 
     currentFile = file;
@@ -1108,7 +1057,6 @@
 
   function applyResults(result){
     document.querySelector('.checklist-card').classList.add('show');
-    document.querySelector('.ref-card-outer').classList.add('show');
     (result.items || []).forEach(it=>{
       if(!state.hasOwnProperty(it.id)) return;
       state[it.id] = it.status;
