@@ -1,42 +1,45 @@
-"""Builds text-position statistics per 이미지 레퍼런스 category by running
-CLOVA OCR against every image in api/_referenceLibrary.js and aggregating
-normalized (0-100%) bounding boxes. This is a one-time/periodic batch job —
-NOT called live per checklist analysis, so it lives here as a local script
-(same pattern as bulk_add_reference_images.py, migrate_existing_to_blob.py)
-rather than a Vercel serverless function.
+"""Builds text-position statistics AND alignment-type groupings per 이미지
+레퍼런스 category by running CLOVA OCR against every image in
+api/_referenceLibrary.js. One-time/periodic batch job — NOT called live per
+checklist analysis (see module docstring history in git log for why this is
+a local script, not a Vercel endpoint: 12-function cap, execution-time risk,
+no login needed since Blob URLs are public).
 
-WHY A LOCAL SCRIPT INSTEAD OF A NEW API ENDPOINT:
-- The project is already at Vercel Hobby's 12-serverless-function cap
-  (see api/ directory — files not prefixed with `_` count).
-- This job touches ~290 images across 13 categories; running it inside a
-  single HTTP request risks the platform's execution time limit. A local
-  script has no such ceiling and can be re-run per-category as the library
-  grows, without needing new server infra.
-- The reference images live at public Vercel Blob URLs (not behind the
-  site's login gate), so this script talks to Blob Storage directly and
-  never needs a logged-in session.
-
-REQUIRES (add to .env.local — get the values from the Vercel dashboard,
-Project Settings -> Environment Variables; NOT committed to git):
+REQUIRES (add to .env.local — get values from Vercel dashboard, Project
+Settings -> Environment Variables; NOT committed to git):
   CLOVA_OCR_INVOKE_URL=...
   CLOVA_OCR_SECRET_KEY=...
-  BLOB_READ_WRITE_TOKEN=...   (already in .env.local for image uploads)
+  BLOB_READ_WRITE_TOKEN=...   (already there for image uploads)
 
 USAGE:
-  python3 scripts/build_layout_stats.py                    # all 13 categories
+  python3 scripts/build_layout_stats.py                    # all categories
   python3 scripts/build_layout_stats.py --category fashion  # just one
-  python3 scripts/build_layout_stats.py --dry-run           # parse + fetch dimensions only, no OCR/upload (sanity check)
+  python3 scripts/build_layout_stats.py --dry-run           # parse + fetch dimensions only, no OCR/upload
+  python3 scripts/build_layout_stats.py --reaggregate-only  # re-run aggregation from cached layout-raw/*.json
+                                                              # WITHOUT calling OCR again (fast iteration on the
+                                                              # aggregation logic itself)
 
-OUTPUT: uploads layout-stats/<categoryId>.json to Blob Storage (stable
-pathname, overwritten each run) with per-category aggregated stats:
-{
-  "categoryId": "fashion", "categoryName": "패션", "sampleCount": 13,
-  "mainCopyTopPct": {"avg":.., "median":.., "min":.., "max":.., "n":..},
-  "ctaBottomPct": {...}, "textDensityPct": {...}, "smallestTextHeightPct": {...}
-}
-These are DESCRIPTIVE statistics over a curated-but-informal library (team
-scraps of competitor ads + NHN's own work) — "common practice", not
-"correct practice". Say so wherever this data is surfaced.
+WHAT CHANGED FROM V1 (both were real bugs, caught by a human review of the
+actual output — see git log):
+- "메인카피 위치"는 원래 "OCR이 감지한 가장 위쪽 텍스트"였는데, 이러면 로고나
+  코너 뱃지처럼 작은 텍스트를 메인카피로 잘못 잡는 경우가 많았다(실제로 3.8%
+  같은 비현실적인 값이 나옴 — 그 위치는 보통 로고 자리). 지금은 "가장 큰
+  글자 크기 계층(높이 기준 클러스터링, 3번 항목의 위계 판정과 같은 방식)에
+  속한 텍스트"로 재정의 — 로고 텍스트는 보통 메인카피보다 작아서 이 계층에
+  안 걸린다.
+- 카테고리당 평균 마커 2개짜리 요약만 보여주면 모든 카테고리가 "위에 선
+  하나, 아래에 선 하나"로 똑같아 보여서 실제 레이아웃 다양성이 안 보였다.
+  지금은 메인카피 텍스트 블록의 가로 중심 위치로 좌측형/중앙형/우측형을
+  분류하고, 각 유형에서 실제 레퍼런스 이미지를 예시로 골라 보여준다.
+
+OUTPUT (per category):
+- layout-raw/<id>.json: 원본에 가까운 이미지별 OCR 정규화 좌표(재계산용 캐시,
+  사이트에서 직접 쓰지 않음)
+- layout-stats/<id>.json: 사이트가 실제로 읽는 집계 결과 — 숫자 통계 +
+  alignmentGroups(좌측/중앙/우측형별 예시 이미지 URL과 장수)
+
+이 통계는 "정답"이 아니라 팀이 그때그때 모은 경쟁사·자사 소재 모음에서 뽑은
+경향입니다 — 사이트에 노출할 때 항상 이 점을 명시하세요.
 """
 
 import argparse
@@ -60,6 +63,8 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIB_PATH = os.path.join(REPO_ROOT, "api", "_referenceLibrary.js")
 ENV_LOCAL = os.path.join(REPO_ROOT, ".env.local")
 MIN_IMAGE_BYTES = 15 * 1024
+RAW_CACHE_DIR = os.path.join(REPO_ROOT, ".layout_raw_cache")
+EXAMPLES_PER_GROUP = 4
 
 
 def load_env_local():
@@ -144,6 +149,29 @@ def normalize_fields(fields, width, height):
     return out
 
 
+# 3번 항목 위계 판정(api/_clovaOcr.js의 clusterHeightTiers)과 같은 방식 —
+# 높이가 서로 15% 이내로 가까우면 같은 계층으로 묶는다. tiers[0]이 가장 큰 계층.
+def cluster_height_tiers(fields):
+    heights = sorted((f for f in fields if f["heightPct"] > 0), key=lambda f: -f["heightPct"])
+    tiers = []
+    for f in heights:
+        h = f["heightPct"]
+        if tiers and h >= tiers[-1]["min"] * 0.85:
+            tiers[-1]["fields"].append(f)
+            tiers[-1]["min"] = min(tiers[-1]["min"], h)
+        else:
+            tiers.append({"min": h, "fields": [f]})
+    return tiers
+
+
+def classify_alignment(center_x_pct):
+    if center_x_pct < 40:
+        return "left"
+    if center_x_pct > 60:
+        return "right"
+    return "center"
+
+
 def summarize(values):
     if not values:
         return None
@@ -156,34 +184,54 @@ def summarize(values):
     }
 
 
-def aggregate_category_stats(per_image_fields):
+def aggregate_category_stats(raw_items):
     main_tops, cta_bottoms, densities, small_heights = [], [], [], []
-    for fields in per_image_fields:
+    alignment_groups = {"left": [], "center": [], "right": []}
+
+    for item in raw_items:
+        fields = item["fields"]
         if not fields:
             continue
-        # rightPct-leftPct와 bottomPct-topPct는 각각 0-100 스케일 퍼센트라, 그냥
-        # 곱하면 퍼센트x퍼센트라 100배 부풀려짐(20%*10%=실제 2%인데 200이 나옴).
-        # /100으로 나눠야 "캔버스 면적 대비 실제 %"가 된다.
+
         area = sum(max(0, f["rightPct"] - f["leftPct"]) * max(0, f["bottomPct"] - f["topPct"]) for f in fields) / 100
         densities.append(min(area, 100))
-        main_tops.append(min(f["topPct"] for f in fields))
         cta_bottoms.append(max(f["bottomPct"] for f in fields))
         heights = [f["heightPct"] for f in fields if f["heightPct"] > 0]
         if heights:
             small_heights.append(min(heights))
 
+        tiers = cluster_height_tiers(fields)
+        if not tiers:
+            continue
+        main_fields = tiers[0]["fields"]  # 가장 큰 글자 계층 = 메인카피로 취급
+        main_top = min(f["topPct"] for f in main_fields)
+        main_center_x = st.mean((f["leftPct"] + f["rightPct"]) / 2 for f in main_fields)
+        main_tops.append(main_top)
+
+        alignment = classify_alignment(main_center_x)
+        alignment_groups[alignment].append(
+            {"brandName": item["brandName"], "thumbUrl": item["thumbUrl"], "fullUrl": item["fullUrl"]}
+        )
+
+    for key in alignment_groups:
+        alignment_groups[key] = {
+            "count": len(alignment_groups[key]),
+            "examples": alignment_groups[key][:EXAMPLES_PER_GROUP],
+        }
+
     return {
-        "sampleCount": len(per_image_fields),
+        "sampleCount": len(raw_items),
         "mainCopyTopPct": summarize(main_tops),
         "ctaBottomPct": summarize(cta_bottoms),
         "textDensityPct": summarize(densities),
         "smallestTextHeightPct": summarize(small_heights),
+        "alignmentGroups": alignment_groups,
     }
 
 
-def build_for_category(cid, cat, dry_run=False):
+def fetch_raw_for_category(cid, cat, dry_run=False):
     print(f"--- {cid} ({cat['name']}) : {len(cat['items'])}장 ---")
-    per_image_fields = []
+    raw_items = []
     for item in cat["items"]:
         label = item["brandName"] or item["fullUrl"]
         try:
@@ -202,28 +250,85 @@ def build_for_category(cid, cat, dry_run=False):
                 print(f"  OCR 실패/스킵: {label}")
                 continue
             normalized = normalize_fields(fields, width, height)
-            per_image_fields.append(normalized)
+            raw_items.append(
+                {
+                    "brandName": item["brandName"],
+                    "thumbUrl": item["thumbUrl"],
+                    "fullUrl": item["fullUrl"],
+                    "width": width,
+                    "height": height,
+                    "fields": normalized,
+                }
+            )
             print(f"  OK: {label} (텍스트 박스 {len(normalized)}개)")
         except Exception as e:
             print(f"  에러: {label} - {e}")
             continue
-    if dry_run:
+    return raw_items
+
+
+def cache_path(cid):
+    return os.path.join(RAW_CACHE_DIR, f"{cid}.json")
+
+
+def save_raw_cache(cid, cat_name, raw_items):
+    os.makedirs(RAW_CACHE_DIR, exist_ok=True)
+    payload = {"categoryId": cid, "categoryName": cat_name, "items": raw_items}
+    with open(cache_path(cid), "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False)
+
+
+def load_raw_cache(cid):
+    p = cache_path(cid)
+    if not os.path.exists(p):
         return None
-    return aggregate_category_stats(per_image_fields)
+    with open(p, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def process_category(cid, cat, dry_run=False, reaggregate_only=False):
+    if reaggregate_only:
+        cached = load_raw_cache(cid)
+        if not cached:
+            print(f"{cid}: 캐시된 원본 데이터 없음 — 먼저 --dry-run 없이 한 번 실행해야 합니다.")
+            return
+        raw_items = cached["items"]
+    else:
+        raw_items = fetch_raw_for_category(cid, cat, dry_run=dry_run)
+        if dry_run:
+            return
+        save_raw_cache(cid, cat["name"], raw_items)
+        raw_upload = json.dumps({"categoryId": cid, "categoryName": cat["name"], "items": raw_items}, ensure_ascii=False).encode("utf-8")
+        url = upload_to_blob(f"layout-raw/{cid}.json", raw_upload, "application/json", allow_overwrite=True)
+        print(f"원본 캐시 업로드 완료: {url}")
+
+    stats = aggregate_category_stats(raw_items)
+    stats["categoryId"] = cid
+    stats["categoryName"] = cat["name"]
+    out_json = json.dumps(stats, ensure_ascii=False, indent=2).encode("utf-8")
+    url = upload_to_blob(f"layout-stats/{cid}.json", out_json, "application/json", allow_overwrite=True)
+    print(f"통계 업로드 완료: {url}")
+    print(
+        f"  좌측형 {stats['alignmentGroups']['left']['count']} · "
+        f"중앙형 {stats['alignmentGroups']['center']['count']} · "
+        f"우측형 {stats['alignmentGroups']['right']['count']}\n"
+    )
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--category", help="특정 카테고리 id만 처리 (예: fashion)")
     parser.add_argument("--dry-run", action="store_true", help="OCR/업로드 없이 파싱+이미지 접근만 확인")
+    parser.add_argument("--reaggregate-only", action="store_true", help="OCR 재호출 없이 캐시된 layout-raw로 통계만 재계산")
     args = parser.parse_args()
 
     load_env_local()
-    if not args.dry_run and (not os.environ.get("CLOVA_OCR_INVOKE_URL") or not os.environ.get("CLOVA_OCR_SECRET_KEY")):
+    if not args.dry_run and not args.reaggregate_only and (
+        not os.environ.get("CLOVA_OCR_INVOKE_URL") or not os.environ.get("CLOVA_OCR_SECRET_KEY")
+    ):
         print(
             "CLOVA_OCR_INVOKE_URL / CLOVA_OCR_SECRET_KEY가 .env.local에 없습니다.\n"
-            "Vercel 대시보드(Project Settings -> Environment Variables)에서 값을 복사해 .env.local에 추가한 뒤 다시 실행해주세요.\n"
-            "(파싱/이미지 접근만 먼저 확인하려면 --dry-run으로 실행하세요.)"
+            "Vercel 대시보드(Project Settings -> Environment Variables)에서 값을 복사해 .env.local에 추가한 뒤 다시 실행해주세요."
         )
         sys.exit(1)
 
@@ -240,15 +345,7 @@ def main():
         if not cat["items"]:
             print(f"{cid}: 이미지 없음, 건너뜀")
             continue
-        stats = build_for_category(cid, cat, dry_run=args.dry_run)
-        if stats is None:
-            continue
-        stats["categoryId"] = cid
-        stats["categoryName"] = cat["name"]
-        print(json.dumps(stats, ensure_ascii=False, indent=2))
-        out_json = json.dumps(stats, ensure_ascii=False, indent=2).encode("utf-8")
-        url = upload_to_blob(f"layout-stats/{cid}.json", out_json, "application/json", allow_overwrite=True)
-        print(f"업로드 완료: {url}\n")
+        process_category(cid, cat, dry_run=args.dry_run, reaggregate_only=args.reaggregate_only)
 
 
 if __name__ == "__main__":

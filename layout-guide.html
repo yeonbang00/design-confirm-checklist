@@ -56,21 +56,20 @@
 
   .category-select{font-family:inherit; font-size:14px; padding:10px 14px; border-radius:10px; border:1px solid var(--card-border); background:var(--card); color:var(--text); margin-bottom:28px; min-width:220px;}
 
-  .layout-body{display:flex; gap:32px; flex-wrap:wrap;}
-  .mock-banner-wrap{flex:0 0 240px;}
-  .mock-banner{width:240px; height:300px; border-radius:14px; background:linear-gradient(180deg, oklch(93% 0.01 265), oklch(89% 0.012 265)); position:relative; overflow:hidden; box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.1);}
-  .mock-marker{position:absolute; left:0; right:0; height:2px; background:var(--num-text);}
-  .mock-marker::after{content:attr(data-label); position:absolute; right:8px; font-size:10px; font-weight:700; color:var(--num-text); background:var(--card); padding:2px 6px; border-radius:6px; white-space:nowrap;}
-  .mock-marker.marker-main::after{top:6px;}
-  .mock-marker.marker-cta::after{bottom:6px;}
-  .mock-caption{font-size:11px; color:var(--text-3); margin-top:10px; text-align:center; line-height:1.6;}
-
-  .stats-panel{flex:1; min-width:280px;}
-  .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px; margin-bottom:20px;}
+  .stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px; margin-bottom:24px;}
   .stat-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:18px 20px;}
   .stat-value{font-size:24px; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums;}
   .stat-label{font-size:12px; color:var(--text-3); margin-top:6px; line-height:1.6;}
   .stat-range{font-size:10.5px; color:var(--text-3); margin-top:4px; font-variant-numeric:tabular-nums;}
+
+  .align-section{margin-bottom:28px;}
+  .align-heading{font-size:14.5px; font-weight:700; margin-bottom:2px;}
+  .align-count{font-size:12px; color:var(--text-3); margin-bottom:12px;}
+  .align-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;}
+  .align-card{border-radius:12px; overflow:hidden; box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); background:var(--card); text-decoration:none; display:block;}
+  .align-card img{width:100%; aspect-ratio:1; object-fit:cover; display:block;}
+  .align-card-cap{padding:7px 10px; font-size:11.5px; color:var(--text-3);}
+  .align-empty{font-size:12.5px; color:var(--text-3); padding:16px; background:var(--card); border-radius:12px;}
 
   .caveat{font-size:12.5px; color:var(--text-3); line-height:1.8; padding:14px 16px; background:var(--card); border-radius:12px; margin-top:6px;}
   .caveat b{color:var(--text-2);}
@@ -82,7 +81,6 @@
     .page{padding:28px 18px 70px;}
     .gnb-bar-inner{gap:16px;}
     .gnb{gap:12px;}
-    .mock-banner-wrap{flex:0 0 100%; max-width:240px; margin:0 auto;}
   }
 </style>
 </head>
@@ -130,43 +128,55 @@
   const content = document.getElementById('content');
   let categoriesData = [];
 
+  const ALIGN_LABELS = { left: '좌측형', center: '중앙형', right: '우측형' };
+
+  function statCard(label, s, suffix){
+    if(!s) return '';
+    return '<div class="stat-card"><div class="stat-value">' + s.median + suffix + '</div>' +
+      '<div class="stat-label">' + label + '</div>' +
+      '<div class="stat-range">범위 ' + s.min + suffix + ' ~ ' + s.max + suffix + ' (n=' + s.n + ')</div></div>';
+  }
+
+  function alignSection(key, group, total){
+    if(!group) return '';
+    const label = ALIGN_LABELS[key] || key;
+    if(!group.count){
+      return '<div class="align-section"><div class="align-heading">' + label + '</div>' +
+        '<div class="align-empty">이 카테고리에서는 발견되지 않은 유형입니다.</div></div>';
+    }
+    const cards = group.examples.map(ex =>
+      '<a class="align-card" href="' + ex.fullUrl + '" target="_blank" rel="noopener">' +
+      '<img src="' + ex.thumbUrl + '" alt="' + (ex.brandName || label) + ' 예시" loading="lazy">' +
+      '<div class="align-card-cap">' + (ex.brandName || '') + '</div></a>'
+    ).join('');
+    return '<div class="align-section"><div class="align-heading">' + label + '</div>' +
+      '<div class="align-count">전체 ' + total + '장 중 ' + group.count + '장</div>' +
+      '<div class="align-grid">' + cards + '</div></div>';
+  }
+
+  const MIN_RELIABLE_SAMPLES = 10; // api/_layoutStats.js와 동일한 기준
+
   function renderStats(stats){
     if(!stats || !stats.sampleCount){
       content.innerHTML = '<div class="empty-state">이 카테고리는 아직 통계가 없습니다(레퍼런스가 새로 추가된 뒤 scripts/build_layout_stats.py가 다시 실행되어야 반영됩니다).</div>';
       return;
     }
-    const mainTop = stats.mainCopyTopPct ? stats.mainCopyTopPct.median : null;
-    const ctaBottom = stats.ctaBottomPct ? stats.ctaBottomPct.median : null;
+    stats.reliable = stats.sampleCount >= MIN_RELIABLE_SAMPLES;
 
-    let markers = '';
-    if(mainTop !== null) markers += '<div class="mock-marker marker-main" data-label="메인카피 ' + mainTop + '%" style="top:' + mainTop + '%;"></div>';
-    if(ctaBottom !== null) markers += '<div class="mock-marker marker-cta" data-label="CTA/하단 ' + ctaBottom + '%" style="top:' + ctaBottom + '%;"></div>';
-
-    function statCard(label, s, suffix){
-      if(!s) return '';
-      return '<div class="stat-card"><div class="stat-value">' + s.median + suffix + '</div>' +
-        '<div class="stat-label">' + label + '</div>' +
-        '<div class="stat-range">범위 ' + s.min + suffix + ' ~ ' + s.max + suffix + ' (n=' + s.n + ')</div></div>';
-    }
+    const ag = stats.alignmentGroups || {};
+    const alignHtml = ['left', 'center', 'right'].map(k => alignSection(k, ag[k], stats.sampleCount)).join('');
 
     content.innerHTML =
-      '<div class="layout-body">' +
-        '<div class="mock-banner-wrap">' +
-          '<div class="mock-banner">' + markers + '</div>' +
-          '<div class="mock-caption">가상 배너 위 중앙값 위치 표시(상단 기준 %)</div>' +
-        '</div>' +
-        '<div class="stats-panel">' +
-          '<div class="stats-grid">' +
-            statCard('메인카피 평균 위치 (상단 기준)', stats.mainCopyTopPct, '%') +
-            statCard('CTA/하단 텍스트 평균 위치 (상단 기준)', stats.ctaBottomPct, '%') +
-            statCard('텍스트 밀도 평균', stats.textDensityPct, '%') +
-            statCard('최소 텍스트 크기 평균 (세로 기준)', stats.smallestTextHeightPct, '%') +
-          '</div>' +
-          '<div class="caveat"><b>' + (stats.categoryName || '') + '</b> 카테고리 레퍼런스 ' + stats.sampleCount + '장을 분석한 결과입니다. 팀이 그때그때 스크랩한 경쟁사 광고 모음이라 "옳은 방식"이 아니라 "흔히 쓰이는 방식"을 보여줄 뿐입니다 — 기획 의도나 브랜드 가이드와 충돌하면 이 통계를 무시하세요.' +
-          (stats.reliable ? '' : '<br><span class="low-confidence">⚠ 표본이 ' + stats.sampleCount + '장으로 적어 참고 신뢰도가 낮습니다</span>') +
-          '</div>' +
-        '</div>' +
-      '</div>';
+      '<div class="stats-grid">' +
+        statCard('메인카피(가장 큰 텍스트) 평균 위치 (상단 기준)', stats.mainCopyTopPct, '%') +
+        statCard('CTA/하단 텍스트 평균 위치 (상단 기준)', stats.ctaBottomPct, '%') +
+        statCard('텍스트 밀도 평균', stats.textDensityPct, '%') +
+        statCard('최소 텍스트 크기 평균 (세로 기준)', stats.smallestTextHeightPct, '%') +
+      '</div>' +
+      '<div class="caveat"><b>' + (stats.categoryName || '') + '</b> 카테고리 레퍼런스 ' + stats.sampleCount + '장을 분석한 결과입니다. 팀이 그때그때 스크랩한 경쟁사 광고 모음이라 "옳은 방식"이 아니라 "흔히 쓰이는 방식"을 보여줄 뿐입니다 — 기획 의도나 브랜드 가이드와 충돌하면 이 통계를 무시하세요. 메인카피 위치는 화면에서 가장 큰 글자 크기 계층의 위치로 판단한 것이라, OCR이 큰 글자를 잘못 인식했을 경우 오차가 있을 수 있습니다.' +
+      (stats.reliable ? '' : '<br><span class="low-confidence">⚠ 표본이 ' + stats.sampleCount + '장으로 적어 참고 신뢰도가 낮습니다</span>') +
+      '</div>' +
+      '<div style="margin-top:28px;"><div class="section-heading" style="font-size:16px; font-weight:700; margin-bottom:14px;">카피 정렬 유형별 예시</div>' + alignHtml + '</div>';
   }
 
   function loadCategoryStats(id){
