@@ -8,14 +8,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: oklch(97.5% 0.006 85);
-    --card: oklch(99.2% 0.002 85);
-    --card-border: oklch(89% 0.015 265);
-    --text: oklch(22% 0.02 265);
-    --text-2: oklch(48% 0.02 265);
-    --text-3: oklch(55% 0.015 265);
-    --num-bg: oklch(93% 0.03 260);
-    --num-text: oklch(35% 0.08 260);
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --card-border: #e0e0e0;
+    --text: #1d1d1f;
+    --text-2: #333333;
+    --text-3: #7a7a7a;
+    --num-bg: #e3edfb;
+    --num-text: #0066cc;
   }
   *{box-sizing:border-box;}
   html{scrollbar-gutter:stable;}
@@ -23,8 +23,8 @@
   body{
     background:var(--bg);
     color:var(--text);
-    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-    line-height:1.6;
+    font-family:'SF Pro Text','SF Pro Display',-apple-system,BlinkMacSystemFont,'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.47;
     -webkit-font-smoothing:antialiased;
     word-break:keep-all;
   }
@@ -32,35 +32,35 @@
   :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
 
   .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
-  .gnb-bar{position:sticky; top:0; background:var(--bg); z-index:100;}
-  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:10px 24px; flex-wrap:wrap;}
+    .gnb-bar{position:sticky; top:0; background:#000000; z-index:100;}
+  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:0 24px; height:44px; flex-wrap:wrap;}
   .gnb-logo{display:flex; align-items:center;}
-  .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
+  .gnb-logo-text{font-size:15px; font-weight:600; color:#ffffff; letter-spacing:-0.01em;}
   .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
-  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
-  .gnb-link:hover{color:var(--text);}
-  .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-link{font-size:12px; font-weight:400; letter-spacing:-0.12px; text-decoration:none; color:#cccccc; transition:color .15s ease;}
+  .gnb-link:hover{color:#ffffff;}
+  .gnb-link.active{color:#ffffff; font-weight:600;}
   .gnb-dropdown{position:relative;}
   .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
   .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
-  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding:14px; background:var(--bg); width:max-content; display:none; flex-direction:row; gap:20px; z-index:30;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding:14px; background:#000000; width:max-content; display:none; flex-direction:row; gap:20px; z-index:30;}
   .gnb-dropdown-menu.open{display:flex;}
   .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu{display:flex;}
-  .gnb-dropdown-item{display:block; font-size:13.5px; text-decoration:none; white-space:nowrap; color:var(--text-3);}
-  .gnb-dropdown-item:hover{color:var(--text);}
-  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown-item{display:block; font-size:12px; text-decoration:none; white-space:nowrap; color:#cccccc;}
+  .gnb-dropdown-item:hover{color:#ffffff;}
+  .gnb-dropdown-item.active{color:#ffffff; font-weight:600;}
 
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
   .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px;}
 
   .select-wrap{position:relative; margin-bottom:28px; max-width:420px;}
   .select-wrap select{
-    width:100%; appearance:none; background:var(--card); border:1px solid oklch(84% 0.015 265);
+    width:100%; appearance:none; background:var(--card); border:1px solid #d2d2d7;
     border-radius:10px; padding:13px 40px 13px 16px; font-size:14.5px; font-weight:600; color:var(--text); cursor:pointer;
   }
   .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
 
-  .brand-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:20px; padding:32px;}
+  .brand-card{background:var(--card); box-shadow:none; border:1px solid #e0e0e0; border-radius:20px; padding:32px;}
   .brand-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
   .brand-name{font-size:19px; font-weight:700;}
   .brand-note{font-size:13px; color:var(--text-2); margin-bottom:20px;}
@@ -72,12 +72,12 @@
   .spec-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:22px;}
   .spec-card{border:1.5px solid var(--num-text); border-radius:14px; padding:16px 18px; background:var(--num-bg);}
   .spec-card-title{font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px;}
-  .spec-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px; padding:5px 0; border-bottom:1px solid oklch(100% 0 0 / 0.5);}
+  .spec-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px; padding:5px 0; border-bottom:1px solid rgba(245,245,247,0.5);}
   .spec-row:last-child{border-bottom:none;}
   .spec-row-label{color:var(--text-2);}
   .spec-row-value{color:var(--text); font-weight:700; text-align:right; font-variant-numeric:tabular-nums;}
 
-  .gl-empty{font-size:13.5px; color:var(--text-3); background:oklch(96% 0.008 85); border-radius:10px; padding:16px 18px;}
+  .gl-empty{font-size:13.5px; color:var(--text-3); background:#e5e5e7; border-radius:10px; padding:16px 18px;}
   .gl-heading{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin:18px 0 10px;}
   .gl-heading:first-child{margin-top:0;}
   .gl-p{font-size:14px; line-height:1.8; color:var(--text); margin:0 0 12px;}

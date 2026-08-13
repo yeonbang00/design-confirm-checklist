@@ -8,45 +8,45 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: oklch(97.5% 0.006 85);
-    --card: oklch(99.2% 0.002 85);
-    --card-border: oklch(89% 0.015 265);
-    --text: oklch(22% 0.02 265);
-    --text-2: oklch(48% 0.02 265);
-    --text-3: oklch(55% 0.015 265);
-    --num-bg: oklch(93% 0.03 260);
-    --num-text: oklch(35% 0.08 260);
-    --pass: oklch(58% 0.13 145); --needsfix: oklch(63% 0.15 55); --reject: oklch(58% 0.19 15); --na: oklch(60% 0.01 265);
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --card-border: #e0e0e0;
+    --text: #1d1d1f;
+    --text-2: #333333;
+    --text-3: #7a7a7a;
+    --num-bg: #e3edfb;
+    --num-text: #0066cc;
+    --pass: #2FA360; --needsfix: #E0791C; --reject: #E33B5A; --na: #8A8A86;
   }
   *{box-sizing:border-box;}
   html{scrollbar-gutter:stable;}
   html,body{margin:0;padding:0;}
   body{
     background:var(--bg); color:var(--text);
-    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-    line-height:1.6; -webkit-font-smoothing:antialiased; word-break:keep-all;
+    font-family:'SF Pro Text','SF Pro Display',-apple-system,BlinkMacSystemFont,'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.47; -webkit-font-smoothing:antialiased; word-break:keep-all;
   }
   a{color:inherit;}
   :focus-visible{outline:2px solid var(--num-text); outline-offset:2px;}
 
   .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
-  .gnb-bar{position:sticky; top:0; background:var(--bg); z-index:100;}
-  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:10px 24px; flex-wrap:wrap;}
+    .gnb-bar{position:sticky; top:0; background:#000000; z-index:100;}
+  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:0 24px; height:44px; flex-wrap:wrap;}
   .gnb-logo{display:flex; align-items:center;}
-  .gnb-logo-text{font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.01em;}
+  .gnb-logo-text{font-size:15px; font-weight:600; color:#ffffff; letter-spacing:-0.01em;}
   .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
-  .gnb-link{font-size:13.5px; font-weight:400; text-decoration:none; color:var(--text-3); transition:color .15s ease;}
-  .gnb-link:hover{color:var(--text);}
-  .gnb-link.active{color:var(--num-text); font-weight:700;}
+  .gnb-link{font-size:12px; font-weight:400; letter-spacing:-0.12px; text-decoration:none; color:#cccccc; transition:color .15s ease;}
+  .gnb-link:hover{color:#ffffff;}
+  .gnb-link.active{color:#ffffff; font-weight:600;}
   .gnb-dropdown{position:relative;}
   .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
   .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
-  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding:14px; background:var(--bg); width:max-content; display:none; flex-direction:row; gap:20px; z-index:30;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding:14px; background:#000000; width:max-content; display:none; flex-direction:row; gap:20px; z-index:30;}
   .gnb-dropdown-menu.open{display:flex;}
   .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu{display:flex;}
-  .gnb-dropdown-item{display:block; font-size:13.5px; text-decoration:none; white-space:nowrap; color:var(--text-3);}
-  .gnb-dropdown-item:hover{color:var(--text);}
-  .gnb-dropdown-item.active{color:var(--num-text); font-weight:700;}
+  .gnb-dropdown-item{display:block; font-size:12px; text-decoration:none; white-space:nowrap; color:#cccccc;}
+  .gnb-dropdown-item:hover{color:#ffffff;}
+  .gnb-dropdown-item.active{color:#ffffff; font-weight:600;}
 
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
   .sub{font-size:14.5px; color:var(--text-2); line-height:1.8; margin:0 0 28px;}
@@ -58,28 +58,28 @@
   .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle;}
 
   .m-tag{display:inline-block; font-size:9.5px; font-weight:700; border-radius:4px; padding:2px 7px; margin-left:5px; vertical-align:middle;}
-  .m1{background:oklch(90% 0.08 150); color:oklch(38% 0.1 150);}
-  .m2{background:oklch(90% 0.08 70); color:oklch(45% 0.1 55);}
-  .m3{background:oklch(90% 0.01 265); color:oklch(45% 0.02 265);}
+  .m1{background:#e2f4e9; color:#2FA360;}
+  .m2{background:#fbf0d9; color:#E0791C;}
+  .m3{background:#d2d2d7; color:#333333;}
   .legend-note{font-size:12.5px; color:var(--text-3); line-height:1.8; margin-bottom:36px;}
 
   .group-title{font-size:19px; font-weight:800; margin:40px 0 4px; padding-top:18px; border-top:2px solid var(--text); color:var(--num-text);}
   .group-desc{font-size:13px; color:var(--text-3); margin:0 0 18px;}
 
-  .item-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:22px 24px; margin-bottom:16px;}
+  .item-card{background:var(--card); box-shadow:none; border:1px solid #e0e0e0; border-radius:16px; padding:22px 24px; margin-bottom:16px;}
   .item-head{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
   .item-num{font-family:'Noto Sans KR',sans-serif; font-weight:800; font-size:12px; color:#fff; background:var(--num-text); border-radius:6px; padding:3px 8px;}
   .item-title{font-size:15.5px; font-weight:700;}
   .item-label{font-size:11px; font-weight:700; color:var(--text-3); margin-bottom:5px;}
   ul.bullets{margin:0 0 10px; padding-left:18px; font-size:13px; color:var(--text-2); line-height:1.75;}
-  .reject-box{font-size:12.5px; color:oklch(45% 0.18 20); background:oklch(94% 0.04 20); border-radius:8px; padding:8px 12px; margin-bottom:10px;}
-  .evidence-box{font-size:13px; color:var(--text); background:oklch(95% 0.015 260); border-left:3px solid var(--num-text); border-radius:0 10px 10px 0; padding:12px 16px; line-height:1.75;}
+  .reject-box{font-size:12.5px; color:#E33B5A; background:#fbe4e4; border-radius:8px; padding:8px 12px; margin-bottom:10px;}
+  .evidence-box{font-size:13px; color:var(--text); background:#e5e5e7; border-left:3px solid var(--num-text); border-radius:0 10px 10px 0; padding:12px 16px; line-height:1.75;}
   .evidence-box b{color:var(--num-text);}
   .evidence-box + .evidence-box{margin-top:8px;}
 
   .diagram-row{display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;}
   .diagram-card{flex:1; min-width:170px; background:#fff; border-radius:10px; padding:10px 12px;}
-  .diagram-visual{height:80px; border-radius:8px; margin-bottom:8px; background:oklch(93% 0.01 265);}
+  .diagram-visual{height:80px; border-radius:8px; margin-bottom:8px; background:#e5e5e7;}
   .diagram-title{font-size:12px; font-weight:700; margin-bottom:2px;}
   .diagram-desc{font-size:11px; color:var(--text-3); line-height:1.6;}
 
@@ -91,7 +91,7 @@
   .btn-mock.mock-outline{background:none; border:1.5px solid var(--num-text); color:var(--num-text); border-radius:6px;}
   .btn-mock.mock-line{background:none; color:var(--num-text); text-decoration:underline; padding:6px 2px;}
   .btn-mock.mock-circle{background:var(--num-text); color:#fff; border-radius:50%; width:34px; height:34px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:10px;}
-  .btn-mock.mock-badge{background:oklch(92% 0.16 90); color:oklch(30% 0.05 60); border-radius:40% 60% 55% 45% / 50% 45% 55% 50%; font-weight:800;}
+  .btn-mock.mock-badge{background:#fbf0d9; color:#E0791C; border-radius:40% 60% 55% 45% / 50% 45% 55% 50%; font-weight:800;}
   .btn-type-label{font-size:10.5px; color:var(--text-3);}
 
   .spec-table{width:100%; border-collapse:collapse; font-size:12px; margin-top:8px;}
@@ -171,17 +171,17 @@
     <div class="evidence-box"><b>시선 흐름 패턴:</b> 텍스트 밀도·구도에 따라 사람이 화면을 보는 순서가 어느 정도 정형화돼 있습니다.
       <div class="diagram-row">
         <div class="diagram-card">
-          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><path d="M 15 20 L 185 20 L 15 55 L 185 55 L 15 90 L 100 90" stroke="oklch(45% 0.12 260)" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="15" cy="20" r="3" fill="oklch(45% 0.12 260)"/></svg></div>
+          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><path d="M 15 20 L 185 20 L 15 55 L 185 55 L 15 90 L 100 90" stroke="#0066cc" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="15" cy="20" r="3" fill="#0066cc"/></svg></div>
           <div class="diagram-title">Z 패턴</div>
           <div class="diagram-desc">텍스트 적고 이미지 중심 — 좌상단→우상단→좌하단→우하단</div>
         </div>
         <div class="diagram-card">
-          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><path d="M 15 15 L 185 15 M 15 15 L 15 105 M 15 45 L 140 45 M 15 45 L 15 105 M 15 75 L 100 75" stroke="oklch(45% 0.12 260)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></div>
+          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><path d="M 15 15 L 185 15 M 15 15 L 15 105 M 15 45 L 140 45 M 15 45 L 15 105 M 15 75 L 100 75" stroke="#0066cc" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></div>
           <div class="diagram-title">F 패턴</div>
           <div class="diagram-desc">텍스트 많음(리뷰·기사형) — 위쪽 넓게, 아래로 갈수록 왼쪽만 짧게</div>
         </div>
         <div class="diagram-card">
-          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><circle cx="20" cy="18" r="4" fill="oklch(45% 0.12 260)"/><circle cx="180" cy="18" r="3" fill="oklch(65% 0.02 265)"/><circle cx="20" cy="102" r="3" fill="oklch(65% 0.02 265)"/><circle cx="180" cy="102" r="4" fill="oklch(45% 0.12 260)"/><path d="M 20 18 Q 100 55 180 102" stroke="oklch(45% 0.12 260)" stroke-width="2" fill="none" stroke-dasharray="4 4"/></svg></div>
+          <div class="diagram-visual"><svg viewBox="0 0 200 120" width="100%" height="100%"><circle cx="20" cy="18" r="4" fill="#0066cc"/><circle cx="180" cy="18" r="3" fill="#7a7a7a"/><circle cx="20" cy="102" r="3" fill="#7a7a7a"/><circle cx="180" cy="102" r="4" fill="#0066cc"/><path d="M 20 18 Q 100 55 180 102" stroke="#0066cc" stroke-width="2" fill="none" stroke-dasharray="4 4"/></svg></div>
           <div class="diagram-title">Gutenberg 다이어그램</div>
           <div class="diagram-desc">밀도 낮고 요소가 듬성듬성 — 좌상단(로고)→우하단(CTA) 대각선</div>
         </div>

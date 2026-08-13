@@ -8,16 +8,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: oklch(97.5% 0.006 85);
-    --card: oklch(99.2% 0.002 85);
-    --card-border: oklch(89% 0.015 265);
-    --text: oklch(22% 0.02 265);
-    --text-2: oklch(48% 0.02 265);
-    --text-3: oklch(55% 0.015 265);
-    --num-bg: oklch(93% 0.03 260);
-    --num-text: oklch(35% 0.08 260);
-    --danger: oklch(55% 0.19 25);
-    --ok: oklch(48% 0.12 145);
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --card-border: #e0e0e0;
+    --text: #1d1d1f;
+    --text-2: #333333;
+    --text-3: #7a7a7a;
+    --num-bg: #e3edfb;
+    --num-text: #0066cc;
+    --danger: #E33B5A;
+    --ok: #2FA360;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -26,7 +26,7 @@
   h1{font-size:20px; font-weight:800; margin:0 0 6px;}
   .sub{font-size:13.5px; color:var(--text-2); margin:0 0 28px;}
 
-  .gate-card{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:16px; padding:28px; max-width:340px;}
+  .gate-card{background:var(--card); box-shadow:none; border:1px solid #e0e0e0; border-radius:16px; padding:28px; max-width:340px;}
   .gate-card input{width:100%; padding:12px 14px; border:1px solid var(--card-border); border-radius:10px; font-size:14px; box-sizing:border-box; margin-bottom:12px; font-family:inherit;}
   .gate-card button{width:100%; padding:12px; border:none; border-radius:10px; background:var(--num-text); color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;}
   .gate-err{color:var(--danger); font-size:12.5px; margin:-4px 0 12px;}
@@ -34,7 +34,7 @@
   .section{display:none; margin-top:32px;}
   .section.show{display:block;}
   .section-title{font-size:14px; font-weight:700; color:var(--text-2); margin:0 0 14px;}
-  .user-row{background:var(--card); box-shadow:6px 6px 18px oklch(20% 0.02 265 / 0.08); border-radius:14px; padding:16px 18px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .user-row{background:var(--card); box-shadow:none; border:1px solid #e0e0e0; border-radius:14px; padding:16px 18px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
   .user-info{font-size:13.5px;}
   .user-name{font-weight:700; margin-right:6px;}
   .user-email{color:var(--text-2);}
@@ -43,7 +43,7 @@
   .btn{padding:8px 14px; border-radius:8px; border:none; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;}
   .btn-approve{background:var(--ok); color:#fff;}
   .btn-reject{background:var(--danger); color:#fff;}
-  .btn-revoke{background:oklch(90% 0.01 265); color:var(--text);}
+  .btn-revoke{background:#d2d2d7; color:var(--text);}
   .empty{font-size:13px; color:var(--text-3); padding:16px 0;}
   .status-line{font-size:12.5px; color:var(--danger); margin-top:12px; min-height:14px;}
 </style>
