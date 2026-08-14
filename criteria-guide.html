@@ -82,6 +82,15 @@
   .evidence-box b{color:var(--num-text);}
   .evidence-box + .evidence-box{margin-top:8px;}
 
+  .example-row{display:flex; gap:10px; margin-top:12px;}
+  .example-cell{flex:1; min-width:0;}
+  .example-cell img{width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px; display:block; border:1px solid #e0e0e0;}
+  .example-tier{font-size:11px; font-weight:700; margin-top:6px; text-align:center; border-radius:20px; padding:3px 0;}
+  .example-tier.pass{color:var(--pass); background:#e2f4e9;}
+  .example-tier.needsfix{color:var(--needsfix); background:#fbe9d8;}
+  .example-tier.reject{color:var(--reject); background:#fbe4e4;}
+  .example-caption{font-size:11.5px; color:var(--text-3); text-align:center; margin-top:3px; line-height:1.4;}
+
   .diagram-row{display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;}
   .diagram-card{flex:1; min-width:170px; background:#fff; border-radius:10px; padding:10px 12px;}
   .diagram-visual{height:80px; border-radius:8px; margin-bottom:8px; background:#e5e5e7;}
@@ -166,7 +175,7 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>목적과 타깃 톤이 일치하는가</li><li>여러 혜택 포인트가 하나의 오퍼로 수렴하는가</li></ul>
     <div class="reject-box">즉시 반려: 서로 다른 오퍼·캠페인이 동시에 경쟁 또는 컨셉 부재</div>
-    <div class="evidence-box"><b>Miller's Law(7±2):</b> 사람이 단기기억에 동시에 담을 수 있는 항목은 보통 7±2개 수준입니다. 배너 하나에 혜택 포인트를 5개, 6개씩 나열하면 하나도 기억에 안 남을 수 있어, 강조 포인트는 1~3개로 압축하는 게 이 항목의 실질적 기준입니다.<br><br>기획안(PPT 캡처 또는 pptx)을 함께 업로드하면, 기획안에서 추출한 방향성과 실제 시안이 얼마나 부합하는지까지 함께 대조합니다.</div>
+    <div class="evidence-box"><b>Miller's Law(7±2):</b> 사람이 단기기억에 동시에 담을 수 있는 항목은 보통 7±2개 수준입니다. 배너 하나에 혜택 포인트를 5개, 6개씩 나열하면 하나도 기억에 안 남을 수 있어, 강조 포인트는 1~3개로 압축하는 게 이 항목의 실질적 기준입니다.<br><br>기획안(PPT 캡처 또는 pptx)을 함께 업로드하면, 기획안에서 추출한 방향성과 실제 시안이 얼마나 부합하는지까지 함께 대조합니다.<br><br><b>예시로 보면:</b> "최대 70% 할인 + 무료배송 + 신규가입 쿠폰 + 오늘만 특가 + 사은품 증정"처럼 오퍼 5개를 한 배너에 다 욱여넣으면 반려 대상입니다. 이걸 "무료배송, 오늘까지"처럼 캠페인 목적에 맞는 오퍼 하나(또는 핵심 오퍼+보조 오퍼 최대 2개)로 압축했는지가 실제 판정 포인트입니다. 이 항목은 리터칭 강도 같은 시각적 스펙트럼이 아니라 카피·오퍼 구성의 문제라 예시 이미지 대신 이렇게 텍스트 예시로 기준을 잡았습니다.</div>
   </div>
 
   <div class="item-card">
@@ -196,6 +205,11 @@
     </div>
     <div class="evidence-box"><b>구도:</b> 삼분할법(화면 3등분 교차점에 핵심 요소 배치), 황금비(비주얼:텍스트 영역 약 1:1.618), 시각적 균형(무게감 상쇄), 비율 그리드(짧은 변을 N등분해 여백 단위로 — 한 브랜드는 SNS 소재에서 18등분 사용).</div>
     <div class="evidence-box"><b>배너 카피 3계층 구조(사내 제작가이드 기준):</b> 서브카피(0~2단, 브랜드명·시즌 태그) → 메인카피(1~2단, 핵심 메시지) → 상세설명(1~2단, 조건·부가정보) 순으로 위계를 나눕니다. 카드형 메시지(MMS 등)에서는 메인 텍스트 3줄 이하, 서브 텍스트 1줄 이하를 권장 기준으로 둡니다.</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/02_hierarchy__pass.jpg" alt="위계 명확한 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">크기·굵기 차이로 위계가 명확</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/02_hierarchy__needsfix.jpg" alt="위계 애매한 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">헤드라인·서브 크기 차이가 애매</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/02_hierarchy__reject.jpg" alt="위계 없는 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">모든 요소가 같은 무게로 나열</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -219,6 +233,12 @@
     <div class="evidence-box"><b>줄간격(행간) 비율:</b> 본문은 폰트 크기의 1.4~1.6배, 헤드라인처럼 큰 텍스트는 1.1~1.3배가 자연스럽습니다 — 실제로 한 브랜드의 배너 헤드라인 스펙도 44pt에 행간 54pt(1.23배), 27pt에 행간 33pt(1.22배)로 이 범위와 일치합니다. 폰트는 2종 이내로 제한하고 굵기 차이로 위계를 주는 것이 여러 폰트를 섞는 것보다 안정적입니다.</div>
     <div class="evidence-box"><b>Gestalt 원리:</b> 근접성(가까운 요소는 하나의 그룹으로 인식 — 여백·간격 일관성의 근거) · 유사성(같은 역할의 요소는 같은 스타일로 통일해야 한눈에 전달). 강조는 색상·굵기·크기 3요소 중 최소 하나 이상으로 뚜렷이 구분돼야 시선을 끕니다.</div>
     <div class="evidence-box"><b>타이포그래피 흔한 실수(실제 브랜드 가이드 금지 규정):</b> 텍스트에 윤곽선·효과를 과도하게 적용 · 배경과 낮은 대비 조합 사용 · 헤드라인에 본문용 서체를 사용 · 행간·자간을 과도하게 적용해 가독성을 해침 · 불필요한 줄바꿈으로 시선을 분산시킴 · 가독성이 떨어지는 정렬을 사용.</div>
+    <div class="item-label" style="margin-top:12px;">명도 대비 예시 (WCAG 4.5:1 기준)</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/03_contrast__pass.jpg" alt="대비 충분한 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">7:1 이상 — 또렷하게 읽힘</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/03_contrast__needsfix.jpg" alt="대비 애매한 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">3~4.5:1 — 애매한 경계 구간</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/03_contrast__reject.jpg" alt="대비 부족한 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">3:1 미만 — 거의 안 보임</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -246,6 +266,11 @@
     <ul class="bullets"><li>톤·질감이 배경과 어울리는가</li><li>그림자·반사가 자연스러운가</li><li>누끼(컷아웃) 경계가 매끄럽게 처리됐는가 (헤어 잔여배경, 거친 윤곽선 등)</li></ul>
     <div class="reject-box">즉시 반려: 합성이 티나거나 이질감이 있음, 누끼 경계에 배경 잔상·거친 윤곽선이 남음</div>
     <div class="evidence-box"><b>누끼 경계 3종 체크:</b> ① 안티에일리어싱 부족(계단 현상) ② 원래 배경색이 얇게 번져 보이는 할레이션 ③ 헤어 등 세밀한 경계의 배경 잔여물. 사진 합성이 아닌 시안은 이 체크가 자동으로 해당 없음(na) 처리됩니다.</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/06_composite__pass.jpg" alt="합성 경계 자연스러운 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">경계가 매끈, 배경 잔상 없음</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/06_composite__needsfix.jpg" alt="합성 경계 미세한 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">확대해야 보이는 미세한 계단현상</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/06_composite__reject.jpg" alt="합성 경계 티나는 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">배경색이 번져 보이는 잔상</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -254,6 +279,11 @@
     <ul class="bullets"><li>보정이 과도하지 않은가</li><li>재질 텍스처가 자연스러운가</li></ul>
     <div class="reject-box">즉시 반려: 과도한 리터칭으로 왜곡된 피사체</div>
     <div class="evidence-box">10번(신체 비율 왜곡)과의 경계: 7번은 질감·보정 품질(형태는 정상이나 표면이 부자연스럽게 매끈함), 10번은 형태·비율(구조 자체가 물리적으로 말이 안 되는 경우)로 구분합니다.</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/07_retouch__pass.jpg" alt="자연스러운 리터칭 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">잡티만 정리, 피부결 유지</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/07_retouch__needsfix.jpg" alt="과도해지기 시작한 리터칭 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">매끈하지만 살짝 인공적인 느낌 시작</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/07_retouch__reject.jpg" alt="과도한 리터칭 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">질감 소실, 왁스인형 같은 느낌</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -261,6 +291,11 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>아이콘·일러스트 마감이 깨끗한가</li><li>벡터에 깨짐이 없는가</li></ul>
     <div class="reject-box">즉시 반려: 저해상도로 깨지거나 미완성</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/08_vector__pass.jpg" alt="벡터 마감이 깨끗한 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">벡터 경계가 선명함</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/08_vector__needsfix.jpg" alt="벡터 경계가 약간 흐릿한 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">경계가 살짝 흐릿, 압축 흔적</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/08_vector__reject.jpg" alt="벡터가 깨진 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">저해상도로 깨진 픽셀 경계</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -290,6 +325,11 @@
       </table>
       CTA 끝에 화살표(&gt;, →)가 없으면 참고 제안으로 가볍게 덧붙이되 판정 등급은 올리지 않습니다.
     </div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/09_cta__pass.jpg" alt="눈에 띄는 CTA 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">배경과 강한 대비로 눈에 띔</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/09_cta__needsfix.jpg" alt="묻히는 CTA 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">배경과 비슷한 톤이라 묻힘</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/09_cta__reject.jpg" alt="존재감 없는 CTA 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">배경과 거의 구분 안 됨</div></div>
+    </div>
   </div>
 
   <!-- ===================== 그룹 2 ===================== -->
@@ -301,6 +341,11 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>얼굴(이목구비)이 뒤틀리지 않았는가</li><li>손가락·팔다리 비율이 정상인가</li><li>자세가 물리적으로 가능한가</li></ul>
     <div class="reject-box">즉시 반려: 얼굴·신체 비율이 명백히 어긋남</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/10_anatomy__pass.jpg" alt="비율 정상 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">손가락 개수·비율 정상</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/10_anatomy__needsfix.jpg" alt="비율 미세하게 어긋난 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">미세하게 부자연스러움</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/10_anatomy__reject.jpg" alt="비율 명백히 왜곡된 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">개수·형태가 명백히 왜곡</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -308,6 +353,11 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>텍스처가 반복되지 않는가</li><li>패턴 경계가 매끄러운가</li></ul>
     <div class="reject-box">즉시 반려: 배경이 눈에 띄게 반복됨</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/11_pattern__pass.jpg" alt="패턴 이음새 없는 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">이음새 없이 매끄럽게 반복</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/11_pattern__needsfix.jpg" alt="패턴 이음선이 옅게 보이는 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">자세히 보면 옅은 이음선</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/11_pattern__reject.jpg" alt="패턴 경계가 뚜렷한 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">어긋나는 경계선이 뚜렷함</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -315,6 +365,11 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>AI 워터마크가 없는가</li><li>스톡 이미지 출처 표시가 없는가</li></ul>
     <div class="reject-box">즉시 반려: 워터마크·서명이 남아있음</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/12_watermark__pass.jpg" alt="흔적 없는 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">워터마크·흔적 없이 깨끗함</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/12_watermark__needsfix.jpg" alt="옅은 흔적 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">구석에 옅은 고스트 흔적</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/12_watermark__reject.jpg" alt="뚜렷한 워터마크 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">반투명 워터마크가 뚜렷함</div></div>
+    </div>
   </div>
 
   <div class="item-card">
@@ -322,6 +377,11 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>그림자를 가진 피사체가 2개 이상일 때, 광원 방향이 서로 모순되지 않는가</li></ul>
     <div class="reject-box">즉시 반려: 그림자 방향이 서로 어긋남 (피사체가 하나뿐이면 해당 없음)</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/13_shadow__pass.jpg" alt="그림자 방향 일치 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">두 그림자 방향이 서로 일치</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/13_shadow__needsfix.jpg" alt="그림자 방향 미세하게 어긋난 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">각도가 미세하게 어긋남</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/13_shadow__reject.jpg" alt="그림자 방향 모순되는 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">방향이 서로 명백히 모순</div></div>
+    </div>
   </div>
 
   <!-- ===================== 그룹 3 ===================== -->
@@ -341,6 +401,11 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>생성된 글자가 정확한가</li><li>로고 형태가 원본과 일치하는가</li></ul>
     <div class="reject-box">즉시 반려: 글자가 깨지거나 로고가 왜곡됨</div>
+    <div class="example-row">
+      <div class="example-cell"><img src="assets/m3-examples/15_textrender__pass.jpg" alt="글자가 정확한 예시" loading="lazy"><div class="example-tier pass">pass</div><div class="example-caption">글자 형태가 정확함</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/15_textrender__needsfix.jpg" alt="글자가 살짝 뒤틀린 예시" loading="lazy"><div class="example-tier needsfix">needsfix</div><div class="example-caption">한 글자가 미세하게 뒤틀림</div></div>
+      <div class="example-cell"><img src="assets/m3-examples/15_textrender__reject.jpg" alt="글자가 깨진 예시" loading="lazy"><div class="example-tier reject">reject</div><div class="example-caption">알아볼 수 없이 뭉개짐</div></div>
+    </div>
   </div>
 
   <div class="item-card">
