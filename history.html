@@ -35,11 +35,13 @@
 
   .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
     .gnb-bar{position:sticky; top:0; background:#000000; z-index:100;}
-  .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:0 24px; height:44px; flex-wrap:wrap;}
-  .gnb-logo{display:flex; align-items:center; gap:8px;}
+  .gnb-bar-inner{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; max-width:1040px; margin:0 auto; padding:0 24px; height:44px;}
+  .gnb-logo{display:flex; align-items:center; gap:8px; justify-self:start;}
   .gnb-logo-icon{height:22px; width:auto; display:block;}
   .gnb-logo-text{font-size:15px; font-weight:600; color:#ffffff; letter-spacing:-0.01em;}
   .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .gnb-primary{justify-self:center;}
+  .gnb-secondary{justify-self:end;}
   .gnb-link{font-size:12px; font-weight:400; letter-spacing:-0.12px; text-decoration:none; color:#cccccc; transition:color .15s ease;}
   .gnb-link:hover{color:#ffffff;}
   .gnb-link.active{color:#ffffff; font-weight:600;}
@@ -71,7 +73,7 @@
 
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
-    .gnb-bar-inner{gap:16px;}
+    .gnb-bar-inner{display:flex; flex-wrap:wrap; gap:16px;}
     .gnb{gap:12px;}
     .history-item{flex-direction:column;}
     .history-delete{align-self:flex-end;}
@@ -83,7 +85,7 @@
 <div class="gnb-bar">
   <div class="gnb-bar-inner">
     <a href="index.html" class="gnb-logo"><img src="logo.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
-    <nav class="gnb">
+    <nav class="gnb gnb-primary">
       <a href="index.html" class="gnb-link">디자인 체크리스트</a>
       <div class="gnb-dropdown">
         <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
@@ -96,7 +98,9 @@
       </div>
       <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
       <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
-      <a href="history.html" class="gnb-link active">히스토리</a>
+      </nav>
+      <nav class="gnb gnb-secondary">
+        <a href="history.html" class="gnb-link active">히스토리</a>
       <a href="roadmap.html" class="gnb-link">업데이트</a>
     </nav>
   </div>
