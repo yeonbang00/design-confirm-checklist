@@ -17,8 +17,14 @@ export default function handler(req, res) {
   }
 
   const { category } = req.query || {};
-  const cat = category ? REFERENCE_CATEGORIES[category] : null;
 
+  if (!category || category === 'all') {
+    const items = Object.values(REFERENCE_CATEGORIES).flatMap((cat) => cat.items || []);
+    res.status(200).json({ items });
+    return;
+  }
+
+  const cat = REFERENCE_CATEGORIES[category];
   if (!cat) {
     res.status(404).json({ error: '카테고리를 찾을 수 없습니다.' });
     return;

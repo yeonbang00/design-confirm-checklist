@@ -7,8 +7,8 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <style>
   :root{
-    --primary: #c2470f;
-    --primary-focus: #a8390c;
+    --primary: #1a33cc;
+    --primary-focus: #12278f;
     --ink: #1d1d1f;
     --bg: #0d0d0f;
     --canvas-text: #f5f5f7;
@@ -20,12 +20,12 @@
     --text: #1d1d1f;
     --text-2: #333333;
     --text-3: #7a7a7a;
-    --num-bg: #fdeee5;
-    --num-text: #c2470f;
+    --num-bg: #e9ebfc;
+    --num-text: #1a33cc;
     --accent: #c8ff33;
     --accent-strong: #a8e62e;
     --accent-ink: #0a0a0d;
-    --group-label: #c2470f;
+    --group-label: #1a33cc;
     --popover-bg: #1d1d1f;
     --progress-fill: #c8ff33;
     --pass:#2FA360; --needsfix:#E0791C; --reject:#E33B5A; --na:#8A8A86;
@@ -48,7 +48,7 @@
   @keyframes scanline { 0% { top:0%; } 100% { top:100%; } }
   @keyframes scanpulse { 0%, 100% { opacity:0.35; } 50% { opacity:0.9; } }
   @keyframes chipIn { 0% { opacity:0; transform:translateY(14px) scale(0.94); } 100% { opacity:1; transform:translateY(0) scale(1); } }
-  @keyframes rowflash { 0%{background:#fdeee5;} 100%{background:transparent;} }
+  @keyframes rowflash { 0%{background:#e9ebfc;} 100%{background:transparent;} }
   @keyframes blinkdot { 0%,100%{opacity:.2;} 50%{opacity:1;} }
 
   /* ---------- top nav (Apple global-nav: pure black, 44px) ---------- */
@@ -61,8 +61,8 @@
   .gnb-primary{justify-self:center;}
   .gnb-secondary{justify-self:end;}
   .gnb-link{font-size:12px; font-weight:400; letter-spacing:-0.12px; text-decoration:none; color:#cccccc; transition:color .15s ease;}
-  .gnb-link:hover{color:#ffffff;}
-  .gnb-link.active{color:#ffffff; font-weight:600;}
+  .gnb-link:hover{color:var(--accent);}
+  .gnb-link.active{color:var(--accent); font-weight:600;}
   .gnb-dropdown{position:relative;}
   .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
   .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
@@ -70,8 +70,8 @@
   .gnb-dropdown-menu.open{display:flex;}
   .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu{display:flex;}
   .gnb-dropdown-item{display:block; font-size:12px; text-decoration:none; white-space:nowrap; color:#cccccc;}
-  .gnb-dropdown-item:hover{color:#ffffff;}
-  .gnb-dropdown-item.active{color:#ffffff; font-weight:600;}
+  .gnb-dropdown-item:hover{color:var(--accent);}
+  .gnb-dropdown-item.active{color:var(--accent); font-weight:600;}
 
   /* ---------- prompt hero (big upload box + option-button row) ---------- */
   .prompt-hero{padding:110px 24px 64px; text-align:center;}
@@ -100,8 +100,8 @@
   .prompt-chip-remove:hover{color:var(--ink);}
 
   .option-row{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:14px;}
-  .option-btn{position:relative; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--card-border); background:#ffffff; color:var(--ink); font-size:13px; font-weight:600; padding:11px 18px; border-radius:9999px; cursor:pointer; font-family:inherit; max-width:220px;}
-  .option-btn:hover{background:var(--bg);}
+  .option-btn{position:relative; display:inline-flex; align-items:center; gap:6px; border:1px solid var(--card-border); background:#ffffff; color:var(--ink); font-size:13px; font-weight:600; padding:11px 18px; border-radius:9999px; cursor:pointer; font-family:inherit; max-width:220px; transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, border-color .18s ease;}
+  .option-btn:hover{transform:translateY(-2px) scale(1.03); box-shadow:0 6px 16px rgba(0,0,0,0.45); border-color:var(--accent);}
   .option-btn-value{color:var(--primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .opt-chevron{color:var(--text-3); font-size:11px; flex-shrink:0;}
   .option-btn-primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); margin-left:auto;}
@@ -115,7 +115,7 @@
   .option-menu.open{display:block;}
   .ppm-item{display:block; width:100%; text-align:left; background:none; border:none; padding:8px; font-size:13.5px; color:var(--ink); cursor:pointer; border-radius:8px; font-family:inherit;}
   .ppm-item:hover{background:var(--bg);}
-  .ppm-item.active{background:#fdeee5; color:var(--primary); font-weight:600;}
+  .ppm-item.active{background:#e9ebfc; color:var(--primary); font-weight:600;}
 
   .brief-thumb-grid{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
   .brief-thumb{position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--card-border); width:36px; height:36px; background:var(--bg); flex-shrink:0;}
@@ -133,7 +133,7 @@
   /* ---------- content / cards (Apple store-utility-card: hairline, no shadow) ---------- */
   .content{max-width:1040px; margin:0 auto; padding:0 24px 100px; position:relative;}
   .card{background:var(--card); border:1px solid var(--card-border); box-shadow:none; border-radius:18px; padding:40px; margin-bottom:24px;}
-  .card.checklist-card{background:var(--charcoal); border-color:var(--charcoal-border); box-shadow:none; display:none; position:relative;}
+  .card.checklist-card{display:none; position:relative;}
   .card.checklist-card.show{display:block;}
   .checklist-pending-overlay{display:none; position:absolute; inset:0; align-items:center; justify-content:center; z-index:5; border-radius:18px;}
   .checklist-card.pending{max-height:280px; overflow:hidden;}
@@ -142,8 +142,7 @@
   .checklist-pending-label{font-size:14px; font-weight:600; color:var(--ink); background:rgba(255,255,255,0.9); padding:10px 20px; border-radius:9999px; display:flex; align-items:center; gap:8px; border:1px solid var(--card-border);}
   .checklist-pending-label .dot{width:7px; height:7px; border-radius:50%; background:var(--primary); animation:scanpulse 1s ease-in-out infinite;}
   .card-head{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
-  .num-badge{width:26px; height:26px; border-radius:50%; background:var(--num-bg); color:var(--num-text); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0;}
-  .card-title{font-size:17px; font-weight:600; letter-spacing:-0.374px; color:var(--canvas-text);}
+  .card-title{font-size:17px; font-weight:600; letter-spacing:-0.374px; color:var(--ink);}
   .mg-check-empty{font-size:12.5px; color:var(--text-3); padding:8px;}
 
   /* ---------- AI summary (Apple product-tile-dark panel — flat, no gradient) ---------- */
@@ -180,12 +179,12 @@
   .brief-error-note{font-size:12px; color:var(--needsfix); margin-top:8px;}
 
   /* ---------- checklist ---------- */
-  .row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 4px; border-bottom:1px solid var(--charcoal-border);}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 4px; border-bottom:1px solid var(--card-border);}
   #groupsContainer .row:last-child{border-bottom:none;}
   .row.jump-flash{animation:rowflash 1.4s ease;}
   .row-label{display:flex; align-items:baseline; gap:10px; min-width:200px;}
-  .row-label .rn{font-size:12px; color:var(--canvas-text-2); font-variant-numeric:tabular-nums;}
-  .row-label .rt{font-size:14.5px; font-weight:600; color:var(--canvas-text);}
+  .row-label .rn{font-size:12px; color:var(--text-3); font-variant-numeric:tabular-nums;}
+  .row-label .rt{font-size:14.5px; font-weight:600; color:var(--ink);}
   .row-btns{display:flex; gap:8px; flex-wrap:wrap;}
   .stbtn{border:1px solid var(--card-border); background:#ffffff; color:var(--text-2); font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:9999px; cursor:pointer; box-shadow:none; transition:transform .1s ease;}
   .stbtn:hover{transform:scale(0.97);}
@@ -193,19 +192,19 @@
   .stbtn[data-status="needsfix"].active{background:var(--needsfix); border-color:var(--needsfix); color:#fff;}
   .stbtn[data-status="reject"].active{background:var(--reject); border-color:var(--reject); color:#fff;}
   .stbtn[data-status="na"].active{background:var(--na); border-color:var(--na); color:#fff;}
-  .row-note{font-size:12px; color:var(--canvas-text-2); margin:-6px 0 10px; padding:8px 10px; background:rgba(255,255,255,0.06); border-radius:8px; display:none;}
+  .row-note{font-size:12px; color:var(--text-3); margin:-6px 0 10px; padding:8px 10px; background:#f5f5f7; border-radius:8px; display:none;}
   .row-note.show{display:block;}
 
-  .checklist-summary{display:flex; align-items:center; justify-content:space-between; margin:16px 0 28px; padding-bottom:24px; border-bottom:1px solid var(--charcoal-border); gap:24px; flex-wrap:wrap;}
+  .checklist-summary{display:flex; align-items:center; justify-content:space-between; margin:16px 0 28px; padding-bottom:24px; border-bottom:1px solid var(--card-border); gap:24px; flex-wrap:wrap;}
   .progress-cluster{display:flex; align-items:center; gap:22px; flex-wrap:wrap;}
-  .progress-track{width:180px; height:6px; background:rgba(255,255,255,0.14); border-radius:9999px; overflow:hidden;}
+  .progress-track{width:180px; height:6px; background:#e5e5e7; border-radius:9999px; overflow:hidden;}
   .progress-fill{height:100%; width:0%; background:var(--progress-fill); border-radius:9999px; transition:width .3s ease;}
-  .counts{display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--canvas-text-2);}
-  .counts b{color:var(--canvas-text);}
+  .counts{display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--text-3);}
+  .counts b{color:var(--ink);}
   .verdict-cluster{display:flex; align-items:center; gap:12px;}
   .verdict-dot{width:12px; height:12px; border-radius:50%; background:#cccccc; flex-shrink:0;}
-  .verdict-label{font-size:14px; font-weight:600; color:var(--canvas-text);}
-  .verdict-sub{font-size:12px; color:var(--canvas-text-2);}
+  .verdict-label{font-size:14px; font-weight:600; color:var(--ink);}
+  .verdict-sub{font-size:12px; color:var(--text-3);}
 
   .page-footer{display:none; text-align:center; font-size:12px; color:var(--canvas-text-2); line-height:1.6; padding-top:8px;}
   .page-footer.show{display:block;}
@@ -365,7 +364,7 @@
   <div class="card checklist-card">
     <div class="checklist-pending-overlay"><div class="checklist-pending-label"><span class="dot"></span>체크 중...</div></div>
     <div class="checklist-inner">
-      <div class="card-head"><div class="num-badge">02</div><div class="card-title">컨펌 체크리스트</div></div>
+      <div class="card-head"><div class="card-title">17개 평가항목</div></div>
 
       <div class="checklist-summary">
         <div class="progress-cluster">

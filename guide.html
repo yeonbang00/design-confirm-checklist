@@ -17,8 +17,8 @@
     --text: #1d1d1f;
     --text-2: #333333;
     --text-3: #7a7a7a;
-    --num-bg: #fdeee5;
-    --num-text: #c2470f;
+    --num-bg: #e9ebfc;
+    --num-text: #1a33cc;
     --accent: #c8ff33;
     --accent-strong: #a8e62e;
     --accent-ink: #0a0a0d;
@@ -49,8 +49,8 @@
   .gnb-primary{justify-self:center;}
   .gnb-secondary{justify-self:end;}
   .gnb-link{font-size:12px; font-weight:400; letter-spacing:-0.12px; text-decoration:none; color:#cccccc; transition:color .15s ease;}
-  .gnb-link:hover{color:#ffffff;}
-  .gnb-link.active{color:#ffffff; font-weight:600;}
+  .gnb-link:hover{color:var(--accent);}
+  .gnb-link.active{color:var(--accent); font-weight:600;}
   .gnb-dropdown{position:relative;}
   .gnb-dropdown-toggle{background:none; border:none; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px;}
   .gnb-dropdown-toggle::after{content:'▾'; font-size:9px; margin-top:1px;}
@@ -58,8 +58,8 @@
   .gnb-dropdown-menu.open{display:flex;}
   .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu{display:flex;}
   .gnb-dropdown-item{display:block; font-size:12px; text-decoration:none; white-space:nowrap; color:#cccccc;}
-  .gnb-dropdown-item:hover{color:#ffffff;}
-  .gnb-dropdown-item.active{color:#ffffff; font-weight:600;}
+  .gnb-dropdown-item:hover{color:var(--accent);}
+  .gnb-dropdown-item.active{color:var(--accent); font-weight:600;}
 
   h1{font-size:30px; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px; color:var(--canvas-text);}
   .sub{font-size:14.5px; color:var(--canvas-text-2); line-height:1.8; margin:0 0 28px;}
