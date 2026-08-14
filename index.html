@@ -308,8 +308,18 @@
       <div class="layout-stats-grid" id="layoutStatsGrid"></div>
     </div>
 
+    <div class="comparison-block" id="comparisonBlock">
+      <div class="comparison-title">브랜드 가이드 비교 결과</div>
+      <div class="comparison-item">
+        <div class="ci-text" id="compGaps"></div>
+      </div>
+    </div>
+
     <div class="comparison-block" id="brandGuideReviewBlock">
       <div class="comparison-title">브랜드 가이드 기준 검수 결과</div>
+      <div class="comparison-item">
+        <div class="ci-text" id="bgDiffers"></div>
+      </div>
       <div class="comparison-item">
         <div class="ci-label">확인이 필요한 점</div>
         <div class="ci-text" id="bgNeedsCheck"></div>
@@ -318,6 +328,9 @@
 
     <div class="comparison-block" id="mediaGuideBlock">
       <div class="comparison-title">매체 가이드 검수 결과</div>
+      <div class="comparison-item">
+        <div class="ci-text" id="mgDiffers"></div>
+      </div>
       <div class="comparison-item">
         <div class="ci-label">확인이 필요한 점</div>
         <div class="ci-text" id="mgNeedsCheck"></div>
@@ -748,6 +761,7 @@
     clearSessionState();
     setStatus('', false);
     document.getElementById('aiSummaryBox').classList.remove('show');
+    document.getElementById('comparisonBlock').classList.remove('show');
     document.getElementById('brandGuideReviewBlock').classList.remove('show');
     document.getElementById('mediaGuideBlock').classList.remove('show');
     document.getElementById('briefAlignmentBlock').classList.remove('show');
@@ -1161,9 +1175,18 @@
       layoutStatsBlock.classList.remove('show');
     }
 
+    const compBlock = document.getElementById('comparisonBlock');
+    if(result.comparison && result.comparison.gaps){
+      document.getElementById('compGaps').textContent = result.comparison.gaps || '—';
+      compBlock.classList.add('show');
+    } else {
+      compBlock.classList.remove('show');
+    }
+
     const bgBlock = document.getElementById('brandGuideReviewBlock');
     const bgr = result.brandGuideReview;
-    if(bgr && bgr.needsCheck){
+    if(bgr && (bgr.differs || bgr.needsCheck)){
+      document.getElementById('bgDiffers').textContent = bgr.differs || '—';
       document.getElementById('bgNeedsCheck').textContent = bgr.needsCheck || '—';
       bgBlock.classList.add('show');
     } else {
@@ -1172,7 +1195,8 @@
 
     const mgBlock = document.getElementById('mediaGuideBlock');
     const mgr = result.mediaGuideReview;
-    if(mgr && mgr.needsCheck){
+    if(mgr && (mgr.differs || mgr.needsCheck)){
+      document.getElementById('mgDiffers').textContent = mgr.differs || '—';
       document.getElementById('mgNeedsCheck').textContent = mgr.needsCheck || '—';
       mgBlock.classList.add('show');
     } else {
