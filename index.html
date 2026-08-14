@@ -84,9 +84,18 @@
   .upload-box-title{font-size:16px; font-weight:600; color:var(--canvas-text); margin-bottom:6px;}
   .upload-box-sub{font-size:12.5px; color:var(--canvas-text-2);}
   .upload-box-loaded{display:none; align-items:center; justify-content:center; gap:10px;}
+  .thumb-wrap{position:relative; flex:none; border-radius:10px; overflow:hidden;}
   .upload-box-loaded img{width:56px; height:56px; border-radius:10px; object-fit:cover; display:block; box-shadow:3px 5px 30px rgba(0,0,0,0.4);}
   .upload-box-filename{font-size:13.5px; color:var(--canvas-text); font-weight:600;}
   .upload-box.analyzing .upload-box-loaded img{outline:2px solid var(--accent); outline-offset:2px; animation:scanpulse 1.2s ease-in-out infinite;}
+  .thumb-sweep{position:absolute; left:0; right:0; top:-40%; height:45%; background:linear-gradient(180deg, transparent, rgba(200,255,51,0.9) 50%, transparent); opacity:0; pointer-events:none;}
+  .upload-box.analyzing .thumb-sweep{animation:thumbsweep 1.3s cubic-bezier(.4,0,.2,1) infinite;}
+  @keyframes thumbsweep{
+    0%{opacity:0; top:-40%;}
+    12%{opacity:1;}
+    88%{opacity:1;}
+    100%{opacity:0; top:100%;}
+  }
   .prompt-chip-remove{border:none; background:none; color:var(--text-3); font-size:16px; line-height:1; cursor:pointer; padding:0; flex-shrink:0;}
   .prompt-chip-remove:hover{color:var(--ink);}
 
@@ -97,6 +106,9 @@
   .opt-chevron{color:var(--text-3); font-size:11px; flex-shrink:0;}
   .option-btn-primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); margin-left:auto;}
   .option-btn-primary:hover{background:var(--accent-strong); border-color:var(--accent-strong);}
+  .btn-spinner{display:none; width:13px; height:13px; border-radius:50%; border:2px solid rgba(10,10,13,0.25); border-top-color:var(--accent-ink); flex:none;}
+  .upload-box.analyzing ~ .option-row .option-btn-primary .btn-spinner{display:inline-block; animation:btnspin .7s linear infinite;}
+  @keyframes btnspin{to{transform:rotate(360deg);}}
   .option-btn-primary:disabled{cursor:not-allowed;}
   .option-dropdown-wrap{position:relative;}
   .option-menu{display:none; position:absolute; top:calc(100% + 8px); left:0; background:#ffffff; border:1px solid var(--card-border); border-radius:14px; padding:8px; width:220px; z-index:50; max-height:260px; overflow-y:auto;}
@@ -250,7 +262,10 @@
         <div class="upload-box-sub">PNG · JPEG · WEBP · GIF, 8MB 이하</div>
       </div>
       <div class="upload-box-loaded" id="bannerChip">
-        <img id="loadedImg" alt="업로드한 시안">
+        <div class="thumb-wrap">
+          <img id="loadedImg" alt="업로드한 시안">
+          <div class="thumb-sweep"></div>
+        </div>
         <span class="upload-box-filename" id="bannerFileName">시안 이미지</span>
         <button type="button" class="prompt-chip-remove" id="bannerChipRemove" aria-label="시안 이미지 제거">&times;</button>
       </div>
@@ -270,7 +285,7 @@
         <div class="option-menu" id="mediaOptMenu"><div id="ppmMediaList"></div></div>
       </div>
       <button type="button" class="option-btn" id="briefDropzone">기획안 추가</button>
-      <button type="button" class="option-btn option-btn-primary" id="analyzeBtn" disabled>분석하기</button>
+      <button type="button" class="option-btn option-btn-primary" id="analyzeBtn" disabled><span class="btn-spinner"></span><span id="analyzeBtnLabel">분석하기</span></button>
     </div>
 
     <div class="brief-thumb-grid" id="briefThumbGrid"></div>
@@ -700,6 +715,7 @@
   const analyzingImg = document.getElementById('analyzingImg');
   const loadedImg = document.getElementById('loadedImg');
   const analyzeBtn = document.getElementById('analyzeBtn');
+  const analyzeBtnLabel = document.getElementById('analyzeBtnLabel');
   const statusLine = document.getElementById('statusLine');
   const pageFooter = document.getElementById('pageFooter');
   const ALLOWED = ['image/png','image/jpeg','image/webp','image/gif'];
@@ -776,7 +792,7 @@
     document.getElementById('layoutStatsBlock').classList.remove('show');
     document.querySelector('.checklist-card').classList.remove('show', 'pending');
     pageFooter.classList.remove('show');
-    analyzeBtn.textContent = 'AI 분석 시작';
+    analyzeBtnLabel.textContent = 'AI 분석 시작';
 
     currentFile = file;
     const reader = new FileReader();
@@ -806,7 +822,7 @@
       loadedImg.src = savedSession.previewDataUrl;
       bannerFileName.textContent = savedSession.fileName || '시안 이미지';
       showDzState('loaded');
-      analyzeBtn.textContent = '다시 분석하기';
+      analyzeBtnLabel.textContent = '다시 분석하기';
       applyResults(savedSession.resultJson);
       setStatus('이전 분석 결과를 불러왔습니다.', false);
     }catch(e){
@@ -1245,7 +1261,7 @@
             mediaGuideIds: getSelectedMediaGuideIds(),
           });
           showDzState('loaded');
-          analyzeBtn.textContent = '다시 분석하기';
+          analyzeBtnLabel.textContent = '다시 분석하기';
           setStatus('', false);
           lastErr = null;
           break;
