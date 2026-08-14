@@ -89,7 +89,7 @@
   .opt-chevron{color:var(--text-3); font-size:11px; flex-shrink:0;}
   .option-btn-primary{background:var(--primary); border-color:var(--primary); color:#fff; margin-left:auto;}
   .option-btn-primary:hover{background:var(--primary);}
-  .option-btn-primary:disabled{background:#d2d2d7; border-color:#d2d2d7; cursor:not-allowed;}
+  .option-btn-primary:disabled{opacity:0.55; cursor:not-allowed;}
   .option-dropdown-wrap{position:relative;}
   .option-menu{display:none; position:absolute; top:calc(100% + 8px); left:0; background:#ffffff; border:1px solid var(--card-border); border-radius:14px; padding:8px; width:220px; z-index:50; max-height:260px; overflow-y:auto;}
   .option-menu.open{display:block;}
@@ -109,7 +109,6 @@
   .prompt-status{font-size:12.5px; color:var(--reject); margin-top:14px; min-height:16px;}
   .prompt-status.loading{color:var(--text-2);}
   .prompt-status.loading::after{content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--primary); margin-left:7px; animation:blinkdot 1s infinite;}
-  .prompt-disclaimer{margin-top:14px; font-size:11.5px; color:var(--text-3); display:flex; align-items:center; gap:6px;}
 
   /* ---------- content / cards (Apple store-utility-card: hairline, no shadow) ---------- */
   .content{max-width:1040px; margin:0 auto; padding:0 24px 100px; position:relative;}
@@ -188,11 +187,8 @@
   .verdict-label{font-size:14px; font-weight:600;}
   .verdict-sub{font-size:12px; color:var(--text-3);}
 
-  .criteria-pointer{font-size:12.5px; color:var(--text-3); text-align:center; padding:8px 0 4px;}
-  .criteria-pointer a{color:var(--primary); font-weight:600; text-decoration:none;}
-  .criteria-pointer a:hover{text-decoration:underline;}
-
-  .page-footer{text-align:center; font-size:12px; color:var(--text-3); line-height:1.6; padding-top:8px;}
+  .page-footer{display:none; text-align:center; font-size:12px; color:var(--text-3); line-height:1.6; padding-top:8px;}
+  .page-footer.show{display:block;}
 
   @media (max-width:720px){
     .prompt-hero{padding:56px 16px 40px;}
@@ -272,7 +268,6 @@
     <div class="brief-thumb-grid" id="briefThumbGrid"></div>
 
     <div class="prompt-status" id="statusLine" aria-live="polite"></div>
-    <div class="prompt-disclaimer"><span>⚠</span><span>AI 판정은 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.</span></div>
   </div>
 
   <img id="analyzingImg" alt="" hidden>
@@ -375,10 +370,7 @@
     </div>
   </div>
 
-  <!-- ---------- criteria guide pointer ---------- -->
-  <div class="criteria-pointer">17개 항목 기준으로 점검합니다 — <a href="criteria-guide.html">영역가이드에서 자세히 보기 ↗</a></div>
-
-  <div class="page-footer">
+  <div class="page-footer" id="pageFooter">
     이 체크리스트는 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
     이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
     © 2026 NHNAD. All rights reserved.
@@ -682,7 +674,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'ppm-item' + (selectedIds.includes(m.id) ? ' active' : '');
-        btn.textContent = m.name + (m.hasGuideline ? ' · 가이드 등록됨' : '');
+        btn.textContent = m.name;
         btn.addEventListener('click', () => {
           const input = mediaGuideChecks.querySelector('input[value="' + m.id + '"]');
           if(input){ input.checked = !input.checked; input.dispatchEvent(new Event('change')); }
@@ -704,6 +696,7 @@
   const loadedImg = document.getElementById('loadedImg');
   const analyzeBtn = document.getElementById('analyzeBtn');
   const statusLine = document.getElementById('statusLine');
+  const pageFooter = document.getElementById('pageFooter');
   const ALLOWED = ['image/png','image/jpeg','image/webp','image/gif'];
   const MAX_BYTES = 8*1024*1024;
   let currentFile = null;
@@ -777,6 +770,7 @@
     document.getElementById('briefAlignmentBlock').classList.remove('show');
     document.getElementById('layoutStatsBlock').classList.remove('show');
     document.querySelector('.checklist-card').classList.remove('show', 'pending');
+    pageFooter.classList.remove('show');
     analyzeBtn.textContent = 'AI 분석 시작';
 
     currentFile = file;
@@ -1109,6 +1103,7 @@
   function applyResults(result){
     document.querySelector('.checklist-card').classList.add('show');
     document.querySelector('.checklist-card').classList.remove('pending');
+    pageFooter.classList.add('show');
     (result.items || []).forEach(it=>{
       if(!state.hasOwnProperty(it.id)) return;
       state[it.id] = it.status;
@@ -1217,6 +1212,7 @@
   async function runAnalysis(file){
     showDzState('analyzing');
     document.querySelector('.checklist-card').classList.add('show', 'pending');
+    pageFooter.classList.add('show');
     setStatus('', false);
     try{
       const prepared = await prepareImageForApi(file);
@@ -1266,6 +1262,7 @@
         console.error(lastErr);
         showDzState('loaded');
         document.querySelector('.checklist-card').classList.remove('show', 'pending');
+        pageFooter.classList.remove('show');
         const detail = (lastErr && lastErr.message) ? lastErr.message : '알 수 없는 오류';
         if(lastErr.status === 429){
           setStatus('AI 분석 요청이 계속 거절되고 있습니다 ('+detail+') — 일시적 혼잡이 아니라 OpenAI 계정의 사용 한도·결제 문제일 수 있으니 계정을 확인해주세요.', false);
@@ -1279,6 +1276,7 @@
       console.error(err);
       showDzState('loaded');
       document.querySelector('.checklist-card').classList.remove('show', 'pending');
+      pageFooter.classList.remove('show');
       const detail = (err && err.message) ? err.message : '알 수 없는 오류';
       setStatus('이미지 처리에 실패했습니다: '+detail, false);
     }
