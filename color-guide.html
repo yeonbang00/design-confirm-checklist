@@ -36,7 +36,8 @@
   .page{max-width:1040px; margin:0 auto; padding:40px 24px 100px;}
     .gnb-bar{position:sticky; top:0; background:#000000; z-index:100;}
   .gnb-bar-inner{display:flex; align-items:center; gap:40px; max-width:1040px; margin:0 auto; padding:0 24px; height:44px; flex-wrap:wrap;}
-  .gnb-logo{display:flex; align-items:center;}
+  .gnb-logo{display:flex; align-items:center; gap:8px;}
+  .gnb-logo-icon{height:22px; width:auto; display:block;}
   .gnb-logo-text{font-size:15px; font-weight:600; color:#ffffff; letter-spacing:-0.01em;}
   .gnb{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
   .gnb-link{font-size:12px; font-weight:400; letter-spacing:-0.12px; text-decoration:none; color:#cccccc; transition:color .15s ease;}
@@ -100,7 +101,7 @@
 
 <div class="gnb-bar">
   <div class="gnb-bar-inner">
-    <a href="index.html" class="gnb-logo"><span class="gnb-logo-text">AdCheck</span></a>
+    <a href="index.html" class="gnb-logo"><img src="logo.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
     <nav class="gnb">
       <a href="index.html" class="gnb-link">디자인 체크리스트</a>
       <div class="gnb-dropdown">
