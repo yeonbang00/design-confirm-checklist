@@ -121,6 +121,80 @@
   .section-desc{font-size:13.5px; font-weight:300; line-height:1.75; color:#8B9099; margin:0 0 20px; max-width:70ch;}
   .section-block{margin-bottom:56px;}
 
+
+  @keyframes breathe{0%,100%{opacity:.6; transform:scale(1);}50%{opacity:1; transform:scale(1.08);}}
+
+  /* ---------- FINAL GOAL 히어로 ---------- */
+  .goal-hero{position:relative; overflow:hidden; border-radius:26px; border:1px solid rgba(204,255,0,.28); background:linear-gradient(150deg,#1A1F14,#0D0F13 62%); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 40px 90px -50px rgba(204,255,0,.3); margin-bottom:56px;}
+  .goal-hero::before{content:''; position:absolute; top:-180px; right:-120px; width:620px; height:620px; pointer-events:none; background:radial-gradient(circle,rgba(204,255,0,.16),transparent 66%); filter:blur(30px); animation:breathe 12s ease-in-out infinite;}
+  .goal-hero-inner{position:relative; padding:44px 46px 46px;}
+  .goal-badge{display:inline-flex; align-items:center; gap:10px; padding:7px 14px 7px 11px; border-radius:999px; background:rgba(204,255,0,.12); border:1px solid rgba(204,255,0,.4); font:600 10.5px/1 var(--font-mono); letter-spacing:.16em; color:var(--accent);}
+  .goal-badge-dot{width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); animation:pulse 2.2s ease-in-out infinite;}
+  .goal-heading{margin:26px 0 0; max-width:26ch; font-family:var(--font-display); font-size:clamp(30px,3.3vw,46px); font-weight:800; letter-spacing:-.045em; line-height:1.16; color:var(--ink);}
+  .goal-desc{margin:24px 0 0; max-width:66ch; font-size:16px; font-weight:300; line-height:1.85; color:#B9BDC4;}
+  .goal-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin-top:34px;}
+  .goal-item{padding:20px 22px; border-radius:14px; background:rgba(11,12,14,.55); border:1px solid rgba(204,255,0,.2); transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s ease;}
+  .goal-item:hover{transform:translateY(-4px); border-color:rgba(204,255,0,.5);}
+  .goal-item-tag{font:600 9.5px/1 var(--font-mono); letter-spacing:.14em; color:var(--accent);}
+  .goal-item-title{margin-top:14px; font-size:14.5px; font-weight:600; color:var(--ink); letter-spacing:-.025em;}
+  .goal-item-desc{margin-top:9px; font-size:12.5px; font-weight:300; line-height:1.7; color:#8B9099;}
+  .goal-status{display:flex; align-items:center; gap:14px; margin-top:26px; padding-top:22px; border-top:1px solid rgba(204,255,0,.18); flex-wrap:wrap;}
+  .goal-status-label{font:600 10px/1 var(--font-mono); letter-spacing:.14em; color:var(--ink-3);}
+  .goal-status-text{font-size:13.5px; font-weight:300; color:#B9BDC4;}
+
+  /* ---------- 사용 중인 기능 카드 ---------- */
+  .use-item{border-radius:22px; background:linear-gradient(168deg,#14171C,#0D0F13 82%); border:1px solid rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.07); padding:30px 34px;}
+  .use-item + .use-item{margin-top:14px;}
+  .use-item-split{display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:38px; align-items:center;}
+  .use-top{display:flex; align-items:center; gap:11px; flex-wrap:wrap;}
+  .use-badge{font:700 10px/1 var(--font-mono); letter-spacing:.14em; color:var(--accent-ink); background:var(--accent); padding:6px 10px; border-radius:6px;}
+  .use-title{font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--ink); letter-spacing:-.035em;}
+  .use-mtag{font:600 9.5px/1 var(--font-mono); letter-spacing:.1em; padding:5px 8px; border-radius:5px; border:1px solid rgba(168,207,188,.5); color:var(--pass);}
+  .use-desc{margin:18px 0 0; max-width:78ch; font-size:14.5px; font-weight:300; line-height:1.85; color:#B9BDC4;}
+  .use-chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:20px;}
+  .use-chip{font:500 11px/1 var(--font-mono); letter-spacing:.04em; padding:8px 11px; border-radius:8px; background:rgba(204,255,0,.09); border:1px solid rgba(204,255,0,.28); color:var(--accent);}
+  .use-blocker{margin-top:18px; font-size:13px; font-weight:300; line-height:1.8; color:var(--ink-2); padding:14px 16px; border-radius:11px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.08); border-left:2px solid rgba(204,255,0,.45);}
+  .use-blocker b{color:var(--accent); font-weight:600;}
+  .use-link{display:inline-block; margin-top:12px; margin-right:14px; font:600 12px/1 var(--font-mono); letter-spacing:.04em; color:var(--accent); text-decoration:none;}
+  .use-link:hover{text-decoration:underline;}
+
+  .use-panel{position:relative; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.11); background:var(--surface-2); padding:22px;}
+  .use-panel-label{font:600 9px/1 var(--font-mono); letter-spacing:.16em; color:var(--ink-4);}
+  .use-panel-canvas{position:relative; margin-top:16px; height:186px; border-radius:10px; background:linear-gradient(140deg,#1B2027,#12151A); border:1px solid rgba(255,255,255,.07); overflow:hidden;}
+  .use-panel-box{position:absolute; border-radius:3px;}
+  .use-panel-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:14px;}
+  .use-stat{padding:11px 12px; border-radius:9px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.08);}
+  .use-stat-label{font:500 9px/1 var(--font-mono); letter-spacing:.1em; color:var(--ink-4);}
+  .use-stat-value{margin-top:8px; font:700 15px/1 var(--font-mono);}
+  .use-panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .use-diff-count{font:700 11px/1 var(--font-mono); color:var(--reject);}
+  .use-diff-list{margin-top:16px; display:flex; flex-direction:column; gap:9px;}
+  .use-diff-row{padding:14px 15px; border-radius:11px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.08);}
+  .use-diff-line{display:flex; align-items:center; gap:9px;}
+  .use-diff-dot{width:5px; height:5px; border-radius:50%; flex:none;}
+  .use-diff-before{font-size:13.5px; font-weight:600; color:#DCA1A9; text-decoration:line-through; text-decoration-color:rgba(220,161,169,.6);}
+  .use-diff-arrow{font-size:10px; color:var(--ink-4);}
+  .use-diff-after{font-size:13.5px; font-weight:600; color:var(--pass);}
+  .use-diff-note{margin-top:9px; font-size:11.5px; font-weight:300; line-height:1.6; color:var(--ink-4);}
+  .use-legend{display:flex; gap:14px; margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08); font:500 9.5px/1 var(--font-mono); color:var(--ink-4); flex-wrap:wrap;}
+  .use-legend span{display:flex; align-items:center; gap:5px;}
+  .use-legend i{width:5px; height:5px; border-radius:50%; display:inline-block;}
+
+  .use-mini-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:22px;}
+  .use-mini{padding:16px 17px; border-radius:12px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.09); transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s ease;}
+  .use-mini:hover{transform:translateY(-4px); border-color:rgba(204,255,0,.36);}
+  .use-mini-title{font-size:13.5px; font-weight:600; color:var(--ink); letter-spacing:-.02em;}
+  .use-mini-desc{margin-top:8px; font-size:12px; font-weight:300; line-height:1.65; color:var(--ink-4);}
+
+  /* ---------- 검토중·넣지않기로: 가로 긴 섹션 ---------- */
+  .roadmap-list.wide{display:flex; flex-direction:column; gap:12px;}
+
+  @media (max-width:900px){
+    .use-item-split{grid-template-columns:1fr;}
+    .goal-grid{grid-template-columns:1fr;}
+    .use-mini-grid{grid-template-columns:repeat(2,1fr);}
+  }
+
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
     .gnb-bar-inner{display:flex; flex-wrap:wrap; gap:16px;}
@@ -163,45 +237,151 @@
   <h1>업데이트 예정</h1>
   <p class="sub">지금 실제로 배너 분석에 쓰이고 있는 기능과, 앞으로 연결하면 도움이 될 만해서 검토했지만 아직 적용하지 않은 기능을 함께 정리했습니다.</p>
 
+  <div class="goal-hero" data-reveal>
+    <div class="goal-hero-inner">
+      <div class="goal-badge"><span class="goal-badge-dot"></span>FINAL GOAL</div>
+      <h2 class="goal-heading">디자인 판정과 실제 성과를<br>같은 화면에서 붙여 본다</h2>
+      <p class="goal-desc">배너를 분석하는 것에서 멈추지 않고, 그 배너가 실제로 낸 성과 데이터를 함께 읽습니다. 어떤 항목을 고쳤을 때 효율과 성과가 실제로 올라갔는지 판단할 수 있게 만드는 것이 AdCheck의 최종 목표입니다.</p>
+      <div class="goal-grid">
+        <div class="goal-item">
+          <div class="goal-item-tag">META</div>
+          <div class="goal-item-title">Meta Marketing API</div>
+          <div class="goal-item-desc">소재별 노출·클릭·CTR·전환 및 광고 세트 단위 성과</div>
+        </div>
+        <div class="goal-item">
+          <div class="goal-item-tag">NAVER GFA</div>
+          <div class="goal-item-title">네이버 성과형 디스플레이 광고 API</div>
+          <div class="goal-item-desc">소재 리포트와 지면별 노출·클릭 지표</div>
+        </div>
+        <div class="goal-item">
+          <div class="goal-item-tag">KAKAO</div>
+          <div class="goal-item-title">카카오모먼트 API</div>
+          <div class="goal-item-desc">비즈보드·디스플레이 소재 단위 성과 리포트</div>
+        </div>
+      </div>
+      <div class="goal-status">
+        <span class="goal-status-label">STATUS</span>
+        <span class="goal-status-text">API 연동 검토 중 · 매체별 지표 정의와 배너-소재 ID 매칭 방식을 먼저 확정해야 합니다</span>
+      </div>
+    </div>
+  </div>
+
   <div class="section-block">
     <div class="section-eyebrow">IN USE</div>
     <div class="section-heading">사용 중인 기능</div>
     <div class="section-desc">지금 실제 배너 분석에 쓰이고 있는 엔진과 API입니다.</div>
-    <div class="roadmap-list" data-stagger>
-      <div class="roadmap-item" data-row>
-        <div class="roadmap-top">
-          <span class="roadmap-title">GPT-5.6 Sol (OpenAI)</span>
-          <span class="roadmap-status active">사용 중</span>
+    <div data-stagger>
+      <div class="use-item" data-row>
+        <div class="use-item-split">
+          <div>
+            <div class="use-top">
+              <span class="use-badge">CLOVA OCR</span>
+              <span class="use-title">픽셀 좌표 실측</span>
+              <span class="use-mtag">M1</span>
+            </div>
+            <p class="use-desc">이미지 속 문자를 추출해 디지털 데이터로 변환합니다. 읽는 순서와 방향을 추정해 인식하고, 곡선으로 배열되거나 기울어진 문자까지 잡아냅니다. AdCheck는 여기서 나오는 텍스트 박스 좌표를 그대로 써서 정렬 오차·여백 균형·텍스트 밀도를 눈대중이 아니라 실측값으로 판정합니다.</p>
+            <div class="use-chips">
+              <span class="use-chip">03 정렬·여백·명도대비</span>
+              <span class="use-chip">04 정보 정확성</span>
+              <span class="use-chip">14 매체 최적화</span>
+              <span class="use-chip">17 심의 문구 크기</span>
+            </div>
+            <a class="use-link" href="https://www.ncloud.com/product/aiService/ocr" target="_blank" rel="noopener">네이버 클로바 OCR 서비스 안내 ↗</a>
+          </div>
+          <div class="use-panel">
+            <div class="use-panel-label">DETECTED TEXT BOXES</div>
+            <div class="use-panel-canvas">
+              <div class="use-panel-box" style="left:9%;top:14%;width:56%;height:19%;border:1px solid rgba(204,255,0,.75);background:rgba(204,255,0,.09);"></div>
+              <div class="use-panel-box" style="left:9%;top:41%;width:72%;height:12%;border:1px solid rgba(204,255,0,.55);background:rgba(204,255,0,.06);"></div>
+              <div class="use-panel-box" style="left:15%;top:60%;width:44%;height:11%;border:1px solid rgba(190,139,68,.85);background:rgba(190,139,68,.12);"></div>
+              <div style="position:absolute;left:15%;top:74%;font:600 7.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;color:#D9A660;">Δ 6px 좌우 불균형</div>
+            </div>
+            <div class="use-panel-stats">
+              <div class="use-stat"><div class="use-stat-label">CONTRAST</div><div class="use-stat-value" style="color:var(--needsfix);">3.9:1</div></div>
+              <div class="use-stat"><div class="use-stat-label">TEXT DENSITY</div><div class="use-stat-value" style="color:var(--pass);">17%</div></div>
+            </div>
+          </div>
         </div>
-        <div class="roadmap-desc">배너 이미지를 보고 17개 항목 전체를 판정하는 메인 분석 엔진입니다. 구도·색감·합성 리얼리티·AI 생성 특유의 아티팩트 등 시각적으로 판단해야 하는 부분을 전담합니다.</div>
       </div>
 
-      <div class="roadmap-item" data-row>
-        <div class="roadmap-top">
-          <span class="roadmap-title">네이버 클로바 OCR</span>
-          <span class="roadmap-status active">사용 중</span>
+      <div class="use-item" data-row>
+        <div class="use-item-split">
+          <div>
+            <div class="use-top">
+              <span class="use-badge">바른한글</span>
+              <span class="use-title">규칙 기반 맞춤법 검사</span>
+              <span class="use-mtag">M1</span>
+            </div>
+            <p class="use-desc">OCR로 읽은 텍스트를 화면 읽기 순서대로 이어붙여 규칙 기반 검사기에 보냅니다. 띄어쓰기·오탈자·문맥상 오류를 구분해 돌려주고 대치어 후보까지 제시하므로, AI 시각 판단만으로는 놓치기 쉬운 자음·모음 한 글자 차이를 04번 정보 정확성 항목에서 잡아냅니다.</p>
+            <div class="use-chips">
+              <span class="use-chip">04 정보 정확성</span>
+              <span class="use-chip">띄어쓰기·오탈자 구분</span>
+              <span class="use-chip">대치어 후보 제시</span>
+            </div>
+            <div class="use-blocker"><b>현재 상태:</b> 개인 비상업용 API 키로 연결되어 있습니다. 팀 차원의 상업적 이용은 나라인포테크에 별도 API 라이선스를 문의해서 가격·조건을 확인한 뒤 추후 업데이트할 예정입니다.</div>
+            <a class="use-link" href="https://nara-speller.co.kr/order/" target="_blank" rel="noopener">구매 문의 페이지 (nara-speller.co.kr) ↗</a>
+          </div>
+          <div class="use-panel">
+            <div class="use-panel-head">
+              <span class="use-panel-label">맞춤법 / 문법 오류</span>
+              <span class="use-diff-count">2개</span>
+            </div>
+            <div class="use-diff-list">
+              <div class="use-diff-row">
+                <div class="use-diff-line">
+                  <span class="use-diff-dot" style="background:#8B7BD8;"></span>
+                  <span class="use-diff-before">가능성들을</span>
+                  <span class="use-diff-arrow">→</span>
+                  <span class="use-diff-after">가능성을</span>
+                </div>
+                <div class="use-diff-note">접미사 '들'의 무원칙한 사용</div>
+              </div>
+              <div class="use-diff-row">
+                <div class="use-diff-line">
+                  <span class="use-diff-dot" style="background:var(--reject);"></span>
+                  <span class="use-diff-before">불리울</span>
+                  <span class="use-diff-arrow">→</span>
+                  <span class="use-diff-after">불릴</span>
+                </div>
+                <div class="use-diff-note">오탈자 — 피동 표현 오용</div>
+              </div>
+            </div>
+            <div class="use-legend">
+              <span><i style="background:var(--pass);"></i>띄어쓰기</span>
+              <span><i style="background:var(--reject);"></i>오탈자</span>
+              <span><i style="background:#8B7BD8;"></i>문맥상</span>
+            </div>
+          </div>
         </div>
-        <div class="roadmap-desc">이미지 속 텍스트 위치를 픽셀 좌표로 직접 측정해서, 3번(타이포·정렬·여백·명도대비)의 정렬 오차와 14번(매체 최적화)의 세이프존 침범량을 AI의 시각 판단이 아닌 실제 수치로 대조합니다.</div>
-        <a class="roadmap-link" href="https://www.ncloud.com/product/aiService/ocr" target="_blank" rel="noopener">네이버 클로바 OCR 서비스 안내 ↗</a>
       </div>
 
-      <div class="roadmap-item" data-row>
-        <div class="roadmap-top">
-          <span class="roadmap-title">WCAG 명도 대비 체크</span>
-          <span class="roadmap-status active">사용 중</span>
+      <div class="use-item" data-row>
+        <div class="use-top">
+          <span class="use-badge">WCAG</span>
+          <span class="use-title">명도 대비 체크</span>
+          <span class="use-mtag">M1</span>
         </div>
-        <div class="roadmap-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 직접 읽어 글자·배경 명도 대비를 계산하고, 3번(타이포·정렬·여백·명도대비) 판정에 근거로 반영합니다. 서버에 새 이미지 처리 라이브러리를 추가하지 않고 캔버스 API만으로 클라이언트에서 계산합니다.<br><br>판정 기준(WCAG AA): 대비 <b>4.5:1 미만</b>이면 기준 미달로 지적, <b>3:1 미만</b>이면 명확히 낮은 값으로 보고 검토필요 이상으로 판정합니다. 3~4.5 사이는 근사치 특성상 애매한 구간이라 AI가 실제 화면을 한 번 더 시각적으로 확인한 뒤 판단합니다.</div>
-        <a class="roadmap-link" href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" target="_blank" rel="noopener">WCAG 2.1 명도 대비 기준 공식 문서 ↗</a>
+        <p class="use-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 직접 읽어 글자·배경 명도 대비를 계산하고, 3번(타이포·정렬·여백·명도대비) 판정에 근거로 반영합니다. 서버에 새 이미지 처리 라이브러리를 추가하지 않고 캔버스 API만으로 클라이언트에서 계산합니다.</p>
+        <div class="use-blocker">판정 기준(WCAG AA): 대비 <b>4.5:1 미만</b>이면 기준 미달로 지적, <b>3:1 미만</b>이면 명확히 낮은 값으로 보고 검토필요 이상으로 판정합니다. 3~4.5 사이는 근사치 특성상 애매한 구간이라 AI가 실제 화면을 한 번 더 시각적으로 확인한 뒤 판단합니다.</div>
+        <div class="use-chips">
+          <span class="use-chip">03 정렬·여백·명도대비</span>
+        </div>
+        <a class="use-link" href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" target="_blank" rel="noopener">WCAG 2.1 명도 대비 기준 공식 문서 ↗</a>
       </div>
 
-      <div class="roadmap-item" data-row>
-        <div class="roadmap-top">
-          <span class="roadmap-title">바른한글(나라인포테크) 맞춤법 검사</span>
-          <span class="roadmap-status active">사용 중 (개인용)</span>
+      <div class="use-item" data-row>
+        <div class="use-top">
+          <span class="use-badge">GPT-5.6 SOL</span>
+          <span class="use-title">시각 판단 · 판정 생성</span>
+          <span class="use-mtag">M2 · M3</span>
         </div>
-        <div class="roadmap-desc">지금 3번(타이포·정렬·여백·명도대비)에 OCR로 픽셀 위치를 대조하는 것처럼, 4번(정보 정확성) 오탈자 판정도 AI 시각 판단 대신 사전 기반 맞춤법 엔진으로 한 번 더 대조합니다.</div>
-        <div class="roadmap-blocker"><b>현재 상태:</b> 개인 비상업용 API 키로 연결되어 있습니다. 팀 차원의 상업적 이용은 나라인포테크에 별도 API 라이선스를 문의해서 가격·조건을 확인한 뒤 추후 업데이트할 예정입니다.</div>
-        <a class="roadmap-link" href="https://nara-speller.co.kr/order/" target="_blank" rel="noopener">구매 문의 페이지 (nara-speller.co.kr) ↗</a>
+        <p class="use-desc">수치로 잴 수 없는 항목을 판단하고, 17개 항목의 판정과 총평을 씁니다. 브랜드·매체 가이드에서 켠 항목과 OCR 실측값을 프롬프트에 함께 넣어, 시각 판단이 근거 없이 흔들리지 않도록 묶어둡니다.</p>
+        <div class="use-mini-grid">
+          <div class="use-mini"><div class="use-mini-title">17개 항목 판정</div><div class="use-mini-desc">수치화할 수 없는 시각 항목을 판단합니다.</div></div>
+          <div class="use-mini"><div class="use-mini-title">AI 총평 작성</div><div class="use-mini-desc">항목별 판정을 하나의 요약으로 정리합니다.</div></div>
+          <div class="use-mini"><div class="use-mini-title">가이드 대조</div><div class="use-mini-desc">켜둔 브랜드·매체 규정과 시안을 비교합니다.</div></div>
+          <div class="use-mini"><div class="use-mini-title">기획안 헬퍼</div><div class="use-mini-desc">기획안 캡처를 읽고 제작 방향을 정리합니다.</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -210,19 +390,7 @@
   <div class="section-eyebrow">REVIEWING</div>
   <div class="section-heading">검토 중 · 넣고 싶지만 아직 확신이 없는 기능</div>
   <div class="section-desc">붙이면 도움이 될 만해서 조사까지 마쳤지만, 비용·정확도·자격 요건 때문에 아직 붙이지 않은 것들입니다.</div>
-  <div class="roadmap-list two-col" data-stagger>
-    <div class="roadmap-item reviewing" data-row>
-      <div class="roadmap-top">
-        <span class="roadmap-title">매체 성과 데이터 연동 (Meta Marketing API · 네이버 성과형 디스플레이 광고 API · 카카오모먼트 API)</span>
-        <span class="roadmap-status">AdCheck 최종 목표</span>
-      </div>
-      <div class="roadmap-desc">지금까지 AdCheck는 배너가 <b>게재되기 전</b> 결함을 걸러내는 역할만 해왔습니다. 이 연동이 붙으면 배너가 <b>게재된 이후</b> 실제로 어떤 성과(클릭률·전환 등)를 냈는지를 매체사 API에서 직접 가져올 수 있게 됩니다.<br><br>여기서 중요한 건, AdCheck가 분석 시점에 이미 클로바 OCR로 요소별 데이터(텍스트 위치·크기, 정렬·여백 수치, 세이프존 침범량 등)를 픽셀 단위로 뽑아두고 있다는 점입니다. 이 구조화된 요소 데이터와 매체에서 가져온 실제 성과 데이터를 배너 단위로 이어 붙이면, "이 배너가 잘 됐다/안 됐다"는 결과만 보는 게 아니라 <b>"CTA 버튼을 이 위치로 옮기니 클릭률이 올랐다"처럼 배너를 구성하는 요소 하나하나가 성과에 어떤 영향을 미쳤는지</b>까지 분석할 수 있게 됩니다. 검수 전용 도구였던 AdCheck가 게재 전 검수와 게재 후 성과 분석을 하나의 데이터 흐름으로 잇는 지점이라, 지금 검토 중인 기능 가운데 최종 목표에 가장 직접적으로 맞닿아 있습니다.</div>
-      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 세 매체 모두 API 신청에 자격 요건이 있습니다 — 네이버는 베타 파트너사 승인, 카카오는 공식대행사와의 사전 협의, 메타는 비즈니스 인증이 먼저 필요합니다. 국내 매체 비중이 큰 만큼 네이버·카카오 쪽을 먼저 신청해보는 게 우선순위상 맞을 것으로 보입니다.</div>
-      <a class="roadmap-link" href="https://naver-ad-api.github.io/openapi-guide/docs/intro" target="_blank" rel="noopener">네이버 성과형 디스플레이 광고 API 안내 ↗</a>
-      <a class="roadmap-link" href="https://developers.kakao.com/docs/latest/ko/keyword-ad/common" target="_blank" rel="noopener">카카오모먼트 API 문서 ↗</a>
-      <a class="roadmap-link" href="https://github.com/mikusnuz/meta-ads-mcp" target="_blank" rel="noopener">Meta Marketing API 연동 예시 ↗</a>
-    </div>
-
+  <div class="roadmap-list wide" data-stagger>
     <div class="roadmap-item reviewing" data-row>
       <div class="roadmap-top">
         <span class="roadmap-title">피그마 MCP 연동 (레이아웃 좌표 직접 수신)</span>
@@ -278,7 +446,7 @@
   <div class="section-eyebrow">DECLINED</div>
   <div class="section-heading">넣지 않기로 · 검토했지만 의도적으로 제외한 기능</div>
   <div class="section-desc">기술적으로 가능하더라도 도구의 성격상 넣지 않기로 판단한 것들입니다.</div>
-  <div class="roadmap-list two-col" data-stagger>
+  <div class="roadmap-list wide" data-stagger>
     <div class="roadmap-item declined" data-row>
       <div class="roadmap-top">
         <span class="roadmap-title">매체별 배너 베리에이션 자동 생성</span>
