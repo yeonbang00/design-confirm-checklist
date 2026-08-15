@@ -127,7 +127,7 @@
   .spec-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px; padding:5px 0; border-bottom:1px solid rgba(245,245,247,0.5);}
   .spec-row:last-child{border-bottom:none;}
   .spec-row-label{color:var(--text-2);}
-  .spec-row-value{color:var(--text); font-weight:700; text-align:right; font-variant-numeric:tabular-nums;}
+  .spec-row-value{color:var(--accent); font-weight:700; text-align:right; font-variant-numeric:tabular-nums;}
 
   .gl-empty{font-size:13.5px; color:var(--text-3); background:rgba(255,255,255,.045); border-radius:10px; padding:16px 18px;}
   .gl-heading{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin:18px 0 10px;}
@@ -185,14 +185,8 @@
   <h1>매체 가이드</h1>
   <p class="sub">매체 가이드 체크박스에 등록된 매체별 소재 등록 기준입니다. 배너를 분석할 때 AI가 참고하는 기준과 그대로 연결되어 있습니다.</p>
 
-  <div class="select-wrap">
-    <select id="mediaSelect">
-      <option value="">매체를 선택하세요</option>
-    </select>
-    <svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1L7 7L13 1" stroke="#a1a1a6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-  </div>
 
-  <div id="mediaDetail">
+  <div id="mediaDetail" data-stagger>
     <div class="loading-msg">매체 가이드를 불러오는 중…</div>
   </div>
 
@@ -259,13 +253,10 @@
     }).join('');
   }
 
-  const mediaSelect = document.getElementById('mediaSelect');
   const mediaDetail = document.getElementById('mediaDetail');
   let mediaGuidesData = [];
 
-  function renderMedia(id){
-    const m = mediaGuidesData.find(x => x.id === id);
-    if(!m){ mediaDetail.innerHTML = ''; return; }
+  function renderCard(m){
     let bodyHtml;
     if(m.guideline && m.guideline.trim()){
       bodyHtml = formatGuideline(m.guideline);
@@ -295,8 +286,7 @@
       }).join('') + '</div>';
     }
 
-    mediaDetail.innerHTML =
-      '<div class="brand-card">' +
+    return '<div class="brand-card" data-row>' +
       '<div class="brand-head"><span class="brand-name">' + escapeHtml(m.name) + '</span></div>' +
       (m.note ? '<div class="brand-note">' + escapeHtml(m.note) + '</div>' : '') +
       sourceHtml +
@@ -305,10 +295,10 @@
       '</div>';
   }
 
-  mediaSelect.addEventListener('change', () => {
-    if(mediaSelect.value) renderMedia(mediaSelect.value);
-    else mediaDetail.innerHTML = '';
-  });
+  function renderAll(){
+    mediaDetail.innerHTML = mediaGuidesData.map(m => renderCard(m)).join('');
+    if(window.acBindMotion) window.acBindMotion();
+  }
 
   fetch('/api/mediaGuideDetails')
     .then(r => {
@@ -321,14 +311,7 @@
         mediaDetail.innerHTML = '<div class="gl-empty">등록된 매체가 없습니다.</div>';
         return;
       }
-      mediaGuidesData.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = m.name;
-        mediaSelect.appendChild(opt);
-      });
-      mediaSelect.value = mediaGuidesData[0].id;
-      renderMedia(mediaGuidesData[0].id);
+      renderAll();
     })
     .catch(() => {
       mediaDetail.innerHTML = '<div class="gl-empty">매체 가이드를 불러오지 못했습니다. api/mediaGuideDetails.js가 배포되었는지 확인해주세요.</div>';

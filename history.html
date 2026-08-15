@@ -109,15 +109,16 @@
   .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
   .gl-empty{font-size:13.5px; color:var(--text-3); background:rgba(255,255,255,.045); border-radius:10px; padding:20px 18px; line-height:1.7;}
 
-  .history-list{display:flex; flex-direction:column; gap:10px;}
-  .history-item{display:flex; align-items:flex-start; gap:14px; background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:14px; padding:16px 18px;}
-  .history-main{flex:1; min-width:0; width:100%;}
-  .history-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:5px;}
-  .history-date{font-size:12px; color:var(--text-3); font-variant-numeric:tabular-nums; white-space:nowrap;}
-  .history-category{font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:3px 10px; white-space:nowrap;}
-  .history-desc{font-size:14px; color:var(--text); line-height:1.6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .history-delete{flex-shrink:0; font-size:12px; font-weight:700; color:var(--danger); background:rgba(194,104,122,.13); border:none; border-radius:8px; padding:7px 12px; cursor:pointer; white-space:nowrap; font-family:inherit;}
-  .history-delete:hover{opacity:0.85;}
+  .history-list{position:relative; padding-left:26px;}
+  .history-list::before{content:''; position:absolute; left:5px; top:8px; bottom:8px; width:1px; background:linear-gradient(180deg,rgba(204,255,0,.5),rgba(255,255,255,.08));}
+  .history-item{position:relative; padding:0 0 34px 0;}
+  .history-item::before{content:''; position:absolute; left:-25px; top:7px; width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px rgba(204,255,0,.12);}
+  .history-item:last-child{padding-bottom:0;}
+  .history-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:9px;}
+  .history-date{font:700 11.5px/1 var(--font-mono); letter-spacing:.1em; color:var(--accent);}
+  .history-category{font:600 10px/1 var(--font-mono); letter-spacing:.1em; color:var(--ink-3); border:1px solid var(--line); border-radius:6px; padding:5px 8px;}
+  .history-title{font-family:var(--font-display); font-size:17px; font-weight:700; letter-spacing:-.03em; color:var(--ink); margin-bottom:8px;}
+  .history-desc{font-size:13.5px; font-weight:300; line-height:1.8; color:var(--ink-2); max-width:76ch;}
 
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
@@ -210,8 +211,8 @@
       historyList.innerHTML = '<div class="gl-empty">아직 등록된 히스토리가 없습니다.</div>';
       return;
     }
-    historyList.innerHTML = '<div class="history-list">' + entries.map(e =>
-      '<div class="history-item" data-id="' + escapeHtml(e.id) + '">' +
+    historyList.innerHTML = '<div class="history-list" data-stagger>' + entries.map(e =>
+      '<div class="history-item" data-row data-id="' + escapeHtml(e.id) + '">' +
         '<div class="history-main">' +
           '<div class="history-top">' +
             '<span class="history-date">' + escapeHtml(formatDate(e.date)) + '</span>' +

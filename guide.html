@@ -351,7 +351,7 @@
       : '';
 
     brandDetail.innerHTML =
-      '<div class="brand-card">' +
+      '<div class="brand-card" data-reveal>' +
       '<div class="brand-head-row">' +
         '<div class="brand-head"><span class="brand-name">' + escapeHtml(b.name) + '</span>' +
         '<span class="brand-count">' + escapeHtml(countLabel) + '</span></div>' +
@@ -442,7 +442,7 @@
       : '<div class="gl-empty">등록된 피드백이 없습니다.</div>';
 
     brandDetail.innerHTML =
-      '<div class="brand-card">' +
+      '<div class="brand-card" data-reveal>' +
       '<div class="brand-head-row">' +
         '<div class="brand-head"><span class="brand-name">' + escapeHtml(d.name) + ' — 편집 중</span></div>' +
         '<div class="btn-row"><button type="button" class="edit-btn cancel" id="cancelEditBtn">취소</button><button type="button" class="edit-btn save" id="saveEditBtn">저장</button></div>' +

@@ -286,7 +286,7 @@
         refContent.innerHTML = '';
 
         const brands = [...new Set(items.map(it => it.brandName).filter(Boolean))];
-        if(brands.length > 1){
+        if(id !== 'all' && brands.length > 1){
           const filterBar = document.createElement('div');
           filterBar.className = 'brand-filter';
           const allChip = document.createElement('button');
@@ -318,10 +318,12 @@
 
         const grid = document.createElement('div');
         grid.className = 'ref-grid';
+        grid.setAttribute('data-stagger','');
         items.forEach((item, i) => {
           const caption = (item.brandName || '') + (item.note ? ' · ' + item.note : '');
           const wrap = document.createElement('div');
           wrap.className = 'ref-item';
+          wrap.setAttribute('data-row','');
           wrap.dataset.brand = item.brandName || '';
           const thumbBtn = document.createElement('button');
           thumbBtn.type = 'button';
@@ -330,14 +332,20 @@
             (item.ownWork ? '<span class="nhn-badge">NHN AD</span>' : '');
           thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
           wrap.appendChild(thumbBtn);
-          const capDiv = document.createElement('div');
-          capDiv.className = 'ref-caption';
-          capDiv.innerHTML = (item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '') +
+          // 전체 보기에서는 브랜드가 뒤섞여 태그가 빽빽해지므로 메모만 남긴다
+          const showBrand = id !== 'all';
+          const capHtml = (showBrand && item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '') +
             (item.note ? '<div class="ref-note">' + escapeHtml(item.note) + '</div>' : '');
-          wrap.appendChild(capDiv);
+          if(capHtml){
+            const capDiv = document.createElement('div');
+            capDiv.className = 'ref-caption';
+            capDiv.innerHTML = capHtml;
+            wrap.appendChild(capDiv);
+          }
           grid.appendChild(wrap);
         });
         refContent.appendChild(grid);
+        if(window.acBindMotion) window.acBindMotion();
       })
       .catch(() => {
         if(currentCategoryId !== id) return;
