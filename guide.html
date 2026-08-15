@@ -98,95 +98,105 @@
   h1{font-family:var(--font-display); font-size:clamp(36px,4.6vw,68px); font-weight:800; letter-spacing:-.055em; line-height:1; margin:0; color:var(--ink);}
   .sub{margin:24px 0 44px; max-width:78ch; font-size:16.5px; font-weight:300; line-height:1.85; color:var(--ink-2);}
 
-  .select-wrap{position:relative; margin-bottom:12px; max-width:420px;}
-  .select-wrap select{
-    width:100%; appearance:none; background:var(--charcoal); border:1px solid var(--charcoal-border);
-    border-radius:10px; padding:13px 40px 13px 16px; font-size:14.5px; font-weight:600; color:var(--canvas-text); cursor:pointer;
-  }
-  .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
+  .bg-sidebar{display:grid; grid-template-columns:260px minmax(0,1fr); gap:28px; align-items:start;}
+  .bg-side-label{font:500 10px/1 var(--font-mono); letter-spacing:.18em; color:var(--ink-4); margin-bottom:10px;}
+  .bg-side-list{display:flex; flex-direction:column; gap:2px; margin-bottom:18px;}
+  .bg-side-item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px; border-radius:10px; border:none; background:none; color:var(--ink-2); font-size:13.5px; font-weight:500; cursor:pointer; text-align:left; width:100%; font-family:inherit; transition:background .2s ease,color .2s ease;}
+  .bg-side-item:hover{background:rgba(255,255,255,.05); color:var(--ink);}
+  .bg-side-item.active{background:rgba(204,255,0,.12); color:var(--accent); font-weight:700;}
+  .bg-side-item .bg-side-count{font-size:12px; font-weight:400; color:var(--ink-4);}
+  .bg-side-item.active .bg-side-count{color:var(--accent);}
 
-  .brand-add-row{display:flex; gap:8px; max-width:420px; margin-bottom:6px;}
-  .brand-add-row input{flex:1; padding:11px 14px; border:1px solid var(--charcoal-border); border-radius:10px; font-size:13.5px; font-family:inherit; background:var(--charcoal); color:var(--canvas-text);}
+  .brand-add-row{display:flex; gap:8px; margin-bottom:6px;}
+  .brand-add-row input{flex:1; min-width:0; padding:11px 14px; border:1px solid var(--charcoal-border); border-radius:10px; font-size:13.5px; font-family:inherit; background:var(--charcoal); color:var(--canvas-text);}
   .brand-add-btn{border:none; background:var(--accent); color:var(--accent-ink); border-radius:10px; padding:0 16px; cursor:pointer; font-size:13px; font-weight:700; flex-shrink:0; font-family:inherit; white-space:nowrap;}
   .brand-add-btn:hover{opacity:0.85;}
-  .brand-add-status{font-size:12px; max-width:420px; min-height:14px; margin-bottom:22px;}
+  .brand-add-status{font-size:12px; min-height:14px; margin-bottom:4px;}
   .brand-add-status.error{color:var(--danger);}
   .brand-add-status.ok{color:var(--ok);}
 
-  .brand-card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:20px; padding:32px;}
+  .bg-card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:20px; padding:28px 30px; margin-bottom:16px;}
   .brand-head-row{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px;}
   .brand-head{display:flex; align-items:baseline; flex-wrap:wrap; gap:8px;}
-  .brand-name{font-size:19px; font-weight:700;}
-  .brand-count{font-size:12px; color:var(--text-3); white-space:nowrap;}
-  .brand-note{font-size:13px; color:var(--text-2); margin-bottom:20px;}
+  .brand-name{font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:-.02em;}
+  .brand-count{font-size:12px; color:var(--ink-4); white-space:nowrap;}
+  .brand-note{font-size:13px; color:var(--text-2); margin-top:8px;}
 
   .btn-row{display:flex; gap:8px; flex-shrink:0;}
-  .edit-btn{font-size:12.5px; font-weight:700; color:var(--num-text); background:var(--num-bg); border:none; border-radius:20px; padding:8px 16px; cursor:pointer; white-space:nowrap; font-family:inherit;}
+  .edit-btn{font-size:12.5px; font-weight:700; border:none; border-radius:20px; padding:8px 16px; cursor:pointer; white-space:nowrap; font-family:inherit;}
   .edit-btn:hover{opacity:0.85;}
-  .edit-btn.cancel{color:var(--text-2); background:rgba(255,255,255,.045);}
   .edit-btn.save{color:var(--accent-ink); background:var(--accent);}
-  .edit-btn.danger{color:var(--danger); background:rgba(194,104,122,.13);}
+  .edit-btn.danger{color:var(--reject); background:rgba(194,104,122,.13);}
 
-  .spec-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:22px;}
-  .spec-card{border:1.5px solid var(--num-text); border-radius:14px; padding:14px 16px; background:var(--num-bg);}
-  .spec-card-label{font-size:11.5px; color:var(--text-2); margin-bottom:4px;}
-  .spec-card-value{font-size:14px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums;}
+  .bg-panel-head{display:flex; align-items:baseline; gap:10px; padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid var(--line-soft);}
+  .bg-panel-label{font:700 10px/1 var(--font-mono); letter-spacing:.14em; color:var(--accent);}
+  .bg-panel-title{font-size:15px; font-weight:700; color:var(--ink);}
+  .bg-panel-meta{margin-left:auto; font-size:12px; color:var(--ink-4); font-family:var(--font-mono); white-space:nowrap;}
 
-  .gl-empty{font-size:13.5px; color:var(--text-3); background:rgba(255,255,255,.045); border-radius:10px; padding:16px 18px;}
-  .gl-heading{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin:18px 0 10px;}
-  .gl-heading:first-child{margin-top:0;}
+  .spec-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px;}
+  .spec-card{border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:rgba(255,255,255,.03);}
+  .spec-card-label{font-size:11.5px; color:var(--ink-3); margin-bottom:4px;}
+  .spec-card-value{font-size:14px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;}
 
-  .checked-list{margin:0 0 6px; padding-left:20px;}
-  .checked-list li{font-size:14px; line-height:1.9; color:var(--text);}
+  .gl-empty{font-size:13.5px; color:var(--ink-4); background:rgba(255,255,255,.03); border-radius:10px; padding:16px 18px;}
 
-  .feedback-list{list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:8px;}
-  .feedback-item{font-size:13px; line-height:1.7; color:var(--text-2); background:rgba(255,255,255,.045); border-radius:10px; padding:10px 14px;}
-  .feedback-date{font-weight:700; color:var(--text); margin-right:6px;}
+  .toggle-section{margin-bottom:16px;}
+  .toggle-section:last-child{margin-bottom:0;}
+  .toggle-row{display:flex; align-items:center; gap:14px; padding:9px 2px; font-size:13.5px; color:var(--ink-2); cursor:pointer;}
+  .toggle-row.on{color:var(--ink);}
+  .toggle-switch{position:relative; flex-shrink:0; width:36px; height:20px;}
+  .toggle-switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .toggle-track{position:absolute; inset:0; border-radius:999px; background:rgba(255,255,255,.1); border:1px solid var(--line); transition:background .2s ease,border-color .2s ease;}
+  .toggle-track::after{content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:var(--ink-3); transition:transform .2s cubic-bezier(.2,.8,.2,1),background .2s ease;}
+  .toggle-switch input:checked + .toggle-track{background:var(--accent); border-color:var(--accent);}
+  .toggle-switch input:checked + .toggle-track::after{transform:translateX(16px); background:var(--accent-ink);}
 
-  .edit-section{margin-bottom:8px;}
-  .edit-section-title{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin-bottom:8px;}
-  .check-row{display:flex; align-items:flex-start; gap:10px; padding:7px 2px; font-size:13.5px; color:var(--text); cursor:pointer;}
-  .check-row input{margin-top:3px; width:16px; height:16px; accent-color:var(--num-text); cursor:pointer; flex-shrink:0;}
+  .feedback-list{list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .feedback-row{display:flex; align-items:center; gap:12px; font-size:13px; color:var(--ink-2); padding:6px 2px;}
+  .feedback-row-date{flex:0 0 60px; font-family:var(--font-mono); font-weight:600; color:var(--ink-4); white-space:nowrap;}
+  .feedback-row-text{flex:1; color:var(--ink-2); line-height:1.6;}
+  .feedback-remove, .field-remove{border:none; background:rgba(255,255,255,.06); color:var(--ink-3); width:26px; height:26px; border-radius:8px; cursor:pointer; font-size:15px; flex-shrink:0; line-height:1; display:flex; align-items:center; justify-content:center;}
+  .feedback-remove:hover, .field-remove:hover{background:rgba(194,104,122,.18); color:var(--reject);}
 
-  .feedback-edit-row{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
-  .feedback-edit-row .feedback-edit-date{flex:0 0 88px; font-size:12px; font-weight:700; color:var(--text); white-space:nowrap;}
-  .feedback-edit-row .feedback-edit-text{flex:1; padding:9px 12px; border:1px solid rgba(255,255,255,.14); border-radius:8px; font-size:13px; font-family:inherit; background:var(--card);}
-  .field-row{display:flex; gap:8px; margin-bottom:8px;}
-  .field-row input{padding:9px 12px; border:1px solid rgba(255,255,255,.14); border-radius:8px; font-size:13px; font-family:inherit; background:var(--card);}
-  .field-row .field-label{flex:0 0 150px;}
-  .field-row .field-value{flex:1;}
-  .field-remove{border:none; background:rgba(194,104,122,.13); color:var(--danger); width:34px; border-radius:8px; cursor:pointer; font-size:16px; flex-shrink:0;}
-  .add-field-btn{font-size:12.5px; color:var(--num-text); background:none; border:1.5px dashed var(--num-text); border-radius:8px; padding:9px 12px; cursor:pointer; width:100%; margin-bottom:18px; font-family:inherit;}
+  .feedback-add-row{display:flex; gap:8px; margin-top:8px;}
+  .feedback-add-row input{flex:1; min-width:0; padding:11px 14px; border:1px solid var(--line); border-radius:10px; font-size:13px; font-family:inherit; background:var(--surface-2); color:var(--ink);}
+  .feedback-add-btn{border:none; background:var(--accent); color:var(--accent-ink); border-radius:10px; padding:0 18px; cursor:pointer; font-size:13px; font-weight:700; flex-shrink:0; font-family:inherit;}
 
-  .feedback-add-row{display:flex; gap:8px; margin:10px 0 28px;}
-  .feedback-add-row input{flex:1; padding:9px 12px; border:1px solid rgba(255,255,255,.14); border-radius:8px; font-size:13px; font-family:inherit; background:var(--card);}
-  .feedback-add-btn{border:none; background:var(--accent); color:var(--accent-ink); border-radius:8px; padding:0 16px; cursor:pointer; font-size:13px; font-weight:700; flex-shrink:0; font-family:inherit;}
+  .field-row{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
+  .field-row input{padding:11px 14px; border:1px solid var(--line); border-radius:10px; font-size:13px; font-family:inherit; background:var(--surface-2); color:var(--ink);}
+  .field-row .field-label{flex:0 0 42%;}
+  .field-row .field-value{flex:1; min-width:0;}
+  .add-field-btn{font-size:12.5px; color:var(--accent); background:none; border:1.5px dashed rgba(204,255,0,.4); border-radius:10px; padding:10px 12px; cursor:pointer; width:100%; margin-top:4px; font-family:inherit;}
+  .add-field-btn:hover{background:rgba(204,255,0,.06);}
+  .field-note{margin-left:auto; font-size:11px; color:var(--ink-4);}
 
-  .save-status{font-size:12.5px; margin-top:16px; min-height:16px;}
-  .save-status.error{color:var(--danger);}
-  .save-status.ok{color:var(--ok);}
+  .save-status{font-size:12.5px; margin-top:14px; min-height:16px;}
+  .save-status.error{color:var(--reject);}
+  .save-status.ok{color:var(--pass);}
 
-  .page-footer{text-align:center; font-size:12px; color:var(--canvas-text-2); line-height:1.8; padding-top:28px;}
+  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:40px; border-top:1px solid var(--line-soft);}
 
-  .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
-  .gallery-loading{font-size:12.5px; color:var(--text-3); margin-bottom:8px;}
+  .loading-msg{font-size:13.5px; color:var(--ink-4); padding:20px 0;}
+  .gallery-loading{font-size:12.5px; color:var(--ink-4); margin-bottom:8px;}
   .gallery{display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;}
   .gallery-item{display:block; border-radius:10px; overflow:hidden; box-shadow:none; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.045); aspect-ratio:1; transition:transform .15s ease, box-shadow .15s ease; padding:0; cursor:pointer; width:100%;}
   .gallery-item:hover{transform:translateY(-2px); box-shadow:3px 5px 30px rgba(0,0,0,0.22);}
   .gallery-item img{width:100%; height:100%; object-fit:cover; display:block;}
 
-  .lightbox{display:none; position:fixed; inset:0; background:rgba(29,29,31,0.85); z-index:100; align-items:center; justify-content:center; padding:40px;}
+  .lightbox{display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100; align-items:center; justify-content:center; padding:40px;}
   .lightbox.show{display:flex;}
   .lightbox img{max-width:100%; max-height:100%; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.4);}
   .lightbox img[src=""]{display:none;}
-  .lightbox-close{position:absolute; top:24px; right:28px; background:none; border:none; color:var(--surface); font-size:32px; line-height:1; cursor:pointer; padding:8px;}
+  .lightbox-close{position:absolute; top:24px; right:28px; background:none; border:none; color:var(--ink); font-size:32px; line-height:1; cursor:pointer; padding:8px;}
 
+  @media (max-width:900px){
+    .bg-sidebar{grid-template-columns:1fr;}
+  }
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
-    .brand-card{padding:22px 20px;}
+    .bg-card{padding:22px 20px;}
     .gnb-bar-inner{display:flex; flex-wrap:wrap; gap:14px;}
     .gnb{gap:12px;}
-    .select-wrap{max-width:none;}
     .field-row{flex-wrap:wrap;}
     .field-row .field-label{flex:1 1 100%;}
   }
@@ -225,28 +235,27 @@
   <div class="page-eyebrow"><b>&#10022;</b>&nbsp;&nbsp;BRAND GUIDE</div>
 
   <h1>브랜드 가이드</h1>
-  <p class="sub">체크리스트에 등록된 브랜드별 디자인 가이드입니다.<br>체크리스트와 필드는 팀이 직접 편집하면서 계속 고도화할 수 있고, 여기 내용은 배너를 분석할 때 AI가 참고하는 기준과 그대로 연결되어 있습니다.</p>
+  <p class="sub">브랜드별 디자인 기준을 팀이 직접 체크리스트로 편집합니다. 여기서 켠 항목이 배너 분석 시 AI가 참고하는 기준으로 그대로 들어갑니다.</p>
 
-  <div class="select-wrap">
-    <select id="brandSelect">
-      <option value="">브랜드를 선택하세요</option>
-    </select>
-    <svg width="14" height="9" viewBox="0 0 14 9"><path d="M1 1L7 7L13 1" stroke="#a1a1a6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-  </div>
+  <div class="bg-sidebar">
+    <div>
+      <div class="bg-side-label">ADVERTISERS</div>
+      <div class="bg-side-list" id="brandSideList"></div>
+      <div class="brand-add-row">
+        <input type="text" id="newBrandInput" placeholder="새 브랜드 이름 (예: 롯데카드)">
+      </div>
+      <button type="button" id="addBrandBtn" class="brand-add-btn" style="width:100%;">+ 브랜드 추가</button>
+      <div class="brand-add-status" id="brandAddStatus"></div>
+    </div>
 
-  <div class="brand-add-row">
-    <input type="text" id="newBrandInput" placeholder="새 브랜드 이름 (예: 롯데카드)">
-    <button type="button" id="addBrandBtn" class="brand-add-btn">+ 브랜드 추가</button>
-  </div>
-  <div class="brand-add-status" id="brandAddStatus"></div>
-
-  <div id="brandDetail" data-stagger>
-    <div class="loading-msg">브랜드 가이드를 불러오는 중…</div>
+    <div id="brandDetail" data-stagger>
+      <div class="loading-msg">브랜드 가이드를 불러오는 중…</div>
+    </div>
   </div>
 
   <div class="page-footer">
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
-    이 페이지는 팀이 직접 편집합니다. 편집 저장에는 공유 비밀번호가 필요해요.
+    이 페이지는 팀이 직접 편집합니다. 저장에는 공유 비밀번호가 필요해요.
   </div>
 </div>
 
@@ -286,13 +295,12 @@
     { key: 'quality', title: '디자인 퀄리티 기준' },
   ];
 
-  const brandSelect = document.getElementById('brandSelect');
+  const brandSideList = document.getElementById('brandSideList');
   const brandDetail = document.getElementById('brandDetail');
   let brandsData = [];
   let checklistOptions = [];
   let currentBrandId = null;
-  let editMode = false;
-  let editingDraft = null;
+  let currentDraft = null; // 항상 편집 가능한 작업본 — 브랜드를 바꿀 때만 서버 데이터로 다시 복제됨
 
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImg');
@@ -310,116 +318,71 @@
   lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
 
-  function render(){
-    if(editMode && editingDraft){ renderEdit(); bindReveal(); return; }
-    const b = brandsData.find(x => x.id === currentBrandId);
-    if(!b){ brandDetail.innerHTML = ''; return; }
-    renderView(b);
-    bindReveal();
-  }
-
   // 브랜드를 바꿔 카드를 새로 그린 뒤 등장 모션을 다시 걸어준다
   function bindReveal(){
     if(window.adcheckReveal) setTimeout(window.adcheckReveal, 0);
   }
 
-  function renderView(b){
-    const countLabel = b.imageCount > 0 ? ('참고 배너 ' + b.imageCount + '장 등록됨') : '참고 배너 없음';
-
-    const checkedLabels = checklistOptions
-      .filter(o => b.checklist && b.checklist[o.id])
-      .map(o => o.label);
-    const checkedHtml = checkedLabels.length
-      ? '<div class="gl-heading">체크된 가이드 기준</div><ul class="checked-list">' + checkedLabels.map(l => '<li>' + escapeHtml(l) + '</li>').join('') + '</ul>'
-      : '<div class="gl-empty">아직 체크된 가이드 기준이 없습니다. "편집"을 눌러 채워보세요.</div>';
-
-    const specHtml = (b.customFields && b.customFields.length)
-      ? '<div class="spec-grid">' + b.customFields.map(s =>
-          '<div class="spec-card"><div class="spec-card-label">' + escapeHtml(s.label) + '</div><div class="spec-card-value">' + escapeHtml(s.value) + '</div></div>'
-        ).join('') + '</div>'
-      : '';
-
-    const feedbackHtml = (b.feedbackLog && b.feedbackLog.length)
-      ? '<div class="gl-heading">광고주 피드백 이력</div><ul class="feedback-list">' + b.feedbackLog.slice().reverse().map(f =>
-          '<li class="feedback-item"><span class="feedback-date">' + escapeHtml(f.date) + '</span>' + escapeHtml(f.text) + '</li>'
-        ).join('') + '</ul>'
-      : '';
-
-    const galleryHtml = b.imageCount > 0
-      ? '<div class="gl-heading">참고 배너</div><div class="gallery-loading">이미지를 불러오는 중…</div><div class="gallery" id="gallery-' + b.id + '"></div>'
-      : '';
-
-    brandDetail.innerHTML =
-      '<div class="brand-card" data-reveal>' +
-      '<div class="brand-head-row">' +
-        '<div class="brand-head"><span class="brand-name">' + escapeHtml(b.name) + '</span>' +
-        '<span class="brand-count">' + escapeHtml(countLabel) + '</span></div>' +
-        '<div class="btn-row">' +
-          '<button type="button" class="edit-btn danger" id="deleteBrandBtn">삭제</button>' +
-          '<button type="button" class="edit-btn" id="editToggleBtn">편집</button>' +
-        '</div>' +
-      '</div>' +
-      (b.note ? '<div class="brand-note">' + escapeHtml(b.note) + '</div>' : '') +
-      feedbackHtml +
-      checkedHtml +
-      specHtml +
-      galleryHtml +
-      '</div>';
-
-    document.getElementById('deleteBrandBtn').addEventListener('click', () => deleteBrand(b));
-
-    document.getElementById('editToggleBtn').addEventListener('click', enterEdit);
-    if(b.imageCount > 0) loadBrandImages(b.id);
+  function cloneDraft(b){
+    const d = JSON.parse(JSON.stringify(b));
+    if(!d.checklist) d.checklist = {};
+    if(!d.customFields) d.customFields = [];
+    if(!d.feedbackLog) d.feedbackLog = [];
+    return d;
   }
 
-  function enterEdit(){
+  function renderSidebar(){
+    const rows = ['<button type="button" class="bg-side-item' + (currentBrandId ? '' : ' active') + '" data-brand-id="">비교 없이<span class="bg-side-count">—</span></button>'];
+    brandsData.forEach(b => {
+      rows.push('<button type="button" class="bg-side-item' + (b.id === currentBrandId ? ' active' : '') + '" data-brand-id="' + escapeHtml(b.id) + '">' +
+        escapeHtml(b.name) + '<span class="bg-side-count">' + (b.imageCount || 0) + '</span></button>');
+    });
+    brandSideList.innerHTML = rows.join('');
+    brandSideList.querySelectorAll('.bg-side-item').forEach(btn => {
+      btn.addEventListener('click', () => selectBrand(btn.dataset.brandId || null));
+    });
+  }
+
+  function selectBrand(id){
+    currentBrandId = id || null;
     const b = brandsData.find(x => x.id === currentBrandId);
-    if(!b) return;
-    // Deep clone so in-progress edits never touch brandsData until saved —
-    // "취소" just discards editingDraft and re-renders from the pristine data.
-    editingDraft = JSON.parse(JSON.stringify(b));
-    if(!editingDraft.checklist) editingDraft.checklist = {};
-    if(!editingDraft.customFields) editingDraft.customFields = [];
-    if(!editingDraft.feedbackLog) editingDraft.feedbackLog = [];
-    editMode = true;
-    render();
+    currentDraft = b ? cloneDraft(b) : null;
+    renderSidebar();
+    renderDetail();
   }
 
-  // Reads the current DOM (checkboxes + custom field rows) back into
-  // editingDraft before any action that re-renders the edit form, so
-  // typed-but-unsaved values in other rows aren't lost.
-  function syncEditStateFromDom(){
+  // 토글·필드·피드백 입력을 DOM에서 읽어 currentDraft에 반영 —
+  // 구조가 바뀌는 동작(추가/삭제/저장) 직전에 호출해 다른 행의 입력값을 잃지 않는다.
+  function syncDraftFromDom(){
+    if(!currentDraft) return;
     const checklist = {};
     document.querySelectorAll('[data-check-id]').forEach(cb => {
       checklist[cb.dataset.checkId] = cb.checked;
     });
-    editingDraft.checklist = checklist;
+    currentDraft.checklist = checklist;
 
     const rows = document.querySelectorAll('#fieldRows .field-row');
-    editingDraft.customFields = Array.from(rows).map(row => ({
+    currentDraft.customFields = Array.from(rows).map(row => ({
       label: row.querySelector('.field-label').value,
       value: row.querySelector('.field-value').value,
     }));
-
-    document.querySelectorAll('#feedbackRows .feedback-edit-row').forEach(row => {
-      const idx = parseInt(row.dataset.feedbackIndex, 10);
-      const text = row.querySelector('.feedback-edit-text').value;
-      if(editingDraft.feedbackLog[idx]) editingDraft.feedbackLog[idx].text = text;
-    });
   }
 
-  function renderEdit(){
-    const d = editingDraft;
+  function renderDetail(){
+    const d = currentDraft;
+    if(!d){ brandDetail.innerHTML = ''; return; }
+    const countLabel = '참고 배너 ' + (d.imageCount || 0) + '장 · 체크리스트 ' + checklistOptions.filter(o => d.checklist[o.id]).length + '항목';
 
-    const checklistHtml = SECTIONS.map(sec => {
-      const items = checklistOptions.filter(o => o.section === sec.key);
-      if(!items.length) return '';
-      const rows = items.map(o => {
-        const checked = !!d.checklist[o.id];
-        return '<label class="check-row"><input type="checkbox" data-check-id="' + escapeHtml(o.id) + '"' + (checked ? ' checked' : '') + '>' + escapeHtml(o.label) + '</label>';
-      }).join('');
-      return '<div class="edit-section"><div class="edit-section-title">' + escapeHtml(sec.title) + '</div>' + rows + '</div>';
-    }).join('');
+    const feedbackRows = d.feedbackLog.length
+      ? d.feedbackLog.map((f, i) => i).reverse().map(i => {
+          const f = d.feedbackLog[i];
+          return '<div class="feedback-row" data-feedback-index="' + i + '">' +
+            '<span class="feedback-row-date">' + escapeHtml(f.date) + '</span>' +
+            '<span class="feedback-row-text">' + escapeHtml(f.text) + '</span>' +
+            '<button type="button" class="feedback-remove" aria-label="삭제">&times;</button>' +
+          '</div>';
+        }).join('')
+      : '<div class="gl-empty">등록된 피드백이 없습니다.</div>';
 
     const fieldsHtml = d.customFields.map((f, i) =>
       '<div class="field-row" data-field-index="' + i + '">' +
@@ -429,52 +392,70 @@
       '</div>'
     ).join('');
 
-    const feedbackHtml = d.feedbackLog.length
-      ? d.feedbackLog.map((f, i) => i).reverse().map(i => {
-          const f = d.feedbackLog[i];
-          return '<div class="feedback-edit-row" data-feedback-index="' + i + '">' +
-            '<span class="feedback-edit-date">' + escapeHtml(f.date) + '</span>' +
-            '<input type="text" class="feedback-edit-text" value="' + escapeHtml(f.text) + '">' +
-            '<button type="button" class="field-remove" aria-label="삭제">&times;</button>' +
-          '</div>';
-        }).join('')
-      : '<div class="gl-empty">등록된 피드백이 없습니다.</div>';
+    const checklistHtml = SECTIONS.map(sec => {
+      const items = checklistOptions.filter(o => o.section === sec.key);
+      if(!items.length) return '';
+      const onCount = items.filter(o => d.checklist[o.id]).length;
+      const rows = items.map(o => {
+        const checked = !!d.checklist[o.id];
+        return '<label class="toggle-row' + (checked ? ' on' : '') + '">' +
+          '<span class="toggle-switch"><input type="checkbox" data-check-id="' + escapeHtml(o.id) + '"' + (checked ? ' checked' : '') + '><span class="toggle-track"></span></span>' +
+          escapeHtml(o.label) +
+        '</label>';
+      }).join('');
+      return '<div class="bg-card toggle-section" data-reveal>' +
+        '<div class="bg-panel-head"><span class="bg-panel-label">' + escapeHtml(sec.key.toUpperCase()) + '</span><span class="bg-panel-title">' + escapeHtml(sec.title) + '</span><span class="bg-panel-meta">' + onCount + ' / ' + items.length + '</span></div>' +
+        rows +
+      '</div>';
+    }).join('');
+
+    const galleryHtml = (d.imageCount > 0)
+      ? '<div class="bg-card" data-reveal><div class="bg-panel-head"><span class="bg-panel-label">REFERENCE</span><span class="bg-panel-title">참고 배너</span></div><div class="gallery-loading">이미지를 불러오는 중…</div><div class="gallery" id="gallery-' + d.id + '"></div></div>'
+      : '';
 
     brandDetail.innerHTML =
-      '<div class="brand-card" data-reveal>' +
-      '<div class="brand-head-row">' +
-        '<div class="brand-head"><span class="brand-name">' + escapeHtml(d.name) + ' — 편집 중</span></div>' +
-        '<div class="btn-row"><button type="button" class="edit-btn cancel" id="cancelEditBtn">취소</button><button type="button" class="edit-btn save" id="saveEditBtn">저장</button></div>' +
+      '<div class="bg-card" data-reveal>' +
+        '<div class="brand-head-row">' +
+          '<div class="brand-head"><span class="brand-name">' + escapeHtml(d.name) + '</span></div>' +
+          '<div class="btn-row">' +
+            '<button type="button" class="edit-btn danger" id="deleteBrandBtn">삭제</button>' +
+            '<button type="button" class="edit-btn save" id="saveEditBtn">변경사항 저장</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="brand-count">' + escapeHtml(countLabel) + '</div>' +
+        (d.note ? '<div class="brand-note">' + escapeHtml(d.note) + '</div>' : '') +
       '</div>' +
-      '<div class="gl-heading">광고주 피드백</div>' +
-      '<div id="feedbackRows">' + feedbackHtml + '</div>' +
-      '<div class="feedback-add-row"><input type="text" id="newFeedbackInput" placeholder="새 피드백 내용을 입력하고 추가"><button type="button" class="feedback-add-btn" id="addFeedbackBtn">추가</button></div>' +
-      '<div class="gl-heading">커스텀 필드 (컬러 코드처럼 직접 입력이 필요한 값)</div>' +
-      '<div id="fieldRows">' + fieldsHtml + '</div>' +
-      '<button type="button" class="add-field-btn" id="addFieldBtn">+ 필드 추가</button>' +
-      checklistHtml +
-      '<div class="save-status" id="saveStatus"></div>' +
-      '</div>';
 
-    document.getElementById('cancelEditBtn').addEventListener('click', () => {
-      editMode = false;
-      editingDraft = null;
-      render();
-    });
+      '<div class="bg-card" data-reveal>' +
+        '<div class="bg-panel-head"><span class="bg-panel-label">FEEDBACK</span><span class="bg-panel-title">광고주 피드백</span><span class="bg-panel-meta">' + d.feedbackLog.length + '건</span></div>' +
+        '<div id="feedbackRows" class="feedback-list">' + feedbackRows + '</div>' +
+        '<div class="feedback-add-row"><input type="text" id="newFeedbackInput" placeholder="새 피드백 내용을 입력하고 추가"><button type="button" class="feedback-add-btn" id="addFeedbackBtn">추가</button></div>' +
+      '</div>' +
+
+      '<div class="bg-card" data-reveal>' +
+        '<div class="bg-panel-head"><span class="bg-panel-label">FIELDS</span><span class="bg-panel-title">커스텀 필드</span><span class="bg-panel-meta">컬러 코드처럼 직접 입력이 필요한 값</span></div>' +
+        '<div id="fieldRows">' + fieldsHtml + '</div>' +
+        '<button type="button" class="add-field-btn" id="addFieldBtn">+ 필드 추가</button>' +
+      '</div>' +
+
+      checklistHtml +
+      galleryHtml +
+      '<div class="save-status" id="saveStatus"></div>';
+
+    document.getElementById('deleteBrandBtn').addEventListener('click', () => deleteBrand(d));
+    document.getElementById('saveEditBtn').addEventListener('click', saveDraft);
 
     document.getElementById('addFieldBtn').addEventListener('click', () => {
-      syncEditStateFromDom();
-      editingDraft.customFields.push({ label: '', value: '' });
-      renderEdit();
+      syncDraftFromDom();
+      currentDraft.customFields.push({ label: '', value: '' });
+      renderDetail();
     });
-
     document.getElementById('fieldRows').addEventListener('click', (e) => {
       const row = e.target.closest('.field-row');
       if(row && e.target.classList.contains('field-remove')){
-        syncEditStateFromDom();
-        const idx = parseInt(row.dataset.fieldIndex, 10);
-        editingDraft.customFields.splice(idx, 1);
-        renderEdit();
+        syncDraftFromDom();
+        currentDraft.customFields.splice(parseInt(row.dataset.fieldIndex, 10), 1);
+        renderDetail();
       }
     });
 
@@ -482,26 +463,25 @@
       const input = document.getElementById('newFeedbackInput');
       const text = input.value.trim();
       if(!text) return;
-      syncEditStateFromDom();
-      editingDraft.feedbackLog.push({ date: new Date().toISOString().slice(0, 10), text });
-      renderEdit();
+      syncDraftFromDom();
+      currentDraft.feedbackLog.push({ date: new Date().toISOString().slice(0, 10), text });
+      renderDetail();
     });
-
     document.getElementById('feedbackRows').addEventListener('click', (e) => {
-      const row = e.target.closest('.feedback-edit-row');
-      if(row && e.target.classList.contains('field-remove')){
-        syncEditStateFromDom();
-        const idx = parseInt(row.dataset.feedbackIndex, 10);
-        editingDraft.feedbackLog.splice(idx, 1);
-        renderEdit();
+      const row = e.target.closest('.feedback-row');
+      if(row && e.target.classList.contains('feedback-remove')){
+        syncDraftFromDom();
+        currentDraft.feedbackLog.splice(parseInt(row.dataset.feedbackIndex, 10), 1);
+        renderDetail();
       }
     });
 
-    document.getElementById('saveEditBtn').addEventListener('click', saveDraft);
+    if(d.imageCount > 0) loadBrandImages(d.id);
+    bindReveal();
   }
 
   function saveDraft(){
-    syncEditStateFromDom();
+    syncDraftFromDom();
     const password = window.prompt('편집 비밀번호를 입력하세요');
     if(password === null) return; // cancelled the prompt
 
@@ -513,10 +493,10 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id: editingDraft.id,
-        checklist: editingDraft.checklist,
-        customFields: editingDraft.customFields.filter(f => f.label && f.value),
-        feedbackLog: editingDraft.feedbackLog,
+        id: currentDraft.id,
+        checklist: currentDraft.checklist,
+        customFields: currentDraft.customFields.filter(f => f.label && f.value),
+        feedbackLog: currentDraft.feedbackLog,
         editPassword: password,
       }),
     })
@@ -527,8 +507,6 @@
           statusEl.className = 'save-status error';
           return;
         }
-        editMode = false;
-        editingDraft = null;
         loadBrandsData(currentBrandId);
       })
       .catch(() => {
@@ -570,13 +548,6 @@
       });
   }
 
-  brandSelect.addEventListener('change', () => {
-    editMode = false;
-    editingDraft = null;
-    if(brandSelect.value){ currentBrandId = brandSelect.value; render(); }
-    else { currentBrandId = null; brandDetail.innerHTML = ''; }
-  });
-
   function loadBrandsData(selectId){
     return fetch('/api/brandGuides')
       .then(r => {
@@ -586,22 +557,13 @@
       .then(data => {
         brandsData = data.brands || [];
         if(brandsData.length === 0){
+          brandSideList.innerHTML = '';
           brandDetail.innerHTML = '<div class="gl-empty">등록된 브랜드가 없습니다.</div>';
           return;
         }
-        // Rebuild every time (not just on first load) so a brand added via
-        // "+ 브랜드 추가" shows up in the dropdown without a page refresh.
-        brandSelect.innerHTML = '<option value="">브랜드를 선택하세요</option>';
-        brandsData.forEach(b => {
-          const opt = document.createElement('option');
-          opt.value = b.id;
-          opt.textContent = b.name;
-          brandSelect.appendChild(opt);
-        });
         const wanted = selectId || currentBrandId;
         currentBrandId = (wanted && brandsData.some(b => b.id === wanted)) ? wanted : brandsData[0].id;
-        brandSelect.value = currentBrandId;
-        render();
+        selectBrand(currentBrandId);
       });
   }
 
