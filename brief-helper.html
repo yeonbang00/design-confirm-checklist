@@ -73,11 +73,11 @@
   .gnb-secondary{gap:2px; justify-self:end;}
   .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; letter-spacing:-.015em; white-space:nowrap; border:none; background:none; cursor:pointer; transition:background .25s ease,color .25s ease,box-shadow .25s ease;}
   .gnb-primary .gnb-link:hover{color:var(--ink); box-shadow:inset 0 0 0 1px rgba(204,255,0,.55);}
-  .gnb-primary .gnb-link.active{background:var(--accent); color:var(--accent-ink); font-weight:700;}
+  .gnb-primary .gnb-link.active{background:#EDEEF0; color:#0B0C0E; font-weight:700;}
   .gnb-primary .gnb-link.active:hover{box-shadow:none;}
   .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none; white-space:nowrap; transition:color .25s ease;}
   .gnb-secondary .gnb-link:hover{color:var(--ink);}
-  .gnb-secondary .gnb-link.active{color:var(--accent);}
+  .gnb-secondary .gnb-link.active{color:#EDEEF0;}
   .gnb-dropdown{position:relative;}
   .gnb-dropdown-toggle{display:flex; align-items:center; gap:5px; font-family:inherit;}
   .gnb-dropdown-toggle::after{content:'\25BC'; font-size:8px; opacity:.55;}
@@ -87,6 +87,18 @@
   .gnb-dropdown-item{display:block; width:100%; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; text-decoration:none; transition:background .2s ease,color .2s ease;}
   .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .gnb-dropdown-item.active{color:var(--accent);}
+
+
+  /* ---------- 등장 모션 (assets/motion.js) ---------- */
+  html.motion-ready [data-reveal]{opacity:0; transform:translateY(30px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1);}
+  html.motion-ready [data-reveal].in{opacity:1; transform:translateY(0);}
+  html.motion-ready [data-row]{opacity:0; transform:translateX(-40px); transition:opacity .7s ease, transform .8s cubic-bezier(.16,1,.3,1);}
+  html.motion-ready [data-row].in{opacity:1; transform:translateX(0);}
+  html.motion-ready [data-row][data-dir="down"]{transform:translateY(-22px);}
+  html.motion-ready [data-row][data-dir="down"].in{transform:translateY(0);}
+
+  /* ---------- 푸터 로고 ---------- */
+  .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
 
   .page-eyebrow{font:500 11px/1 var(--font-mono); letter-spacing:.2em; color:var(--ink-3); margin-bottom:22px;}
   .page-eyebrow b{color:var(--accent); font-weight:500;}
@@ -200,9 +212,9 @@
       <div class="gnb-dropdown">
         <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
         <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
           <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
           <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
-          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
           <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
         </div></div>
       </div>
@@ -280,6 +292,7 @@
   <div id="resultSection"></div>
 
   <div class="page-footer">
+    <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     ※ 업로드한 기획안 이미지는 분석 후 서버에 저장되지 않고 바로 폐기됩니다.<br>
     사용 중인 OpenAI API는 기본적으로 전송된 데이터를 모델 학습에 사용하지 않으며, 어뷰징 모니터링 목적으로만 최대 30일간 보관됩니다.<br>
     구조적으로도 정책상으로도 보안 문제가 크지 않은 수준입니다.

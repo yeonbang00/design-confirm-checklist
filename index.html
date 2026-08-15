@@ -67,11 +67,11 @@
   .gnb-secondary{display:flex; align-items:center; gap:2px; justify-self:end;}
   .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; letter-spacing:-.015em; white-space:nowrap; border:none; background:none; cursor:pointer; transition:background .25s ease,color .25s ease,box-shadow .25s ease;}
   .gnb-primary .gnb-link:hover{color:var(--ink); box-shadow:inset 0 0 0 1px rgba(204,255,0,.55);}
-  .gnb-primary .gnb-link.active{background:var(--accent); color:var(--accent-ink); font-weight:700;}
+  .gnb-primary .gnb-link.active{background:#EDEEF0; color:#0B0C0E; font-weight:700;}
   .gnb-primary .gnb-link.active:hover{box-shadow:none;}
   .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none; white-space:nowrap; transition:color .25s ease;}
   .gnb-secondary .gnb-link:hover{color:var(--ink);}
-  .gnb-secondary .gnb-link.active{color:var(--accent);}
+  .gnb-secondary .gnb-link.active{color:#EDEEF0;}
   .gnb-dropdown{position:relative;}
   .gnb-dropdown-toggle{display:flex; align-items:center; gap:5px; font-family:inherit;}
   .gnb-dropdown-toggle::after{content:'▼'; font-size:8px; opacity:.55;}
@@ -105,8 +105,13 @@
   .hero-drift-col.up{animation:driftUp 42s linear infinite;}
   .hero-drift-col.down{animation:driftDown 34s linear infinite;}
   .hero-drift-col.up-slow{animation:driftUp 48s linear infinite;}
-  .hero-drift-col img{width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; background:var(--surface); border:1px solid rgba(255,255,255,.1); flex:none; display:block; transition:transform .45s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .3s ease;}
-  .hero-drift-col img:hover{transform:scale(1.06); border-color:rgba(204,255,0,.6); box-shadow:0 0 34px -8px rgba(204,255,0,.45);}
+  .drift-cell{position:relative; aspect-ratio:1; border-radius:12px; overflow:hidden; background:var(--surface); border:1px solid rgba(255,255,255,.1); flex:none; transition:transform .45s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .3s ease;}
+  .drift-cell img{width:100%; height:100%; object-fit:cover; display:block;}
+  .drift-cell:hover{transform:scale(1.06); border-color:rgba(204,255,0,.6); box-shadow:0 0 34px -8px rgba(204,255,0,.45);}
+  .drift-tag{position:absolute; left:7px; bottom:7px; font:500 8px/1 var(--font-mono); letter-spacing:.06em; padding:4px 6px; border-radius:5px; border:1px solid;}
+  .drift-cell.v-pass .drift-tag{background:rgba(168,207,188,.16); border-color:rgba(168,207,188,.5); color:var(--pass);}
+  .drift-cell.v-needsfix .drift-tag{background:rgba(217,166,96,.16); border-color:rgba(217,166,96,.5); color:var(--needsfix);}
+  .drift-cell.v-reject .drift-tag{background:rgba(194,104,122,.16); border-color:rgba(194,104,122,.5); color:var(--reject);}
 
   /* ---------- dropzone ---------- */
   .prompt-wrap{position:relative; max-width:1520px; margin:0 auto; padding:100px 40px 0;}
@@ -199,7 +204,7 @@
   .comparison-title{font:700 10.5px/1 var(--font-mono); letter-spacing:.16em; color:var(--accent); margin-bottom:12px;}
   .comparison-item{margin-bottom:10px;}
   .ci-label{font-size:11.5px; font-weight:600; color:var(--ink-3); margin-bottom:4px;}
-  .ci-text{font-size:13.5px; font-weight:300; line-height:1.7; color:#C4C7CD;}
+  .ci-text{font-size:13.5px; font-weight:300; line-height:1.7; color:#C4C7CD; white-space:pre-line;}
   .verdict-badge{display:inline-block; font:600 10.5px/1 var(--font-mono); letter-spacing:.08em; padding:6px 10px; border-radius:7px; margin-bottom:10px; background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--ink-2);}
   .verdict-badge.v-aligned{background:rgba(168,207,188,.12); border-color:rgba(168,207,188,.4); color:var(--pass);}
   .verdict-badge.v-partial{background:rgba(217,166,96,.12); border-color:rgba(217,166,96,.4); color:var(--needsfix);}
@@ -214,7 +219,7 @@
   .card{margin-top:52px;}
   .card.checklist-card{position:relative; display:none;}
   .card.checklist-card.show{display:block;}
-  .checklist-card.pending{max-height:340px; overflow:hidden;}
+  .checklist-card.pending{max-height:420px; overflow:hidden; -webkit-mask-image:linear-gradient(180deg,#000 62%,transparent); mask-image:linear-gradient(180deg,#000 62%,transparent);}
   .checklist-card.pending .checklist-pending-overlay{display:flex;}
   .checklist-card.pending .checklist-inner{filter:blur(6px); pointer-events:none; user-select:none;}
   .checklist-pending-overlay{display:none; position:absolute; inset:0; align-items:center; justify-content:center; z-index:5;}
@@ -236,20 +241,27 @@
   .progress-fill{height:2px; width:0%; background:var(--accent); border-radius:2px; transition:width .65s cubic-bezier(.2,.8,.2,1);}
   .counts{display:none;}
 
-  .row{position:relative; display:grid; grid-template-columns:3px 62px minmax(0,1fr) auto; align-items:center; gap:22px; padding:20px 16px; border-radius:14px; border-bottom:1px solid rgba(255,255,255,.06); transition:background .3s ease,box-shadow .3s ease;}
+  .row{position:relative; display:grid; grid-template-columns:3px 62px minmax(0,1fr) auto auto; align-items:center; gap:22px; padding:20px 16px; border-radius:14px; border-bottom:1px solid rgba(255,255,255,.06); transition:background .3s ease,box-shadow .3s ease;}
   .row::before{content:''; width:3px; height:26px; border-radius:2px; background:rgba(255,255,255,.12); transition:background .45s ease;}
   .row:hover{background:rgba(255,255,255,.04); box-shadow:inset 0 0 0 1px rgba(204,255,0,.2);}
   .row.jump-flash{animation:rowflash 1.4s ease;}
-  .row-label{display:contents;}
-  .row-label .rn{font:700 15px/1 var(--font-mono); color:var(--ink-3); font-variant-numeric:tabular-nums; letter-spacing:-.03em; transition:color .45s ease;}
-  .row-label .rt{font-size:16.5px; font-weight:600; color:var(--ink); letter-spacing:-.025em; min-width:0;}
-  .row-btns{display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;}
-  .stbtn{border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--ink-3); font-size:12px; font-weight:600; padding:9px 14px; border-radius:9px; cursor:pointer; letter-spacing:-.015em; transition:all .3s ease;}
-  .stbtn:hover{color:var(--ink); border-color:rgba(255,255,255,.24);}
-  .stbtn[data-status="pass"].active{background:rgba(168,207,188,.14); border-color:rgba(168,207,188,.5); color:var(--pass);}
-  .stbtn[data-status="needsfix"].active{background:rgba(217,166,96,.14); border-color:rgba(217,166,96,.5); color:var(--needsfix);}
-  .stbtn[data-status="reject"].active{background:rgba(194,104,122,.14); border-color:rgba(194,104,122,.5); color:var(--reject);}
-  .stbtn[data-status="na"].active{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); color:var(--ink-2);}
+  .rn{font:700 15px/1 var(--font-mono); color:var(--ink-3); font-variant-numeric:tabular-nums; letter-spacing:-.03em; transition:color .45s ease;}
+  .row-main{min-width:0;}
+  .rt{font-size:16.5px; font-weight:600; color:var(--ink); letter-spacing:-.025em;}
+  .row-note{margin-top:7px; font-size:13px; font-weight:300; line-height:1.7; color:#8B9099; display:none;}
+  .row-note.show{display:block;}
+  .row-tags{display:flex; gap:5px;}
+  .mtag{font:500 10px/1 var(--font-mono); letter-spacing:.08em; padding:5px 8px; border-radius:6px; border:1px solid var(--line); color:var(--ink-3);}
+  .row-verdict{position:relative;}
+  .stbtn{min-width:80px; text-align:center; font-size:12px; font-weight:600; letter-spacing:-.015em; padding:9px 14px; border-radius:9px; background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--ink-3); cursor:pointer; transition:all .45s ease;}
+  .stbtn[data-status="pass"]{background:rgba(168,207,188,.14); border-color:rgba(168,207,188,.5); color:var(--pass);}
+  .stbtn[data-status="needsfix"]{background:rgba(217,166,96,.14); border-color:rgba(217,166,96,.5); color:var(--needsfix);}
+  .stbtn[data-status="reject"]{background:rgba(194,104,122,.14); border-color:rgba(194,104,122,.5); color:var(--reject);}
+  .stbtn[data-status="na"]{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); color:var(--ink-2);}
+  .verdict-menu{position:absolute; top:calc(100% + 6px); right:0; z-index:30; display:none; padding:6px; gap:4px; flex-direction:column; border-radius:12px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95);}
+  .verdict-menu.open{display:flex;}
+  .verdict-menu button{min-width:92px; text-align:left; font-size:12px; font-weight:600; padding:8px 12px; border-radius:8px; border:none; background:none; color:var(--ink-2); cursor:pointer; transition:background .2s ease,color .2s ease;}
+  .verdict-menu button:hover{background:rgba(255,255,255,.07); color:var(--ink);}
   .row[data-status="pass"]::before{background:var(--pass);}
   .row[data-status="needsfix"]::before{background:var(--needsfix);}
   .row[data-status="reject"]::before{background:var(--reject);}
@@ -257,8 +269,15 @@
   .row[data-status="pass"] .rn{color:var(--pass);}
   .row[data-status="needsfix"] .rn{color:var(--needsfix);}
   .row[data-status="reject"] .rn{color:var(--reject);}
-  .row-note{grid-column:3 / -1; margin:-8px 0 14px; padding:0 16px 0 0; font-size:13px; font-weight:300; line-height:1.7; color:#8B9099; display:none;}
-  .row-note.show{display:block;}
+  html.motion-ready .row{opacity:0; transform:translateX(-30px); transition:opacity .5s ease, transform .55s cubic-bezier(.16,1,.3,1), background .3s ease, box-shadow .3s ease;}
+  html.motion-ready .row.revealed{opacity:1; transform:translateX(0);}
+
+  /* 하단 17항목 마퀴 */
+  .marquee{overflow:hidden; margin-top:80px; padding:26px 0; border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft);}
+  .marquee-track{display:flex; width:max-content; animation:marq 34s linear infinite; font:500 12.5px/1 var(--font-mono); letter-spacing:.18em; color:#8B9099;}
+  .marquee-track span{padding-right:44px; white-space:nowrap;}
+  .marquee-track .sep{color:var(--accent); opacity:.5;}
+  @keyframes marq{to{transform:translateX(-50%);}}
 
   .page-footer{display:none; text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:60px; border-top:1px solid var(--line-soft);}
   .page-footer.show{display:block;}
@@ -287,6 +306,17 @@
     .row-btns{grid-column:1 / -1; justify-content:flex-start; margin-top:10px;}
     .row-note{grid-column:1 / -1;}
   }
+
+  /* ---------- 등장 모션 (assets/motion.js) ---------- */
+  html.motion-ready [data-reveal]{opacity:0; transform:translateY(30px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1);}
+  html.motion-ready [data-reveal].in{opacity:1; transform:translateY(0);}
+  html.motion-ready [data-row]{opacity:0; transform:translateX(-40px); transition:opacity .7s ease, transform .8s cubic-bezier(.16,1,.3,1);}
+  html.motion-ready [data-row].in{opacity:1; transform:translateX(0);}
+  html.motion-ready [data-row][data-dir="down"]{transform:translateY(-22px);}
+  html.motion-ready [data-row][data-dir="down"].in{transform:translateY(0);}
+
+  /* ---------- 푸터 로고 ---------- */
+  .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
 </style>
 </head>
 <body>
@@ -301,9 +331,9 @@
       <div class="gnb-dropdown">
         <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
         <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
           <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
           <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
-          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
           <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
         </div></div>
       </div>
@@ -328,40 +358,58 @@
         <span class="sep">/</span>
         <span class="sub">17 CRITERIA</span>
       </div>
-      <h1>배너 한 장,<br><em>17</em>개의 판정.</h1>
+      <h1>Drop a banner.<br>Get <em>17</em> verdicts.</h1>
       <p class="hero-sub">브랜드·매체 가이드를 그대로 적용해 전략부터 AI 생성 아티팩트까지 한 번에 검수합니다.</p>
       <div class="hero-stats">
         <div class="hero-stat"><div class="hero-stat-v" style="color:var(--accent);">17</div><div class="hero-stat-k">평가 항목</div></div>
-        <div class="hero-stat"><div class="hero-stat-v" style="color:var(--ink);">3</div><div class="hero-stat-k">판정 방식 (M1·M2·M3)</div></div>
-        <div class="hero-stat"><div class="hero-stat-v" style="color:var(--ink);">288</div><div class="hero-stat-k">레퍼런스 소재</div></div>
-        <div class="hero-stat"><div class="hero-stat-v" style="color:var(--ink);">4</div><div class="hero-stat-k">실측 엔진 연동</div></div>
+        <div class="hero-stat"><div class="hero-stat-v">4</div><div class="hero-stat-k">판정 등급</div></div>
+        <div class="hero-stat"><div class="hero-stat-v">40s</div><div class="hero-stat-k">평균 검수 시간</div></div>
+        <div class="hero-stat"><div class="hero-stat-v">1px</div><div class="hero-stat-k">픽셀 정밀 측정</div></div>
       </div>
     </div>
     <div class="hero-drift" aria-hidden="true">
       <div class="hero-drift-cols">
         <div class="hero-drift-col up">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/telecom/%ED%86%B5%EC%8B%A0-ktmmobile-01-thumb-L9peAVIO39YPehwcE9fLTEKYoqrzHn.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/finance/kb%EA%B5%AD%EB%AF%BC%EC%B9%B4%EB%93%9C-046-thumb-6xo4JifPoQA9S7ACdjH6l8wxYnRLUS.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/beauty/%EC%A0%9C%EB%A1%9C%EC%9D%B4%EB%93%9C-134-thumb-TdiJLgNMCCPyPHDw8MZEuZSW6MO6y8.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/telecom/%ED%86%B5%EC%8B%A0-ktmmobile-01-thumb-L9peAVIO39YPehwcE9fLTEKYoqrzHn.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/finance/kb%EA%B5%AD%EB%AF%BC%EC%B9%B4%EB%93%9C-046-thumb-6xo4JifPoQA9S7ACdjH6l8wxYnRLUS.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/beauty/%EC%A0%9C%EB%A1%9C%EC%9D%B4%EB%93%9C-134-thumb-TdiJLgNMCCPyPHDw8MZEuZSW6MO6y8.jpg" alt="" loading="lazy">
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/02_hierarchy__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/03_contrast__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/07_retouch__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/10_anatomy__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/12_watermark__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/08_vector__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/02_hierarchy__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/03_contrast__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/07_retouch__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/10_anatomy__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/12_watermark__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/08_vector__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
         </div>
         <div class="hero-drift-col down">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/shopping/%EC%87%BC%ED%95%91-glive-01-thumb-FfjIKf4h6akMESyGCYwVnvUdNBhx6A.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/healthcare/%ED%97%AC%EC%8A%A4%EC%BC%80%EC%96%B4-%EC%96%BC%EB%9D%BC%EC%9D%B4%EB%B8%8C-01-thumb-c5vMiEI0S13S5eB1mU93xalbrwFExI.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/finance/%ED%95%98%EB%82%98%EC%B9%B4%EB%93%9C-055-thumb-PEzaE2u69TlLBkEBueVpsFte9GCBlE.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/shopping/%EC%87%BC%ED%95%91-glive-01-thumb-FfjIKf4h6akMESyGCYwVnvUdNBhx6A.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/healthcare/%ED%97%AC%EC%8A%A4%EC%BC%80%EC%96%B4-%EC%96%BC%EB%9D%BC%EC%9D%B4%EB%B8%8C-01-thumb-c5vMiEI0S13S5eB1mU93xalbrwFExI.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/finance/%ED%95%98%EB%82%98%EC%B9%B4%EB%93%9C-055-thumb-PEzaE2u69TlLBkEBueVpsFte9GCBlE.jpg" alt="" loading="lazy">
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/06_composite__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/09_cta__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/11_pattern__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/13_shadow__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/15_textrender__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/03_contrast__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/06_composite__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/09_cta__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/11_pattern__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/13_shadow__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/15_textrender__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/03_contrast__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
         </div>
         <div class="hero-drift-col up-slow">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/electronics/%EA%B0%80%EC%A0%84-%EA%B0%A4%EB%9F%AD%EC%8B%9C-01-thumb-D5JSF6Xc8qhtz6NnFs1qJ2Knri7dNR.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/travel/nhnad-%EC%97%94%EC%A0%A4%EC%B9%B4-angelcar-09-thumb-jURnQ6O8pSt4sYf33HfqovLh2KHlBo.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/finance/%EC%82%BC%EC%84%B1%ED%99%94%EC%9E%AC-028-thumb-g3qselXBJ0EJNeyMyX8ZnM9fEDpgwG.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/electronics/%EA%B0%80%EC%A0%84-%EA%B0%A4%EB%9F%AD%EC%8B%9C-01-thumb-D5JSF6Xc8qhtz6NnFs1qJ2Knri7dNR.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/travel/nhnad-%EC%97%94%EC%A0%A4%EC%B9%B4-angelcar-09-thumb-jURnQ6O8pSt4sYf33HfqovLh2KHlBo.jpg" alt="" loading="lazy">
-          <img src="https://oeiquwo26iglgctf.public.blob.vercel-storage.com/reference/finance/%EC%82%BC%EC%84%B1%ED%99%94%EC%9E%AC-028-thumb-g3qselXBJ0EJNeyMyX8ZnM9fEDpgwG.jpg" alt="" loading="lazy">
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/10_anatomy__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/07_retouch__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/08_vector__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/12_watermark__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/02_hierarchy__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/06_composite__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/10_anatomy__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/07_retouch__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/08_vector__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
+          <div class="drift-cell v-reject"><img src="assets/m3-examples/12_watermark__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
+          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/02_hierarchy__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
+          <div class="drift-cell v-pass"><img src="assets/m3-examples/06_composite__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
         </div>
       </div>
     </div>
@@ -429,7 +477,7 @@
 <div class="content">
 
   <!-- ---------- AI summary ---------- -->
-  <div class="ai-summary" id="aiSummaryBox">
+  <div class="ai-summary" id="aiSummaryBox" data-reveal>
     <div class="ai-summary-head"><span class="dot" id="summaryDot"></span><span>AI 총평</span></div>
     <div class="ai-summary-body">
       <span id="aiSummaryText"></span>
@@ -463,7 +511,7 @@
     </div>
 
     <div class="comparison-block" id="brandGuideReviewBlock">
-      <div class="comparison-title">브랜드 가이드 기준 검수 결과</div>
+      <div class="comparison-title">브랜드 가이드 검수 결과</div>
       <div class="comparison-item">
         <div class="ci-text" id="bgDiffers"></div>
       </div>
@@ -487,39 +535,39 @@
 
   <!-- ---------- tier cards ---------- -->
   <div class="section-divider" id="tierDivider" style="display:none;"></div>
-  <div class="tier-grid" id="tierGrid" style="display:none;">
-    <div class="tier-card">
-      <div class="tier-ghost" id="gPass">0</div>
+  <div class="tier-grid" id="tierGrid" style="display:none;" data-stagger>
+    <div class="tier-card" id="tPass">
+      <div class="tier-ghost" id="gPass">00</div>
       <div class="tier-code">PASS</div>
-      <div class="tier-count" id="cPass" style="color:var(--pass);">0</div>
-      <div class="tier-label" style="color:var(--pass);">통과</div>
-      <div class="tier-bar"><span id="bPass" style="background:var(--pass);"></span></div>
+      <div class="tier-count" id="cPass">00</div>
+      <div class="tier-label" id="lPass">통과</div>
+      <div class="tier-bar"><span id="bPass"></span></div>
     </div>
-    <div class="tier-card">
-      <div class="tier-ghost" id="gNeedsfix">0</div>
+    <div class="tier-card" id="tNeedsfix">
+      <div class="tier-ghost" id="gNeedsfix">00</div>
       <div class="tier-code">NEEDS FIX</div>
-      <div class="tier-count" id="cNeedsfix" style="color:var(--needsfix);">0</div>
-      <div class="tier-label" style="color:var(--needsfix);">검토 필요</div>
-      <div class="tier-bar"><span id="bNeedsfix" style="background:var(--needsfix);"></span></div>
+      <div class="tier-count" id="cNeedsfix">00</div>
+      <div class="tier-label" id="lNeedsfix">검토 필요</div>
+      <div class="tier-bar"><span id="bNeedsfix"></span></div>
     </div>
-    <div class="tier-card">
-      <div class="tier-ghost" id="gReject">0</div>
+    <div class="tier-card" id="tReject">
+      <div class="tier-ghost" id="gReject">00</div>
       <div class="tier-code">REJECT</div>
-      <div class="tier-count" id="cReject" style="color:var(--reject);">0</div>
-      <div class="tier-label" style="color:var(--reject);">반려</div>
-      <div class="tier-bar"><span id="bReject" style="background:var(--reject);"></span></div>
+      <div class="tier-count" id="cReject">00</div>
+      <div class="tier-label" id="lReject">반려</div>
+      <div class="tier-bar"><span id="bReject"></span></div>
     </div>
-    <div class="tier-card">
-      <div class="tier-ghost" id="gNa">0</div>
+    <div class="tier-card" id="tNa">
+      <div class="tier-ghost" id="gNa">00</div>
       <div class="tier-code">N/A</div>
-      <div class="tier-count" id="cNa" style="color:var(--ink-2);">0</div>
-      <div class="tier-label" style="color:var(--ink-2);">해당 없음</div>
-      <div class="tier-bar"><span id="bNa" style="background:var(--na);"></span></div>
+      <div class="tier-count" id="cNa">00</div>
+      <div class="tier-label" id="lNa">해당 없음</div>
+      <div class="tier-bar"><span id="bNa"></span></div>
     </div>
   </div>
 
   <!-- ---------- checklist ---------- -->
-  <div class="card checklist-card">
+  <div class="card checklist-card" data-reveal>
     <div class="checklist-pending-overlay"><div class="checklist-pending-label"><span class="dot"></span>체크 중...</div></div>
     <div class="checklist-inner">
       <div class="card-head">
@@ -550,7 +598,12 @@
     </div>
   </div>
 
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track"><span>전략 적합성</span><span class="sep">/</span><span>위계 및 구조</span><span class="sep">/</span><span>타이포·정렬·여백·명도대비</span><span class="sep">/</span><span>정보 정확성</span><span class="sep">/</span><span>컬러 일관성</span><span class="sep">/</span><span>합성 리얼리티</span><span class="sep">/</span><span>피사체 보정</span><span class="sep">/</span><span>그래픽 완성도</span><span class="sep">/</span><span>CTA 및 전환</span><span class="sep">/</span><span>신체 비율 왜곡</span><span class="sep">/</span><span>배경 패턴 반복</span><span class="sep">/</span><span>워터마크·서명 흔적</span><span class="sep">/</span><span>광원-그림자 방향 일치</span><span class="sep">/</span><span>매체 최적화</span><span class="sep">/</span><span>텍스트·로고 렌더링</span><span class="sep">/</span><span>로고 사용 규정</span><span class="sep">/</span><span>법적고지·심의 문구</span><span class="sep">/</span><span>전략 적합성</span><span class="sep">/</span><span>위계 및 구조</span><span class="sep">/</span><span>타이포·정렬·여백·명도대비</span><span class="sep">/</span><span>정보 정확성</span><span class="sep">/</span><span>컬러 일관성</span><span class="sep">/</span><span>합성 리얼리티</span><span class="sep">/</span><span>피사체 보정</span><span class="sep">/</span><span>그래픽 완성도</span><span class="sep">/</span><span>CTA 및 전환</span><span class="sep">/</span><span>신체 비율 왜곡</span><span class="sep">/</span><span>배경 패턴 반복</span><span class="sep">/</span><span>워터마크·서명 흔적</span><span class="sep">/</span><span>광원-그림자 방향 일치</span><span class="sep">/</span><span>매체 최적화</span><span class="sep">/</span><span>텍스트·로고 렌더링</span><span class="sep">/</span><span>로고 사용 규정</span><span class="sep">/</span><span>법적고지·심의 문구</span><span class="sep">/</span></div>
+  </div>
+
   <div class="page-footer" id="pageFooter">
+    <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     이 체크리스트는 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
     이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
     © 2026 NHNAD. All rights reserved.
@@ -620,37 +673,69 @@
   ITEMS.forEach(it => state[it.n] = null);
 
   // ---------- build checklist groups ----------
+  // 판정 방식 태그(M1 수치·M2 규정·M3 시각) — 항목가이드와 동일한 매핑
+  const TAGS = {1:['M3'],2:['M1','M3'],3:['M1','M3'],4:['M1','M2'],5:['M1','M2'],6:['M3'],
+                7:['M3'],8:['M3'],9:['M3'],10:['M3'],11:['M3'],12:['M3'],13:['M3'],
+                14:['M1','M2'],15:['M3'],16:['M2'],17:['M1','M2']};
   const groupsContainer = document.getElementById('groupsContainer');
   ITEMS.forEach(it => {
     const row = document.createElement('div');
     row.className = 'row';
     row.id = 'row-' + it.n;
     row.innerHTML = `
-      <div class="row-label"><span class="rn">${String(it.n).padStart(2,'0')}</span><span class="rt">${it.title}</span></div>
-      <div class="row-btns" data-id="${it.n}">
-        <button class="stbtn" data-status="pass">통과</button>
-        <button class="stbtn" data-status="needsfix">검토필요</button>
-        <button class="stbtn" data-status="reject">반려</button>
-        <button class="stbtn" data-status="na">해당없음</button>
+      <span class="rn">${String(it.n).padStart(2,'0')}</span>
+      <div class="row-main">
+        <div class="rt">${it.title}</div>
+        <div class="row-note" id="note-${it.n}"></div>
+      </div>
+      <div class="row-tags">${(TAGS[it.n]||[]).map(g=>`<span class="mtag">${g}</span>`).join('')}</div>
+      <div class="row-verdict" data-id="${it.n}">
+        <button type="button" class="stbtn">미판정</button>
+        <div class="verdict-menu">
+          <button type="button" data-status="pass">통과</button>
+          <button type="button" data-status="needsfix">검토필요</button>
+          <button type="button" data-status="reject">반려</button>
+          <button type="button" data-status="na">해당없음</button>
+        </div>
       </div>`;
     groupsContainer.appendChild(row);
-    const note = document.createElement('div');
-    note.className = 'row-note';
-    note.id = 'note-' + it.n;
-    groupsContainer.appendChild(note);
   });
 
+  function setRowVerdict(n, status){
+    const row = document.getElementById('row-' + n);
+    if(!row) return;
+    const pill = row.querySelector('.stbtn');
+    if(status){
+      row.setAttribute('data-status', status);
+      pill.setAttribute('data-status', status);
+      pill.textContent = STATUS[status].label;
+    } else {
+      row.removeAttribute('data-status');
+      pill.removeAttribute('data-status');
+      pill.textContent = '미판정';
+    }
+  }
+
+  // 판정 pill 클릭 → 4개 선택지 팝오버 (디자인은 결과만 보여주지만, 리뷰어가 직접 고칠 수 있어야 하므로)
   groupsContainer.addEventListener('click', (e) => {
-    const btn = e.target.closest('.stbtn');
-    if(!btn) return;
-    const group = btn.closest('.row-btns');
-    const id = group.dataset.id;
-    const status = btn.dataset.status;
-    const already = state[id] === status;
-    state[id] = already ? null : status;
-    group.querySelectorAll('.stbtn').forEach(b=>b.classList.remove('active'));
-    if(!already) btn.classList.add('active');
+    const pill = e.target.closest('.stbtn');
+    if(pill){
+      const menu = pill.parentElement.querySelector('.verdict-menu');
+      const wasOpen = menu.classList.contains('open');
+      groupsContainer.querySelectorAll('.verdict-menu.open').forEach(m => m.classList.remove('open'));
+      if(!wasOpen) menu.classList.add('open');
+      return;
+    }
+    const opt = e.target.closest('.verdict-menu button');
+    if(!opt) return;
+    const id = Number(opt.closest('.row-verdict').dataset.id);
+    state[id] = opt.dataset.status;
+    setRowVerdict(id, state[id]);
+    opt.closest('.verdict-menu').classList.remove('open');
     update();
+  });
+  document.addEventListener('click', (e) => {
+    if(!e.target.closest('.row-verdict')) groupsContainer.querySelectorAll('.verdict-menu.open').forEach(m => m.classList.remove('open'));
   });
 
   // ---------- checklist summary / verdict ----------
@@ -677,13 +762,26 @@
     document.getElementById('verdictDot').style.background = color;
     document.getElementById('summaryDot').style.background = color;
 
-    // 등급 카드: 큰 배경 숫자 + 하단 바 길이를 카운트에 맞춰 갱신
+    // 등급 카드: 값이 0이면 가라앉아 있다가, 판정이 잡히면 해당 색으로 살아난다
+    const TIER = {
+      pass:     {fg:'var(--pass)',     bg:'rgba(168,207,188,.07)', bd:'rgba(168,207,188,.22)', gh:'rgba(168,207,188,.1)'},
+      needsfix: {fg:'var(--needsfix)', bg:'rgba(217,166,96,.07)',  bd:'rgba(217,166,96,.22)',  gh:'rgba(217,166,96,.11)'},
+      reject:   {fg:'var(--reject)',   bg:'rgba(194,104,122,.08)', bd:'rgba(194,104,122,.26)', gh:'rgba(194,104,122,.14)'},
+      na:       {fg:'var(--ink-2)',    bg:'rgba(255,255,255,.028)',bd:'rgba(255,255,255,.09)', gh:'rgba(154,160,170,.09)'},
+    };
     ['pass','needsfix','reject','na'].forEach(k => {
       const key = k === 'needsfix' ? 'Needsfix' : k.charAt(0).toUpperCase() + k.slice(1);
+      const c = counts[k], on = c > 0, cfg = TIER[k];
+      const card = document.getElementById('t' + key);
       const ghost = document.getElementById('g' + key);
+      const num = document.getElementById('c' + key);
+      const lab = document.getElementById('l' + key);
       const bar = document.getElementById('b' + key);
-      if(ghost) ghost.textContent = counts[k];
-      if(bar) bar.style.width = ((counts[k] / 17) * 100) + '%';
+      if(card){ card.style.background = on ? cfg.bg : 'rgba(255,255,255,.022)'; card.style.borderColor = on ? cfg.bd : 'var(--line)'; }
+      if(ghost){ ghost.textContent = String(c).padStart(2,'0'); ghost.style.color = on ? cfg.gh : '#15181D'; }
+      if(num){ num.textContent = String(c).padStart(2,'0'); num.style.color = on ? cfg.fg : 'var(--ink-4)'; }
+      if(lab) lab.style.color = on ? cfg.fg : 'var(--ink-4)';
+      if(bar){ bar.style.width = ((c/17)*100) + '%'; bar.style.background = cfg.fg; }
     });
     if(done > 0){
       const tg = document.getElementById('tierGrid');
@@ -844,7 +942,13 @@
     const advList = document.getElementById('ppmAdvertiserList');
     advList.innerHTML = '';
     const selectedAdvertiser = advertisersData.find(a => a.id === advertiserSelect.value);
-    document.getElementById('ppmBrandValue').textContent = selectedAdvertiser ? selectedAdvertiser.name : '';
+    document.getElementById('ppmBrandValue').textContent = selectedAdvertiser ? selectedAdvertiser.name : '선택 없음';
+    const noneB = document.createElement('button');
+    noneB.type = 'button';
+    noneB.className = 'ppm-item' + (advertiserSelect.value ? '' : ' active');
+    noneB.textContent = '선택 없음';
+    noneB.addEventListener('click', () => { advertiserSelect.value = ''; renderPromptPlusMenu(); });
+    advList.appendChild(noneB);
     advertisersData.forEach(a => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -867,7 +971,16 @@
     medList.innerHTML = '';
     const selectedIds = getSelectedMediaGuideIds();
     const selectedMedia = mediaGuidesData.find(m => selectedIds.includes(m.id));
-    document.getElementById('ppmMediaValue').textContent = selectedMedia ? selectedMedia.name : '';
+    document.getElementById('ppmMediaValue').textContent = selectedMedia ? selectedMedia.name : '선택 없음';
+    const noneM = document.createElement('button');
+    noneM.type = 'button';
+    noneM.className = 'ppm-item' + (selectedIds.length ? '' : ' active');
+    noneM.textContent = '선택 없음';
+    noneM.addEventListener('click', () => {
+      mediaGuideChecks.querySelectorAll('input[type=checkbox]').forEach(c => { c.checked = false; });
+      renderPromptPlusMenu();
+    });
+    medList.appendChild(noneM);
     if(mediaGuidesData.length === 0){
       const empty = document.createElement('div');
       empty.className = 'mg-check-empty';
@@ -1309,13 +1422,27 @@
     document.querySelector('.checklist-card').classList.add('show');
     document.querySelector('.checklist-card').classList.remove('pending');
     pageFooter.classList.add('show');
-    (result.items || []).forEach(it=>{
-      if(!state.hasOwnProperty(it.id)) return;
-      state[it.id] = it.status;
-      const group = document.querySelector(`.row-btns[data-id="${it.id}"]`);
-      if(group) group.querySelectorAll('.stbtn').forEach(b=>b.classList.toggle('active', b.dataset.status===it.status));
-      const noteEl = document.getElementById('note-'+it.id);
-      if(noteEl){ noteEl.textContent = it.note || ''; noteEl.classList.toggle('show', !!it.note); }
+
+    // 17개 판정을 한꺼번에 꽂지 않고 위에서 아래로 차례차례 — 결과가
+    // "채점되는" 느낌을 주려는 연출이라, 판정 자체는 이미 다 받아둔 상태다.
+    const items = (result.items || []).filter(it => state.hasOwnProperty(it.id));
+    const STEP = 110;
+    items.forEach((it, i) => {
+      setTimeout(() => {
+        state[it.id] = it.status;
+        setRowVerdict(it.id, it.status);
+        const row = document.getElementById('row-' + it.id);
+        if(row) row.classList.add('revealed');
+        const noteEl = document.getElementById('note-'+it.id);
+        if(noteEl){ noteEl.textContent = it.note || ''; noteEl.classList.toggle('show', !!it.note); }
+        update();
+      }, i * STEP);
+    });
+    // 판정이 없는 항목도 순서에 맞춰 함께 드러나게
+    ITEMS.forEach(it => {
+      if(items.some(r => r.id === it.n)) return;
+      const row = document.getElementById('row-' + it.n);
+      if(row) setTimeout(() => row.classList.add('revealed'), items.length * STEP);
     });
 
     const summaryBox = document.getElementById('aiSummaryBox');
@@ -1383,19 +1510,23 @@
       layoutStatsBlock.classList.remove('show');
     }
 
-    const compBlock = document.getElementById('comparisonBlock');
-    if(result.comparison && result.comparison.gaps){
-      document.getElementById('compGaps').textContent = result.comparison.gaps || '—';
-      compBlock.classList.add('show');
-    } else {
-      compBlock.classList.remove('show');
-    }
+    // 총평에는 "실제로 선택해서 넣은 가이드"의 결과만 띄운다.
+    // 브랜드 쪽은 레퍼런스 비교(comparison)와 가이드 검수(brandGuideReview)가
+    // 따로 내려오는데 둘 다 브랜드 이야기라 한 블록에 합쳐 중복을 없앴다.
+    const brandPicked = !!advertiserSelect.value;
+    const mediaPicked = getSelectedMediaGuideIds().length > 0;
+
+    document.getElementById('comparisonBlock').classList.remove('show');
 
     const bgBlock = document.getElementById('brandGuideReviewBlock');
     const bgr = result.brandGuideReview;
-    if(bgr && (bgr.differs || bgr.needsCheck)){
-      document.getElementById('bgDiffers').textContent = bgr.differs || '—';
-      document.getElementById('bgNeedsCheck').textContent = bgr.needsCheck || '—';
+    const gaps = result.comparison && result.comparison.gaps;
+    if(brandPicked && (gaps || (bgr && (bgr.differs || bgr.needsCheck)))){
+      const parts = [];
+      if(bgr && bgr.differs) parts.push(bgr.differs);
+      if(gaps) parts.push(gaps);
+      document.getElementById('bgDiffers').textContent = parts.join('\n\n') || '—';
+      document.getElementById('bgNeedsCheck').textContent = (bgr && bgr.needsCheck) || '—';
       bgBlock.classList.add('show');
     } else {
       bgBlock.classList.remove('show');
@@ -1403,7 +1534,7 @@
 
     const mgBlock = document.getElementById('mediaGuideBlock');
     const mgr = result.mediaGuideReview;
-    if(mgr && (mgr.differs || mgr.needsCheck)){
+    if(mediaPicked && mgr && (mgr.differs || mgr.needsCheck)){
       document.getElementById('mgDiffers').textContent = mgr.differs || '—';
       document.getElementById('mgNeedsCheck').textContent = mgr.needsCheck || '—';
       mgBlock.classList.add('show');
