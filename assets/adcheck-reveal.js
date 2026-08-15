@@ -23,7 +23,7 @@
  *      (일반 링크 이동 방식이면 아무것도 안 해도 됩니다.)
  */
 (function () {
-  var STEP = 52;          // 항목 간 시간차(ms)
+  var STEP = 70;          // 항목 간 시간차(ms)
   var DIST = 40;          // 좌→우 이동 거리(px)
   var DIST_DOWN = 22;     // 위→아래 이동 거리(px)
   var EASE = 'cubic-bezier(.16,1,.3,1)';
@@ -43,7 +43,7 @@
     el.style.transform = dir === 'down'
       ? 'translateY(-' + DIST_DOWN + 'px)'
       : 'translateX(-' + DIST + 'px)';
-    el.style.transition = 'opacity .7s ease, transform .8s ' + EASE;
+    el.style.transition = 'opacity .85s ease, transform .95s ' + EASE;
   }
 
   function show(el) {
@@ -112,7 +112,7 @@
       if (!reduce) {
         el.style.opacity = '0';
         el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1)';
+        el.style.transition = 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)';
       }
       revealEls.push(el);
     });
