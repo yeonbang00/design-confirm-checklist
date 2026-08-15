@@ -105,8 +105,7 @@
   .bg-side-item:hover{background:rgba(255,255,255,.05); color:var(--ink);}
   .bg-side-item.active{background:rgba(204,255,0,.12); color:var(--accent); font-weight:700;}
   .bg-side-item .bg-side-count{font-size:12px; font-weight:400; color:var(--ink-4);}
-  .bg-side-item.active .bg-side-count{color:var(--accent);}
-
+  
   .brand-add-row{display:flex; gap:8px; margin-bottom:6px;}
   .brand-add-row input{flex:1; min-width:0; padding:11px 14px; border:1px solid var(--charcoal-border); border-radius:10px; font-size:13.5px; font-family:inherit; background:var(--charcoal); color:var(--canvas-text);}
   .brand-add-btn{border:none; background:var(--accent); color:var(--accent-ink); border-radius:10px; padding:0 16px; cursor:pointer; font-size:13px; font-weight:700; flex-shrink:0; font-family:inherit; white-space:nowrap;}
@@ -253,7 +252,7 @@
     </div>
   </div>
 
-  <div class="page-footer">
+  <div class="page-footer" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     이 페이지는 팀이 직접 편집합니다. 저장에는 공유 비밀번호가 필요해요.
   </div>
@@ -403,18 +402,18 @@
           escapeHtml(o.label) +
         '</label>';
       }).join('');
-      return '<div class="bg-card toggle-section" data-reveal>' +
+      return '<div class="bg-card toggle-section" data-row>' +
         '<div class="bg-panel-head"><span class="bg-panel-label">' + escapeHtml(sec.key.toUpperCase()) + '</span><span class="bg-panel-title">' + escapeHtml(sec.title) + '</span><span class="bg-panel-meta">' + onCount + ' / ' + items.length + '</span></div>' +
         rows +
       '</div>';
     }).join('');
 
     const galleryHtml = (d.imageCount > 0)
-      ? '<div class="bg-card" data-reveal><div class="bg-panel-head"><span class="bg-panel-label">REFERENCE</span><span class="bg-panel-title">참고 배너</span></div><div class="gallery-loading">이미지를 불러오는 중…</div><div class="gallery" id="gallery-' + d.id + '"></div></div>'
+      ? '<div class="bg-card" data-row><div class="bg-panel-head"><span class="bg-panel-label">REFERENCE</span><span class="bg-panel-title">참고 배너</span></div><div class="gallery-loading">이미지를 불러오는 중…</div><div class="gallery" id="gallery-' + d.id + '"></div></div>'
       : '';
 
     brandDetail.innerHTML =
-      '<div class="bg-card" data-reveal>' +
+      '<div class="bg-card" data-row>' +
         '<div class="brand-head-row">' +
           '<div class="brand-head"><span class="brand-name">' + escapeHtml(d.name) + '</span></div>' +
           '<div class="btn-row">' +
@@ -426,13 +425,13 @@
         (d.note ? '<div class="brand-note">' + escapeHtml(d.note) + '</div>' : '') +
       '</div>' +
 
-      '<div class="bg-card" data-reveal>' +
+      '<div class="bg-card" data-row>' +
         '<div class="bg-panel-head"><span class="bg-panel-label">FEEDBACK</span><span class="bg-panel-title">광고주 피드백</span><span class="bg-panel-meta">' + d.feedbackLog.length + '건</span></div>' +
         '<div id="feedbackRows" class="feedback-list">' + feedbackRows + '</div>' +
         '<div class="feedback-add-row"><input type="text" id="newFeedbackInput" placeholder="새 피드백 내용을 입력하고 추가"><button type="button" class="feedback-add-btn" id="addFeedbackBtn">추가</button></div>' +
       '</div>' +
 
-      '<div class="bg-card" data-reveal>' +
+      '<div class="bg-card" data-row>' +
         '<div class="bg-panel-head"><span class="bg-panel-label">FIELDS</span><span class="bg-panel-title">커스텀 필드</span><span class="bg-panel-meta">컬러 코드처럼 직접 입력이 필요한 값</span></div>' +
         '<div id="fieldRows">' + fieldsHtml + '</div>' +
         '<button type="button" class="add-field-btn" id="addFieldBtn">+ 필드 추가</button>' +

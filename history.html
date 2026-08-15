@@ -103,7 +103,7 @@
   .gl-empty{font-size:13.5px; color:var(--text-3); background:rgba(255,255,255,.045); border-radius:10px; padding:20px 18px; line-height:1.7;}
 
   .history-list{position:relative; padding-left:26px;}
-  .history-list::before{content:''; position:absolute; left:5px; top:8px; bottom:8px; width:1px; background:linear-gradient(180deg,rgba(204,255,0,.5),rgba(255,255,255,.08));}
+  .history-list::before{content:''; position:absolute; left:5px; top:8px; bottom:8px; width:1px; background:var(--line);}
   .history-item{position:relative; padding:0 0 34px 0;}
   .history-item::before{content:''; position:absolute; left:-25px; top:7px; width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px rgba(204,255,0,.12);}
   .history-item:last-child{padding-bottom:0;}
@@ -112,6 +112,9 @@
   .history-category{font:600 10px/1 var(--font-mono); letter-spacing:.1em; color:var(--ink-3); border:1px solid var(--line); border-radius:6px; padding:5px 8px;}
   .history-title{font-family:var(--font-display); font-size:17px; font-weight:700; letter-spacing:-.03em; color:var(--ink); margin-bottom:8px;}
   .history-desc{font-size:13.5px; font-weight:300; line-height:1.8; color:var(--ink-2); max-width:76ch;}
+  .history-item{display:flex; align-items:flex-start; justify-content:space-between; gap:16px;}
+  .history-delete{flex-shrink:0; width:30px; height:30px; border-radius:9px; border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--ink-3); font-size:15px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s ease,color .2s ease,border-color .2s ease;}
+  .history-delete:hover{background:rgba(194,104,122,.13); border-color:rgba(194,104,122,.4); color:var(--reject);}
 
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
@@ -160,7 +163,7 @@
   <div id="historyList">
     <div class="loading-msg">히스토리를 불러오는 중…</div>
   </div>
-  <div class="page-footer show">
+  <div class="page-footer show" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     이 결과는 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
     이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
@@ -213,7 +216,7 @@
           '</div>' +
           '<div class="history-desc" title="' + escapeHtml(e.description) + '">' + escapeHtml(e.description) + '</div>' +
         '</div>' +
-        '<button type="button" class="history-delete" data-id="' + escapeHtml(e.id) + '">삭제</button>' +
+        '<button type="button" class="history-delete" data-id="' + escapeHtml(e.id) + '" aria-label="삭제">&times;</button>' +
       '</div>'
     ).join('') + '</div>';
   }
@@ -238,8 +241,7 @@
     const password = window.prompt('편집 비밀번호를 입력하세요');
     if(password === null) return;
 
-    btn.disabled = true;
-    btn.textContent = '삭제 중…';
+    btn.disabled = true; btn.style.opacity = '.4';
 
     fetch('/api/referenceCategories', {
       method: 'DELETE',
@@ -250,16 +252,14 @@
       .then(({ ok, data }) => {
         if(!ok){
           window.alert(data.error || '삭제에 실패했습니다.');
-          btn.disabled = false;
-          btn.textContent = '삭제';
+          btn.disabled = false; btn.style.opacity = '';
           return;
         }
         loadHistory();
       })
       .catch(() => {
         window.alert('삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
-        btn.disabled = false;
-        btn.textContent = '삭제';
+        btn.disabled = false; btn.style.opacity = '';
       });
   });
 

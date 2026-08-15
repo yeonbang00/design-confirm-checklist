@@ -105,41 +105,47 @@
   }
   .select-wrap svg{position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none;}
 
-  .brand-card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:20px; padding:32px;}
-  .brand-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
-  .brand-name{font-size:19px; font-weight:700;}
-  .brand-note{font-size:13px; color:var(--text-2); margin-bottom:20px;}
-  .source-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;}
-  .source-btn{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--accent-ink); background:var(--accent); border:none; border-radius:20px; padding:8px 14px; text-decoration:none; cursor:pointer; font-family:inherit;}
-  .source-btn:hover{opacity:0.85;}
-  .source-btn:disabled{opacity:0.6; cursor:default;}
+  .mg-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  .mg-card{border-radius:20px; background:linear-gradient(168deg,#14171C,#0D0F13 82%); border:1px solid rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.07); padding:26px 28px; transition:border-color .35s ease, box-shadow .35s ease;}
+  .mg-card:hover{border-color:rgba(204,255,0,.3); box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 50px -22px rgba(204,255,0,.36);}
+  .mg-card-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;}
+  .mg-card-name{font-family:var(--font-display); font-size:18px; font-weight:700; letter-spacing:-.02em; color:var(--ink);}
+  .mg-badge{font:700 10px/1 var(--font-mono); letter-spacing:.12em; color:var(--accent); text-decoration:none; white-space:nowrap;}
+  a.mg-badge:hover{text-decoration:underline;}
+  .mg-note{font-size:12.5px; color:var(--ink-3); margin-bottom:16px; line-height:1.6;}
 
-  .spec-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:22px;}
-  .spec-card{border:1.5px solid var(--num-text); border-radius:14px; padding:16px 18px; background:var(--num-bg);}
-  .spec-card-title{font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px;}
-  .spec-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px; padding:5px 0; border-bottom:1px solid rgba(245,245,247,0.5);}
-  .spec-row:last-child{border-bottom:none;}
-  .spec-row-label{color:var(--text-2);}
-  .spec-row-value{color:var(--accent); font-weight:700; text-align:right; font-variant-numeric:tabular-nums;}
+  .mg-rows{border-top:1px solid var(--line-soft);}
+  .mg-row{display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:11px 0; border-bottom:1px solid var(--line-soft); font-size:12.5px;}
+  .mg-row-label{color:var(--ink-3); flex-shrink:0; white-space:nowrap;}
+  .mg-row-value{color:var(--ink); text-align:right; font-variant-numeric:tabular-nums; font-weight:500;}
+
+  .mg-more{margin-top:16px;}
+  .mg-more summary{font-size:12px; font-weight:600; color:var(--accent); cursor:pointer; list-style:none;}
+  .mg-more summary::-webkit-details-marker{display:none;}
+  .mg-more summary::before{content:'세부 기준 보기 ▾'; }
+  .mg-more[open] summary::before{content:'세부 기준 접기 ▴';}
+  .mg-more-body{margin-top:12px;}
 
   .gl-empty{font-size:13.5px; color:var(--text-3); background:rgba(255,255,255,.045); border-radius:10px; padding:16px 18px;}
-  .gl-heading{font-size:13px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:8px; padding:8px 12px; margin:18px 0 10px;}
+  .gl-heading{font-size:12px; font-weight:700; color:var(--accent); background:rgba(204,255,0,.1); border-radius:8px; padding:7px 11px; margin:16px 0 9px;}
   .gl-heading:first-child{margin-top:0;}
-  .gl-p{font-size:14px; line-height:1.8; color:var(--text); margin:0 0 12px;}
-  .gl-list{margin:0 0 14px; padding-left:20px;}
-  .gl-list li{font-size:14px; line-height:1.8; color:var(--text); margin-bottom:4px;}
+  .gl-p{font-size:13px; line-height:1.8; color:var(--ink-2); margin:0 0 10px;}
+  .gl-list{margin:0 0 12px; padding-left:20px;}
+  .gl-list li{font-size:13px; line-height:1.8; color:var(--ink-2); margin-bottom:4px;}
   .gl-list li.gl-warn{color:var(--reject); font-weight:700;}
 
-  .page-footer{text-align:center; font-size:12px; color:var(--canvas-text-2); line-height:1.8; padding-top:28px;}
+  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:60px; border-top:1px solid var(--line-soft);}
 
   .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
 
+  @media (max-width:900px){
+    .mg-grid{grid-template-columns:1fr;}
+  }
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
-    .brand-card{padding:22px 20px;}
+    .mg-card{padding:22px 20px;}
     .gnb-bar-inner{display:flex; flex-wrap:wrap; gap:14px;}
     .gnb{gap:12px;}
-    .select-wrap{max-width:none;}
   }
 </style>
 </head>
@@ -179,11 +185,11 @@
   <p class="sub">매체 가이드 체크박스에 등록된 매체별 소재 등록 기준입니다. 배너를 분석할 때 AI가 참고하는 기준과 그대로 연결되어 있습니다.</p>
 
 
-  <div id="mediaDetail" data-stagger>
+  <div id="mediaDetail" class="mg-grid" data-stagger>
     <div class="loading-msg">매체 가이드를 불러오는 중…</div>
   </div>
 
-  <div class="page-footer">
+  <div class="page-footer" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     이 페이지는 참고용입니다. 가이드 내용을 바꾸려면 팀과 상의 후 코드에 반영해주세요.
   </div>
@@ -250,41 +256,39 @@
   let mediaGuidesData = [];
 
   function renderCard(m){
-    let bodyHtml;
+    // 상단 뱃지는 매체 id 앞부분을 코드로 사용 (예: meta-image → META).
+    // 공식 가이드 URL이 있으면 뱃지 자체가 그 페이지로 가는 링크가 된다.
+    const code = (m.id.split('-')[0] || m.id).toUpperCase();
+    const badgeHtml = m.sourceUrl
+      ? '<a class="mg-badge" href="' + escapeHtml(m.sourceUrl) + '" target="_blank" rel="noopener">' + escapeHtml(code) + ' ↗</a>'
+      : '<span class="mg-badge">' + escapeHtml(code) + '</span>';
+
+    const rowsHtml = (m.specs && m.specs.length)
+      ? '<div class="mg-rows">' + m.specs.map(s => {
+          const value = [s.size, s.format, s.maxSize].filter(Boolean).join(' · ');
+          return '<div class="mg-row"><span class="mg-row-label">' + escapeHtml(s.label) + '</span><span class="mg-row-value">' + escapeHtml(value || '—') + '</span></div>';
+        }).join('') + '</div>'
+      : '';
+
+    let detailHtml;
     if(m.guideline && m.guideline.trim()){
-      bodyHtml = formatGuideline(m.guideline);
+      detailHtml = '<details class="mg-more"><summary></summary><div class="mg-more-body">' + formatGuideline(m.guideline) + '</div></details>';
+    } else if(!rowsHtml){
+      detailHtml = '<div class="gl-empty">아직 이 매체의 가이드가 등록되지 않았습니다.</div>';
     } else {
-      bodyHtml = '<div class="gl-empty">아직 이 매체의 가이드가 등록되지 않았습니다.</div>';
+      detailHtml = '';
     }
 
-    let sourceHtml = '';
-    if(m.sourceUrl || m.fileUrl){
-      sourceHtml = '<div class="source-row">';
-      if(m.sourceUrl){
-        sourceHtml += '<a class="source-btn" href="' + escapeHtml(m.sourceUrl) + '" target="_blank" rel="noopener">공식 가이드 페이지 열기 ↗</a>';
-      }
-      if(m.fileUrl){
-        sourceHtml += '<a class="source-btn" href="' + escapeHtml(m.fileUrl) + '" target="_blank" rel="noopener" download="' + escapeHtml(m.fileName || 'guide.pdf') + '">' + escapeHtml(m.fileName || 'PDF 다운로드') + ' ⬇</a>';
-      }
-      sourceHtml += '</div>';
-    }
+    const fileLinkHtml = m.fileUrl
+      ? '<a class="mg-badge" href="' + escapeHtml(m.fileUrl) + '" target="_blank" rel="noopener" download="' + escapeHtml(m.fileName || 'guide.pdf') + '" style="display:block; margin-top:10px;">' + escapeHtml(m.fileName || 'PDF 다운로드') + ' ⬇</a>'
+      : '';
 
-    let specHtml = '';
-    if(m.specs && m.specs.length){
-      specHtml = '<div class="spec-grid">' + m.specs.map(s => {
-        let rows = '<div class="spec-row"><span class="spec-row-label">사이즈</span><span class="spec-row-value">' + escapeHtml(s.size || '—') + '</span></div>';
-        if(s.format) rows += '<div class="spec-row"><span class="spec-row-label">파일형식</span><span class="spec-row-value">' + escapeHtml(s.format) + '</span></div>';
-        if(s.maxSize) rows += '<div class="spec-row"><span class="spec-row-label">용량 제한</span><span class="spec-row-value">' + escapeHtml(s.maxSize) + '</span></div>';
-        return '<div class="spec-card"><div class="spec-card-title">' + escapeHtml(s.label) + '</div>' + rows + '</div>';
-      }).join('') + '</div>';
-    }
-
-    return '<div class="brand-card" data-row>' +
-      '<div class="brand-head"><span class="brand-name">' + escapeHtml(m.name) + '</span></div>' +
-      (m.note ? '<div class="brand-note">' + escapeHtml(m.note) + '</div>' : '') +
-      sourceHtml +
-      specHtml +
-      bodyHtml +
+    return '<div class="mg-card" data-row>' +
+      '<div class="mg-card-head"><span class="mg-card-name">' + escapeHtml(m.name) + '</span>' + badgeHtml + '</div>' +
+      (m.note ? '<div class="mg-note">' + escapeHtml(m.note) + '</div>' : '') +
+      rowsHtml +
+      detailHtml +
+      fileLinkHtml +
       '</div>';
   }
 

@@ -104,6 +104,14 @@
   .section-heading{font-size:16px; font-weight:700; margin:0 0 6px; color:var(--canvas-text);}
   .section-note{font-size:13px; color:var(--text-3); margin:0 0 18px; line-height:1.7;}
 
+
+  .swatch-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:14px;}
+  .swatch-card{border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.11);}
+  .swatch-face{height:96px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:26px; font-weight:800; color:#0B0C0E;}
+  .swatch-foot{padding:14px 16px; background:var(--surface-2);}
+  .swatch-hex{font:600 12px/1 var(--font-mono); color:var(--ink); margin-bottom:5px;}
+  .swatch-contrast{font-size:11.5px; color:var(--ink-4);}
+
   .palette-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
   .palette-card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:16px; overflow:hidden;}
   .palette-swatch{display:flex; height:64px;}
@@ -174,6 +182,18 @@
   <div class="page-eyebrow"><b>&#10022;</b>&nbsp;&nbsp;COLOR GUIDE</div>
   <h1>컬러 가이드</h1>
   <p class="sub">눈에 잘 띄는 배색 조합, 업종·시즌별로 자주 쓰이는 컬러, 자주 쓰이는 그라데이션을 정리했습니다. 브랜드 컬러가 정해진 시안이라면 브랜드 가이드가 항상 우선이고, 이 페이지는 브랜드 컬러가 없거나 시즌·테마 배너를 만들 때 참고용입니다. 레이아웃·타이포·항목별 판정 기준은 <a href="criteria-guide.html" style="color:var(--num-text); font-weight:600;">항목가이드</a>에 따로 있습니다.</p>
+
+  <div class="section-block" data-reveal>
+    <div class="section-heading">눈에 잘 띄는 배색</div>
+    <div class="section-note">AdCheck 자체 디자인 시스템에 쓰이는 색입니다. 전부 어두운 배경(#0B0C0E) 위에서 WCAG AA 기준(4.5:1)을 넉넉히 넘는, 검증된 조합입니다.</div>
+    <div class="swatch-grid">
+<div class="swatch-card"><div class="swatch-face" style="background:#EDEEF0;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#EDEEF0</div><div class="swatch-contrast">배경 대비 16.9:1</div></div></div>
+<div class="swatch-card"><div class="swatch-face" style="background:#CCFF00;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#CCFF00</div><div class="swatch-contrast">배경 대비 16.7:1</div></div></div>
+<div class="swatch-card"><div class="swatch-face" style="background:#A8CFBC;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#A8CFBC</div><div class="swatch-contrast">배경 대비 11.5:1</div></div></div>
+<div class="swatch-card"><div class="swatch-face" style="background:#D9A660;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#D9A660</div><div class="swatch-contrast">배경 대비 8.9:1</div></div></div>
+<div class="swatch-card"><div class="swatch-face" style="background:#C2687A;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#C2687A</div><div class="swatch-contrast">배경 대비 5.2:1</div></div></div>
+    </div>
+  </div>
 
   <div class="section-block" data-reveal>
     <div class="section-heading">배색 관계 이론</div>
@@ -570,7 +590,7 @@
       <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #7a5a47, #281a12);"></div><div class="gradient-body"><div class="gradient-hex">#7a5a47 → #281a12</div></div></div>
     </div>
   </div>
-  <div class="page-footer show">
+  <div class="page-footer show" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     이 결과는 참고용입니다. 최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
     이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>

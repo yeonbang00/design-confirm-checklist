@@ -83,25 +83,35 @@
       }, {threshold: 0.06});
     }
 
-    document.querySelectorAll('[data-stagger]').forEach(function (group) {
+    // 1단계: 대상 전부를 먼저 숨김 상태로 만든다 (아직 관찰·발화는 하지 않음)
+    var staggerGroups = document.querySelectorAll('[data-stagger]');
+    staggerGroups.forEach(function (group) {
       var dir = group.getAttribute('data-stagger') === 'down' ? 'down' : 'left';
       group.querySelectorAll('[data-row]').forEach(function (r) { prep(r, dir); });
-      if (group.dataset.staggerBound) return;
-      group.dataset.staggerBound = '1';
-      // 이미 화면 안이면 옵저버를 기다리지 않고 바로 실행 (진입 직후 첫 화면)
-      if (group.getBoundingClientRect().top < innerHeight * 1.2) { fire(group); return; }
-      groupIO.observe(group);
+    });
+    var revealEls = document.querySelectorAll('[data-reveal]');
+    revealEls.forEach(function (el) {
+      if (el.dataset.revealBound || reduce) return;
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1)';
     });
 
-    document.querySelectorAll('[data-reveal]').forEach(function (el) {
-      if (el.dataset.revealBound) return;
-      el.dataset.revealBound = '1';
-      if (!reduce) {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1)';
-      }
-      revealIO.observe(el);
+    // 2단계: 프레임을 하나 넘겨 브라우저가 숨김 상태를 한 번 그리게 한 뒤에야
+    // 관찰을 시작하거나 화면 안 항목을 발화한다 — 이 틈이 없으면 opacity:0→1
+    // 전환이 같은 틱에서 합쳐져 트랜지션 없이 툭 튀어 보인다("잠깐 움찔").
+    requestAnimationFrame(function () {
+      staggerGroups.forEach(function (group) {
+        if (group.dataset.staggerBound) return;
+        group.dataset.staggerBound = '1';
+        if (group.getBoundingClientRect().top < innerHeight * 1.2) { fire(group); return; }
+        groupIO.observe(group);
+      });
+      revealEls.forEach(function (el) {
+        if (el.dataset.revealBound) return;
+        el.dataset.revealBound = '1';
+        revealIO.observe(el);
+      });
     });
 
     // 안전장치: 어떤 이유로든 트리거되지 않은 요소를 1.4초 후 강제 표시
