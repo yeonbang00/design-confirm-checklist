@@ -269,8 +269,13 @@
   .row[data-status="pass"] .rn{color:var(--pass);}
   .row[data-status="needsfix"] .rn{color:var(--needsfix);}
   .row[data-status="reject"] .rn{color:var(--reject);}
-  html.motion-ready .row{opacity:0; transform:translateX(-30px); transition:opacity .5s ease, transform .55s cubic-bezier(.16,1,.3,1), background .3s ease, box-shadow .3s ease;}
-  html.motion-ready .row.revealed{opacity:1; transform:translateX(0);}
+  /* 분석 시작 시 .staged를 붙여 행을 숨겼다가, 판정이 도착하는 순서대로
+     .revealed를 붙여 하나씩 드러낸다. JS가 안 돌면 .staged가 없어 그냥 보인다. */
+  .checklist-card.staged .row{opacity:0; transform:translateX(-30px); transition:opacity .5s ease, transform .55s cubic-bezier(.16,1,.3,1), background .3s ease, box-shadow .3s ease;}
+  .checklist-card.staged .row.revealed{opacity:1; transform:none;}
+  @media (prefers-reduced-motion:reduce){
+    .checklist-card.staged .row{opacity:1; transform:none;}
+  }
 
   /* 하단 17항목 마퀴 */
   .marquee{overflow:hidden; margin-top:80px; padding:26px 0; border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft);}
@@ -307,13 +312,6 @@
     .row-note{grid-column:1 / -1;}
   }
 
-  /* ---------- 등장 모션 (assets/motion.js) ---------- */
-  html.motion-ready [data-reveal]{opacity:0; transform:translateY(30px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1);}
-  html.motion-ready [data-reveal].in{opacity:1; transform:translateY(0);}
-  html.motion-ready [data-row]{opacity:0; transform:translateX(-40px); transition:opacity .7s ease, transform .8s cubic-bezier(.16,1,.3,1);}
-  html.motion-ready [data-row].in{opacity:1; transform:translateX(0);}
-  html.motion-ready [data-row][data-dir="down"]{transform:translateY(-22px);}
-  html.motion-ready [data-row][data-dir="down"].in{transform:translateY(0);}
 
   /* ---------- 푸터 로고 ---------- */
   .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
@@ -536,28 +534,28 @@
   <!-- ---------- tier cards ---------- -->
   <div class="section-divider" id="tierDivider" style="display:none;"></div>
   <div class="tier-grid" id="tierGrid" style="display:none;" data-stagger>
-    <div class="tier-card" id="tPass">
+    <div class="tier-card" data-row id="tPass">
       <div class="tier-ghost" id="gPass">00</div>
       <div class="tier-code">PASS</div>
       <div class="tier-count" id="cPass">00</div>
       <div class="tier-label" id="lPass">통과</div>
       <div class="tier-bar"><span id="bPass"></span></div>
     </div>
-    <div class="tier-card" id="tNeedsfix">
+    <div class="tier-card" data-row id="tNeedsfix">
       <div class="tier-ghost" id="gNeedsfix">00</div>
       <div class="tier-code">NEEDS FIX</div>
       <div class="tier-count" id="cNeedsfix">00</div>
       <div class="tier-label" id="lNeedsfix">검토 필요</div>
       <div class="tier-bar"><span id="bNeedsfix"></span></div>
     </div>
-    <div class="tier-card" id="tReject">
+    <div class="tier-card" data-row id="tReject">
       <div class="tier-ghost" id="gReject">00</div>
       <div class="tier-code">REJECT</div>
       <div class="tier-count" id="cReject">00</div>
       <div class="tier-label" id="lReject">반려</div>
       <div class="tier-bar"><span id="bReject"></span></div>
     </div>
-    <div class="tier-card" id="tNa">
+    <div class="tier-card" data-row id="tNa">
       <div class="tier-ghost" id="gNa">00</div>
       <div class="tier-code">N/A</div>
       <div class="tier-count" id="cNa">00</div>
@@ -1120,6 +1118,7 @@
       bannerFileName.textContent = savedSession.fileName || '시안 이미지';
       showDzState('loaded');
       analyzeBtnLabel.textContent = '다시 분석하기';
+      document.querySelector('.checklist-card').classList.add('staged');
       applyResults(savedSession.resultJson);
       setStatus('이전 분석 결과를 불러왔습니다.', false);
     }catch(e){
@@ -1547,7 +1546,7 @@
 
   async function runAnalysis(file){
     showDzState('analyzing');
-    document.querySelector('.checklist-card').classList.add('show', 'pending');
+    document.querySelector('.checklist-card').classList.add('show', 'pending', 'staged');
     pageFooter.classList.add('show');
     setStatus('', false);
     try{
@@ -1630,5 +1629,6 @@
     onScroll();
   })();
 </script>
+<script src="assets/adcheck-reveal.js"></script>
 </body>
 </html>

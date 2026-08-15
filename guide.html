@@ -89,13 +89,6 @@
   .gnb-dropdown-item.active{color:var(--accent);}
 
 
-  /* ---------- 등장 모션 (assets/motion.js) ---------- */
-  html.motion-ready [data-reveal]{opacity:0; transform:translateY(30px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1);}
-  html.motion-ready [data-reveal].in{opacity:1; transform:translateY(0);}
-  html.motion-ready [data-row]{opacity:0; transform:translateX(-40px); transition:opacity .7s ease, transform .8s cubic-bezier(.16,1,.3,1);}
-  html.motion-ready [data-row].in{opacity:1; transform:translateX(0);}
-  html.motion-ready [data-row][data-dir="down"]{transform:translateY(-22px);}
-  html.motion-ready [data-row][data-dir="down"].in{transform:translateY(0);}
 
   /* ---------- 푸터 로고 ---------- */
   .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
@@ -247,7 +240,7 @@
   </div>
   <div class="brand-add-status" id="brandAddStatus"></div>
 
-  <div id="brandDetail">
+  <div id="brandDetail" data-stagger>
     <div class="loading-msg">브랜드 가이드를 불러오는 중…</div>
   </div>
 
@@ -318,10 +311,16 @@
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
 
   function render(){
-    if(editMode && editingDraft){ renderEdit(); return; }
+    if(editMode && editingDraft){ renderEdit(); bindReveal(); return; }
     const b = brandsData.find(x => x.id === currentBrandId);
     if(!b){ brandDetail.innerHTML = ''; return; }
     renderView(b);
+    bindReveal();
+  }
+
+  // 브랜드를 바꿔 카드를 새로 그린 뒤 등장 모션을 다시 걸어준다
+  function bindReveal(){
+    if(window.adcheckReveal) setTimeout(window.adcheckReveal, 0);
   }
 
   function renderView(b){
@@ -685,5 +684,6 @@
       brandDetail.innerHTML = '<div class="gl-empty">브랜드 가이드를 불러오지 못했습니다. API가 배포되었는지 확인해주세요.</div>';
     });
 </script>
+<script src="assets/adcheck-reveal.js"></script>
 </body>
 </html>

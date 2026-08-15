@@ -89,13 +89,6 @@
   .gnb-dropdown-item.active{color:var(--accent);}
 
 
-  /* ---------- 등장 모션 (assets/motion.js) ---------- */
-  html.motion-ready [data-reveal]{opacity:0; transform:translateY(30px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1);}
-  html.motion-ready [data-reveal].in{opacity:1; transform:translateY(0);}
-  html.motion-ready [data-row]{opacity:0; transform:translateX(-40px); transition:opacity .7s ease, transform .8s cubic-bezier(.16,1,.3,1);}
-  html.motion-ready [data-row].in{opacity:1; transform:translateX(0);}
-  html.motion-ready [data-row][data-dir="down"]{transform:translateY(-22px);}
-  html.motion-ready [data-row][data-dir="down"].in{transform:translateY(0);}
 
   /* ---------- 푸터 로고 ---------- */
   .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
@@ -235,7 +228,7 @@
   <h1>기획안 헬퍼</h1>
   <p class="sub">기획안(PPT) 캡처 이미지를 올리면, 배너를 만들 때 필요한 방향을 정리해드립니다.</p>
 
-  <div class="preview-list" data-stagger>
+  <div class="preview-list" data-stagger="down">
     <div class="preview-item" data-row><span class="preview-num">1</span><div><b>레이아웃 무드보드 생성</b> — 분석과 함께 AI가 레이아웃·구도·톤 참고용 이미지를 자동으로 만들어드려요 (텍스트는 부정확할 수 있어 디자이너가 직접 배치해야 해요)</div></div>
     <div class="preview-item" data-row><span class="preview-num">2</span><div><b>핵심 제작 방향</b> — 이 배너가 전달해야 할 가장 중요한 인상</div></div>
     <div class="preview-item" data-row><span class="preview-num">3</span><div><b>카피·비주얼 추가제안</b> — 기획안 레퍼런스에는 없는 새로운 비주얼 아이디어, 필요시 카피 제안까지</div></div>
@@ -654,5 +647,6 @@
 
   genBannerBtn.addEventListener('click', runBannerGeneration);
 </script>
+<script src="assets/adcheck-reveal.js"></script>
 </body>
 </html>
