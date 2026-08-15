@@ -212,7 +212,7 @@
       historyList.innerHTML = '<div class="gl-empty">아직 등록된 히스토리가 없습니다.</div>';
       return;
     }
-    historyList.innerHTML = '<div class="history-list" data-stagger>' + entries.map(e =>
+    historyList.innerHTML = '<div class="history-list" data-stagger="down">' + entries.map(e =>
       '<div class="history-item" data-row data-id="' + escapeHtml(e.id) + '">' +
         '<div class="history-main">' +
           '<div class="history-top">' +
@@ -224,6 +224,7 @@
         '<button type="button" class="history-delete" data-id="' + escapeHtml(e.id) + '" aria-label="삭제">&times;</button>' +
       '</div>'
     ).join('') + '</div>';
+    if(window.adcheckReveal) window.adcheckReveal();
   }
 
   function loadHistory(){

@@ -262,11 +262,17 @@
 
   function renderCard(m){
     // 상단 뱃지는 매체 id 앞부분을 코드로 사용 (예: meta-image → META).
-    // 공식 가이드 URL이 있으면 뱃지 자체가 그 페이지로 가는 링크가 된다.
+    // 공식 가이드 URL이 있으면 뱃지 자체가 그 페이지로 가는 링크, URL은
+    // 없고 PDF만 있으면 그 자리에 PDF 다운로드 링크, 둘 다 없으면 비워둔다.
     const code = (m.id.split('-')[0] || m.id).toUpperCase();
-    const badgeHtml = m.sourceUrl
-      ? '<a class="mg-badge" href="' + escapeHtml(m.sourceUrl) + '" target="_blank" rel="noopener">' + escapeHtml(code) + ' ↗</a>'
-      : '<span class="mg-badge">' + escapeHtml(code) + '</span>';
+    let badgeHtml;
+    if(m.sourceUrl){
+      badgeHtml = '<a class="mg-badge" href="' + escapeHtml(m.sourceUrl) + '" target="_blank" rel="noopener">' + escapeHtml(code) + ' ↗</a>';
+    } else if(m.fileUrl){
+      badgeHtml = '<a class="mg-badge" href="' + escapeHtml(m.fileUrl) + '" target="_blank" rel="noopener" download="' + escapeHtml(m.fileName || 'guide.pdf') + '">PDF ⬇</a>';
+    } else {
+      badgeHtml = '';
+    }
 
     const rowsHtml = (m.specs && m.specs.length)
       ? '<div class="mg-rows">' + m.specs.map(s => {
@@ -284,16 +290,11 @@
       detailHtml = '';
     }
 
-    const fileLinkHtml = m.fileUrl
-      ? '<a class="mg-badge" href="' + escapeHtml(m.fileUrl) + '" target="_blank" rel="noopener" download="' + escapeHtml(m.fileName || 'guide.pdf') + '" style="display:block; margin-top:10px;">' + escapeHtml(m.fileName || 'PDF 다운로드') + ' ⬇</a>'
-      : '';
-
     return '<div class="mg-card" data-row>' +
       '<div class="mg-card-head"><span class="mg-card-name">' + escapeHtml(m.name) + '</span>' + badgeHtml + '</div>' +
       (m.note ? '<div class="mg-note">' + escapeHtml(m.note) + '</div>' : '') +
       rowsHtml +
       detailHtml +
-      fileLinkHtml +
       '</div>';
   }
 
