@@ -122,7 +122,7 @@
   .prompt-divider{margin:0 auto 44px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 18%,rgba(255,255,255,.15) 82%,transparent);}
   .dropzone-shell{position:relative;}
   .dropzone-orbit{position:absolute; inset:-1px; border-radius:26px; overflow:hidden; pointer-events:none;}
-  .dropzone-orbit::before{content:''; position:absolute; top:50%; left:50%; width:180%; aspect-ratio:1; margin:-90% 0 0 -90%; background:conic-gradient(from 0deg,transparent 0%,rgba(255,255,255,.4) 11%,transparent 24%,transparent 62%,rgba(204,255,0,.55) 76%,transparent 90%); animation:orbit 11s linear infinite; opacity:.7;}
+  .dropzone-orbit::before{content:''; position:absolute; top:50%; left:50%; width:180%; aspect-ratio:1; margin:-90% 0 0 -90%; background:conic-gradient(from 0deg,transparent 0%,rgba(255,255,255,.6) 11%,transparent 24%,transparent 62%,rgba(204,255,0,.95) 76%,transparent 90%); animation:orbit 11s linear infinite; opacity:1;}
   .dropzone-orbit::after{content:''; position:absolute; inset:1px; border-radius:25px; background:var(--bg);}
   .upload-box{position:relative; cursor:pointer; border-radius:25px; background:linear-gradient(155deg,#1A1E24,#101317 72%); border:1px solid rgba(255,255,255,.16); box-shadow:inset 0 1px 0 rgba(255,255,255,.11); overflow:hidden; transition:border-color .35s ease,box-shadow .35s ease;}
   .upload-box:hover{border-color:rgba(204,255,0,.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 34px 90px -46px rgba(204,255,0,.4);}
@@ -192,7 +192,6 @@
 
   /* ai summary */
   .ai-summary{position:relative; display:block; border-radius:18px; background:linear-gradient(120deg,#16191F,#0F1216 78%); border:1px solid rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.08); padding:20px 26px; overflow:hidden; margin-top:32px;}
-  .ai-summary::before{content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(204,255,0,.7),transparent);}
   .ai-summary-head{display:flex; align-items:center; gap:10px; font:700 10.5px/1 var(--font-mono); letter-spacing:.18em; color:var(--ink); margin-bottom:12px;}
   .ai-summary-idle-flag{margin-left:auto; color:var(--ink-4); letter-spacing:.14em;}
   .ai-summary.active .ai-summary-idle-flag{display:none;}
@@ -247,7 +246,7 @@
   .progress-fill{height:2px; width:0%; background:var(--accent); border-radius:2px; transition:width .65s cubic-bezier(.2,.8,.2,1);}
   .counts{display:none;}
 
-  .row{position:relative; display:grid; grid-template-columns:3px 62px minmax(0,1fr) auto auto; align-items:center; gap:22px; padding:20px 16px; border-radius:14px; border-bottom:1px solid rgba(255,255,255,.06); transition:background .3s ease,box-shadow .3s ease;}
+  .row{position:relative; display:grid; grid-template-columns:3px 62px minmax(0,1fr) auto; align-items:center; gap:22px; padding:20px 16px; border-radius:14px; border-bottom:1px solid rgba(255,255,255,.06); transition:background .3s ease,box-shadow .3s ease;}
   .row::before{content:''; width:3px; height:26px; border-radius:2px; background:rgba(255,255,255,.12); transition:background .45s ease;}
   .row:hover{background:rgba(255,255,255,.04); box-shadow:inset 0 0 0 1px rgba(204,255,0,.2);}
   .row.jump-flash{animation:rowflash 1.4s ease;}
@@ -255,8 +254,6 @@
   .row-main{min-width:0;}
   .rt{font-size:16.5px; font-weight:600; color:var(--ink); letter-spacing:-.025em;}
   .row-note{margin-top:7px; font-size:13px; font-weight:300; line-height:1.7; color:#8B9099;}
-  .row-tags{display:flex; gap:5px;}
-  .mtag{font:500 10px/1 var(--font-mono); letter-spacing:.08em; padding:5px 8px; border-radius:6px; border:1px solid var(--line); color:var(--ink-3);}
   .row-verdict{position:relative;}
   .stbtn{min-width:80px; text-align:center; font-size:12px; font-weight:600; letter-spacing:-.015em; padding:9px 14px; border-radius:9px; background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--ink-3); cursor:pointer; transition:all .45s ease;}
   .stbtn[data-status="pass"]{background:rgba(168,207,188,.14); border-color:rgba(168,207,188,.5); color:var(--pass);}
@@ -286,7 +283,7 @@
   .marquee-track .sep{color:var(--accent); opacity:.5;}
   @keyframes marq{to{transform:translateX(-50%);}}
 
-  .page-footer{display:block; text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:60px; border-top:1px solid var(--line-soft);}
+  .page-footer{display:block; text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:60px; border-top:1px solid var(--line-soft);}
   .page-footer.show{display:block;}
 
   @media (max-width:1180px){
@@ -674,10 +671,6 @@
   ITEMS.forEach(it => state[it.n] = null);
 
   // ---------- build checklist groups ----------
-  // 판정 방식 태그(M1 수치·M2 규정·M3 시각) — 항목가이드와 동일한 매핑
-  const TAGS = {1:['M3'],2:['M1','M3'],3:['M1','M3'],4:['M1','M2'],5:['M1','M2'],6:['M3'],
-                7:['M3'],8:['M3'],9:['M3'],10:['M3'],11:['M3'],12:['M3'],13:['M3'],
-                14:['M1','M2'],15:['M3'],16:['M2'],17:['M1','M2']};
   const groupsContainer = document.getElementById('groupsContainer');
   ITEMS.forEach(it => {
     const row = document.createElement('div');
@@ -689,7 +682,6 @@
         <div class="rt">${it.title}</div>
         <div class="row-note" id="note-${it.n}">판정 대기 중</div>
       </div>
-      <div class="row-tags">${(TAGS[it.n]||[]).map(g=>`<span class="mtag">${g}</span>`).join('')}</div>
       <div class="row-verdict" data-id="${it.n}">
         <button type="button" class="stbtn">—</button>
         <div class="verdict-menu">

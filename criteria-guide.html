@@ -92,10 +92,13 @@
   .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
 
+  .scroll-progress{max-width:1520px; margin:14px auto 0; height:1px; background:rgba(255,255,255,.07); border-radius:1px; overflow:hidden;}
+  .scroll-progress-bar{height:1px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
 
 
   /* ---------- 푸터 로고 ---------- */
-  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
   .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
 
   .page-eyebrow{font:500 11px/1 var(--font-mono); letter-spacing:.2em; color:var(--ink-3); margin-bottom:22px;}
@@ -111,13 +114,11 @@
   .legend-table td:first-child{border-right:1px solid rgba(255,255,255,.09); font-weight:600; white-space:nowrap;}
   .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:9px; vertical-align:middle;}
 
-  .m-tag{display:inline-block; font:600 9.5px/1 var(--font-mono); letter-spacing:.1em; border-radius:5px; padding:5px 7px; margin-left:6px; vertical-align:middle; border:1px solid rgba(255,255,255,.16); color:var(--ink-2);}
-  .m1,.m2,.m3{background:none;}
   .legend-note{padding:20px 22px; border-radius:14px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.09); font-size:13.5px; font-weight:300; line-height:1.9; color:var(--ink-2); margin-bottom:56px;}
   .legend-note b{color:var(--accent); font-weight:600;}
 
   /* ---------- 그룹 ---------- */
-  .group-title{font-family:var(--font-display); font-size:20px; font-weight:800; letter-spacing:-.03em; color:var(--accent); margin:0; padding-top:34px;}
+  .group-title{font-family:var(--font-display); font-size:28px; font-weight:800; letter-spacing:-.03em; color:var(--accent); margin:0; padding-top:34px;}
   .group-desc{margin-top:9px; font-size:13.5px; font-weight:300; line-height:1.75; color:#8B9099; max-width:70ch; margin-bottom:20px;}
 
   /* ---------- 항목 카드 (14·15·16번) ---------- */
@@ -208,6 +209,7 @@
       <a href="roadmap.html" class="gnb-link">로드맵</a>
     </nav>
   </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
 </div>
 
 <div class="page" data-stagger>
@@ -225,7 +227,7 @@
     <tr><td><span class="dot" style="background:var(--na);"></span>해당 없음</td><td>이미지 구성상 이 항목이 적용되지 않음(예: 인물 없는 시안의 신체 비율 항목)</td></tr>
   </table>
   <div class="legend-note" data-reveal>
-    판정 방식 태그 — <span class="m-tag m1">M1</span>수치 기반(OCR·WCAG 등 실측값 대조) <span class="m-tag m2">M2</span>규정 대조(브랜드·매체 가이드라인과 비교) <span class="m-tag m3">M3</span>AI 시각 판단(수치화하지 않고 이미지를 보고 판단) — 대부분 항목은 두 가지 이상이 함께 쓰입니다. 판정 근거 박스는 "왜 이 기준인지"에 대한 실제 출처가 있는 설명입니다 — 절대 규칙이 아니라 참고 기준이니, 브랜드 가이드나 기획 의도와 충돌하면 그쪽이 우선입니다.
+    AdCheck는 항목마다 <b>수치 기반</b>(OCR·WCAG 등으로 실측값을 직접 대조), <b>규정 대조</b>(브랜드·매체 가이드라인과 비교), <b>AI 시각 판단</b>(수치화하지 않고 이미지를 직접 보고 판단) 이 세 가지 방식을 조합해서 판정합니다. 판정 근거 박스는 "왜 이 기준인지"에 대한 실제 출처가 있는 설명입니다 — 절대 규칙이 아니라 참고 기준이니, 브랜드 가이드나 기획 의도와 충돌하면 그쪽이 우선입니다.
   </div>
 
   <!-- ===================== 그룹 1 ===================== -->
@@ -233,7 +235,7 @@
   <div class="group-desc">크리에이티브 자체의 완성도를 보는 9개 항목입니다.</div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">01</span><span class="item-title">전략 적합성</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">01</span><span class="item-title">전략 적합성</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>목적과 타깃 톤이 일치하는가</li><li>여러 혜택 포인트가 하나의 오퍼로 수렴하는가</li></ul>
     <div class="reject-box">서로 다른 오퍼·캠페인이 동시에 경쟁 또는 컨셉 부재</div>
@@ -241,7 +243,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">02</span><span class="item-title">위계 및 구조</span><span class="m-tag m1">M1</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">02</span><span class="item-title">위계 및 구조</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>헤드라인→비주얼→CTA 흐름인가</li><li>우선순위가 크기로 구분되는가</li></ul>
     <div class="reject-box">모든 요소가 같은 크기로 나열</div>
@@ -275,7 +277,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">03</span><span class="item-title">타이포·정렬·여백·명도대비</span><span class="m-tag m1">M1</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">03</span><span class="item-title">타이포·정렬·여백·명도대비</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets">
       <li>폰트가 2종 이내로 통일됐는가</li>
@@ -304,7 +306,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">04</span><span class="item-title">정보 정확성</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-head"><span class="item-num">04</span><span class="item-title">정보 정확성</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>가격·일정 정보에 오류 없는가</li><li>원고와 수치가 일치하는가</li></ul>
     <div class="reject-box">가격·일정 등 사실관계 오류</div>
@@ -315,7 +317,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">05</span><span class="item-title">컬러 일관성</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-head"><span class="item-num">05</span><span class="item-title">컬러 일관성</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>브랜드 컬러를 준수했는가</li></ul>
     <div class="reject-box">브랜드 컬러 이탈</div>
@@ -323,7 +325,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">06</span><span class="item-title">합성 리얼리티</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">06</span><span class="item-title">합성 리얼리티</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>톤·질감이 배경과 어울리는가</li><li>그림자·반사가 자연스러운가</li><li>누끼(컷아웃) 경계가 매끄럽게 처리됐는가 (헤어 잔여배경, 거친 윤곽선 등)</li></ul>
     <div class="reject-box">합성이 티나거나 이질감이 있음, 누끼 경계에 배경 잔상·거친 윤곽선이 남음</div>
@@ -336,7 +338,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">07</span><span class="item-title">피사체 보정</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">07</span><span class="item-title">피사체 보정</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>보정이 과도하지 않은가</li><li>재질 텍스처가 자연스러운가</li></ul>
     <div class="reject-box">과도한 리터칭으로 왜곡된 피사체</div>
@@ -349,7 +351,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">08</span><span class="item-title">그래픽 완성도</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">08</span><span class="item-title">그래픽 완성도</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>아이콘·일러스트 마감이 깨끗한가</li><li>벡터에 깨짐이 없는가</li></ul>
     <div class="reject-box">저해상도로 깨지거나 미완성</div>
@@ -361,7 +363,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">09</span><span class="item-title">CTA 및 전환</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">09</span><span class="item-title">CTA 및 전환</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>CTA가 있다면 문구가 행동을 유도하는가</li><li>CTA가 있다면 버튼이 눈에 띄는가</li></ul>
     <div class="reject-box">있는 CTA가 텍스트에 묻히는 등 명백히 눈에 안 띔 (CTA 부재 자체는 매체에 따라 정상일 수 있음)</div>
@@ -399,7 +401,7 @@
   <div class="group-desc">AI로 생성·보정한 이미지 특유의 티가 나는 문제를 잡는 4개 항목입니다. 사진 합성이 아닌 시안에는 대부분 해당 없음(na)으로 처리됩니다.</div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">10</span><span class="item-title">신체 비율 왜곡</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">10</span><span class="item-title">신체 비율 왜곡</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>얼굴(이목구비)이 뒤틀리지 않았는가</li><li>손가락·팔다리 비율이 정상인가</li><li>자세가 물리적으로 가능한가</li></ul>
     <div class="reject-box">얼굴·신체 비율이 명백히 어긋남</div>
@@ -411,7 +413,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">11</span><span class="item-title">배경 패턴 반복</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">11</span><span class="item-title">배경 패턴 반복</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>텍스처가 반복되지 않는가</li><li>패턴 경계가 매끄러운가</li></ul>
     <div class="reject-box">배경이 눈에 띄게 반복됨</div>
@@ -423,7 +425,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">12</span><span class="item-title">워터마크·서명 흔적</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">12</span><span class="item-title">워터마크·서명 흔적</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>AI 워터마크가 없는가</li><li>스톡 이미지 출처 표시가 없는가</li></ul>
     <div class="reject-box">워터마크·서명이 남아있음</div>
@@ -435,7 +437,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">13</span><span class="item-title">광원-그림자 방향 일치</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">13</span><span class="item-title">광원-그림자 방향 일치</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>그림자를 가진 피사체가 2개 이상일 때, 광원 방향이 서로 모순되지 않는가</li></ul>
     <div class="reject-box">그림자 방향이 서로 어긋남 (피사체가 하나뿐이면 해당 없음)</div>
@@ -451,7 +453,7 @@
   <div class="group-desc">크리에이티브 품질과 별개로, 매체·브랜드·법적 규정을 지켰는지 반드시 확인해야 하는 4개 항목입니다.</div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">14</span><span class="item-title">매체 최적화</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-head"><span class="item-num">14</span><span class="item-title">매체 최적화</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>매체 규격(사이즈·용량)에 맞는가</li><li>안전 여백 안에 배치됐는가</li></ul>
     <div class="reject-box">규격·용량 초과 또는 요소 잘림</div>
@@ -459,7 +461,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">15</span><span class="item-title">텍스트·로고 렌더링</span><span class="m-tag m3">M3</span></div>
+    <div class="item-head"><span class="item-num">15</span><span class="item-title">텍스트·로고 렌더링</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>생성된 글자가 정확한가</li><li>로고 형태가 원본과 일치하는가</li></ul>
     <div class="reject-box">글자가 깨지거나 로고가 왜곡됨</div>
@@ -471,7 +473,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">16</span><span class="item-title">로고 사용 규정</span><span class="m-tag m2">M2</span></div>
+    <div class="item-head"><span class="item-num">16</span><span class="item-title">로고 사용 규정</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>로고가 누락되지 않았는가</li><li>로고 여백이 다른 요소와 부자연스럽게 붙어 보이지 않는가</li><li>색상·비율을 변경하지 않았는가</li></ul>
     <div class="reject-box">로고 가이드라인 위반</div>
@@ -479,7 +481,7 @@
   </div>
 
   <div class="item-card" data-row>
-    <div class="item-head"><span class="item-num">17</span><span class="item-title">법적고지·심의 문구</span><span class="m-tag m1">M1</span><span class="m-tag m2">M2</span></div>
+    <div class="item-head"><span class="item-num">17</span><span class="item-title">법적고지·심의 문구</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>필수 고지사항이 포함됐는가</li><li>심의 문구 크기가 기준 이상인가</li></ul>
     <div class="reject-box">법적 고지·심의 문구 누락</div>
@@ -536,6 +538,18 @@
     }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
     document.querySelectorAll('.item-card').forEach(el => revealObserver.observe(el));
   }
+
+  // 헤더 하단 스크롤 진행 바
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
 </body>

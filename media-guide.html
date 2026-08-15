@@ -92,6 +92,9 @@
   .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
 
+  .scroll-progress{max-width:1520px; margin:14px auto 0; height:1px; background:rgba(255,255,255,.07); border-radius:1px; overflow:hidden;}
+  .scroll-progress-bar{height:1px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
 
 
   /* ---------- 푸터 로고 ---------- */
@@ -138,7 +141,7 @@
   .gl-list li{font-size:13px; line-height:1.8; color:var(--ink-2); margin-bottom:4px;}
   .gl-list li.gl-warn{color:var(--reject); font-weight:700;}
 
-  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:60px; border-top:1px solid var(--line-soft);}
+  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:60px; border-top:1px solid var(--line-soft);}
 
   .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
 
@@ -180,6 +183,7 @@
       <a href="roadmap.html" class="gnb-link">로드맵</a>
     </nav>
   </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
 </div>
 
 <div class="page">
@@ -319,6 +323,18 @@
     .catch(() => {
       mediaDetail.innerHTML = '<div class="gl-empty">매체 가이드를 불러오지 못했습니다. api/mediaGuideDetails.js가 배포되었는지 확인해주세요.</div>';
     });
+
+  // 헤더 하단 스크롤 진행 바
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
 </body>

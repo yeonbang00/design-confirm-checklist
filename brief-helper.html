@@ -92,6 +92,9 @@
   .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
 
+  .scroll-progress{max-width:1520px; margin:14px auto 0; height:1px; background:rgba(255,255,255,.07); border-radius:1px; overflow:hidden;}
+  .scroll-progress-bar{height:1px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
 
 
   /* ---------- 푸터 로고 ---------- */
@@ -113,18 +116,22 @@
   .optional-tag{font-size:11.5px; color:var(--text-3); font-weight:400;}
   .compare-label b{color:var(--num-text); font-size:15px; font-weight:700;}
   .compare-desc{font-size:13px; line-height:1.7; color:var(--text-3); margin-bottom:16px;}
-  .select-wrap{position:relative; margin-bottom:22px; max-width:280px;}
-  .select-wrap select{
-    width:100%; appearance:none; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.14);
-    border-radius:10px; padding:12px 36px 12px 14px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; font-family:inherit;
-  }
-  .select-wrap .opt-chevron{position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:8px; color:var(--accent);}
+  .option-dropdown-wrap{position:relative; max-width:280px; margin-bottom:22px;}
+  .option-btn{width:100%; display:inline-flex; align-items:center; gap:8px; background:var(--surface-3); border:1px solid var(--line); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); color:var(--ink); font-size:13.5px; font-weight:600; padding:12px 14px; border-radius:10px; cursor:pointer; letter-spacing:-.015em; text-align:left; transition:border-color .25s ease;}
+  .option-btn:hover{border-color:rgba(204,255,0,.5);}
+  .option-btn-value{color:var(--accent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0;}
+  .opt-chevron{margin-left:auto; font-size:8px; color:var(--accent); flex-shrink:0;}
+  .option-menu{position:absolute; top:calc(100% + 8px); left:0; min-width:100%; max-width:340px; padding:8px; border-radius:16px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95); display:none; z-index:60; max-height:340px; overflow-y:auto;}
+  .option-menu.open{display:block;}
+  .ppm-item{display:block; width:100%; text-align:left; border:none; background:none; cursor:pointer; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; font-family:inherit; transition:background .2s ease,color .2s ease;}
+  .ppm-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
+  .ppm-item.active{color:var(--accent); background:rgba(204,255,0,.09); font-weight:600;}
 
   .card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:20px; padding:32px; margin-bottom:24px;}
 
   .dropzone{border:1.5px dashed rgba(204,255,0,.55); border-radius:14px; padding:48px 24px; text-align:center; cursor:pointer; background:rgba(255,255,255,.03); transition:border-color .15s ease;}
   .dropzone.dragover{border-color:var(--accent);}
-  .dz-empty .dz-icon{position:relative; width:22px; height:34px; margin:0 auto 14px;}
+  .dz-empty .dz-icon{position:relative; width:28px; height:28px; margin:0 auto 14px;}
   .dz-empty .dz-icon::before,.dz-empty .dz-icon::after{content:''; position:absolute; background:var(--accent); border-radius:2px;}
   .dz-empty .dz-icon::before{left:50%; top:0; bottom:0; width:2px; transform:translateX(-50%);}
   .dz-empty .dz-icon::after{top:50%; left:0; right:0; height:2px; transform:translateY(-50%);}
@@ -229,6 +236,7 @@
       <a href="roadmap.html" class="gnb-link">로드맵</a>
     </nav>
   </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
 </div>
 
 <div class="page">
@@ -249,12 +257,13 @@
   <div class="card" data-reveal>
     <div class="compare-label"><b>브랜드</b> <span class="optional-tag">(선택사항)</span></div>
     <div class="compare-desc">브랜드를 선택하면, 기획안 속 레퍼런스 이미지의 색상·톤이 그 브랜드 공식 가이드와 다를 때 짚어드려요.</div>
-    <div class="select-wrap">
-      <select id="advertiserSelect">
-        <option value="">선택 없음</option>
-      </select>
-      <span class="opt-chevron">▼</span>
+    <div class="option-dropdown-wrap">
+      <button type="button" class="option-btn" id="advertiserOptBtn">
+        <span class="option-btn-value" id="advertiserOptValue">선택 없음</span><span class="opt-chevron">▼</span>
+      </button>
+      <div class="option-menu" id="advertiserOptMenu"><div id="advertiserOptList"></div></div>
     </div>
+    <select id="advertiserSelect" style="display:none;"><option value="">선택 없음</option></select>
 
     <div class="dropzone" id="dropzone">
       <div class="dz-empty" id="dzEmpty">
@@ -336,16 +345,40 @@
   const resultSection = document.getElementById('resultSection');
 
   const advertiserSelect = document.getElementById('advertiserSelect');
+  const advertiserOptBtn = document.getElementById('advertiserOptBtn');
+  const advertiserOptMenu = document.getElementById('advertiserOptMenu');
+  const advertiserOptValue = document.getElementById('advertiserOptValue');
+  const advertiserOptList = document.getElementById('advertiserOptList');
+
+  function renderAdvertiserOptions(advertisers){
+    advertiserOptList.innerHTML = '';
+    const makeItem = (id, name) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ppm-item' + (advertiserSelect.value === id ? ' active' : '');
+      btn.textContent = name;
+      btn.addEventListener('click', () => {
+        advertiserSelect.value = id;
+        advertiserOptValue.textContent = name;
+        advertiserOptMenu.classList.remove('open');
+        renderAdvertiserOptions(advertisers);
+      });
+      advertiserOptList.appendChild(btn);
+    };
+    makeItem('', '선택 없음');
+    advertisers.forEach(a => makeItem(a.id, a.name));
+  }
+  renderAdvertiserOptions([]);
+
+  advertiserOptBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    advertiserOptMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', () => advertiserOptMenu.classList.remove('open'));
+
   fetch('/api/advertisers')
     .then(r => r.ok ? r.json() : { advertisers: [] })
-    .then(data => {
-      (data.advertisers || []).forEach(a => {
-        const opt = document.createElement('option');
-        opt.value = a.id;
-        opt.textContent = a.name;
-        advertiserSelect.appendChild(opt);
-      });
-    })
+    .then(data => renderAdvertiserOptions(data.advertisers || []))
     .catch(() => {});
 
   const ALLOWED = ['image/png','image/jpeg','image/webp'];
@@ -656,6 +689,18 @@
   }
 
   genBannerBtn.addEventListener('click', runBannerGeneration);
+
+  // 헤더 하단 스크롤 진행 바
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
 </body>

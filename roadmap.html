@@ -92,10 +92,13 @@
   .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
 
+  .scroll-progress{max-width:1520px; margin:14px auto 0; height:1px; background:rgba(255,255,255,.07); border-radius:1px; overflow:hidden;}
+  .scroll-progress-bar{height:1px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
 
 
   /* ---------- 푸터 로고 ---------- */
-  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
   .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
 
   .page-eyebrow{font:500 11px/1 var(--font-mono); letter-spacing:.2em; color:var(--ink-3); margin-bottom:22px;}
@@ -134,7 +137,8 @@
   .goal-hero-inner{position:relative; padding:44px 46px 46px;}
   .goal-badge{display:inline-flex; align-items:center; gap:10px; padding:7px 14px 7px 11px; border-radius:999px; background:rgba(204,255,0,.12); border:1px solid rgba(204,255,0,.4); font:600 10.5px/1 var(--font-mono); letter-spacing:.16em; color:var(--accent);}
   .goal-badge-dot{width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); animation:pulse 2.2s ease-in-out infinite;}
-  .goal-heading{margin:26px 0 0; max-width:26ch; font-family:var(--font-display); font-size:clamp(30px,3.3vw,46px); font-weight:800; letter-spacing:-.045em; line-height:1.16; color:var(--ink);}
+  .goal-heading-box{margin:26px 0 0; max-width:fit-content; padding:22px 28px; border-radius:18px; background:rgba(204,255,0,.07); border:1px solid rgba(204,255,0,.28); box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+  .goal-heading{max-width:26ch; font-family:var(--font-display); font-size:clamp(30px,3.3vw,46px); font-weight:800; letter-spacing:-.045em; line-height:1.16; color:var(--ink);}
   .goal-desc{margin:24px 0 0; max-width:66ch; font-size:16px; font-weight:300; line-height:1.85; color:#B9BDC4;}
   .goal-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin-top:34px;}
   .goal-item{padding:20px 22px; border-radius:14px; background:rgba(11,12,14,.55); border:1px solid rgba(204,255,0,.2); transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s ease;}
@@ -153,7 +157,6 @@
   .use-top{display:flex; align-items:center; gap:11px; flex-wrap:wrap;}
   .use-badge{font:700 10px/1 var(--font-mono); letter-spacing:.14em; color:var(--accent-ink); background:var(--accent); padding:6px 10px; border-radius:6px;}
   .use-title{font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--ink); letter-spacing:-.035em;}
-  .use-mtag{font:600 9.5px/1 var(--font-mono); letter-spacing:.1em; padding:5px 8px; border-radius:5px; border:1px solid rgba(168,207,188,.5); color:var(--pass);}
   .use-desc{margin:18px 0 0; max-width:78ch; font-size:14.5px; font-weight:300; line-height:1.85; color:#B9BDC4;}
   .use-chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:20px;}
   .use-chip{font:500 11px/1 var(--font-mono); letter-spacing:.04em; padding:8px 11px; border-radius:8px; background:rgba(204,255,0,.09); border:1px solid rgba(204,255,0,.28); color:var(--accent);}
@@ -233,6 +236,7 @@
       <a href="roadmap.html" class="gnb-link active">로드맵</a>
     </nav>
   </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
 </div>
 
 <div class="page">
@@ -245,7 +249,7 @@
   <div class="goal-hero" data-reveal>
     <div class="goal-hero-inner">
       <div class="goal-badge"><span class="goal-badge-dot"></span>FINAL GOAL</div>
-      <h2 class="goal-heading">디자인 판정과 실제 성과를<br>같은 화면에서 붙여 본다</h2>
+      <div class="goal-heading-box"><h2 class="goal-heading">판정에서 끝내지 않고,<br>성과로 증명한다</h2></div>
       <p class="goal-desc">배너를 분석하는 것에서 멈추지 않고, 그 배너가 실제로 낸 성과 데이터를 함께 읽습니다. 어떤 항목을 고쳤을 때 효율과 성과가 실제로 올라갔는지 판단할 수 있게 만드는 것이 AdCheck의 최종 목표입니다.</p>
       <div class="goal-grid">
         <div class="goal-item">
@@ -282,7 +286,6 @@
             <div class="use-top">
               <span class="use-badge">CLOVA OCR</span>
               <span class="use-title">픽셀 좌표 실측</span>
-              <span class="use-mtag">M1</span>
             </div>
             <p class="use-desc">이미지 속 문자를 추출해 디지털 데이터로 변환합니다. 읽는 순서와 방향을 추정해 인식하고, 곡선으로 배열되거나 기울어진 문자까지 잡아냅니다. AdCheck는 여기서 나오는 텍스트 박스 좌표를 그대로 써서 정렬 오차·여백 균형·텍스트 밀도를 눈대중이 아니라 실측값으로 판정합니다.</p>
             <div class="use-chips">
@@ -315,7 +318,6 @@
             <div class="use-top">
               <span class="use-badge">바른한글</span>
               <span class="use-title">규칙 기반 맞춤법 검사</span>
-              <span class="use-mtag">M1</span>
             </div>
             <p class="use-desc">OCR로 읽은 텍스트를 화면 읽기 순서대로 이어붙여 규칙 기반 검사기에 보냅니다. 띄어쓰기·오탈자·문맥상 오류를 구분해 돌려주고 대치어 후보까지 제시하므로, AI 시각 판단만으로는 놓치기 쉬운 자음·모음 한 글자 차이를 04번 정보 정확성 항목에서 잡아냅니다.</p>
             <div class="use-chips">
@@ -364,7 +366,6 @@
         <div class="use-top">
           <span class="use-badge">WCAG</span>
           <span class="use-title">명도 대비 체크</span>
-          <span class="use-mtag">M1</span>
         </div>
         <p class="use-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 직접 읽어 글자·배경 명도 대비를 계산하고, 3번(타이포·정렬·여백·명도대비) 판정에 근거로 반영합니다. 서버에 새 이미지 처리 라이브러리를 추가하지 않고 캔버스 API만으로 클라이언트에서 계산합니다.</p>
         <div class="use-blocker">판정 기준(WCAG AA): 대비 <b>4.5:1 미만</b>이면 기준 미달로 지적, <b>3:1 미만</b>이면 명확히 낮은 값으로 보고 검토필요 이상으로 판정합니다. 3~4.5 사이는 근사치 특성상 애매한 구간이라 AI가 실제 화면을 한 번 더 시각적으로 확인한 뒤 판단합니다.</div>
@@ -378,7 +379,6 @@
         <div class="use-top">
           <span class="use-badge">GPT-5.6 SOL</span>
           <span class="use-title">시각 판단 · 판정 생성</span>
-          <span class="use-mtag">M2 · M3</span>
         </div>
         <p class="use-desc">수치로 잴 수 없는 항목을 판단하고, 17개 항목의 판정과 총평을 씁니다. 브랜드·매체 가이드에서 켠 항목과 OCR 실측값을 프롬프트에 함께 넣어, 시각 판단이 근거 없이 흔들리지 않도록 묶어둡니다.</p>
         <div class="use-mini-grid">
@@ -486,6 +486,18 @@
   document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
   });
+
+  // 헤더 하단 스크롤 진행 바
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
 </body>

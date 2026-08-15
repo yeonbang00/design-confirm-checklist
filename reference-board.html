@@ -92,6 +92,9 @@
   .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
 
+  .scroll-progress{max-width:1520px; margin:14px auto 0; height:1px; background:rgba(255,255,255,.07); border-radius:1px; overflow:hidden;}
+  .scroll-progress-bar{height:1px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
 
 
   /* ---------- 푸터 로고 ---------- */
@@ -109,12 +112,16 @@
   .coming-soon-badge{display:inline-block; font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:4px 12px; margin-bottom:10px;}
   .coming-soon-text{font-size:13px; color:var(--canvas-text-2); line-height:1.7; max-width:480px; margin:0 auto;}
 
-  .select-wrap{position:relative; margin-bottom:28px; max-width:220px;}
-  .select-wrap select{
-    width:100%; appearance:none; background:var(--charcoal); border:1px solid var(--charcoal-border);
-    border-radius:10px; padding:13px 40px 13px 16px; font-size:14.5px; font-weight:600; color:var(--canvas-text); cursor:pointer;
-  }
-  .select-wrap .opt-chevron{position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:8px; color:var(--accent);}
+  .option-dropdown-wrap{position:relative; max-width:220px; margin-bottom:28px;}
+  .option-btn{width:100%; display:inline-flex; align-items:center; gap:8px; background:var(--surface-3); border:1px solid var(--line); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); color:var(--ink); font-size:13.5px; font-weight:600; padding:12px 14px; border-radius:10px; cursor:pointer; letter-spacing:-.015em; text-align:left; transition:border-color .25s ease;}
+  .option-btn:hover{border-color:rgba(204,255,0,.5);}
+  .option-btn-value{color:var(--accent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0;}
+  .opt-chevron{margin-left:auto; font-size:8px; color:var(--accent); flex-shrink:0;}
+  .option-menu{position:absolute; top:calc(100% + 8px); left:0; min-width:100%; max-width:340px; padding:8px; border-radius:16px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95); display:none; z-index:60; max-height:340px; overflow-y:auto;}
+  .option-menu.open{display:block;}
+  .ppm-item{display:block; width:100%; text-align:left; border:none; background:none; cursor:pointer; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; font-family:inherit; transition:background .2s ease,color .2s ease;}
+  .ppm-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
+  .ppm-item.active{color:var(--accent); background:rgba(204,255,0,.09); font-weight:600;}
 
   .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
   .gl-empty{font-size:13.5px; color:var(--text-3); background:rgba(255,255,255,.045); border-radius:10px; padding:20px 18px; line-height:1.7;}
@@ -134,7 +141,7 @@
   .ref-brand{font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px;}
   .ref-note{font-size:12px; color:var(--text-2); line-height:1.5;}
 
-  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:.04em; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
   .lightbox{display:none; position:fixed; inset:0; background:rgba(29,29,31,0.85); z-index:100; align-items:center; justify-content:center; padding:40px;}
   .lightbox.show{display:flex;}
@@ -180,6 +187,7 @@
       <a href="roadmap.html" class="gnb-link">로드맵</a>
     </nav>
   </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
 </div>
 
 <div class="page">
@@ -195,11 +203,11 @@
     <div class="coming-soon-text">이 사이트를 이용하는 팀원이 직접 이미지를 등록할 수 있는 기능이에요.<br>유료 플랜 결제 후 업데이트 예정입니다.</div>
   </div>
 
-  <div class="select-wrap">
-    <select id="categorySelect">
-      <option value="all">전체</option>
-    </select>
-    <span class="opt-chevron">▼</span>
+  <div class="option-dropdown-wrap">
+    <button type="button" class="option-btn" id="categoryOptBtn">
+      <span class="option-btn-value" id="categoryOptValue">전체</span><span class="opt-chevron">▼</span>
+    </button>
+    <div class="option-menu" id="categoryOptMenu"><div id="categoryOptList"></div></div>
   </div>
 
   <div id="refContent">
@@ -260,10 +268,38 @@
   lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
 
-  const categorySelect = document.getElementById('categorySelect');
+  const categoryOptBtn = document.getElementById('categoryOptBtn');
+  const categoryOptMenu = document.getElementById('categoryOptMenu');
+  const categoryOptValue = document.getElementById('categoryOptValue');
+  const categoryOptList = document.getElementById('categoryOptList');
   const refContent = document.getElementById('refContent');
   let categoriesData = [];
   let currentCategoryId = null;
+
+  function renderCategoryOptions(){
+    categoryOptList.innerHTML = '';
+    const makeItem = (id, label) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ppm-item' + (currentCategoryId === id ? ' active' : '');
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        categoryOptValue.textContent = label.replace(/ \(\d+\)$/, '');
+        categoryOptMenu.classList.remove('open');
+        loadCategoryImages(id, label.replace(/ \(\d+\)$/, ''));
+        renderCategoryOptions();
+      });
+      categoryOptList.appendChild(btn);
+    };
+    makeItem('all', '전체');
+    categoriesData.forEach(c => makeItem(c.id, c.name + ' (' + c.count + ')'));
+  }
+
+  categoryOptBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    categoryOptMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', () => categoryOptMenu.classList.remove('open'));
 
   function loadCategoryImages(id, name){
     currentCategoryId = id;
@@ -351,12 +387,6 @@
       });
   }
 
-  categorySelect.addEventListener('change', () => {
-    if(categorySelect.value === 'all'){ loadCategoryImages('all', '전체'); return; }
-    const cat = categoriesData.find(c => c.id === categorySelect.value);
-    loadCategoryImages(categorySelect.value, cat ? cat.name : '');
-  });
-
   fetch('/api/referenceCategories')
     .then(r => {
       if(!r.ok) throw new Error('status ' + r.status);
@@ -364,17 +394,24 @@
     })
     .then(data => {
       categoriesData = data.categories || [];
-      categoriesData.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = c.name + ' (' + c.count + ')';
-        categorySelect.appendChild(opt);
-      });
+      renderCategoryOptions();
       loadCategoryImages('all', '전체');
     })
     .catch(() => {
       refContent.innerHTML = '<div class="gl-empty">카테고리를 불러오지 못했습니다. api/referenceCategories.js가 배포되었는지 확인해주세요.</div>';
     });
+
+  // 헤더 하단 스크롤 진행 바
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
 </body>
