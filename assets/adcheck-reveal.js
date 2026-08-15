@@ -30,9 +30,14 @@
 
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
 
+  // dcHidden/dcShown은 "컨테이너를 이번에 처리했는지"가 아니라 "이 낱개 요소가
+  // 지금 어떤 상태인지"를 기록한다 — 브랜드가이드·매체가이드처럼 같은 컨테이너의
+  // innerHTML을 fetch 이후 다시 채우는 페이지에서, 데이터가 오기 전(빈 상태)에
+  // 한 번 처리된 컨테이너가 "이미 다뤘음"으로 영구히 표시돼 데이터가 채워진
+  // 이후의 진짜 행들이 다시는 관찰·발화되지 않던 문제를 없애기 위함이다.
   function prep(el, dir) {
-    if (el.dataset.revealPrepped) return;
-    el.dataset.revealPrepped = '1';
+    if (el.dataset.dcHidden || el.dataset.dcShown) return;
+    el.dataset.dcHidden = '1';
     if (reduce) return;
     el.style.opacity = '0';
     el.style.transform = dir === 'down'
@@ -42,18 +47,24 @@
   }
 
   function show(el) {
+    el.dataset.dcShown = '1';
     el.style.opacity = '1';
     el.style.transform = 'none';
   }
 
   function fire(group) {
-    var dir = group.getAttribute('data-stagger') === 'down' ? 'down' : 'left';
     var rows = group.querySelectorAll('[data-row]');
     for (var i = 0; i < rows.length; i++) {
       (function (row, i) {
+        if (row.dataset.dcShown) return;
         setTimeout(function () { show(row); }, i * STEP);
       })(rows[i], i);
     }
+  }
+
+  function hasUnshown(rows) {
+    for (var i = 0; i < rows.length; i++) { if (!rows[i].dataset.dcShown) return true; }
+    return false;
   }
 
   var groupIO, revealIO;
@@ -83,18 +94,27 @@
       }, {threshold: 0.06});
     }
 
-    // 1단계: 대상 전부를 먼저 숨김 상태로 만든다 (아직 관찰·발화는 하지 않음)
-    var staggerGroups = document.querySelectorAll('[data-stagger]');
-    staggerGroups.forEach(function (group) {
+    // 1단계: 대상 전부를 먼저 숨김 상태로 만든다 (아직 관찰·발화는 하지 않음).
+    // 컨테이너에 아직 [data-row]가 하나도 없으면(fetch 전) 그냥 건너뛴다 —
+    // 나중에 콘텐츠가 채워진 뒤 다시 호출될 때 그때 처리하면 된다.
+    var staggerGroups = [];
+    document.querySelectorAll('[data-stagger]').forEach(function (group) {
+      var rows = group.querySelectorAll('[data-row]');
+      if (!rows.length) return;
       var dir = group.getAttribute('data-stagger') === 'down' ? 'down' : 'left';
-      group.querySelectorAll('[data-row]').forEach(function (r) { prep(r, dir); });
+      rows.forEach(function (r) { prep(r, dir); });
+      staggerGroups.push(group);
     });
-    var revealEls = document.querySelectorAll('[data-reveal]');
-    revealEls.forEach(function (el) {
-      if (el.dataset.revealBound || reduce) return;
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(30px)';
-      el.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1)';
+    var revealEls = [];
+    document.querySelectorAll('[data-reveal]').forEach(function (el) {
+      if (el.dataset.dcHidden || el.dataset.dcShown) { revealEls.push(el); return; }
+      el.dataset.dcHidden = '1';
+      if (!reduce) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1)';
+      }
+      revealEls.push(el);
     });
 
     // 2단계: 프레임을 하나 넘겨 브라우저가 숨김 상태를 한 번 그리게 한 뒤에야
@@ -102,14 +122,12 @@
     // 전환이 같은 틱에서 합쳐져 트랜지션 없이 툭 튀어 보인다("잠깐 움찔").
     requestAnimationFrame(function () {
       staggerGroups.forEach(function (group) {
-        if (group.dataset.staggerBound) return;
-        group.dataset.staggerBound = '1';
+        if (!hasUnshown(group.querySelectorAll('[data-row]'))) return;
         if (group.getBoundingClientRect().top < innerHeight * 1.2) { fire(group); return; }
-        groupIO.observe(group);
+        groupIO.observe(group); // 이미 관찰 중이면 스펙상 no-op이라 중복 호출 안전
       });
       revealEls.forEach(function (el) {
-        if (el.dataset.revealBound) return;
-        el.dataset.revealBound = '1';
+        if (el.dataset.dcShown) return;
         revealIO.observe(el);
       });
     });

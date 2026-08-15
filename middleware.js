@@ -87,10 +87,15 @@ async function getUsers() {
       const data = await resp.json();
       if (data && Array.isArray(data.users)) return data;
     }
+    if (resp.status === 404) return { users: [] }; // not created yet — genuinely no users
+    // Blob responded but with an error status — treat as unreachable, not "no users".
+    return { users: [], fetchFailed: true };
   } catch (e) {
-    // Not created yet, or Blob unreachable — treat as no users.
+    // Network/DNS/etc — Blob unreachable. Distinguish this from "no such user" so
+    // login doesn't tell someone their real password is wrong when the actual
+    // problem is we couldn't even read the user list.
+    return { users: [], fetchFailed: true };
   }
-  return { users: [] };
 }
 
 async function saveUsers(data) {
@@ -146,20 +151,30 @@ function gateHtml({ nextPath, tab, loginError, signupError, signupNotice }) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AdCheck | 접근 확인</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <style>
-  body{margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:oklch(97.5% 0.006 85); font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;}
-  .box{background:#fff; border:1px solid oklch(89% 0.015 265); border-radius:20px; padding:36px 32px; width:340px; box-shadow:0 12px 30px oklch(20% 0.02 265 / 0.08); box-sizing:border-box;}
-  h1{font-size:18px; margin:0 0 20px; color:oklch(22% 0.02 265);}
-  .tabs{display:flex; border:1px solid oklch(84% 0.015 265); border-radius:10px; overflow:hidden; margin-bottom:20px;}
-  .tab-btn{flex:1; padding:10px; border:none; background:oklch(97% 0.005 85); color:oklch(45% 0.02 265); font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit;}
-  .tab-btn.active{background:#fff; color:oklch(22% 0.02 265);}
+  :root{
+    --bg:#0B0C0E; --surface:#14171C; --surface-2:#0F1216; --line:rgba(255,255,255,.11);
+    --ink:#EDEEF0; --ink-2:#A2A7B0; --ink-3:#7E838C; --ink-4:#6B707A;
+    --accent:#CCFF00; --accent-ink:#0B0C0E; --pass:#A8CFBC; --reject:#C2687A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--ink); font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; -webkit-font-smoothing:antialiased;}
+  .box{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:36px 32px; width:340px; box-shadow:0 24px 60px -20px rgba(0,0,0,.7); box-sizing:border-box;}
+  h1{font-size:19px; font-weight:700; margin:0 0 20px; color:var(--ink); letter-spacing:-.02em;}
+  .tabs{display:flex; padding:4px; border-radius:12px; background:var(--surface-2); border:1px solid var(--line); margin-bottom:20px;}
+  .tab-btn{flex:1; padding:9px; border:none; border-radius:9px; background:none; color:var(--ink-3); font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .2s ease,color .2s ease;}
+  .tab-btn.active{background:var(--accent); color:var(--accent-ink);}
   .panel{display:none;}
   .panel.active{display:block;}
-  p.hint{font-size:12.5px; color:oklch(48% 0.02 265); margin:0 0 16px;}
-  input{width:100%; padding:12px 14px; border:1px solid oklch(84% 0.015 265); border-radius:10px; font-size:14px; box-sizing:border-box; margin-bottom:10px; font-family:inherit;}
-  button[type="submit"]{width:100%; padding:12px; border:none; border-radius:10px; background:oklch(35% 0.08 260); color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:4px;}
-  .err{color:oklch(55% 0.18 25); font-size:12.5px; margin:0 0 12px;}
-  .notice{color:oklch(40% 0.1 150); font-size:12.5px; margin:0 0 16px; background:oklch(96% 0.03 150); border-radius:8px; padding:10px 12px;}
+  p.hint{font-size:12.5px; color:var(--ink-3); margin:0 0 16px; line-height:1.6;}
+  input{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px; font-size:14px; box-sizing:border-box; margin-bottom:10px; font-family:inherit; background:var(--surface-2); color:var(--ink);}
+  input::placeholder{color:var(--ink-4);}
+  input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  button[type="submit"]{width:100%; padding:12px; border:none; border-radius:10px; background:var(--accent); color:var(--accent-ink); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:4px;}
+  button[type="submit"]:hover{opacity:.9;}
+  .err{color:var(--reject); font-size:12.5px; margin:0 0 12px; line-height:1.6;}
+  .notice{color:var(--pass); font-size:12.5px; margin:0 0 16px; background:rgba(168,207,188,.1); border:1px solid rgba(168,207,188,.3); border-radius:8px; padding:10px 12px; line-height:1.6;}
 </style>
 </head>
 <body>
@@ -275,7 +290,9 @@ export default async function middleware(request) {
     const user = findUserByEmail(data, email);
 
     let loginError = null;
-    if (!user) {
+    if (data.fetchFailed) {
+      loginError = '로그인 서비스에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해주세요. (계속되면 관리자에게 알려주세요 — Blob Storage 연결 문제일 수 있습니다)';
+    } else if (!user) {
       loginError = '이메일 또는 비밀번호가 올바르지 않습니다.';
     } else if (user.status === 'pending') {
       loginError = '아직 관리자 승인 대기 중입니다.';
@@ -350,6 +367,19 @@ export default async function middleware(request) {
   const data = await getUsers();
   const user = await verifySession(cookies[COOKIE_NAME], data);
   if (user) return next();
+
+  // Session re-verifies against the CURRENT user list on every request (see
+  // verifySession's comment) — but that means a transient Blob hiccup makes
+  // getUsers() return an empty list, which fails EVERY session check and
+  // bounces already-logged-in people back to the login gate for no real
+  // reason. If we simply couldn't reach Blob this request (not "this cookie
+  // is invalid"), let a plausibly-shaped session cookie through rather than
+  // force a re-login — instant revocation just doesn't apply during that
+  // narrow outage window, which is an acceptable trade for not kicking the
+  // whole team out over a passing network blip.
+  if (data.fetchFailed && cookies[COOKIE_NAME] && cookies[COOKIE_NAME].indexOf('.') !== -1) {
+    return next();
+  }
 
   const accept = request.headers.get('accept') || '';
   if (accept.includes('text/html')) {
