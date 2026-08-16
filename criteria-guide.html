@@ -100,7 +100,7 @@
 
 
   /* ---------- 푸터 로고 ---------- */
-  .page-footer{text-align:center; font:400 11.5px/1.9 var(--font-mono); letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
   .footer-logo{display:block; height:20px; width:auto; margin:0 auto 18px; opacity:.5;}
 
   .page-eyebrow{font:500 11px/1 var(--font-mono); letter-spacing:.2em; color:var(--ink-3); margin-bottom:22px;}
@@ -156,17 +156,6 @@
   .diagram-visual{height:70px; border-radius:8px; margin-bottom:9px; background:rgba(255,255,255,.03);}
   .diagram-title{font-size:12.5px; font-weight:600; color:var(--ink); letter-spacing:-.015em;}
   .diagram-desc{margin-top:7px; font-size:11.5px; font-weight:300; line-height:1.65; color:#8B9099;}
-
-  .btn-type-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:9px; margin-top:14px;}
-  .btn-type-mini{padding:13px 14px; border-radius:10px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); text-align:center;}
-  .btn-mock{display:inline-block; padding:6px 14px; font-size:11.5px; font-weight:700; margin-bottom:8px;}
-  .btn-mock.mock-rect{background:var(--accent); color:var(--accent-ink); border-radius:0;}
-  .btn-mock.mock-round{background:var(--accent); color:var(--accent-ink); border-radius:999px;}
-  .btn-mock.mock-outline{background:none; border:1.5px solid var(--accent); color:var(--accent); border-radius:6px;}
-  .btn-mock.mock-line{background:none; color:var(--accent); text-decoration:underline; padding:6px 2px;}
-  .btn-mock.mock-circle{background:var(--accent); color:var(--accent-ink); border-radius:50%; width:34px; height:34px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:10px;}
-  .btn-mock.mock-badge{background:rgba(217,166,96,.16); color:var(--needsfix); border-radius:40% 60% 55% 45% / 50% 45% 55% 50%; font-weight:800;}
-  .btn-type-label{font-size:11.5px; font-weight:300; color:#8B9099;}
 
   .spec-table{width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; margin-top:14px; border:1px solid rgba(255,255,255,.09); border-radius:10px; overflow:hidden;}
   .spec-table th{display:none;}
@@ -270,7 +259,7 @@
       </div>
     </div>
     <div class="evidence-box"><b>구도:</b> 삼분할법(화면 3등분 교차점에 핵심 요소 배치), 황금비(비주얼:텍스트 영역 약 1:1.618), 시각적 균형(무게감 상쇄), 비율 그리드(짧은 변을 N등분해 여백 단위로 — 한 브랜드는 SNS 소재에서 18등분 사용).</div>
-    <div class="evidence-box"><b>배너 카피 3계층 구조(사내 제작가이드 기준):</b> 서브카피(0~2단, 브랜드명·시즌 태그) → 메인카피(1~2단, 핵심 메시지) → 상세설명(1~2단, 조건·부가정보) 순으로 위계를 나눕니다. 카드형 메시지(MMS 등)에서는 메인 텍스트 3줄 이하, 서브 텍스트 1줄 이하를 권장 기준으로 둡니다.</div>
+    <div class="evidence-box"><b>배너 카피 3계층 구조:</b> 서브카피(0~2단, 브랜드명·시즌 태그) → 메인카피(1~2단, 핵심 메시지) → 상세설명(1~2단, 조건·부가정보) 순으로 위계를 나눕니다. 카드형 메시지(MMS 등)에서는 메인 텍스트 3줄 이하, 서브 텍스트 1줄 이하를 권장 기준으로 둡니다.</div>
     <div class="example-row">
       <div class="example-cell pass"><img src="assets/m3-examples/02_hierarchy__pass.jpg" alt="위계 명확한 예시" loading="lazy"><div class="example-foot"><div class="example-tier">PASS</div><div class="example-caption">헤드라인이 서브보다 약 2배 커서 위계가 뚜렷함</div></div></div>
       <div class="example-cell needsfix"><img src="assets/m3-examples/02_hierarchy__needsfix.jpg" alt="위계 애매한 예시" loading="lazy"><div class="example-foot"><div class="example-tier">NEEDS FIX</div><div class="example-caption">크기 차이가 15%뿐이라 우선순위가 애매</div></div></div>
@@ -293,12 +282,12 @@
       <li>레이아웃/텍스트가 답답해 보이거나 절대적으로 너무 작아 보이지 않는가</li>
     </ul>
     <div class="reject-box">텍스트가 그리드 밖으로 밀림, 여백 불균형, 대비 부족, 텍스트 밀도·자간·행간으로 인한 답답함 등</div>
-    <div class="evidence-box"><b>정렬 오차:</b> CLOVA OCR로 각 텍스트 요소의 실제 픽셀 좌표를 측정해 비교합니다. 0px 차이는 통과, 1~2px은 검토 필요, 3px 이상은 반려 — 단 스트록·그림자 효과나 광학적 정렬(뾰족한 자모와 둥근 자모가 섞였을 때의 미세 조정)이 있으면 예외로 봅니다. 캔버스 중앙정렬은 더 여유 있게 좌우 여백 차이 10px까지 허용합니다.</div>
     <div class="evidence-box"><b>명도 대비 — WCAG 2.1 AA 기준:</b> 일반 텍스트는 4.5:1 미만, 24px 이상 큰 텍스트는 3:1 미만이면 기준 미달로 판정합니다.</div>
-    <div class="evidence-box"><b>텍스트 밀도·절대 크기:</b> OCR 박스 넓이 합계로 전체 이미지 대비 텍스트 밀도(%)와 가장 작은 텍스트 계층의 세로 비율(%)을 참고 수치로 씁니다. 리뷰형·기사형·시험지형·채팅형처럼 텍스트가 많은 게 자연스러운 컨셉은 예외로 처리하고, 제품에 실제로 인쇄되어 촬영된 문구(성분표 등)는 디자이너가 편집할 수 없는 원본이라 모든 밀도·크기 체크에서 제외합니다. 자간·행간으로 인한 로컬 답답함은 OCR로 잴 수 없어 순수 시각 판단으로 확인합니다.</div>
-    <div class="evidence-box"><b>줄간격(행간) 비율:</b> 본문은 폰트 크기의 1.4~1.6배, 헤드라인처럼 큰 텍스트는 1.1~1.3배가 자연스럽습니다 — 실제로 한 브랜드의 배너 헤드라인 스펙도 44pt에 행간 54pt(1.23배), 27pt에 행간 33pt(1.22배)로 이 범위와 일치합니다. 폰트는 2종 이내로 제한하고 굵기 차이로 위계를 주는 것이 여러 폰트를 섞는 것보다 안정적입니다.</div>
     <div class="evidence-box"><b>Gestalt 원리:</b> 근접성(가까운 요소는 하나의 그룹으로 인식 — 여백·간격 일관성의 근거) · 유사성(같은 역할의 요소는 같은 스타일로 통일해야 한눈에 전달). 강조는 색상·굵기·크기 3요소 중 최소 하나 이상으로 뚜렷이 구분돼야 시선을 끕니다.</div>
-    <div class="evidence-box"><b>타이포그래피 흔한 실수(실제 브랜드 가이드 금지 규정):</b> 텍스트에 윤곽선·효과를 과도하게 적용 · 배경과 낮은 대비 조합 사용 · 헤드라인에 본문용 서체를 사용 · 행간·자간을 과도하게 적용해 가독성을 해침 · 불필요한 줄바꿈으로 시선을 분산시킴 · 가독성이 떨어지는 정렬을 사용.</div>
+    <div class="evidence-box"><b>줄간격(행간) 비율:</b> 본문은 폰트 크기의 1.4~1.6배, 헤드라인처럼 큰 텍스트는 1.1~1.3배가 자연스럽습니다 — 실제로 한 브랜드의 배너 헤드라인 스펙도 44pt에 행간 54pt(1.23배), 27pt에 행간 33pt(1.22배)로 이 범위와 일치합니다. 폰트는 2종 이내로 제한하고 굵기 차이로 위계를 주는 것이 여러 폰트를 섞는 것보다 안정적입니다.</div>
+    <div class="evidence-box"><b>정렬 오차 — 우리가 다듬어온 기준:</b> CLOVA OCR로 각 텍스트 요소의 실제 픽셀 좌표를 측정해 비교합니다. 0px 차이는 통과, 1~2px은 검토 필요, 3px 이상은 반려 — 단 스트록·그림자 효과나 광학적 정렬(뾰족한 자모와 둥근 자모가 섞였을 때의 미세 조정)이 있으면 예외로 봅니다. 캔버스 중앙정렬은 더 여유 있게 좌우 여백 차이 10px까지 허용합니다.</div>
+    <div class="evidence-box"><b>텍스트 밀도·절대 크기 — 우리가 다듬어온 기준:</b> OCR 박스 넓이 합계로 전체 이미지 대비 텍스트 밀도(%)와 가장 작은 텍스트 계층의 세로 비율(%)을 참고 수치로 씁니다. 리뷰형·기사형·시험지형·채팅형처럼 텍스트가 많은 게 자연스러운 컨셉은 예외로 처리하고, 제품에 실제로 인쇄되어 촬영된 문구(성분표 등)는 디자이너가 편집할 수 없는 원본이라 모든 밀도·크기 체크에서 제외합니다. 자간·행간으로 인한 로컬 답답함은 OCR로 잴 수 없어 순수 시각 판단으로 확인합니다.</div>
+    <div class="evidence-box"><b>타이포그래피 흔한 실수 — 실제 브랜드 가이드 금지 규정에서 참고:</b> 텍스트에 윤곽선·효과를 과도하게 적용 · 배경과 낮은 대비 조합 사용 · 헤드라인에 본문용 서체를 사용 · 행간·자간을 과도하게 적용해 가독성을 해침 · 불필요한 줄바꿈으로 시선을 분산시킴 · 가독성이 떨어지는 정렬을 사용.</div>
     <div class="item-label" style="margin-top:12px;">명도 대비 예시 (WCAG 4.5:1 기준)</div>
     <div class="example-row">
       <div class="example-cell pass"><img src="assets/m3-examples/03_contrast__pass.jpg" alt="대비 충분한 예시" loading="lazy"><div class="example-foot"><div class="example-tier">PASS</div><div class="example-caption">7:1 이상 — 또렷하게 읽힘</div></div></div>
@@ -312,10 +301,10 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>가격·일정 정보에 오류 없는가</li><li>원고와 수치가 일치하는가</li></ul>
     <div class="reject-box">가격·일정 등 사실관계 오류</div>
-    <div class="evidence-box"><b>2단계 오탈자 검증 절차:</b> 이미지 속 모든 텍스트를 먼저 그대로 옮겨 적게 한 뒤(textTranscript), 그 내용을 다시 처음부터 훑으며 자음·모음 하나 차이 같은 오탈자를 대조합니다.</div>
     <div class="evidence-box"><b>규칙 기반 맞춤법 검사기(바른한글/PNU WebSpeller):</b> OCR로 읽은 텍스트를 화면 읽기 순서로 이어붙여 규칙 기반 맞춤법 검사기에 보내고, 감지된 오류를 참고 신호로 함께 제공합니다. 배너 카피가 관행적으로 생략하는 종결 문장부호 오탐은 서버에서 미리 걸러냅니다.</div>
     <div class="evidence-box"><b>최상급·순위 표현 실증 표기(네이버 광고 심사 기준 참고):</b> "최고", "1위" 등 표현이 있는데 근거(수상 내역, 조사기관 등) 표기가 이미지 안 어디에도 없으면 반려로 판정합니다.</div>
-    <div class="evidence-box"><b>표기 컨벤션:</b> 금액은 "3만 원대"(원 표기 시 띄어쓰기 필수), 물결표는 숫자와 붙여쓰기("~70%"), 말줄임표는 광고 카피 특성상 약식(..)도 허용합니다.</div>
+    <div class="evidence-box"><b>2단계 오탈자 검증 절차 — 우리가 다듬어온 기준:</b> 이미지 속 모든 텍스트를 먼저 그대로 옮겨 적게 한 뒤(textTranscript), 그 내용을 다시 처음부터 훑으며 자음·모음 하나 차이 같은 오탈자를 대조합니다.</div>
+    <div class="evidence-box"><b>표기 컨벤션 — 우리가 다듬어온 기준:</b> 금액은 "3만 원대"(원 표기 시 띄어쓰기 필수), 물결표는 숫자와 붙여쓰기("~70%"), 말줄임표는 광고 카피 특성상 약식(..)도 허용합니다.</div>
   </div>
 
   <div class="item-card" data-row>
@@ -369,19 +358,7 @@
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>CTA가 있다면 문구가 행동을 유도하는가</li><li>CTA가 있다면 버튼이 눈에 띄는가</li></ul>
     <div class="reject-box">있는 CTA가 텍스트에 묻히는 등 명백히 눈에 안 띔 (CTA 부재 자체는 매체에 따라 정상일 수 있음)</div>
-    <div class="evidence-box">메타(Meta)처럼 플랫폼이 CTA 버튼을 소재와 별도로 자동으로 붙여주는 매체가 많아, 이미지 안에 CTA가 아예 없는 것은 반려 사유로 보지 않고 참고 제안으로만 남깁니다.</div>
     <div class="evidence-box"><b>Hick's Law:</b> 선택지가 많아질수록 결정 시간이 늘어납니다(선택지 수에 로그 비례). CTA는 배너 하나에 하나로 압축하는 게 원칙입니다.<br><br><b>Fitts's Law:</b> 타겟(버튼)이 크고 가까울수록 도달·클릭 시간이 짧아집니다. CTA를 작게 만들거나 다른 요소에서 멀리 떨어뜨리면 클릭까지 이어질 확률이 떨어집니다.</div>
-    <div class="evidence-box"><b>버튼 스타일 6종(사내 제작가이드 기준):</b>
-      <div class="btn-type-row">
-        <div class="btn-type-mini"><span class="btn-mock mock-rect">버튼</span><div class="btn-type-label">직사각형</div></div>
-        <div class="btn-type-mini"><span class="btn-mock mock-round">버튼</span><div class="btn-type-label">라운딩형</div></div>
-        <div class="btn-type-mini"><span class="btn-mock mock-outline">버튼</span><div class="btn-type-label">테두리형</div></div>
-        <div class="btn-type-mini"><span class="btn-mock mock-line">버튼 →</span><div class="btn-type-label">라인형</div></div>
-        <div class="btn-type-mini"><span class="btn-mock mock-circle">GO</span><div class="btn-type-label">원형</div></div>
-        <div class="btn-type-mini"><span class="btn-mock mock-badge">참여</span><div class="btn-type-label">뱃지형</div></div>
-      </div>
-      버튼 내부 여백은 세로 여백(a)의 2배(2a)를 가로 여백으로 잡으면 균형 잡혀 보입니다(8pt 그리드 기준 배수 권장).
-    </div>
     <div class="evidence-box"><b>터치 타겟 최소 크기(참고 제안 — px 단정 대신 육안 판단):</b>
       <table class="spec-table">
         <tr><th>기준</th><th>최소 크기</th></tr>
@@ -391,6 +368,7 @@
       </table>
       CTA 끝에 화살표(&gt;, →)가 없으면 참고 제안으로 가볍게 덧붙이되 판정 등급은 올리지 않습니다.
     </div>
+    <div class="evidence-box">메타(Meta)처럼 플랫폼이 CTA 버튼을 소재와 별도로 자동으로 붙여주는 매체가 많아, 이미지 안에 CTA가 아예 없는 것은 반려 사유로 보지 않고 참고 제안으로만 남깁니다.</div>
     <div class="example-row">
       <div class="example-cell pass"><img src="assets/m3-examples/09_cta__pass.jpg" alt="눈에 띄는 CTA 예시" loading="lazy"><div class="example-foot"><div class="example-tier">PASS</div><div class="example-caption">배경과 강한 대비로 눈에 띔</div></div></div>
       <div class="example-cell needsfix"><img src="assets/m3-examples/09_cta__needsfix.jpg" alt="묻히는 CTA 예시" loading="lazy"><div class="example-foot"><div class="example-tier">NEEDS FIX</div><div class="example-caption">배경과 비슷한 톤이라 묻힘</div></div></div>
@@ -500,7 +478,7 @@
   </div>
 
   <div class="legend-note" style="margin-top:20px;">
-    이 페이지의 근거들은 특정 논문·공식 문서에 근거한 것과, 여러 UX 문헌에서 통용되는 경험칙(F/Z패턴, 삼분할법 등)이 섞여 있습니다. 후자는 "업계에서 널리 쓰이는 관행"이지 엄밀한 실험 근거가 있는 법칙은 아니니 참고 기준으로만 활용하세요. 사내 제작가이드·실제 브랜드 사례로 표시된 내용은 특정 프로젝트에서 검증된 값이라 다른 맥락에서는 다를 수 있습니다.
+    이 페이지의 근거들은 특정 논문·공식 문서에 근거한 것과, 여러 UX 문헌에서 통용되는 경험칙(F/Z패턴, 삼분할법 등)이 섞여 있습니다. 후자는 "업계에서 널리 쓰이는 관행"이지 엄밀한 실험 근거가 있는 법칙은 아니니 참고 기준으로만 활용하세요. "우리가 다듬어온 기준"으로 표시된 내용은 AdCheck가 실제 배너를 분석하면서 정리한 값이라, 공식 문서만큼 보편적이지 않고 다른 맥락에서는 다를 수 있습니다.
   </div>
 
   <div class="page-footer show" data-reveal>
