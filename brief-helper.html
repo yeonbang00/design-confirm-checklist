@@ -169,7 +169,6 @@
 
   .result-label{font-size:12px; font-weight:700; letter-spacing:0.04em; color:var(--num-text); background:var(--num-bg); display:inline-block; border-radius:20px; padding:4px 12px; margin-bottom:12px;}
   .result-text{font-size:14.5px; line-height:1.85; color:var(--text);}
-  .core-direction{font-size:14.5px; font-weight:500; line-height:1.8; color:var(--text); padding:12px 14px; margin:0 0 16px; border-left:2px solid var(--accent); background:rgba(204,255,0,.05); border-radius:0 8px 8px 0;}
   .result-list{margin:0; padding-left:20px;}
   .result-list li{font-size:14.5px; line-height:1.85; color:var(--text); margin-bottom:4px;}
   .result-empty{font-size:13px; color:var(--text-3);}
@@ -560,7 +559,7 @@
 
     resultSection.innerHTML =
       '<div class="card" data-reveal><div class="result-label">카피·비주얼 추가제안</div>' +
-      (data.coreDirection ? '<div class="core-direction">' + escapeHtml(data.coreDirection) + '</div>' : '') +
+      (data.coreDirection ? '<div class="gl-heading">핵심 제작 방향</div><p class="gl-p">' + escapeHtml(data.coreDirection) + '</p>' : '') +
       formatDirection(data.creativeDirection) + '</div>' +
       visualRefCard +
       '<div class="card" data-reveal><div class="result-label">주의할 점</div>' + pitfallsHtml + gapsHtml + '</div>';
