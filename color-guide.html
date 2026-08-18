@@ -114,13 +114,6 @@
   .section-note{font-size:13px; color:var(--text-3); margin:0 0 18px; line-height:1.7;}
 
 
-  .swatch-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:14px;}
-  .swatch-card{border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.11);}
-  .swatch-face{height:96px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:26px; font-weight:800; color:#0B0C0E;}
-  .swatch-foot{padding:14px 16px; background:var(--surface-2);}
-  .swatch-hex{font:600 12px/1 var(--font-mono); color:var(--ink); margin-bottom:5px;}
-  .swatch-contrast{font-size:11.5px; color:var(--ink-4);}
-
   .palette-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
   .palette-card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:16px; overflow:hidden;}
   .palette-swatch{display:flex; height:64px;}
@@ -259,7 +252,7 @@
 
   <div class="section-block" data-reveal>
     <div class="section-heading">색상 심리학 · 웜톤·쿨톤</div>
-    <div class="section-note">아래는 디자인 업계에서 통용되는 일반적인 경향입니다. 문화·맥락에 따라 예외가 많으니 절대 규칙이 아니라 참고로만 쓰세요.</div>
+    <div class="section-note">아래는 디자인 업계에서 통용되는 일반적인 경향입니다. 문화·맥락에 따라 예외가 많으니 절대 규칙이 아니라 참고로만 쓰입니다.</div>
     <table class="psych-table">
       <tr><th>색상</th><th>흔한 연상</th><th>자주 쓰이는 업종</th></tr>
       <tr><td><span class="psych-chip" style="background:rgb(32,82,149);"></span>블루</td><td>신뢰, 안정, 차분함</td><td>금융·보험·B2B</td></tr>
@@ -288,8 +281,8 @@
   </div>
 
   <div class="section-block" data-reveal>
-    <div class="section-heading">눈에 잘 띄는 배색 조합</div>
-    <div class="section-note">배경/포인트 컬러 대비가 강해 시선을 빠르게 끄는 조합입니다. 할인·이벤트처럼 즉각적인 주목이 필요한 배너에 어울립니다.</div>
+    <div class="section-heading">눈에 잘 띄는 단색</div>
+    <div class="section-note">단독으로 써도 시선을 끄는 비비드·파스텔 컬러입니다. 아래 배색 조합을 만들 때 참고하세요.</div>
 
     <div class="section-note" style="font-weight:700; color:var(--text-2); margin-bottom:8px;">비비드 컬러</div>
     <div class="theory-swatches" style="gap:8px; margin-bottom:24px;">
@@ -306,7 +299,7 @@
     </div>
 
     <div class="section-note" style="font-weight:700; color:var(--text-2); margin-bottom:8px;">파스텔 컬러</div>
-    <div class="theory-swatches" style="gap:8px; margin-bottom:24px;">
+    <div class="theory-swatches" style="gap:8px;">
       <span class="theory-swatch" style="background:#ffb2b4; height:52px;"></span>
       <span class="theory-swatch" style="background:#ffd57f; height:52px;"></span>
       <span class="theory-swatch" style="background:#9df2be; height:52px;"></span>
@@ -315,8 +308,11 @@
       <span class="theory-swatch" style="background:#e7ccff; height:52px;"></span>
       <span class="theory-swatch" style="background:#d9b9a3; height:52px;"></span>
     </div>
+  </div>
 
-    <div class="section-note" style="font-weight:700; color:var(--text-2); margin-bottom:8px;">배색 · 포인트 조합 (좌: 배경 / 우: 포인트)</div>
+  <div class="section-block" data-reveal>
+    <div class="section-heading">눈에 잘 띄는 배색 조합</div>
+    <div class="section-note">배경/포인트 컬러 대비가 강해 시선을 빠르게 끄는 조합입니다. 할인·이벤트처럼 즉각적인 주목이 필요한 배너에 어울립니다. 색상 계열별로 묶어뒀습니다.</div>
     <div class="palette-grid">
       <div class="palette-card">
         <div class="palette-swatch"><span style="background:rgb(255,212,0);"></span><span style="background:rgb(17,17,17);"></span></div>
@@ -327,43 +323,23 @@
         </div>
       </div>
       <div class="palette-card">
+        <div class="palette-swatch"><span style="background:rgb(255,195,0);"></span><span style="background:rgb(0,0,0);"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">골드 × 블랙</div>
+          <div class="palette-hex">rgb(255,195,0) · rgb(0,0,0)</div>
+          <div class="palette-desc">프리미엄·럭셔리한 인상을 강조하고 싶을 때.</div>
+        </div>
+      </div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#ffff00;"></span><span style="background:#ff4a26;"></span></div><div class="palette-body"><div class="palette-title">옐로우 × 레드오렌지</div><div class="palette-hex">#ffff00 · #ff4a26</div><div class="palette-desc">쨍한 두 난색이 부딪혀 강한 주목도를 냄. 세일·이벤트 배너에 어울림.</div></div></div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#ffff00;"></span><span style="background:#701d54;"></span></div><div class="palette-body"><div class="palette-title">옐로우 × 버건디퍼플</div><div class="palette-hex">#ffff00 · #701d54</div><div class="palette-desc">밝은 옐로우와 짙은 퍼플의 대비로 고급스러우면서도 눈에 띔.</div></div></div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#ffff00;"></span><span style="background:#2c3489;"></span></div><div class="palette-body"><div class="palette-title">옐로우 × 네이비</div><div class="palette-hex">#ffff00 · #2c3489</div><div class="palette-desc">쨍한 옐로우와 안정적인 네이비의 조합. 신뢰감 있으면서도 주목도 있음.</div></div></div>
+
+      <div class="palette-card">
         <div class="palette-swatch"><span style="background:rgb(230,57,70);"></span><span style="background:rgb(255,255,255);"></span></div>
         <div class="palette-body">
           <div class="palette-title">레드 × 화이트</div>
           <div class="palette-hex">rgb(230,57,70) · rgb(255,255,255)</div>
           <div class="palette-desc">긴급함·할인율 강조에 효과적. 식품·이벤트 배너와 잘 맞음.</div>
-        </div>
-      </div>
-      <div class="palette-card">
-        <div class="palette-swatch"><span style="background:rgb(180,255,57);"></span><span style="background:rgb(13,13,13);"></span></div>
-        <div class="palette-body">
-          <div class="palette-title">네온그린 × 블랙</div>
-          <div class="palette-hex">rgb(180,255,57) · rgb(13,13,13)</div>
-          <div class="palette-desc">테크·게임처럼 힙하고 강렬한 톤이 필요할 때.</div>
-        </div>
-      </div>
-      <div class="palette-card">
-        <div class="palette-swatch"><span style="background:rgb(255,62,165);"></span><span style="background:rgb(123,47,247);"></span></div>
-        <div class="palette-body">
-          <div class="palette-title">핫핑크 × 퍼플</div>
-          <div class="palette-hex">rgb(255,62,165) · rgb(123,47,247)</div>
-          <div class="palette-desc">트렌디하고 젊은 톤. 뷰티·MZ 타겟 캠페인에 어울림.</div>
-        </div>
-      </div>
-      <div class="palette-card">
-        <div class="palette-swatch"><span style="background:rgb(255,122,0);"></span><span style="background:rgb(11,37,69);"></span></div>
-        <div class="palette-body">
-          <div class="palette-title">오렌지 × 딥블루</div>
-          <div class="palette-hex">rgb(255,122,0) · rgb(11,37,69)</div>
-          <div class="palette-desc">보색 대비로 주목도가 높으면서도 과하지 않은 조합.</div>
-        </div>
-      </div>
-      <div class="palette-card">
-        <div class="palette-swatch"><span style="background:rgb(0,217,163);"></span><span style="background:rgb(10,31,68);"></span></div>
-        <div class="palette-body">
-          <div class="palette-title">민트 × 네이비</div>
-          <div class="palette-hex">rgb(0,217,163) · rgb(10,31,68)</div>
-          <div class="palette-desc">상쾌하면서도 안정감 있는 강한 대비. 테크·핀테크 배너에 어울림.</div>
         </div>
       </div>
       <div class="palette-card">
@@ -375,6 +351,25 @@
         </div>
       </div>
       <div class="palette-card">
+        <div class="palette-swatch"><span style="background:rgb(255,122,0);"></span><span style="background:rgb(11,37,69);"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">오렌지 × 딥블루</div>
+          <div class="palette-hex">rgb(255,122,0) · rgb(11,37,69)</div>
+          <div class="palette-desc">보색 대비로 주목도가 높으면서도 과하지 않은 조합.</div>
+        </div>
+      </div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#ff6a0d;"></span><span style="background:#323040;"></span></div><div class="palette-body"><div class="palette-title">오렌지 × 차콜</div><div class="palette-hex">#ff6a0d · #323040</div><div class="palette-desc">따뜻한 오렌지 포인트와 어두운 배경의 대비. 활기차면서도 안정적임.</div></div></div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#ff6a0d;"></span><span style="background:#3d3533;"></span></div><div class="palette-body"><div class="palette-title">오렌지 × 다크브라운</div><div class="palette-hex">#ff6a0d · #3d3533</div><div class="palette-desc">따뜻한 오렌지와 짙은 브라운의 톤온톤 대비. 내추럴하면서도 눈에 띔.</div></div></div>
+
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:rgb(180,255,57);"></span><span style="background:rgb(13,13,13);"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">네온그린 × 블랙</div>
+          <div class="palette-hex">rgb(180,255,57) · rgb(13,13,13)</div>
+          <div class="palette-desc">테크·게임처럼 힙하고 강렬한 톤이 필요할 때.</div>
+        </div>
+      </div>
+      <div class="palette-card">
         <div class="palette-swatch"><span style="background:rgb(198,255,0);"></span><span style="background:rgb(74,20,140);"></span></div>
         <div class="palette-body">
           <div class="palette-title">라임 × 퍼플</div>
@@ -383,13 +378,28 @@
         </div>
       </div>
       <div class="palette-card">
-        <div class="palette-swatch"><span style="background:rgb(255,195,0);"></span><span style="background:rgb(0,0,0);"></span></div>
+        <div class="palette-swatch"><span style="background:rgb(0,217,163);"></span><span style="background:rgb(10,31,68);"></span></div>
         <div class="palette-body">
-          <div class="palette-title">골드 × 블랙</div>
-          <div class="palette-hex">rgb(255,195,0) · rgb(0,0,0)</div>
-          <div class="palette-desc">프리미엄·럭셔리한 인상을 강조하고 싶을 때.</div>
+          <div class="palette-title">민트 × 네이비</div>
+          <div class="palette-hex">rgb(0,217,163) · rgb(10,31,68)</div>
+          <div class="palette-desc">상쾌하면서도 안정감 있는 강한 대비. 테크·핀테크 배너에 어울림.</div>
         </div>
       </div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#26c3ca;"></span><span style="background:#ff4a26;"></span></div><div class="palette-body"><div class="palette-title">틸 × 레드오렌지</div><div class="palette-hex">#26c3ca · #ff4a26</div><div class="palette-desc">쿨톤과 난색의 강한 보색 대비. 스포츠·액티브한 톤에 어울림.</div></div></div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#34ff6d;"></span><span style="background:#701d54;"></span></div><div class="palette-body"><div class="palette-title">그린 × 버건디퍼플</div><div class="palette-hex">#34ff6d · #701d54</div><div class="palette-desc">쨍한 그린과 짙은 퍼플의 보색 대비. 힙하고 개성 있는 톤.</div></div></div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#34ff6d;"></span><span style="background:#2c3489;"></span></div><div class="palette-body"><div class="palette-title">그린 × 네이비</div><div class="palette-hex">#34ff6d · #2c3489</div><div class="palette-desc">쨍한 그린 포인트에 차분한 네이비 배경. 테크·스포츠 톤에 어울림.</div></div></div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#34ffaf;"></span><span style="background:#3d3533;"></span></div><div class="palette-body"><div class="palette-title">민트 × 다크브라운</div><div class="palette-hex">#34ffaf · #3d3533</div><div class="palette-desc">청량한 민트와 짙은 브라운의 대비. 차분하면서도 생기 있는 인상.</div></div></div>
+
+      <div class="palette-card">
+        <div class="palette-swatch"><span style="background:rgb(255,62,165);"></span><span style="background:rgb(123,47,247);"></span></div>
+        <div class="palette-body">
+          <div class="palette-title">핫핑크 × 퍼플</div>
+          <div class="palette-hex">rgb(255,62,165) · rgb(123,47,247)</div>
+          <div class="palette-desc">트렌디하고 젊은 톤. 뷰티·MZ 타겟 캠페인에 어울림.</div>
+        </div>
+      </div>
+      <div class="palette-card"><div class="palette-swatch"><span style="background:#fe1e76;"></span><span style="background:#323040;"></span></div><div class="palette-body"><div class="palette-title">핫핑크 × 차콜</div><div class="palette-hex">#fe1e76 · #323040</div><div class="palette-desc">쨍한 핑크와 어두운 차콜의 강한 대비. 트렌디하고 젊은 톤.</div></div></div>
+
       <div class="palette-card">
         <div class="palette-swatch"><span style="background:rgb(72,202,228);"></span><span style="background:rgb(255,255,255);"></span></div>
         <div class="palette-body">
@@ -398,16 +408,6 @@
           <div class="palette-desc">청량하고 깨끗한 인상. 여행·음료 배너에 잘 맞음.</div>
         </div>
       </div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#ffff00;"></span><span style="background:#ff4a26;"></span></div><div class="palette-body"><div class="palette-title">옐로우 × 레드오렌지</div><div class="palette-hex">#ffff00 · #ff4a26</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#26c3ca;"></span><span style="background:#ff4a26;"></span></div><div class="palette-body"><div class="palette-title">틸 × 레드오렌지</div><div class="palette-hex">#26c3ca · #ff4a26</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#ffff00;"></span><span style="background:#701d54;"></span></div><div class="palette-body"><div class="palette-title">옐로우 × 버건디퍼플</div><div class="palette-hex">#ffff00 · #701d54</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#34ff6d;"></span><span style="background:#701d54;"></span></div><div class="palette-body"><div class="palette-title">그린 × 버건디퍼플</div><div class="palette-hex">#34ff6d · #701d54</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#ffff00;"></span><span style="background:#2c3489;"></span></div><div class="palette-body"><div class="palette-title">옐로우 × 네이비</div><div class="palette-hex">#ffff00 · #2c3489</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#34ff6d;"></span><span style="background:#2c3489;"></span></div><div class="palette-body"><div class="palette-title">그린 × 네이비</div><div class="palette-hex">#34ff6d · #2c3489</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#fe1e76;"></span><span style="background:#323040;"></span></div><div class="palette-body"><div class="palette-title">핫핑크 × 차콜</div><div class="palette-hex">#fe1e76 · #323040</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#ff6a0d;"></span><span style="background:#323040;"></span></div><div class="palette-body"><div class="palette-title">오렌지 × 차콜</div><div class="palette-hex">#ff6a0d · #323040</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#34ffaf;"></span><span style="background:#3d3533;"></span></div><div class="palette-body"><div class="palette-title">민트 × 다크브라운</div><div class="palette-hex">#34ffaf · #3d3533</div></div></div>
-      <div class="palette-card"><div class="palette-swatch"><span style="background:#ff6a0d;"></span><span style="background:#3d3533;"></span></div><div class="palette-body"><div class="palette-title">오렌지 × 다크브라운</div><div class="palette-hex">#ff6a0d · #3d3533</div></div></div>
     </div>
   </div>
 
@@ -500,54 +500,14 @@
 
   <div class="section-block" data-reveal>
     <div class="section-heading">자주 쓰이는 그라데이션</div>
-    <div class="section-note">배경을 단색보다 입체적으로 보이게 하고 싶을 때 참고할 조합입니다.</div>
+    <div class="section-note">배경을 단색보다 입체적으로 보이게 하고 싶을 때 참고할 조합입니다. 색상 계열별로 묶어뒀습니다.</div>
     <div class="gradient-grid">
-      <div class="gradient-card">
-        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(255,122,0), rgb(255,62,165), rgb(123,47,247));"></div>
-        <div class="gradient-body">
-          <div class="gradient-title">선셋 그라데이션</div>
-          <div class="gradient-hex">rgb(255,122,0) → rgb(255,62,165) → rgb(123,47,247)</div>
-          <div class="gradient-desc">따뜻하고 화사한 인상. 이벤트·라이프스타일 배너에 어울림.</div>
-        </div>
-      </div>
-      <div class="gradient-card">
-        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(11,37,69), rgb(30,96,145));"></div>
-        <div class="gradient-body">
-          <div class="gradient-title">블루 그라데이션</div>
-          <div class="gradient-hex">rgb(11,37,69) → rgb(30,96,145)</div>
-          <div class="gradient-desc">신뢰감·테크 느낌. 금융·IT·B2B 배너에 자주 쓰임.</div>
-        </div>
-      </div>
-      <div class="gradient-card">
-        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(123,47,247), rgb(255,62,165));"></div>
-        <div class="gradient-body">
-          <div class="gradient-title">퍼플-핑크 그라데이션</div>
-          <div class="gradient-hex">rgb(123,47,247) → rgb(255,62,165)</div>
-          <div class="gradient-desc">트렌디한 톤. MZ 타겟·뷰티·엔터테인먼트 배너와 잘 맞음.</div>
-        </div>
-      </div>
-      <div class="gradient-card">
-        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(0,78,100), rgb(0,168,150));"></div>
-        <div class="gradient-body">
-          <div class="gradient-title">그린-틸 그라데이션</div>
-          <div class="gradient-hex">rgb(0,78,100) → rgb(0,168,150)</div>
-          <div class="gradient-desc">자연·헬스·웰니스 느낌. 차분하면서도 생기 있는 인상.</div>
-        </div>
-      </div>
       <div class="gradient-card">
         <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(255,175,189), rgb(255,195,160));"></div>
         <div class="gradient-body">
           <div class="gradient-title">피치 그라데이션</div>
           <div class="gradient-hex">rgb(255,175,189) → rgb(255,195,160)</div>
           <div class="gradient-desc">부드럽고 따뜻한 인상. 뷰티·라이프스타일 배너에 어울림.</div>
-        </div>
-      </div>
-      <div class="gradient-card">
-        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(15,32,39), rgb(32,58,67), rgb(44,83,100));"></div>
-        <div class="gradient-body">
-          <div class="gradient-title">다크 테크 그라데이션</div>
-          <div class="gradient-hex">rgb(15,32,39) → rgb(32,58,67) → rgb(44,83,100)</div>
-          <div class="gradient-desc">차분하고 고급스러운 다크 톤. IT·프리미엄 브랜드 배너에 어울림.</div>
         </div>
       </div>
       <div class="gradient-card">
@@ -558,6 +518,56 @@
           <div class="gradient-desc">사랑스럽고 부드러운 톤. 키즈·디저트 배너에 잘 맞음.</div>
         </div>
       </div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #f2eb1f, #fab728);"></div><div class="gradient-body"><div class="gradient-title">옐로우-오렌지 그라데이션</div><div class="gradient-hex">#f2eb1f → #fab728</div><div class="gradient-desc">따뜻하고 밝은 인상. 푸드·세일 배너에 잘 맞음.</div></div></div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #d4145a, #fbb03b);"></div><div class="gradient-body"><div class="gradient-title">마젠타-오렌지 그라데이션</div><div class="gradient-hex">#d4145a → #fbb03b</div><div class="gradient-desc">강렬하고 화사한 톤. 이벤트·뷰티 배너에 어울림.</div></div></div>
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(255,122,0), rgb(255,62,165), rgb(123,47,247));"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">선셋 그라데이션</div>
+          <div class="gradient-hex">rgb(255,122,0) → rgb(255,62,165) → rgb(123,47,247)</div>
+          <div class="gradient-desc">따뜻하고 화사한 인상. 이벤트·라이프스타일 배너에 어울림.</div>
+        </div>
+      </div>
+
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(123,47,247), rgb(255,62,165));"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">퍼플-핑크 그라데이션</div>
+          <div class="gradient-hex">rgb(123,47,247) → rgb(255,62,165)</div>
+          <div class="gradient-desc">트렌디한 톤. MZ 타겟·뷰티·엔터테인먼트 배너와 잘 맞음.</div>
+        </div>
+      </div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #73f3ff, #fc90fc);"></div><div class="gradient-body"><div class="gradient-title">스카이블루-핑크 그라데이션</div><div class="gradient-hex">#73f3ff → #fc90fc</div><div class="gradient-desc">부드럽고 몽환적인 톤. 뷰티·라이프스타일 배너에 어울림.</div></div></div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #43f4ff, #ff0dfe);"></div><div class="gradient-body"><div class="gradient-title">시안-마젠타 그라데이션</div><div class="gradient-hex">#43f4ff → #ff0dfe</div><div class="gradient-desc">화려하고 강렬한 톤. 게임·엔터테인먼트 배너에 어울림.</div></div></div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #a525b7, #312a6c);"></div><div class="gradient-body"><div class="gradient-title">퍼플-네이비 그라데이션</div><div class="gradient-hex">#a525b7 → #312a6c</div><div class="gradient-desc">신비롭고 고급스러운 톤. 프리미엄·엔터테인먼트 배너에 어울림.</div></div></div>
+
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(11,37,69), rgb(30,96,145));"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">블루 그라데이션</div>
+          <div class="gradient-hex">rgb(11,37,69) → rgb(30,96,145)</div>
+          <div class="gradient-desc">신뢰감·테크 느낌. 금융·IT·B2B 배너에 자주 쓰임.</div>
+        </div>
+      </div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #1bffff, #226091);"></div><div class="gradient-body"><div class="gradient-title">시안-네이비 그라데이션</div><div class="gradient-hex">#1bffff → #226091</div><div class="gradient-desc">시원하면서도 안정적인 톤. 테크·IT 배너에 어울림.</div></div></div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #359de6, #28329f);"></div><div class="gradient-body"><div class="gradient-title">블루-네이비 그라데이션</div><div class="gradient-hex">#359de6 → #28329f</div><div class="gradient-desc">차분하고 신뢰감 있는 톤. 금융·B2B 배너에 어울림.</div></div></div>
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(15,32,39), rgb(32,58,67), rgb(44,83,100));"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">다크 테크 그라데이션</div>
+          <div class="gradient-hex">rgb(15,32,39) → rgb(32,58,67) → rgb(44,83,100)</div>
+          <div class="gradient-desc">차분하고 고급스러운 다크 톤. IT·프리미엄 브랜드 배너에 어울림.</div>
+        </div>
+      </div>
+
+      <div class="gradient-card">
+        <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(0,78,100), rgb(0,168,150));"></div>
+        <div class="gradient-body">
+          <div class="gradient-title">그린-틸 그라데이션</div>
+          <div class="gradient-hex">rgb(0,78,100) → rgb(0,168,150)</div>
+          <div class="gradient-desc">자연·헬스·웰니스 느낌. 차분하면서도 생기 있는 인상.</div>
+        </div>
+      </div>
       <div class="gradient-card">
         <div class="gradient-swatch" style="background:linear-gradient(135deg, rgb(0,201,255), rgb(146,254,157));"></div>
         <div class="gradient-body">
@@ -566,31 +576,13 @@
           <div class="gradient-desc">시원하고 생동감 있는 톤. 스포츠·아웃도어 배너에 어울림.</div>
         </div>
       </div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #d4145a, #fbb03b);"></div><div class="gradient-body"><div class="gradient-title">마젠타-오렌지 그라데이션</div><div class="gradient-hex">#d4145a → #fbb03b</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #f2eb1f, #fab728);"></div><div class="gradient-body"><div class="gradient-title">옐로우-오렌지 그라데이션</div><div class="gradient-hex">#f2eb1f → #fab728</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #c1fc21, #00d20e);"></div><div class="gradient-body"><div class="gradient-title">라임-그린 그라데이션</div><div class="gradient-hex">#c1fc21 → #00d20e</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #00ffff, #00ffa1);"></div><div class="gradient-body"><div class="gradient-title">시안-민트 그라데이션</div><div class="gradient-hex">#00ffff → #00ffa1</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #1bffff, #226091);"></div><div class="gradient-body"><div class="gradient-title">시안-네이비 그라데이션</div><div class="gradient-hex">#1bffff → #226091</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #73f3ff, #fc90fc);"></div><div class="gradient-body"><div class="gradient-title">스카이블루-핑크 그라데이션</div><div class="gradient-hex">#73f3ff → #fc90fc</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #43f4ff, #ff0dfe);"></div><div class="gradient-body"><div class="gradient-title">시안-마젠타 그라데이션</div><div class="gradient-hex">#43f4ff → #ff0dfe</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #a525b7, #312a6c);"></div><div class="gradient-body"><div class="gradient-title">퍼플-네이비 그라데이션</div><div class="gradient-hex">#a525b7 → #312a6c</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #359de6, #28329f);"></div><div class="gradient-body"><div class="gradient-title">블루-네이비 그라데이션</div><div class="gradient-hex">#359de6 → #28329f</div></div></div>
-      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #7a5a47, #281a12);"></div><div class="gradient-body"><div class="gradient-title">브라운 그라데이션</div><div class="gradient-hex">#7a5a47 → #281a12</div></div></div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #c1fc21, #00d20e);"></div><div class="gradient-body"><div class="gradient-title">라임-그린 그라데이션</div><div class="gradient-hex">#c1fc21 → #00d20e</div><div class="gradient-desc">생동감 있고 신선한 톤. 헬스·친환경 배너에 어울림.</div></div></div>
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #00ffff, #00ffa1);"></div><div class="gradient-body"><div class="gradient-title">시안-민트 그라데이션</div><div class="gradient-hex">#00ffff → #00ffa1</div><div class="gradient-desc">청량하고 시원한 톤. 여름·음료 배너에 잘 맞음.</div></div></div>
+
+      <div class="gradient-card"><div class="gradient-swatch" style="background:linear-gradient(135deg, #7a5a47, #281a12);"></div><div class="gradient-body"><div class="gradient-title">브라운 그라데이션</div><div class="gradient-hex">#7a5a47 → #281a12</div><div class="gradient-desc">따뜻하고 차분한 톤온톤. 내추럴·프리미엄 브랜드 배너에 어울림.</div></div></div>
     </div>
   </div>
 
-
-  <div class="section-block" data-reveal>
-    <div class="section-heading">AdCheck 자체 UI 컬러</div>
-    <div class="section-note">AdCheck 자체 디자인 시스템에 쓰이는 색입니다. 전부 어두운 배경(#0B0C0E) 위에서 WCAG AA 기준(4.5:1)을 넉넉히 넘는, 검증된 조합입니다.</div>
-    <div class="swatch-grid">
-<div class="swatch-card"><div class="swatch-face" style="background:#EDEEF0;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#EDEEF0</div><div class="swatch-contrast">배경 대비 16.9:1</div></div></div>
-<div class="swatch-card"><div class="swatch-face" style="background:#CCFF00;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#CCFF00</div><div class="swatch-contrast">배경 대비 16.7:1</div></div></div>
-<div class="swatch-card"><div class="swatch-face" style="background:#A8CFBC;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#A8CFBC</div><div class="swatch-contrast">배경 대비 11.5:1</div></div></div>
-<div class="swatch-card"><div class="swatch-face" style="background:#D9A660;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#D9A660</div><div class="swatch-contrast">배경 대비 8.9:1</div></div></div>
-<div class="swatch-card"><div class="swatch-face" style="background:#C2687A;">Aa</div><div class="swatch-foot"><div class="swatch-hex">#C2687A</div><div class="swatch-contrast">배경 대비 5.2:1</div></div></div>
-    </div>
-  </div>
 
   <div class="page-footer show" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
