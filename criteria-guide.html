@@ -133,8 +133,8 @@
   ul.bullets{list-style:none; margin:13px 0 0; padding:0; display:flex; flex-direction:column; gap:8px;}
   ul.bullets li{display:grid; grid-template-columns:14px 1fr; gap:10px; font-size:14.5px; font-weight:300; line-height:1.7; color:#C4C7CD;}
   ul.bullets li::before{content:'·'; color:var(--accent); font-size:11px; line-height:2;}
-  .reject-box{margin-top:20px; display:grid; grid-template-columns:auto 1fr; gap:11px; align-items:baseline; padding:13px 16px; border-radius:11px; background:rgba(194,104,122,.1); border:1px solid rgba(194,104,122,.3); font-size:13.5px; font-weight:300; line-height:1.7; color:#E4B4BB;}
-  .reject-box::before{content:'즉시 반려'; font:700 9.5px/1 var(--font-mono); letter-spacing:.12em; color:#DCA1A9; white-space:nowrap;}
+  .reject-box{margin-top:14px; font-size:13.5px; font-weight:300; line-height:1.7; color:var(--reject);}
+  .reject-box::before{content:'즉시 반려: '; font-weight:700;}
   .evidence-box{margin-top:13px; padding:17px 19px; border-radius:12px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.09); border-left:2px solid rgba(204,255,0,.55); font-size:13.5px; font-weight:300; line-height:1.85; color:#B9BDC4;}
   .evidence-box b{color:var(--accent); font-weight:600;}
   .evidence-box + .evidence-box{margin-top:9px;}
