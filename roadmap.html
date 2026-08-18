@@ -414,7 +414,7 @@
           <span class="use-badge">WCAG</span>
           <span class="use-title">명도 대비 체크</span>
         </div>
-        <p class="use-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 읽어 명도 대비를 계산하고, 3번(타이포·정렬·여백·명도대비) 판정 근거로 반영합니다. 서버 라이브러리 없이 캔버스 API만으로 클라이언트에서 계산합니다.</p>
+        <p class="use-desc">브라우저가 OCR 텍스트 위치의 실제 픽셀을 읽어 명도 대비를 계산하고, 3번(타이포·정렬·여백·명도대비) 판정 근거로 반영합니다.<br>서버 라이브러리 없이 캔버스 API만으로 클라이언트에서 계산합니다.</p>
         <div class="use-blocker">판정 기준(WCAG AA): 대비 <b>4.5:1 미만</b>이면 기준 미달로 지적, <b>3:1 미만</b>이면 명확히 낮은 값으로 보고 검토필요 이상으로 판정합니다. 3~4.5 사이는 근사치 특성상 애매한 구간이라 AI가 실제 화면을 한 번 더 시각적으로 확인한 뒤 판단합니다.</div>
         <div class="use-chips">
           <span class="use-chip">03 정렬·여백·명도대비</span>
@@ -427,7 +427,7 @@
           <span class="use-badge">GPT-5.6 SOL</span>
           <span class="use-title">시각 판단 · 판정 생성</span>
         </div>
-        <p class="use-desc">수치로 잴 수 없는 항목을 판단하고 17개 항목의 판정과 총평을 씁니다. 브랜드·매체 가이드와 OCR 실측값을 프롬프트에 함께 넣어 시각 판단이 근거 없이 흔들리지 않게 합니다.</p>
+        <p class="use-desc">수치로 잴 수 없는 항목을 판단해 17개 항목의 판정과 총평을 쓰되, 브랜드·매체 가이드와 OCR 실측값을 프롬프트에 함께 넣어 시각 판단이 근거 없이 흔들리지 않게 합니다.</p>
         <div class="use-mini-grid">
           <div class="use-mini"><div class="use-mini-title">17개 항목 판정</div><div class="use-mini-desc">수치화할 수 없는 시각 항목을 판단합니다.</div></div>
           <div class="use-mini"><div class="use-mini-title">AI 총평 작성</div><div class="use-mini-desc">항목별 판정을 하나의 요약으로 정리합니다.</div></div>
