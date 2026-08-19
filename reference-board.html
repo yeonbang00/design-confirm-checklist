@@ -114,6 +114,8 @@
   .coming-soon-badge{display:inline-block; font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:4px 12px; margin-bottom:10px;}
   .coming-soon-text{font-size:13px; color:var(--canvas-text-2); line-height:1.7; max-width:480px; margin:0 auto;}
 
+  .option-dropdown-row{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px;}
+  .option-dropdown-row .option-dropdown-wrap{margin-bottom:0;}
   .option-dropdown-wrap{position:relative; max-width:220px; margin-bottom:28px;}
   .option-btn{width:100%; display:inline-flex; align-items:center; gap:8px; background:var(--surface-3); border:1px solid var(--line); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); color:var(--ink); font-size:13.5px; font-weight:600; padding:12px 14px; border-radius:10px; cursor:pointer; letter-spacing:-.015em; text-align:left; transition:border-color .25s ease;}
   .option-btn:hover{border-color:rgba(204,255,0,.5);}
@@ -197,7 +199,7 @@
   <div class="page-eyebrow"><b>&#10022;</b>&nbsp;&nbsp;REFERENCE LIBRARY</div>
 
   <h1>이미지 레퍼런스</h1>
-  <p class="sub">업종별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
+  <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
 
   <div class="card coming-soon upload-coming-soon">
     <div class="coming-soon-icon">🖼️</div>
@@ -205,11 +207,19 @@
     <div class="coming-soon-text">이 사이트를 이용하는 팀원이 직접 이미지를 등록할 수 있는 기능이에요.<br>유료 플랜 결제 후 업데이트 예정입니다.</div>
   </div>
 
-  <div class="option-dropdown-wrap">
-    <button type="button" class="option-btn" id="categoryOptBtn">
-      <span class="option-btn-value" id="categoryOptValue">전체</span><span class="opt-chevron">▼</span>
-    </button>
-    <div class="option-menu" id="categoryOptMenu"><div id="categoryOptList"></div></div>
+  <div class="option-dropdown-row">
+    <div class="option-dropdown-wrap">
+      <button type="button" class="option-btn" id="categoryOptBtn">
+        <span class="option-btn-value" id="categoryOptValue">업종 전체</span><span class="opt-chevron">▼</span>
+      </button>
+      <div class="option-menu" id="categoryOptMenu"><div id="categoryOptList"></div></div>
+    </div>
+    <div class="option-dropdown-wrap">
+      <button type="button" class="option-btn" id="typeOptBtn">
+        <span class="option-btn-value" id="typeOptValue">유형 전체</span><span class="opt-chevron">▼</span>
+      </button>
+      <div class="option-menu" id="typeOptMenu"><div id="typeOptList"></div></div>
+    </div>
   </div>
 
   <div id="refContent">
@@ -281,21 +291,21 @@
 
   function renderCategoryOptions(){
     categoryOptList.innerHTML = '';
-    const makeItem = (id, label) => {
+    const makeItem = (id, label, displayLabel) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'ppm-item' + (currentCategoryId === id ? ' active' : '');
       btn.textContent = label;
       btn.addEventListener('click', () => {
-        categoryOptValue.textContent = label.replace(/ \(\d+\)$/, '');
+        categoryOptValue.textContent = displayLabel;
         categoryOptMenu.classList.remove('open');
-        loadCategoryImages(id, label.replace(/ \(\d+\)$/, ''));
+        loadCategoryImages(id, displayLabel);
         renderCategoryOptions();
       });
       categoryOptList.appendChild(btn);
     };
-    makeItem('all', '전체');
-    categoriesData.forEach(c => makeItem(c.id, c.name + ' (' + c.count + ')'));
+    makeItem('all', '업종 전체', '업종 전체');
+    categoriesData.forEach(c => makeItem(c.id, c.name + ' (' + c.count + ')', c.name));
   }
 
   categoryOptBtn.addEventListener('click', (e) => {
@@ -303,6 +313,60 @@
     categoryOptMenu.classList.toggle('open');
   });
   document.addEventListener('click', () => categoryOptMenu.classList.remove('open'));
+
+  // ---------- 유형별 필터 (업종과 독립적인 클라이언트 사이드 필터) ----------
+  const TYPE_LABELS = {
+    problem: '문제제기형', beforeafter: '비포애프터형', comparison: '비교형',
+    numbers: '숫자강조형', testimonial: '후기·인용형', authority: '권위형',
+    benefit: '혜택직관형', usage: '사용장면형', product: '제품단독형',
+    list: '리스트형', question: '질문형', seasonal: '시즌이슈형',
+    character: '캐릭터·일러스트형', event: '이벤트·응모형',
+  };
+  const TYPE_ORDER = ['benefit','seasonal','usage','product','character','event','authority','numbers','list','beforeafter','comparison','testimonial','question','problem'];
+
+  const typeOptBtn = document.getElementById('typeOptBtn');
+  const typeOptMenu = document.getElementById('typeOptMenu');
+  const typeOptValue = document.getElementById('typeOptValue');
+  const typeOptList = document.getElementById('typeOptList');
+  let currentTypeId = 'all';
+
+  function renderTypeOptions(){
+    typeOptList.innerHTML = '';
+    const makeItem = (id, label) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ppm-item' + (currentTypeId === id ? ' active' : '');
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        currentTypeId = id;
+        typeOptValue.textContent = label;
+        typeOptMenu.classList.remove('open');
+        renderTypeOptions();
+        updateItemVisibility();
+      });
+      typeOptList.appendChild(btn);
+    };
+    makeItem('all', '유형 전체');
+    TYPE_ORDER.forEach(id => makeItem(id, TYPE_LABELS[id]));
+  }
+  renderTypeOptions();
+
+  typeOptBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    typeOptMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', () => typeOptMenu.classList.remove('open'));
+
+  // 업종(서버에서 이미 필터된 목록)과 유형(클라이언트 필터) 두 조건을 함께 적용한다.
+  function updateItemVisibility(){
+    const activeBrandChip = refContent.querySelector('.filter-chip.active');
+    const brand = activeBrandChip ? activeBrandChip.dataset.brand : '';
+    refContent.querySelectorAll('.ref-item').forEach(el => {
+      const brandOk = !brand || el.dataset.brand === brand;
+      const typeOk = currentTypeId === 'all' || el.dataset.type === currentTypeId;
+      el.style.display = (brandOk && typeOk) ? '' : 'none';
+    });
+  }
 
   function loadCategoryImages(id, name){
     currentCategoryId = id;
@@ -345,10 +409,7 @@
             if(!chip) return;
             filterBar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
-            const brand = chip.dataset.brand;
-            grid.querySelectorAll('.ref-item').forEach(el => {
-              el.style.display = (!brand || el.dataset.brand === brand) ? '' : 'none';
-            });
+            updateItemVisibility();
           });
           refContent.appendChild(filterBar);
         }
@@ -362,6 +423,7 @@
           wrap.className = 'ref-item';
           wrap.setAttribute('data-row','');
           wrap.dataset.brand = item.brandName || '';
+          wrap.dataset.type = item.type || '';
           const thumbBtn = document.createElement('button');
           thumbBtn.type = 'button';
           thumbBtn.className = 'ref-thumb';
@@ -382,6 +444,7 @@
           grid.appendChild(wrap);
         });
         refContent.appendChild(grid);
+        updateItemVisibility();
         if(window.adcheckReveal) window.adcheckReveal();
       })
       .catch(() => {
