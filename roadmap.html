@@ -465,21 +465,11 @@
 
     <div class="roadmap-item reviewing" data-row>
       <div class="roadmap-top">
-        <span class="roadmap-title">블러·저품질 감지</span>
-        <span class="roadmap-status">신뢰도 검토 중</span>
+        <span class="roadmap-title">메타 광고 라이브러리 API 연동 (이미지 레퍼런스 자동 수집)</span>
+        <span class="roadmap-status">신원 인증 대기 중</span>
       </div>
-      <div class="roadmap-desc">6·7번(합성 리얼리티, 피사체 보정)에서 잡아내는 AI 생성 특유의 아티팩트(울퉁불퉁한 질감 등)를 이미지 선명도 수치로 보강하려는 아이디어입니다.</div>
-      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 배너는 단색 배경이나 그라디언트처럼 원래 "흐릿하게" 측정될 수 있는 영역이 많아서, 단순 선명도 수치만으로는 오탐(진짜 문제가 아닌데 문제로 잡히는 경우)이 많이 날 위험이 있습니다. 더 신뢰할 수 있는 방식을 찾는 중입니다.</div>
-    </div>
-
-    <div class="roadmap-item reviewing" data-row>
-      <div class="roadmap-top">
-        <span class="roadmap-title">GPT-5.6 Sol → Luna(무료 티어) 전환 검토</span>
-        <span class="roadmap-status">비용 절감 검토 중</span>
-      </div>
-      <div class="roadmap-desc">OpenAI가 무료 사용자에게도 GPT-5.6 Luna를 기본 모델로 열었는데, 가격이 지금 쓰는 Sol 대비 1/25 수준입니다(1M 토큰당 입력 $5→$0.20, 출력 $30→$1.20). 다만 벤치마크를 보면 태스크 성격에 따라 격차가 크게 갈립니다 — 복합적인 다단계 추론 태스크에서는 Sol 91.5% vs Luna 41.3%로 격차가 크지만, 순수 이미지 이해 벤치마크에서는 Sol 73~74.6% vs Luna 66.2~74.1%로 격차가 훨씬 좁습니다.</div>
-      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> AdCheck는 17개 항목 전체를 구조화된 판정과 reject 사유까지 생성하는 작업이라, 단순 비전 벤치마크보다 격차가 큰 복합 추론 벤치마크에 더 가깝습니다. 3번처럼 미묘한 판정에서 오탐이 반복되는 걸 감안하면, 바로 전환하기보다는 Sol·Luna 양쪽에 같은 배너·같은 프롬프트로 돌려 판정 결과를 직접 비교하는 검증이 먼저 필요합니다.</div>
-      <a class="roadmap-link" href="https://openai.com/index/improving-gpt-5-6-sol-in-chatgpt/" target="_blank" rel="noopener">OpenAI GPT-5.6 Luna 무료 티어 공지 ↗</a>
+      <div class="roadmap-desc">지금 이미지 레퍼런스는 팀원이 메타 광고 라이브러리·구글 광고 트랜스페어런시 센터에서 직접 찾은 스크린샷을 보내주면 등록하는 수동 방식입니다. 메타 광고 라이브러리 API를 연동하면 브랜드명만 입력해도 그 브랜드가 메타에 지금 집행 중인 광고 소재를 자동으로 가져와 업로드·분류까지 이어붙일 수 있습니다.</div>
+      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 메타가 API 접근에 개인 신원 인증(facebook.com/ID)을 요구해 승인을 기다리는 중입니다. 승인 후에도 API가 이미지 파일을 바로 주는지, 광고 스냅샷 페이지 URL만 주는지 확인이 필요합니다 — 후자라면 스냅샷 페이지를 캡처하는 방식으로 우회해야 합니다. 구글 트랜스페어런시 센터·틱톡·유튜브는 공식 API가 없어 이번 연동 범위에서 제외했습니다.</div>
     </div>
   </div>
   </div>
