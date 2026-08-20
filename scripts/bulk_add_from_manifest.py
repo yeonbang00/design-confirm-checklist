@@ -6,14 +6,17 @@ first).
 Manifest format (JSON array):
 [
   { "path": "/abs/path/to/image1.jpg", "category": "fashion",
-    "brand": "안다르", "note": "시즌오프 세일" },
+    "brand": "안다르", "note": "시즌오프 세일", "type": "benefit" },
   ...
 ]
 
 category must be one of the ids already in api/_referenceLibrary.js
 (fashion, finance, shopping, beauty, telecom, food, travel, electronics,
-automotive, education, healthcare, realestate, gaming). Every entry
-inserted by this script is marked ownWork: true (NHN AD 자체 제작).
+automotive, education, healthcare, realestate, gaming). "type" is optional
+(the 14 유형별 ids — problem, beforeafter, comparison, numbers, testimonial,
+authority, benefit, usage, product, list, question, seasonal, character,
+event); omit it if not classified. Every entry inserted by this script is
+marked ownWork: true (NHN AD 자체 제작).
 
 Usage: python3 scripts/bulk_add_from_manifest.py manifest.json
 """
@@ -71,6 +74,7 @@ def main():
         category_id = entry["category"]
         brand = entry.get("brand", "") or ""
         note = entry.get("note", "") or ""
+        type_id = entry.get("type", "") or ""
 
         if path in already_done:
             skipped += 1
@@ -94,10 +98,11 @@ def main():
 
         brand_escaped = brand.replace('"', '\\"')
         note_escaped = note.replace('"', '\\"')
+        type_field = (", type: \"" + type_id + "\"") if type_id else ""
         new_item = (
             "{ brandName: \"" + brand_escaped + "\", note: \"" + note_escaped + "\", "
             "mimeType: \"image/jpeg\", thumbUrl: \"" + thumb_url + "\", fullUrl: \"" + full_url + "\""
-            ", ownWork: true }"
+            + type_field + ", ownWork: true }"
         )
 
         text = open(_DATA_FILE, "r").read()
