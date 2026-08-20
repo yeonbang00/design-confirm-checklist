@@ -419,6 +419,15 @@
       <div class="roadmap-desc">지금 이미지 레퍼런스는 팀원이 메타 광고 라이브러리·구글 광고 트랜스페어런시 센터에서 직접 찾은 스크린샷을 보내주면 등록하는 수동 방식입니다. 메타 광고 라이브러리 API를 연동하면 브랜드명만 입력해도 그 브랜드가 메타에 지금 집행 중인 광고 소재를 자동으로 가져와 업로드·분류까지 이어붙일 수 있습니다.</div>
       <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 메타가 API 접근에 개인 신원 인증(facebook.com/ID)을 요구해 승인을 기다리는 중입니다. 승인 후에도 API가 이미지 파일을 바로 주는지, 광고 스냅샷 페이지 URL만 주는지 확인이 필요합니다 — 후자라면 스냅샷 페이지를 캡처하는 방식으로 우회해야 합니다. 구글 트랜스페어런시 센터·틱톡·유튜브는 공식 API가 없어 이번 연동 범위에서 제외했습니다.</div>
     </div>
+
+    <div class="roadmap-item reviewing" data-row>
+      <div class="roadmap-top">
+        <span class="roadmap-title">개인별 계정 시스템 (Supabase 인증·DB 전환)</span>
+        <span class="roadmap-status">우선순위 낮음</span>
+      </div>
+      <div class="roadmap-desc">지금 로그인은 팀 전체가 비밀번호 하나를 공유하는 방식이고, 데이터도 `_referenceLibrary.js` 같은 일반 JS 파일에 저장돼 있습니다. Supabase 같은 서비스로 전환하면 팀원마다 개별 계정으로 로그인하고, 데이터도 진짜 데이터베이스(Postgres)에 저장해서 사람마다 볼 수 있는 범위를 DB 레벨에서 구분하는 것도 가능해집니다.</div>
+      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 지금은 팀 규모가 작아 공유 비밀번호로도 충분히 돌아가고 있습니다. 팀원이 늘거나 사람별 권한 구분·개인화된 히스토리가 실제로 필요해지는 시점에 다시 검토하면 될 항목이라 지금은 우선순위가 낮습니다.</div>
+    </div>
   </div>
   </div>
 
