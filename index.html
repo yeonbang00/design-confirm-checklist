@@ -734,6 +734,25 @@
     if(!e.target.closest('.row-verdict')) groupsContainer.querySelectorAll('.verdict-menu.open').forEach(m => m.classList.remove('open'));
   });
 
+  // 숫자가 슬롯머신처럼 랜덤하게 돌다가 실제 값에 멈추는 연출 (0/1처럼 작은 변화도 티가 나도록)
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function spinToNumber(el, targetValue){
+    const target = String(targetValue).padStart(2,'0');
+    if(prefersReducedMotion){ el.textContent = target; return; }
+    const myGen = (el._spinGen = (el._spinGen || 0) + 1);
+    const totalSteps = 9;
+    let step = 0;
+    function next(){
+      if(el._spinGen !== myGen) return; // 도중에 새 스핀이 시작되면 이전 건 중단
+      if(step >= totalSteps){ el.textContent = target; return; }
+      el.textContent = String(Math.floor(Math.random()*100)).padStart(2,'0');
+      step++;
+      const progress = step/totalSteps;
+      setTimeout(next, 28 + progress*progress*130); // 갈수록 느려지며 착지
+    }
+    next();
+  }
+
   // ---------- checklist summary / verdict ----------
   function update(){
     const counts = {pass:0,needsfix:0,reject:0,na:0};
@@ -775,7 +794,10 @@
       const bar = document.getElementById('b' + key);
       if(card){ card.style.background = on ? cfg.bg : 'rgba(255,255,255,.022)'; card.style.borderColor = on ? cfg.bd : 'var(--line)'; }
       if(ghost){ ghost.textContent = String(c).padStart(2,'0'); ghost.style.color = on ? cfg.gh : '#15181D'; }
-      if(num){ num.textContent = String(c).padStart(2,'0'); num.style.color = on ? cfg.fg : 'var(--ink-4)'; }
+      if(num){
+        if(num.dataset.val !== String(c)){ spinToNumber(num, c); num.dataset.val = String(c); }
+        num.style.color = on ? cfg.fg : 'var(--ink-4)';
+      }
       if(lab) lab.style.color = on ? cfg.fg : 'var(--ink-4)';
       if(bar){ bar.style.width = ((c/17)*100) + '%'; bar.style.background = cfg.fg; }
     });
