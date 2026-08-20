@@ -396,9 +396,28 @@
         <span class="roadmap-title">피그마 MCP 연동 (레이아웃 좌표 직접 수신)</span>
         <span class="roadmap-status">정확도 개선 검토</span>
       </div>
-      <div class="roadmap-desc">지금 3번(타이포·정렬·여백·명도대비) 판정은 완성된 배너 이미지에서 클로바 OCR로 텍스트 위치를 픽셀 좌표로 "측정"하는 방식입니다. 피그마 MCP를 연결하면 디자이너가 작업한 원본 파일에서 레이어 트리와 실제 x/y 좌표, spacing 값을 그대로 받아올 수 있어서, 완성된 이미지에서 추론하는 대신 디자인 파일에 실제로 기록된 값을 곧바로 대조할 수 있게 됩니다.</div>
+      <div class="roadmap-desc">지금 3번(타이포·정렬·여백·명도대비) 판정은 완성된 배너 이미지에서 클로바 OCR로 텍스트 위치를 픽셀 좌표로 "측정"하는 방식입니다. 피그마 MCP를 연결하면 디자이너가 작업한 원본 파일에서 레이어 트리와 실제 x/y 좌표, spacing 값을 그대로 받아올 수 있어서, 완성된 이미지에서 추론하는 대신 디자인 파일에 실제로 기록된 값을 곧바로 대조할 수 있게 됩니다. 정렬·여백 외에도 활용 범위가 넓습니다 — 텍스트 레이어의 실제 폰트명·크기·굵기를 그대로 읽어 3번의 "폰트 2종 이내" 기준을 눈대중이 아니라 정확히 셀 수 있고, 5번(컬러 일관성)도 캔버스 픽셀을 샘플링하는 근사식(redmean) 대신 레이어의 실제 fill 색상값을 바로 대조할 수 있습니다. 로고 레이어의 scale-x/scale-y 차이를 읽으면 16번(로고 사용 규정)의 비율 왜곡도 육안 판단 없이 수치로 잡아낼 수 있고, 파일 최종 수정 시각과 내보낸 이미지를 대조하면 "파일은 고쳤는데 내보내기를 깜빡한" 실무 사고도 감지할 수 있습니다.</div>
       <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 3번 항목에서 반복적으로 나오는 오탐(스트록·그림자가 있는 텍스트를 정렬 오차로 오인하거나, 캔버스 중앙정렬을 좌우정렬 규칙으로 잘못 적용하는 경우 등)의 근본 원인이 결국 "이미지에서 좌표를 추론해야 한다"는 점에 있어서, 이 연동이 붙으면 구조적으로 해결될 가능성이 있습니다. 다만 모든 배너가 피그마로 작업되는 건 아니라서(포토샵·일러스트레이터로 작업하는 경우도 많음), 피그마 원본이 있을 때만 보강 데이터로 쓰는 방식으로 설계해야 합니다.</div>
       <a class="roadmap-link" href="https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server" target="_blank" rel="noopener">Figma MCP 서버 가이드 ↗</a>
+    </div>
+
+    <div class="roadmap-item reviewing" data-row>
+      <div class="roadmap-top">
+        <span class="roadmap-title">힉스필드 MCP 연동 (브리프헬퍼 참고 소재 품질 개선)</span>
+        <span class="roadmap-status">품질 비교 검토 필요</span>
+      </div>
+      <div class="roadmap-desc">지금 브리프헬퍼 무드보드는 gpt-image-2로 생성하는데, 힉스필드는 제품 사진(product photography)에 특화된 모델을 따로 제공해서 실사 합성 퀄리티가 더 나을 가능성이 있습니다. UGC(사용자 제작 콘텐츠) 스타일 참고 이미지·영상 생성도 지원해서 요즘 광고 트렌드에 맞는 참고 소재를 제안할 수 있고, 스타일 트랜스퍼로 기존 배너 하나를 다른 시즌·톤으로 빠르게 변형한 참고 시안도 여러 개 뽑아볼 수 있습니다.</div>
+      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> AdCheck는 AI가 검수·정보 제공까지만 하고 최종 결과물은 디자이너가 만든다는 원칙을 처음부터 지켜왔습니다. 힉스필드로 만든 이미지가 "참고용 무드보드"를 넘어 "그대로 쓰는 완성 소재"로 오인되지 않도록 UI·문구 설계부터 먼저 정리해야 하고, gpt-image-2 대비 실제로 품질이 나은지 직접 비교 검증도 필요합니다.</div>
+      <a class="roadmap-link" href="https://higgsfield.ai/blog/mcp-for-marketers" target="_blank" rel="noopener">Higgsfield MCP 소개 ↗</a>
+    </div>
+
+    <div class="roadmap-item reviewing" data-row>
+      <div class="roadmap-top">
+        <span class="roadmap-title">메타 광고 라이브러리 API 연동 (이미지 레퍼런스 자동 수집)</span>
+        <span class="roadmap-status">신원 인증 대기 중</span>
+      </div>
+      <div class="roadmap-desc">지금 이미지 레퍼런스는 팀원이 메타 광고 라이브러리·구글 광고 트랜스페어런시 센터에서 직접 찾은 스크린샷을 보내주면 등록하는 수동 방식입니다. 메타 광고 라이브러리 API를 연동하면 브랜드명만 입력해도 그 브랜드가 메타에 지금 집행 중인 광고 소재를 자동으로 가져와 업로드·분류까지 이어붙일 수 있습니다.</div>
+      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 메타가 API 접근에 개인 신원 인증(facebook.com/ID)을 요구해 승인을 기다리는 중입니다. 승인 후에도 API가 이미지 파일을 바로 주는지, 광고 스냅샷 페이지 URL만 주는지 확인이 필요합니다 — 후자라면 스냅샷 페이지를 캡처하는 방식으로 우회해야 합니다. 구글 트랜스페어런시 센터·틱톡·유튜브는 공식 API가 없어 이번 연동 범위에서 제외했습니다.</div>
     </div>
 
     <div class="roadmap-item reviewing" data-row>
@@ -409,15 +428,6 @@
       <div class="roadmap-desc">스톡 이미지를 무단으로 쓰지 않았는지, 경쟁사나 다른 브랜드 소재와 지나치게 비슷하지 않은지 자동으로 역검색해서 확인하는 기능입니다.</div>
       <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 상업용 API가 월 $200(5,000건)부터 시작해서, 배너를 분석할 때마다 매번 돌리기보다는 필요할 때만 선택적으로 켜는 방식으로 붙이는 게 나을지 검토 중입니다.</div>
       <a class="roadmap-link" href="https://services.tineye.com/TinEyeAPI" target="_blank" rel="noopener">TinEye API 안내 ↗</a>
-    </div>
-
-    <div class="roadmap-item reviewing" data-row>
-      <div class="roadmap-top">
-        <span class="roadmap-title">메타 광고 라이브러리 API 연동 (이미지 레퍼런스 자동 수집)</span>
-        <span class="roadmap-status">신원 인증 대기 중</span>
-      </div>
-      <div class="roadmap-desc">지금 이미지 레퍼런스는 팀원이 메타 광고 라이브러리·구글 광고 트랜스페어런시 센터에서 직접 찾은 스크린샷을 보내주면 등록하는 수동 방식입니다. 메타 광고 라이브러리 API를 연동하면 브랜드명만 입력해도 그 브랜드가 메타에 지금 집행 중인 광고 소재를 자동으로 가져와 업로드·분류까지 이어붙일 수 있습니다.</div>
-      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 메타가 API 접근에 개인 신원 인증(facebook.com/ID)을 요구해 승인을 기다리는 중입니다. 승인 후에도 API가 이미지 파일을 바로 주는지, 광고 스냅샷 페이지 URL만 주는지 확인이 필요합니다 — 후자라면 스냅샷 페이지를 캡처하는 방식으로 우회해야 합니다. 구글 트랜스페어런시 센터·틱톡·유튜브는 공식 API가 없어 이번 연동 범위에서 제외했습니다.</div>
     </div>
 
     <div class="roadmap-item reviewing" data-row>
