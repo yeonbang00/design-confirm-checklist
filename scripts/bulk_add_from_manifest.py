@@ -6,7 +6,8 @@ first).
 Manifest format (JSON array):
 [
   { "path": "/abs/path/to/image1.jpg", "category": "fashion",
-    "brand": "안다르", "note": "시즌오프 세일", "type": "benefit" },
+    "brand": "안다르", "note": "시즌오프 세일", "type": "benefit",
+    "ownWork": true },
   ...
 ]
 
@@ -15,8 +16,9 @@ category must be one of the ids already in api/_referenceLibrary.js
 automotive, education, healthcare, realestate, gaming). "type" is optional
 (the 14 유형별 ids — problem, beforeafter, comparison, numbers, testimonial,
 authority, benefit, usage, product, list, question, seasonal, character,
-event); omit it if not classified. Every entry inserted by this script is
-marked ownWork: true (NHN AD 자체 제작).
+event); omit it if not classified. "ownWork" is optional and defaults to
+true (NHN AD 자체 제작) for backward compatibility — set it to false per
+entry for competitor material.
 
 Usage: python3 scripts/bulk_add_from_manifest.py manifest.json
 """
@@ -75,6 +77,7 @@ def main():
         brand = entry.get("brand", "") or ""
         note = entry.get("note", "") or ""
         type_id = entry.get("type", "") or ""
+        own_work = entry.get("ownWork", True)
 
         if path in already_done:
             skipped += 1
@@ -92,17 +95,19 @@ def main():
 
         thumb_bytes, full_bytes = resize_image(path)
         base = os.path.splitext(os.path.basename(path))[0]
-        slug = slugify(f"nhnad-{brand}-{base}") if brand else slugify(f"nhnad-{base}")
+        prefix = "nhnad-" if own_work else ""
+        slug = slugify(f"{prefix}{brand}-{base}") if brand else slugify(f"{prefix}{base}")
         thumb_url = upload_to_blob(f"reference/{category_id}/{slug}-thumb.jpg", thumb_bytes)
         full_url = upload_to_blob(f"reference/{category_id}/{slug}-full.jpg", full_bytes)
 
         brand_escaped = brand.replace('"', '\\"')
         note_escaped = note.replace('"', '\\"')
         type_field = (", type: \"" + type_id + "\"") if type_id else ""
+        own_work_field = ", ownWork: true" if own_work else ""
         new_item = (
             "{ brandName: \"" + brand_escaped + "\", note: \"" + note_escaped + "\", "
             "mimeType: \"image/jpeg\", thumbUrl: \"" + thumb_url + "\", fullUrl: \"" + full_url + "\""
-            + type_field + ", ownWork: true }"
+            + type_field + own_work_field + " }"
         )
 
         text = open(_DATA_FILE, "r").read()
