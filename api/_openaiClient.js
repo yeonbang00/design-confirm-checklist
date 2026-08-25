@@ -6,7 +6,7 @@
 // response text when JSON parsing fails — so existing catch blocks in
 // callers (which check err.status for 429/5xx retry logic) work unchanged.
 
-const OPENAI_MODEL = 'gpt-5.6-luna'; // 임시: Sol 대비 품질 비교 테스트용 (test-gpt-5.6-luna 브랜치)
+const OPENAI_MODEL = 'gpt-5.6-sol';
 const OPENAI_URL = 'https://api.openai.com/v1/responses';
 
 // images: [{ base64, mediaType }, ...]

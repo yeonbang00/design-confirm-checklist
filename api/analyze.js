@@ -27,9 +27,6 @@ export const config = {
       sizeLimit: '25mb',
     },
   },
-  // 테스트: gpt-5.6-luna가 혼잡 시 Sol보다 응답이 느려 기본 제한 시간(15초)을
-  // 넘기고 504로 끊기는지 확인하기 위해 임시로 늘림 (test-gpt-5.6-luna 브랜치 전용).
-  maxDuration: 60,
 };
 
 // 17 items = 9 core design/strategy checks + 4 AI-generation artifact checks
