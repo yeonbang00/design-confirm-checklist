@@ -110,14 +110,14 @@
   .card{border-radius:14px; box-shadow:none; border:1px solid rgba(255,255,255,.11); background:var(--card); padding:20px;}
 
   .upload-section{margin-bottom:28px;}
-  .upload-dropzone{border:2px dashed var(--charcoal-border); border-radius:16px; padding:36px 24px; text-align:center; cursor:pointer; transition:border-color .2s ease,background .2s ease;}
+  .upload-dropzone{border:1.5px dashed rgba(204,255,0,.55); border-radius:16px; padding:36px 24px; text-align:center; cursor:pointer; background:rgba(255,255,255,.03); transition:border-color .15s ease,background .15s ease;}
   .upload-dropzone:hover, .upload-dropzone.dragover{border-color:var(--accent); background:rgba(204,255,0,.04);}
-  .upload-dropzone-icon{font-size:26px; font-weight:300; color:var(--canvas-text-2); margin-bottom:8px; line-height:1;}
+  .upload-dropzone-icon{font-size:26px; font-weight:300; color:var(--accent); margin-bottom:8px; line-height:1;}
   .upload-dropzone-title{font-size:14px; font-weight:600; color:var(--canvas-text); margin-bottom:4px;}
   .upload-dropzone-sub{font-size:12.5px; color:var(--canvas-text-2);}
 
   .upload-panel{position:relative; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:24px;}
-  .upload-panel-close{position:absolute; top:14px; right:16px; background:none; border:none; color:var(--canvas-text-2); font-size:26px; line-height:1; cursor:pointer; padding:4px;}
+  .upload-panel-close{position:absolute; top:6px; right:10px; background:none; border:none; color:var(--canvas-text-2); font-size:26px; line-height:1; cursor:pointer; padding:4px;}
   .upload-panel-close:hover{color:var(--canvas-text);}
   .upload-panel-body{display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;}
   .upload-panel-thumb{width:160px; height:160px; object-fit:cover; border-radius:10px; background:var(--charcoal); flex-shrink:0;}
@@ -150,6 +150,10 @@
   .ppm-item{display:block; width:100%; text-align:left; border:none; background:none; cursor:pointer; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; font-family:inherit; transition:background .2s ease,color .2s ease;}
   .ppm-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .ppm-item.active{color:var(--accent); background:rgba(204,255,0,.09); font-weight:600;}
+
+  .option-btn-primary{display:inline-flex; align-items:center; justify-content:center; gap:10px; background:var(--accent); border:1px solid var(--accent); color:var(--accent-ink); box-shadow:0 18px 44px -22px rgba(204,255,0,.8); font-family:var(--font-display); font-size:14px; font-weight:700; padding:14px 30px; border-radius:12px; letter-spacing:-.02em; width:auto; transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s ease,background .25s ease;}
+  .option-btn-primary:hover{transform:translateY(-3px); border-color:var(--accent);}
+  .option-btn-primary:active{transform:scale(.95); transition:transform .1s ease;}
 
   .loading-msg{font-size:13.5px; color:var(--text-3); padding:20px 0;}
   .gl-empty{font-size:13.5px; color:var(--text-3); background:rgba(255,255,255,.045); border-radius:10px; padding:20px 18px; line-height:1.7;}
@@ -240,8 +244,13 @@
         <img class="upload-panel-thumb" id="uploadPreviewImg" alt="선택한 이미지 미리보기">
         <div class="upload-panel-fields">
           <div class="upload-field">
-            <label for="uploadCategory">업종 카테고리</label>
-            <select id="uploadCategory"></select>
+            <label>업종 카테고리</label>
+            <div class="option-dropdown-wrap" style="max-width:none; margin-bottom:0;">
+              <button type="button" class="option-btn" id="uploadCategoryBtn">
+                <span class="option-btn-value" id="uploadCategoryValue">선택</span><span class="opt-chevron">▼</span>
+              </button>
+              <div class="option-menu" id="uploadCategoryMenu"><div id="uploadCategoryList"></div></div>
+            </div>
           </div>
           <div class="upload-field">
             <label for="uploadBrandName">브랜드명</label>
@@ -252,7 +261,7 @@
             우리 팀이 직접 제작한 소재예요 (NHN AD)
           </label>
           <div class="upload-modal-msg" id="uploadModalMsg"></div>
-          <button type="button" class="option-btn option-btn-primary" id="uploadSubmitBtn" style="width:100%;">등록하기</button>
+          <button type="button" class="option-btn-primary" id="uploadSubmitBtn">등록하기</button>
         </div>
       </div>
     </div>
@@ -514,8 +523,8 @@
       categoriesData = data.categories || [];
       renderCategoryOptions();
       loadCategoryImages('all', '전체');
-      uploadCategorySelect.innerHTML = categoriesData.map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('');
-      if(currentCategoryId && currentCategoryId !== 'all') uploadCategorySelect.value = currentCategoryId;
+      renderUploadCategoryOptions();
+      if(currentCategoryId && currentCategoryId !== 'all') setUploadCategory(currentCategoryId);
     })
     .catch(() => {
       refContent.innerHTML = '<div class="gl-empty">카테고리를 불러오지 못했습니다. api/referenceCategories.js가 배포되었는지 확인해주세요.</div>';
@@ -526,7 +535,10 @@
   const uploadPanel = document.getElementById('uploadPanel');
   const uploadCancelBtn = document.getElementById('uploadCancelBtn');
   const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
-  const uploadCategorySelect = document.getElementById('uploadCategory');
+  const uploadCategoryBtn = document.getElementById('uploadCategoryBtn');
+  const uploadCategoryMenu = document.getElementById('uploadCategoryMenu');
+  const uploadCategoryValue = document.getElementById('uploadCategoryValue');
+  const uploadCategoryList = document.getElementById('uploadCategoryList');
   const uploadBrandNameInput = document.getElementById('uploadBrandName');
   const uploadOwnWorkInput = document.getElementById('uploadOwnWork');
   const uploadFileInput = document.getElementById('uploadFile');
@@ -536,6 +548,33 @@
   let pendingResized = null; // { file, thumb, full }
   let pendingAnalysisPromise = null; // 메모·유형은 화면에 안 보이고 백그라운드에서만 채워짐
   let pendingPreviewUrl = null;
+  let uploadCategoryId = '';
+
+  function setUploadCategory(id){
+    uploadCategoryId = id;
+    const found = categoriesData.find(c => c.id === id);
+    uploadCategoryValue.textContent = found ? found.name : '선택';
+    renderUploadCategoryOptions();
+  }
+  function renderUploadCategoryOptions(){
+    uploadCategoryList.innerHTML = '';
+    categoriesData.forEach(c => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ppm-item' + (uploadCategoryId === c.id ? ' active' : '');
+      btn.textContent = c.name;
+      btn.addEventListener('click', () => {
+        setUploadCategory(c.id);
+        uploadCategoryMenu.classList.remove('open');
+      });
+      uploadCategoryList.appendChild(btn);
+    });
+  }
+  uploadCategoryBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    uploadCategoryMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', () => uploadCategoryMenu.classList.remove('open'));
 
   function resetUploadArea(){
     uploadDropzone.style.display = '';
@@ -593,7 +632,7 @@
     uploadPanel.style.display = '';
     uploadModalMsg.textContent = '';
     uploadModalMsg.className = 'upload-modal-msg';
-    if(currentCategoryId && currentCategoryId !== 'all') uploadCategorySelect.value = currentCategoryId;
+    if(currentCategoryId && currentCategoryId !== 'all') setUploadCategory(currentCategoryId);
     uploadBrandNameInput.focus();
 
     pendingAnalysisPromise = (async () => {
@@ -630,9 +669,10 @@
   uploadCancelBtn.addEventListener('click', resetUploadArea);
 
   uploadSubmitBtn.addEventListener('click', async () => {
-    const category = uploadCategorySelect.value;
+    const category = uploadCategoryId;
     const brandName = uploadBrandNameInput.value.trim();
 
+    if(!category){ uploadModalMsg.textContent = '업종 카테고리를 선택해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
     if(!brandName){ uploadModalMsg.textContent = '브랜드명을 입력해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
     if(!pendingAnalysisPromise){ uploadModalMsg.textContent = '이미지 파일을 선택해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
 
