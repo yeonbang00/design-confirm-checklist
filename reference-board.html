@@ -108,19 +108,35 @@
   .sub{margin:24px 0 44px; max-width:78ch; font-size:16.5px; font-weight:300; line-height:1.85; color:var(--ink-2);}
 
   .card{border-radius:14px; box-shadow:none; border:1px solid rgba(255,255,255,.11); background:var(--card); padding:20px;}
-  .upload-cta-row{display:flex; align-items:center; gap:16px; margin-bottom:28px; flex-wrap:wrap;}
-  .upload-cta-note{font-size:13px; color:var(--canvas-text-2);}
-  .upload-modal-inner{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:28px; width:420px; max-width:90vw; max-height:85vh; overflow-y:auto; text-align:left;}
-  .upload-modal-title{font-size:18px; font-weight:700; margin:0 0 18px; color:var(--canvas-text);}
+
+  .upload-section{margin-bottom:28px;}
+  .upload-dropzone{border:2px dashed var(--charcoal-border); border-radius:16px; padding:36px 24px; text-align:center; cursor:pointer; transition:border-color .2s ease,background .2s ease;}
+  .upload-dropzone:hover, .upload-dropzone.dragover{border-color:var(--accent); background:rgba(204,255,0,.04);}
+  .upload-dropzone-icon{font-size:26px; font-weight:300; color:var(--canvas-text-2); margin-bottom:8px; line-height:1;}
+  .upload-dropzone-title{font-size:14px; font-weight:600; color:var(--canvas-text); margin-bottom:4px;}
+  .upload-dropzone-sub{font-size:12.5px; color:var(--canvas-text-2);}
+
+  .upload-panel{position:relative; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:24px;}
+  .upload-panel-close{position:absolute; top:14px; right:16px; background:none; border:none; color:var(--canvas-text-2); font-size:26px; line-height:1; cursor:pointer; padding:4px;}
+  .upload-panel-close:hover{color:var(--canvas-text);}
+  .upload-panel-body{display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;}
+  .upload-panel-thumb{width:160px; height:160px; object-fit:cover; border-radius:10px; background:var(--charcoal); flex-shrink:0;}
+  .upload-panel-fields{flex:1; min-width:220px;}
   .upload-field{margin-bottom:14px;}
   .upload-field label{display:block; font-size:12.5px; font-weight:600; color:var(--canvas-text-2); margin-bottom:6px;}
-  .upload-field input[type=text], .upload-field select, .upload-field input[type=file]{width:100%; padding:11px 14px; border:1px solid var(--charcoal-border); border-radius:10px; font-size:13px; font-family:inherit; background:var(--charcoal); color:var(--canvas-text); box-sizing:border-box;}
-  .upload-field-checkbox label{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--canvas-text-2); font-weight:400;}
-  .upload-field-checkbox input{margin:0;}
-  .upload-modal-msg{font-size:12.5px; margin-bottom:10px; min-height:1.4em;}
+  .upload-field input[type=text], .upload-field select{width:100%; padding:11px 14px; border:1px solid var(--charcoal-border); border-radius:10px; font-size:13px; font-family:inherit; background:var(--charcoal); color:var(--canvas-text); box-sizing:border-box;}
+  .upload-modal-msg{font-size:12.5px; margin:10px 0; min-height:1.4em;}
   .upload-modal-msg.error{color:var(--reject);}
   .upload-modal-msg.success{color:var(--pass);}
-  .upload-modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:18px;}
+
+  /* 브랜드가이드 페이지와 동일한 토글 스위치 */
+  .toggle-row{display:flex; align-items:center; gap:12px; padding:6px 0; font-size:13px; color:var(--canvas-text-2); cursor:pointer;}
+  .toggle-switch{position:relative; flex-shrink:0; width:36px; height:20px;}
+  .toggle-switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .toggle-track{position:absolute; inset:0; border-radius:999px; background:rgba(255,255,255,.1); border:1px solid var(--charcoal-border); transition:background .2s ease,border-color .2s ease;}
+  .toggle-track::after{content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:var(--canvas-text-2); transition:transform .2s cubic-bezier(.2,.8,.2,1),background .2s ease;}
+  .toggle-switch input:checked + .toggle-track{background:var(--accent); border-color:var(--accent);}
+  .toggle-switch input:checked + .toggle-track::after{transform:translateX(16px); background:var(--accent-ink);}
 
   .option-dropdown-row{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px;}
   .option-dropdown-row .option-dropdown-wrap{width:220px; margin-bottom:0;}
@@ -210,9 +226,36 @@
   <h1>이미지 레퍼런스</h1>
   <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
 
-  <div class="upload-cta-row">
-    <button type="button" class="option-btn option-btn-primary" id="openUploadBtn" style="width:auto;">+ 이미지 올리기</button>
-    <div class="upload-cta-note">이 사이트를 이용하는 팀원이 직접 이미지를 등록할 수 있어요.</div>
+  <div class="upload-section">
+    <div class="upload-dropzone" id="uploadDropzone">
+      <input type="file" id="uploadFile" accept="image/*" hidden>
+      <div class="upload-dropzone-icon">+</div>
+      <div class="upload-dropzone-title">이미지를 끌어다 놓거나 클릭해서 올려주세요</div>
+      <div class="upload-dropzone-sub">이 사이트를 이용하는 팀원이 직접 레퍼런스를 등록할 수 있어요</div>
+    </div>
+
+    <div class="upload-panel" id="uploadPanel" style="display:none;">
+      <button type="button" class="upload-panel-close" id="uploadCancelBtn" aria-label="취소">&times;</button>
+      <div class="upload-panel-body">
+        <img class="upload-panel-thumb" id="uploadPreviewImg" alt="선택한 이미지 미리보기">
+        <div class="upload-panel-fields">
+          <div class="upload-field">
+            <label for="uploadCategory">업종 카테고리</label>
+            <select id="uploadCategory"></select>
+          </div>
+          <div class="upload-field">
+            <label for="uploadBrandName">브랜드명</label>
+            <input type="text" id="uploadBrandName" placeholder="예: COACH">
+          </div>
+          <label class="toggle-row" id="uploadOwnWorkRow">
+            <span class="toggle-switch"><input type="checkbox" id="uploadOwnWork"><span class="toggle-track"></span></span>
+            우리 팀이 직접 제작한 소재예요 (NHN AD)
+          </label>
+          <div class="upload-modal-msg" id="uploadModalMsg"></div>
+          <button type="button" class="option-btn option-btn-primary" id="uploadSubmitBtn" style="width:100%;">등록하기</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="option-dropdown-row">
@@ -247,41 +290,6 @@
   <div class="lightbox-inner">
     <img id="lightboxImg" src="" alt="확대된 레퍼런스 이미지">
     <div class="lightbox-caption" id="lightboxCaption"></div>
-  </div>
-</div>
-
-<div class="lightbox" id="uploadModal">
-  <button type="button" class="lightbox-close" id="uploadModalClose" aria-label="닫기">&times;</button>
-  <div class="upload-modal-inner">
-    <h2 class="upload-modal-title">이미지 올리기</h2>
-    <div class="upload-field">
-      <label for="uploadCategory">업종 카테고리</label>
-      <select id="uploadCategory"></select>
-    </div>
-    <div class="upload-field">
-      <label for="uploadBrandName">브랜드명</label>
-      <input type="text" id="uploadBrandName" placeholder="예: COACH">
-    </div>
-    <div class="upload-field">
-      <label for="uploadNote">메모 (파일 선택 시 AI가 자동 작성 — 수정 가능)</label>
-      <input type="text" id="uploadNote" placeholder="예: 여름 세일 배너, 가방 클로즈업">
-    </div>
-    <div class="upload-field">
-      <label for="uploadType">유형 (파일 선택 시 AI가 자동 분류 — 수정 가능)</label>
-      <select id="uploadType"><option value="">선택 안 함</option></select>
-    </div>
-    <div class="upload-field upload-field-checkbox">
-      <label><input type="checkbox" id="uploadOwnWork"> 우리 팀이 직접 제작한 소재예요</label>
-    </div>
-    <div class="upload-field">
-      <label for="uploadFile">이미지 파일</label>
-      <input type="file" id="uploadFile" accept="image/*">
-    </div>
-    <div class="upload-modal-msg" id="uploadModalMsg"></div>
-    <div class="upload-modal-actions">
-      <button type="button" class="option-btn" id="uploadCancelBtn" style="width:auto;">취소</button>
-      <button type="button" class="option-btn option-btn-primary" id="uploadSubmitBtn" style="width:auto;">등록하기</button>
-    </div>
   </div>
 </div>
 
@@ -513,42 +521,34 @@
       refContent.innerHTML = '<div class="gl-empty">카테고리를 불러오지 못했습니다. api/referenceCategories.js가 배포되었는지 확인해주세요.</div>';
     });
 
-  // ---------- 이미지 올리기 모달 ----------
-  const uploadModal = document.getElementById('uploadModal');
-  const openUploadBtn = document.getElementById('openUploadBtn');
-  const uploadModalClose = document.getElementById('uploadModalClose');
+  // ---------- 이미지 올리기 (드롭존 → 패널) ----------
+  const uploadDropzone = document.getElementById('uploadDropzone');
+  const uploadPanel = document.getElementById('uploadPanel');
   const uploadCancelBtn = document.getElementById('uploadCancelBtn');
   const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
   const uploadCategorySelect = document.getElementById('uploadCategory');
-  const uploadTypeSelect = document.getElementById('uploadType');
   const uploadBrandNameInput = document.getElementById('uploadBrandName');
-  const uploadNoteInput = document.getElementById('uploadNote');
   const uploadOwnWorkInput = document.getElementById('uploadOwnWork');
   const uploadFileInput = document.getElementById('uploadFile');
   const uploadModalMsg = document.getElementById('uploadModalMsg');
+  const uploadPreviewImg = document.getElementById('uploadPreviewImg');
 
-  uploadTypeSelect.innerHTML += TYPE_ORDER.map(id => '<option value="' + id + '">' + TYPE_LABELS[id] + '</option>').join('');
+  let pendingResized = null; // { file, thumb, full }
+  let pendingAnalysisPromise = null; // 메모·유형은 화면에 안 보이고 백그라운드에서만 채워짐
+  let pendingPreviewUrl = null;
 
-  let pendingResized = null; // { file, thumb, full } — 파일 선택 시 한 번만 리사이즈해서 분석·업로드에 재사용
-
-  function openUploadModal(){
+  function resetUploadArea(){
+    uploadDropzone.style.display = '';
+    uploadPanel.style.display = 'none';
     uploadModalMsg.textContent = '';
     uploadModalMsg.className = 'upload-modal-msg';
     uploadBrandNameInput.value = '';
-    uploadNoteInput.value = '';
     uploadOwnWorkInput.checked = false;
     uploadFileInput.value = '';
-    uploadTypeSelect.value = '';
     pendingResized = null;
-    if(currentCategoryId && currentCategoryId !== 'all') uploadCategorySelect.value = currentCategoryId;
-    uploadModal.classList.add('show');
+    pendingAnalysisPromise = null;
+    if(pendingPreviewUrl){ URL.revokeObjectURL(pendingPreviewUrl); pendingPreviewUrl = null; }
   }
-  function closeUploadModal(){ uploadModal.classList.remove('show'); }
-
-  openUploadBtn.addEventListener('click', openUploadModal);
-  uploadModalClose.addEventListener('click', closeUploadModal);
-  uploadCancelBtn.addEventListener('click', closeUploadModal);
-  uploadModal.addEventListener('click', (e) => { if(e.target === uploadModal) closeUploadModal(); });
 
   // 캔버스로 리사이즈해서 base64 JPEG로 변환 — 인덱스 페이지의 프리뷰
   // 준비 로직과 같은 방식(썸네일 700px q0.74, 원본 2000px q0.92).
@@ -579,66 +579,77 @@
     });
   }
 
-  // 파일을 고르면 바로 리사이즈해두고, 썸네일로 AI 분석을 돌려 메모·유형을
-  // 자동으로 채운다 — 직접 타이핑하지 않아도 되고, 마음에 안 들면 그대로 수정 가능.
-  uploadFileInput.addEventListener('change', async () => {
-    const file = uploadFileInput.files[0];
-    pendingResized = null;
-    if(!file) return;
+  // 이미지를 넣으면 즉시 미리보기 + 패널을 보여주고, 리사이즈와 AI 분석은
+  // 뒤에서 조용히 진행한다(메모·유형 입력란 자체를 없애고 등록 시점에
+  // 자동으로 채워 넣음 — 사용자가 신경 쓸 필드를 줄이기 위해).
+  function handleFileSelected(file){
+    if(!file || !file.type.startsWith('image/')) return;
 
-    uploadModalMsg.textContent = 'AI가 이미지를 분석하는 중…';
+    if(pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    pendingPreviewUrl = URL.createObjectURL(file);
+    uploadPreviewImg.src = pendingPreviewUrl;
+
+    uploadDropzone.style.display = 'none';
+    uploadPanel.style.display = '';
+    uploadModalMsg.textContent = '';
     uploadModalMsg.className = 'upload-modal-msg';
+    if(currentCategoryId && currentCategoryId !== 'all') uploadCategorySelect.value = currentCategoryId;
+    uploadBrandNameInput.focus();
 
-    try{
+    pendingAnalysisPromise = (async () => {
       const [thumb, full] = await Promise.all([
         resizeImageToBase64(file, 700, 0.74),
         resizeImageToBase64(file, 2000, 0.92),
       ]);
       pendingResized = { file, thumb, full };
-
-      const resp = await fetch('/api/analyzeReferenceImage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64: thumb.base64, mediaType: thumb.mimeType, brandName: uploadBrandNameInput.value.trim() }),
-      });
-      const data = await resp.json();
-      if(resp.ok){
-        if(data.note) uploadNoteInput.value = data.note;
-        if(data.type) uploadTypeSelect.value = data.type;
-        uploadModalMsg.textContent = '';
-      } else {
-        uploadModalMsg.textContent = 'AI 자동 분석에 실패했어요 — 메모·유형을 직접 입력해주세요.';
+      try{
+        const resp = await fetch('/api/analyzeReferenceImage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64: thumb.base64, mediaType: thumb.mimeType, brandName: uploadBrandNameInput.value.trim() }),
+        });
+        const data = await resp.json();
+        return resp.ok ? { note: data.note || '', type: data.type || '' } : { note: '', type: '' };
+      }catch(e){
+        return { note: '', type: '' };
       }
-    }catch(err){
-      uploadModalMsg.textContent = 'AI 자동 분석에 실패했어요 — 메모·유형을 직접 입력해주세요.';
-    }
+    })();
+  }
+
+  uploadDropzone.addEventListener('click', () => uploadFileInput.click());
+  uploadFileInput.addEventListener('change', () => handleFileSelected(uploadFileInput.files[0]));
+  uploadDropzone.addEventListener('dragover', e => { e.preventDefault(); uploadDropzone.classList.add('dragover'); });
+  uploadDropzone.addEventListener('dragleave', () => uploadDropzone.classList.remove('dragover'));
+  uploadDropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadDropzone.classList.remove('dragover');
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) handleFileSelected(file);
   });
+
+  uploadCancelBtn.addEventListener('click', resetUploadArea);
 
   uploadSubmitBtn.addEventListener('click', async () => {
     const category = uploadCategorySelect.value;
     const brandName = uploadBrandNameInput.value.trim();
-    const file = uploadFileInput.files[0];
 
     if(!brandName){ uploadModalMsg.textContent = '브랜드명을 입력해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
-    if(!file){ uploadModalMsg.textContent = '이미지 파일을 선택해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
+    if(!pendingAnalysisPromise){ uploadModalMsg.textContent = '이미지 파일을 선택해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
 
     uploadSubmitBtn.disabled = true;
     uploadModalMsg.textContent = '업로드 중…';
     uploadModalMsg.className = 'upload-modal-msg';
 
     try{
-      const resized = (pendingResized && pendingResized.file === file) ? pendingResized : {
-        thumb: await resizeImageToBase64(file, 700, 0.74),
-        full: await resizeImageToBase64(file, 2000, 0.92),
-      };
-      const { thumb, full } = resized;
+      const analysis = await pendingAnalysisPromise;
+      const { thumb, full } = pendingResized;
       const resp = await fetch('/api/uploadReferenceImage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category, brandName,
-          note: uploadNoteInput.value.trim(),
-          type: uploadTypeSelect.value,
+          note: analysis.note,
+          type: analysis.type,
           ownWork: uploadOwnWorkInput.checked,
           thumb, full,
         }),
@@ -649,7 +660,7 @@
       uploadModalMsg.textContent = '등록됐습니다!';
       uploadModalMsg.className = 'upload-modal-msg success';
       setTimeout(() => {
-        closeUploadModal();
+        resetUploadArea();
         loadCategoryImages(currentCategoryId || 'all', categoryOptValue.textContent);
       }, 700);
     }catch(err){
