@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 폰트 페어링</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- 배너용 샘플 폰트 — 구글 폰트(한글 지원 24종)를 한 번에 요청 -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;600;900&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Gothic+A1:wght@400;500;700;900&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nanum+Brush+Script&family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gaegu:wght@300;400;700&family=Gamja+Flower&family=Poor+Story&family=Stylish&family=Song+Myung&family=East+Sea+Dokdo&family=Hi+Melody&family=Cute+Font&family=Yeon+Sung&family=Gugi&family=Dokdo&family=Single+Day&family=Kirang+Haerang&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0C0E;
+    --surface: #14171C;
+    --surface-2: #0F1216;
+    --surface-3: #15181D;
+    --line: rgba(255,255,255,.11);
+    --line-soft: rgba(255,255,255,.07);
+    --ink: #EDEEF0;
+    --ink-2: #A2A7B0;
+    --ink-3: #7E838C;
+    --ink-4: #6B707A;
+    --accent: #CCFF00;
+    --accent-strong: #B8E600;
+    --accent-ink: #0B0C0E;
+    --card: #14171C;
+    --card-border: rgba(255,255,255,.11);
+    --text: #EDEEF0;
+    --text-2: #A2A7B0;
+    --text-3: #7E838C;
+    --canvas-text: #EDEEF0;
+    --canvas-text-2: #A2A7B0;
+    --charcoal: #15181D;
+    --charcoal-border: rgba(255,255,255,.11);
+    --num-bg: rgba(204,255,0,.1);
+    --num-text: #CCFF00;
+    --pass: #A8CFBC;
+    --needsfix: #D9A660;
+    --reject: #C2687A;
+    --na: #6B707A;
+    --danger: #C2687A;
+    --ok: #A8CFBC;
+    --font-display: 'Sora','Pretendard',sans-serif;
+    --font-mono: 'JetBrains Mono',ui-monospace,monospace;
+  }
+
+  /* 배너 샘플용 폰트 — SUIT은 구글 폰트에 없어 눈누 CDN에서 직접 로드 */
+  @font-face{font-family:'SUIT';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SUIT';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SUIT';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-SemiBold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SUIT';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SUIT';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-ExtraBold.woff2') format('woff2');font-weight:800;font-style:normal;font-display:swap;}
+
+  *{box-sizing:border-box;}
+  [data-row],[data-reveal]{opacity:0;}
+
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; word-break:keep-all; overflow-x:hidden;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--accent); color:var(--accent-ink);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  button,input,select,textarea{font-family:inherit;}
+  @keyframes pulse{0%,100%{opacity:.35;}50%{opacity:1;}}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
+
+  .grain{position:fixed; inset:0; z-index:600; pointer-events:none; background-image:url(assets/grain.svg); background-size:180px 180px; opacity:.09; mix-blend-mode:overlay;}
+
+  .page{max-width:1180px; margin:0 auto; padding:120px 40px 100px;}
+
+  .gnb-bar{position:fixed; top:0; left:0; right:0; z-index:200; padding:14px 40px 0; background:linear-gradient(180deg,#0B0C0E 74%,rgba(11,12,14,.86)); backdrop-filter:blur(10px);}
+  .gnb-bar-inner{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; max-width:1520px; margin:0 auto; gap:20px;}
+  .gnb-logo{display:flex; align-items:center; justify-self:start; text-decoration:none;}
+  .gnb-logo-icon{height:40px; width:auto; display:block;}
+  .gnb-logo-text{display:none;}
+  .gnb{display:flex; align-items:center;}
+  .gnb-primary{gap:2px; justify-self:center; padding:6px; border-radius:999px; background:rgba(18,21,25,.9); backdrop-filter:blur(18px) saturate(1.2); border:1px solid rgba(255,255,255,.1); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px -26px rgba(0,0,0,.95);}
+  .gnb-secondary{gap:2px; justify-self:end;}
+  .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; letter-spacing:-.015em; white-space:nowrap; border:none; background:none; cursor:pointer; transition:background .25s ease,color .25s ease,box-shadow .25s ease;}
+  .gnb-primary .gnb-link:hover{color:var(--ink); box-shadow:inset 0 0 0 1px rgba(204,255,0,.55);}
+  .gnb-primary .gnb-link.active{background:#EDEEF0; color:#0B0C0E; font-weight:700;}
+  .gnb-primary .gnb-link.active:hover{box-shadow:none;}
+  .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none; white-space:nowrap; transition:color .25s ease;}
+  .gnb-secondary .gnb-link:hover{color:var(--ink);}
+  .gnb-secondary .gnb-link.active{color:#EDEEF0;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{display:flex; align-items:center; gap:5px; font-family:inherit;}
+  .gnb-dropdown-toggle::after{content:'\25BC'; font-size:8px; opacity:.55;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding-top:12px; display:none; z-index:40;}
+  .gnb-dropdown-menu-inner{padding:8px; border-radius:16px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95); min-width:158px; display:flex; flex-direction:column; gap:2px;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu, .gnb-dropdown-menu.open{display:block;}
+  .gnb-dropdown-item{display:block; width:100%; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; text-decoration:none; transition:background .2s ease,color .2s ease;}
+  .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
+  .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
+
+  .scroll-progress{max-width:1520px; margin:14px auto 0; height:1px; background:rgba(255,255,255,.07); border-radius:1px; overflow:hidden;}
+  .scroll-progress-bar{height:1px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
+  .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  .footer-logo{display:block; height:36px; width:auto; margin:0 auto 18px; opacity:.5;}
+
+  .page-eyebrow{font:500 11px/1 var(--font-mono); letter-spacing:.2em; color:var(--ink-3); margin-bottom:22px;}
+  .page-eyebrow b{color:var(--accent); font-weight:500;}
+  h1{font-family:var(--font-display); font-size:clamp(36px,4.6vw,68px); font-weight:800; letter-spacing:-.055em; line-height:1; margin:0; color:var(--ink);}
+  .sub{margin:24px 0 12px; max-width:78ch; font-size:16.5px; font-weight:300; line-height:1.85; color:var(--ink-2);}
+  .privacy-note{font-size:12px; color:var(--ink-4); line-height:1.8; margin:0 0 44px;}
+
+  .section-block{margin-bottom:44px;}
+  .section-heading{font-size:16px; font-weight:700; margin:0 0 6px; color:var(--canvas-text);}
+  .section-note{font-size:13px; color:var(--text-3); margin:0 0 18px; line-height:1.7;}
+
+  /* 프리셋 칩 */
+  .preset-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:28px;}
+  .preset-chip{display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--ink-2); font-size:13px; font-weight:600; cursor:pointer; transition:background .2s ease,color .2s ease,border-color .2s ease;}
+  .preset-chip:hover{color:var(--ink); border-color:rgba(255,255,255,.25);}
+  .preset-chip.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+
+  /* 배너 미리보기 */
+  .preview-wrap{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:28px; align-items:start;}
+  .preview-card{position:relative; border-radius:22px; overflow:hidden; min-height:360px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:56px 40px; transition:background 1s ease;}
+  .preview-badge{position:absolute; top:16px; left:18px; font:600 10px/1 var(--font-mono); letter-spacing:.16em; color:rgba(255,255,255,.55); text-transform:uppercase;}
+  .preview-headline{margin:0; line-height:1.15; word-break:keep-all;}
+  .preview-subtitle{margin:14px 0 0; line-height:1.4; word-break:keep-all; opacity:.92;}
+  .preview-cta{margin-top:26px; display:inline-flex; align-items:center; gap:8px; padding:13px 26px; border-radius:999px; background:rgba(255,255,255,.96); color:#0B0C0E; white-space:nowrap;}
+  .preview-bg-row{display:flex; gap:8px; margin-top:14px;}
+  .preview-bg-swatch{width:26px; height:26px; border-radius:8px; border:2px solid transparent; cursor:pointer; padding:0;}
+  .preview-bg-swatch.active{border-color:var(--accent);}
+
+  .role-panels{display:flex; flex-direction:column; gap:14px;}
+  .role-card{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px 18px;}
+  .role-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .role-label{font:600 11px/1 var(--font-mono); letter-spacing:.14em; color:var(--ink-3); text-transform:uppercase;}
+  .lock-btn{border:none; background:none; cursor:pointer; font-size:15px; color:var(--ink-4); padding:4px; border-radius:8px; line-height:1;}
+  .lock-btn.locked{color:var(--accent);}
+  .role-select-row{display:flex; gap:8px; margin-bottom:10px;}
+  .role-select{flex:1; min-width:0; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 10px; color:var(--ink); font-size:13.5px;}
+  .role-tag{font-size:10.5px; font-weight:700; letter-spacing:.04em; color:var(--ink-4); background:rgba(255,255,255,.05); border-radius:6px; padding:5px 8px; white-space:nowrap; align-self:center;}
+  .role-slider-row{display:flex; align-items:center; gap:10px; font-size:11.5px; color:var(--ink-3);}
+  .role-slider-row input[type=range]{flex:1; accent-color:var(--accent);}
+  .role-slider-val{width:38px; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-2);}
+  .role-text-input{width:100%; margin-top:10px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 10px; color:var(--ink); font-size:13px;}
+
+  .shuffle-btn{width:100%; margin-top:2px; padding:13px; border-radius:12px; border:1px dashed rgba(255,255,255,.22); background:none; color:var(--ink-2); font-size:13.5px; font-weight:600; cursor:pointer; transition:border-color .2s ease,color .2s ease;}
+  .shuffle-btn:hover{border-color:var(--accent); color:var(--accent);}
+
+  .combo-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px;}
+  .combo-card{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px 18px; cursor:pointer; transition:border-color .2s ease,transform .2s ease;}
+  .combo-card:hover{border-color:rgba(204,255,0,.5); transform:translateY(-2px);}
+  .combo-title{font-size:13px; font-weight:700; margin-bottom:10px; color:var(--canvas-text);}
+  .combo-preview{font-size:20px; line-height:1.3; margin-bottom:4px; word-break:keep-all;}
+  .combo-sub{font-size:12.5px; color:var(--text-3); margin-bottom:8px; word-break:keep-all;}
+  .combo-fonts{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ink-4); flex-wrap:wrap;}
+  .combo-arrow{opacity:.5;}
+
+  @media (max-width:900px){
+    .preview-wrap{grid-template-columns:1fr;}
+  }
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar-inner{display:flex; flex-wrap:wrap; gap:16px;}
+    .gnb{gap:12px;}
+  }
+</style>
+</head>
+<body>
+<noscript><style>[data-row],[data-reveal]{opacity:1 !important;}</style></noscript>
+
+<div class="grain"></div>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb gnb-primary">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div></div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <a href="font-pairing.html" class="gnb-link active">폰트 페어링</a>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      </nav>
+      <nav class="gnb gnb-secondary">
+        <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">로드맵</a>
+    </nav>
+  </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
+</div>
+
+<div class="page">
+
+  <div class="page-eyebrow"><b>&#10022;</b>&nbsp;FONT PAIRING</div>
+  <h1>폰트 페어링</h1>
+  <p class="sub">헤드라인·서브카피·본문 폰트 조합을 배너 형태로 바로 미리보고 고를 수 있는 참고 도구입니다. 구글 폰트 전체와 눈누(noonnu.cc)의 상업적 이용 가능한 무료 폰트 일부를 사용합니다.</p>
+  <p class="privacy-note">※ 아래 "추천 조합"은 실증된 타이포그래피 이론이 아니라 팀이 직접 골라본 참고용 조합입니다 — 최종 선택은 배너 톤에 맞게 디자이너가 판단해주세요. 목록에 없는 폰트(예: 어도비 폰트)를 쓰고 싶다면 실제 배너 제작은 해당 프로그램에서 진행해주세요, 이 도구는 미리보기 전용입니다.</p>
+
+  <div class="section-block" data-reveal>
+    <div class="preset-row" id="presetRow"></div>
+
+    <div class="preview-wrap">
+      <div>
+        <div class="preview-card" id="previewCard">
+          <div class="preview-badge">AD PREVIEW</div>
+          <h2 class="preview-headline" id="previewHeadline" contenteditable="true" spellcheck="false"></h2>
+          <p class="preview-subtitle" id="previewSubtitle" contenteditable="true" spellcheck="false"></p>
+          <div class="preview-cta" id="previewCta" contenteditable="true" spellcheck="false"></div>
+        </div>
+        <div class="preview-bg-row" id="bgRow"></div>
+        <div class="section-note" style="margin-top:10px;">배경색을 바꿔가며 대비를 확인하고, 텍스트를 직접 클릭해서 실제 카피로 바꿔보세요.</div>
+      </div>
+
+      <div class="role-panels">
+        <div class="role-card">
+          <div class="role-head"><span class="role-label">헤드라인</span><button type="button" class="lock-btn" data-lock="heading">🔓</button></div>
+          <div class="role-select-row">
+            <select class="role-select" id="selHeading"></select>
+            <span class="role-tag" id="tagHeading">–</span>
+          </div>
+          <div class="role-slider-row"><span>크기</span><input type="range" id="sizeHeading" min="28" max="64" value="44"><span class="role-slider-val" id="sizeHeadingVal">44px</span></div>
+        </div>
+        <div class="role-card">
+          <div class="role-head"><span class="role-label">서브카피</span><button type="button" class="lock-btn" data-lock="subtitle">🔓</button></div>
+          <div class="role-select-row">
+            <select class="role-select" id="selSubtitle"></select>
+            <span class="role-tag" id="tagSubtitle">–</span>
+          </div>
+          <div class="role-slider-row"><span>크기</span><input type="range" id="sizeSubtitle" min="14" max="30" value="18"><span class="role-slider-val" id="sizeSubtitleVal">18px</span></div>
+        </div>
+        <div class="role-card">
+          <div class="role-head"><span class="role-label">본문·CTA</span><button type="button" class="lock-btn" data-lock="body">🔓</button></div>
+          <div class="role-select-row">
+            <select class="role-select" id="selBody"></select>
+            <span class="role-tag" id="tagBody">–</span>
+          </div>
+          <div class="role-slider-row"><span>크기</span><input type="range" id="sizeBody" min="12" max="20" value="15"><span class="role-slider-val" id="sizeBodyVal">15px</span></div>
+        </div>
+        <button type="button" class="shuffle-btn" id="shuffleBtn">🎲 다른 조합 보기 (잠긴 역할은 유지)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block" data-reveal>
+    <div class="section-heading">추천 조합</div>
+    <div class="section-note" id="comboNote">선택한 무드에 어울리는 조합입니다. 카드를 클릭하면 바로 적용됩니다.</div>
+    <div class="combo-grid" id="comboGrid"></div>
+  </div>
+
+  <div class="page-footer show" data-reveal>
+    <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
+    폰트 저작권은 각 제작사에 있습니다 — 실제 사용 전 라이선스 조건(상업적 이용 범위 등)을 다시 한번 확인해주세요.<br>
+    이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
+    &copy; 2026 NHNAD. All rights reserved.
+  </div>
+</div>
+
+<script>
+  // ---------- 폰트 카탈로그 ----------
+  // category: SERIF / SANS-SERIF / DISPLAY / HANDWRITING (표시용 태그)
+  // body: 본문·CTA 셀렉트에 노출할지 여부 (가독성 위주로 제한)
+  const FONTS = [
+    { id:'pretendard', name:'Pretendard', family:"'Pretendard'", category:'SANS-SERIF', body:true },
+    { id:'suit', name:'SUIT', family:"'SUIT'", category:'SANS-SERIF', body:true },
+    { id:'notosanskr', name:'Noto Sans KR', family:"'Noto Sans KR'", category:'SANS-SERIF', body:true },
+    { id:'notoserifkr', name:'Noto Serif KR', family:"'Noto Serif KR'", category:'SERIF', body:true },
+    { id:'ibmplexsanskr', name:'IBM Plex Sans KR', family:"'IBM Plex Sans KR'", category:'SANS-SERIF', body:true },
+    { id:'gothica1', name:'Gothic A1', family:"'Gothic A1'", category:'SANS-SERIF', body:true },
+    { id:'nanumgothic', name:'Nanum Gothic', family:"'Nanum Gothic'", category:'SANS-SERIF', body:true },
+    { id:'nanummyeongjo', name:'Nanum Myeongjo', family:"'Nanum Myeongjo'", category:'SERIF', body:true },
+    { id:'blackhansans', name:'Black Han Sans', family:"'Black Han Sans'", category:'DISPLAY', body:false },
+    { id:'dohyeon', name:'Do Hyeon', family:"'Do Hyeon'", category:'DISPLAY', body:false },
+    { id:'jua', name:'Jua', family:"'Jua'", category:'DISPLAY', body:false },
+    { id:'gaegu', name:'Gaegu', family:"'Gaegu'", category:'HANDWRITING', body:false },
+    { id:'gamjaflower', name:'Gamja Flower', family:"'Gamja Flower'", category:'HANDWRITING', body:false },
+    { id:'poorstory', name:'Poor Story', family:"'Poor Story'", category:'HANDWRITING', body:false },
+    { id:'stylish', name:'Stylish', family:"'Stylish'", category:'DISPLAY', body:false },
+    { id:'songmyung', name:'Song Myung', family:"'Song Myung'", category:'SERIF', body:false },
+    { id:'eastseadokdo', name:'East Sea Dokdo', family:"'East Sea Dokdo'", category:'HANDWRITING', body:false },
+    { id:'himelody', name:'Hi Melody', family:"'Hi Melody'", category:'HANDWRITING', body:false },
+    { id:'cutefont', name:'Cute Font', family:"'Cute Font'", category:'HANDWRITING', body:false },
+    { id:'yeonsung', name:'Yeon Sung', family:"'Yeon Sung'", category:'HANDWRITING', body:false },
+    { id:'gugi', name:'Gugi', family:"'Gugi'", category:'DISPLAY', body:false },
+    { id:'dokdo', name:'Dokdo', family:"'Dokdo'", category:'HANDWRITING', body:false },
+    { id:'singleday', name:'Single Day', family:"'Single Day'", category:'HANDWRITING', body:false },
+    { id:'kiranghaerang', name:'Kirang Haerang', family:"'Kirang Haerang'", category:'DISPLAY', body:false },
+    { id:'nanumpen', name:'Nanum Pen Script', family:"'Nanum Pen Script'", category:'HANDWRITING', body:false },
+    { id:'nanumbrush', name:'Nanum Brush Script', family:"'Nanum Brush Script'", category:'HANDWRITING', body:false },
+  ];
+  const FONT_BY_ID = Object.fromEntries(FONTS.map(f => [f.id, f]));
+  const BODY_FONTS = FONTS.filter(f => f.body);
+
+  // ---------- 프리셋 무드 & 추천 조합 ----------
+  const PRESETS = {
+    free: { label:'자유 조합', emoji:'🎲', combos:[] },
+    warm: { label:'따뜻함 & 감성', emoji:'🌸', combos:[
+      { heading:'nanummyeongjo', subtitle:'nanummyeongjo', body:'nanumgothic', desc:'전통 명조 + 깔끔 고딕' },
+      { heading:'gamjaflower', subtitle:'nanumgothic', body:'nanumgothic', desc:'손글씨 헤드라인 + 편안한 본문' },
+      { heading:'poorstory', subtitle:'nanummyeongjo', body:'notosanskr', desc:'감성 손글씨 + 격식 있는 서브' },
+    ]},
+    minimal: { label:'미니멀 & 모던', emoji:'📐', combos:[
+      { heading:'pretendard', subtitle:'pretendard', body:'notosanskr', desc:'프리텐다드로 통일한 클린 톤' },
+      { heading:'ibmplexsanskr', subtitle:'gothica1', body:'ibmplexsanskr', desc:'테크·B2B에 어울리는 조합' },
+      { heading:'suit', subtitle:'suit', body:'pretendard', desc:'SUIT 헤드라인 + 프리텐다드 본문' },
+    ]},
+    bold: { label:'강렬함 & 개성', emoji:'⚡', combos:[
+      { heading:'blackhansans', subtitle:'notosanskr', body:'notosanskr', desc:'임팩트 헤드라인 + 가독성 본문' },
+      { heading:'gugi', subtitle:'dohyeon', body:'notosanskr', desc:'두꺼운 헤드라인 + 강조 서브' },
+      { heading:'stylish', subtitle:'jua', body:'gothica1', desc:'개성 있는 헤드라인 조합' },
+    ]},
+    retro: { label:'레트로 & 아날로그', emoji:'💾', combos:[
+      { heading:'songmyung', subtitle:'nanummyeongjo', body:'nanumgothic', desc:'옛 신문 느낌의 명조 조합' },
+      { heading:'eastseadokdo', subtitle:'nanumpen', body:'nanumgothic', desc:'손맛 나는 레트로 손글씨' },
+      { heading:'dokdo', subtitle:'gamjaflower', body:'notosanskr', desc:'아날로그 감성 손글씨 조합' },
+    ]},
+  };
+
+  const BG_COLORS = ['#141822','#F5F1E8','#FCEEE8','#0B2A24','#2A1B3D'];
+
+  const state = {
+    heading:'pretendard', subtitle:'notosanskr', body:'notosanskr',
+    locks:{heading:false, subtitle:false, body:false},
+    mood:'free', comboCursor:{warm:0, minimal:0, bold:0, retro:0},
+    bg: BG_COLORS[0],
+    sizes:{heading:44, subtitle:18, body:15},
+  };
+
+  function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function fillSelect(sel, list, current){
+    sel.innerHTML = list.map(f => `<option value="${f.id}"${f.id===current?' selected':''}>${f.name}</option>`).join('');
+  }
+
+  function render(){
+    const hf = FONT_BY_ID[state.heading], sf = FONT_BY_ID[state.subtitle], bf = FONT_BY_ID[state.body];
+    const card = document.getElementById('previewCard');
+    card.style.background = state.bg;
+    const isLight = ['#F5F1E8','#FCEEE8'].includes(state.bg);
+    card.style.color = isLight ? '#1A1A1A' : '#FFFFFF';
+
+    const hEl = document.getElementById('previewHeadline');
+    const sEl = document.getElementById('previewSubtitle');
+    const cEl = document.getElementById('previewCta');
+    hEl.style.fontFamily = hf.family; hEl.style.fontWeight = 800; hEl.style.fontSize = state.sizes.heading+'px';
+    sEl.style.fontFamily = sf.family; sEl.style.fontWeight = 500; sEl.style.fontSize = state.sizes.subtitle+'px';
+    cEl.style.fontFamily = bf.family; cEl.style.fontWeight = 700; cEl.style.fontSize = state.sizes.body+'px';
+
+    document.getElementById('selHeading').value = state.heading;
+    document.getElementById('selSubtitle').value = state.subtitle;
+    document.getElementById('selBody').value = state.body;
+    document.getElementById('tagHeading').textContent = hf.category;
+    document.getElementById('tagSubtitle').textContent = sf.category;
+    document.getElementById('tagBody').textContent = bf.category;
+
+    document.getElementById('sizeHeading').value = state.sizes.heading;
+    document.getElementById('sizeSubtitle').value = state.sizes.subtitle;
+    document.getElementById('sizeBody').value = state.sizes.body;
+    document.getElementById('sizeHeadingVal').textContent = state.sizes.heading+'px';
+    document.getElementById('sizeSubtitleVal').textContent = state.sizes.subtitle+'px';
+    document.getElementById('sizeBodyVal').textContent = state.sizes.body+'px';
+
+    document.querySelectorAll('.lock-btn').forEach(btn => {
+      const role = btn.dataset.lock;
+      btn.textContent = state.locks[role] ? '🔒' : '🔓';
+      btn.classList.toggle('locked', state.locks[role]);
+    });
+
+    document.querySelectorAll('.preview-bg-swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.dataset.bg === state.bg);
+    });
+
+    document.querySelectorAll('.preset-chip').forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.mood === state.mood);
+    });
+
+    renderCombos();
+  }
+
+  function applyCombo(combo){
+    if(!state.locks.heading) state.heading = combo.heading;
+    if(!state.locks.subtitle) state.subtitle = combo.subtitle;
+    if(!state.locks.body) state.body = combo.body;
+    render();
+  }
+
+  function shuffle(){
+    if(state.mood === 'free'){
+      if(!state.locks.heading) state.heading = randomFrom(FONTS).id;
+      if(!state.locks.subtitle) state.subtitle = randomFrom(FONTS).id;
+      if(!state.locks.body) state.body = randomFrom(BODY_FONTS).id;
+    } else {
+      const combos = PRESETS[state.mood].combos;
+      state.comboCursor[state.mood] = (state.comboCursor[state.mood] + 1) % combos.length;
+      applyCombo(combos[state.comboCursor[state.mood]]);
+      return;
+    }
+    render();
+  }
+
+  function renderCombos(){
+    const grid = document.getElementById('comboGrid');
+    const note = document.getElementById('comboNote');
+    let combos, showMoodLabel = false;
+    if(state.mood === 'free'){
+      combos = Object.entries(PRESETS).filter(([k])=>k!=='free').flatMap(([k,p]) => p.combos.map(c => ({...c, moodLabel:p.label})));
+      showMoodLabel = true;
+      note.textContent = '무드를 선택하면 그 톤에 맞는 조합만 볼 수 있습니다. 카드를 클릭하면 바로 적용됩니다.';
+    } else {
+      combos = PRESETS[state.mood].combos;
+      note.textContent = '선택한 무드에 어울리는 조합입니다. 카드를 클릭하면 바로 적용됩니다.';
+    }
+    grid.innerHTML = combos.map(c => {
+      const hf = FONT_BY_ID[c.heading], sf = FONT_BY_ID[c.subtitle], bf = FONT_BY_ID[c.body];
+      return `<div class="combo-card" data-h="${c.heading}" data-s="${c.subtitle}" data-b="${c.body}">
+        <div class="combo-title">${showMoodLabel ? c.moodLabel+' — ' : ''}${c.desc}</div>
+        <div class="combo-preview" style="font-family:${hf.family};font-weight:800;">테스트를 해보자</div>
+        <div class="combo-sub" style="font-family:${sf.family};">부제목도 함께 확인하세요</div>
+        <div class="combo-fonts">${hf.name}<span class="combo-arrow">→</span>${sf.name}<span class="combo-arrow">→</span>${bf.name}</div>
+      </div>`;
+    }).join('');
+    grid.querySelectorAll('.combo-card').forEach(card => {
+      card.addEventListener('click', () => applyCombo({ heading:card.dataset.h, subtitle:card.dataset.s, body:card.dataset.b }));
+    });
+  }
+
+  // ---------- 초기화 ----------
+  fillSelect(document.getElementById('selHeading'), FONTS, state.heading);
+  fillSelect(document.getElementById('selSubtitle'), FONTS, state.subtitle);
+  fillSelect(document.getElementById('selBody'), BODY_FONTS, state.body);
+
+  document.getElementById('previewHeadline').textContent = '지금 이 순간, 놓치지 마세요';
+  document.getElementById('previewSubtitle').textContent = '신규 가입 시 첫 달 50% 할인';
+  document.getElementById('previewCta').textContent = '지금 확인하기 →';
+
+  document.getElementById('presetRow').innerHTML = Object.entries(PRESETS).map(([key,p]) =>
+    `<button type="button" class="preset-chip" data-mood="${key}">${p.emoji} ${p.label}</button>`
+  ).join('');
+  document.getElementById('bgRow').innerHTML = BG_COLORS.map(c =>
+    `<button type="button" class="preview-bg-swatch" data-bg="${c}" style="background:${c};"></button>`
+  ).join('');
+
+  document.getElementById('selHeading').addEventListener('change', e => { state.heading = e.target.value; render(); });
+  document.getElementById('selSubtitle').addEventListener('change', e => { state.subtitle = e.target.value; render(); });
+  document.getElementById('selBody').addEventListener('change', e => { state.body = e.target.value; render(); });
+
+  document.getElementById('sizeHeading').addEventListener('input', e => { state.sizes.heading = +e.target.value; render(); });
+  document.getElementById('sizeSubtitle').addEventListener('input', e => { state.sizes.subtitle = +e.target.value; render(); });
+  document.getElementById('sizeBody').addEventListener('input', e => { state.sizes.body = +e.target.value; render(); });
+
+  document.querySelectorAll('.lock-btn').forEach(btn => {
+    btn.addEventListener('click', () => { const r = btn.dataset.lock; state.locks[r] = !state.locks[r]; render(); });
+  });
+
+  document.getElementById('presetRow').addEventListener('click', e => {
+    const chip = e.target.closest('.preset-chip');
+    if(!chip) return;
+    state.mood = chip.dataset.mood;
+    if(state.mood !== 'free'){
+      applyCombo(PRESETS[state.mood].combos[state.comboCursor[state.mood]]);
+    } else {
+      render();
+    }
+  });
+
+  document.getElementById('bgRow').addEventListener('click', e => {
+    const sw = e.target.closest('.preview-bg-swatch');
+    if(!sw) return;
+    state.bg = sw.dataset.bg;
+    render();
+  });
+
+  document.getElementById('shuffleBtn').addEventListener('click', shuffle);
+
+  render();
+
+  // ---------- GNB / 스크롤바 (공통) ----------
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+<script src="assets/adcheck-reveal.js"></script>
+</body>
+</html>
