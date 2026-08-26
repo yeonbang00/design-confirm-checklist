@@ -132,8 +132,8 @@
 
   .card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:20px; padding:32px; margin-bottom:24px;}
 
-  .dropzone{border:1.5px dashed rgba(204,255,0,.55); border-radius:14px; padding:48px 24px; text-align:center; cursor:pointer; background:rgba(255,255,255,.03); transition:border-color .15s ease;}
-  .dropzone.dragover{border-color:var(--accent);}
+  .dropzone{border:1.5px dashed var(--charcoal-border); border-radius:14px; padding:48px 24px; text-align:center; cursor:pointer; background:rgba(255,255,255,.03); transition:border-color .15s ease;}
+  .dropzone:hover, .dropzone.dragover{border-color:var(--accent);}
   .dz-empty .dz-icon{position:relative; width:28px; height:28px; margin:0 auto 14px;}
   .dz-empty .dz-icon::before,.dz-empty .dz-icon::after{content:''; position:absolute; background:var(--accent); border-radius:2px;}
   .dz-empty .dz-icon::before{left:50%; top:0; bottom:0; width:2px; transform:translateX(-50%);}
