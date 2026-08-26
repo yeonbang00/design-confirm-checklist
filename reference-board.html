@@ -112,7 +112,10 @@
   .upload-section{margin-bottom:28px;}
   .upload-dropzone{border:1px dashed var(--charcoal-border); border-radius:16px; padding:36px 24px; text-align:center; cursor:pointer; background:rgba(255,255,255,.03); transition:border-color .15s ease,background .15s ease;}
   .upload-dropzone:hover, .upload-dropzone.dragover{border-color:var(--accent); background:rgba(204,255,0,.04);}
-  .upload-dropzone-icon{font-size:26px; font-weight:300; color:var(--accent); margin-bottom:8px; line-height:1;}
+  .upload-dropzone-icon{position:relative; width:22px; height:22px; margin:0 auto 8px;}
+  .upload-dropzone-icon::before, .upload-dropzone-icon::after{content:''; position:absolute; background:var(--accent); border-radius:2px;}
+  .upload-dropzone-icon::before{left:50%; top:0; bottom:0; width:2px; transform:translateX(-50%);}
+  .upload-dropzone-icon::after{top:50%; left:0; right:0; height:2px; transform:translateY(-50%);}
   .upload-dropzone-title{font-size:14px; font-weight:600; color:var(--canvas-text); margin-bottom:4px;}
   .upload-dropzone-sub{font-size:12.5px; color:var(--canvas-text-2);}
 
@@ -235,7 +238,7 @@
   <div class="upload-section">
     <div class="upload-dropzone" id="uploadDropzone">
       <input type="file" id="uploadFile" accept="image/*" hidden>
-      <div class="upload-dropzone-icon">+</div>
+      <div class="upload-dropzone-icon"></div>
       <div class="upload-dropzone-title">이미지를 끌어다 놓거나 클릭해서 올려주세요</div>
       <div class="upload-dropzone-sub">이 사이트를 이용하는 팀원이 직접 레퍼런스를 등록할 수 있어요</div>
     </div>
