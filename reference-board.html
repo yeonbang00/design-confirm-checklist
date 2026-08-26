@@ -635,7 +635,6 @@
     uploadModalMsg.textContent = '';
     uploadModalMsg.className = 'upload-modal-msg';
     if(currentCategoryId && currentCategoryId !== 'all') setUploadCategory(currentCategoryId);
-    uploadBrandNameInput.focus();
 
     pendingAnalysisPromise = (async () => {
       const [thumb, full] = await Promise.all([
