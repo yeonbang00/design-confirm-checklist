@@ -19,6 +19,7 @@
 
 import { REFERENCE_CATEGORIES } from './_referenceLibrary.js';
 import { getHistoryEntries, removeHistoryEntry } from './_historyStore.js';
+import { getUploadedReferenceImages } from './_referenceUploadsStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 export default async function handler(req, res) {
@@ -30,10 +31,11 @@ export default async function handler(req, res) {
       return;
     }
 
+    const uploaded = await getUploadedReferenceImages();
     const categories = Object.entries(REFERENCE_CATEGORIES).map(([id, c]) => ({
       id,
       name: c.name,
-      count: (c.items || []).length,
+      count: (c.items || []).length + uploaded.filter((u) => u.category === id).length,
     }));
     res.status(200).json({ categories });
     return;

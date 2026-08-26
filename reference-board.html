@@ -108,11 +108,19 @@
   .sub{margin:24px 0 44px; max-width:78ch; font-size:16.5px; font-weight:300; line-height:1.85; color:var(--ink-2);}
 
   .card{border-radius:14px; box-shadow:none; border:1px solid rgba(255,255,255,.11); background:var(--card); padding:20px;}
-  .card.coming-soon{background:var(--charcoal); text-align:center;}
-  .upload-coming-soon{margin-bottom:24px;}
-  .coming-soon-icon{font-size:26px; margin-bottom:8px;}
-  .coming-soon-badge{display:inline-block; font-size:11px; font-weight:700; color:var(--num-text); background:var(--num-bg); border-radius:20px; padding:4px 12px; margin-bottom:10px;}
-  .coming-soon-text{font-size:13px; color:var(--canvas-text-2); line-height:1.7; max-width:480px; margin:0 auto;}
+  .upload-cta-row{display:flex; align-items:center; gap:16px; margin-bottom:28px; flex-wrap:wrap;}
+  .upload-cta-note{font-size:13px; color:var(--canvas-text-2);}
+  .upload-modal-inner{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:28px; width:420px; max-width:90vw; max-height:85vh; overflow-y:auto; text-align:left;}
+  .upload-modal-title{font-size:18px; font-weight:700; margin:0 0 18px; color:var(--canvas-text);}
+  .upload-field{margin-bottom:14px;}
+  .upload-field label{display:block; font-size:12.5px; font-weight:600; color:var(--canvas-text-2); margin-bottom:6px;}
+  .upload-field input[type=text], .upload-field select, .upload-field input[type=file]{width:100%; padding:11px 14px; border:1px solid var(--charcoal-border); border-radius:10px; font-size:13px; font-family:inherit; background:var(--charcoal); color:var(--canvas-text); box-sizing:border-box;}
+  .upload-field-checkbox label{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--canvas-text-2); font-weight:400;}
+  .upload-field-checkbox input{margin:0;}
+  .upload-modal-msg{font-size:12.5px; margin-bottom:10px; min-height:1.4em;}
+  .upload-modal-msg.error{color:var(--reject);}
+  .upload-modal-msg.success{color:var(--pass);}
+  .upload-modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:18px;}
 
   .option-dropdown-row{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px;}
   .option-dropdown-row .option-dropdown-wrap{width:220px; margin-bottom:0;}
@@ -202,10 +210,9 @@
   <h1>이미지 레퍼런스</h1>
   <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
 
-  <div class="card coming-soon upload-coming-soon">
-    <div class="coming-soon-icon">🖼️</div>
-    <div class="coming-soon-badge">업데이트 예정</div>
-    <div class="coming-soon-text">이 사이트를 이용하는 팀원이 직접 이미지를 등록할 수 있는 기능이에요.<br>유료 플랜 결제 후 업데이트 예정입니다.</div>
+  <div class="upload-cta-row">
+    <button type="button" class="option-btn option-btn-primary" id="openUploadBtn" style="width:auto;">+ 이미지 올리기</button>
+    <div class="upload-cta-note">이 사이트를 이용하는 팀원이 직접 이미지를 등록할 수 있어요.</div>
   </div>
 
   <div class="option-dropdown-row">
@@ -240,6 +247,41 @@
   <div class="lightbox-inner">
     <img id="lightboxImg" src="" alt="확대된 레퍼런스 이미지">
     <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="uploadModal">
+  <button type="button" class="lightbox-close" id="uploadModalClose" aria-label="닫기">&times;</button>
+  <div class="upload-modal-inner">
+    <h2 class="upload-modal-title">이미지 올리기</h2>
+    <div class="upload-field">
+      <label for="uploadCategory">업종 카테고리</label>
+      <select id="uploadCategory"></select>
+    </div>
+    <div class="upload-field">
+      <label for="uploadBrandName">브랜드명</label>
+      <input type="text" id="uploadBrandName" placeholder="예: COACH">
+    </div>
+    <div class="upload-field">
+      <label for="uploadNote">메모 (선택)</label>
+      <input type="text" id="uploadNote" placeholder="예: 여름 세일 배너, 가방 클로즈업">
+    </div>
+    <div class="upload-field">
+      <label for="uploadType">유형 (선택)</label>
+      <select id="uploadType"><option value="">선택 안 함</option></select>
+    </div>
+    <div class="upload-field upload-field-checkbox">
+      <label><input type="checkbox" id="uploadOwnWork"> 우리 팀이 직접 제작한 소재예요</label>
+    </div>
+    <div class="upload-field">
+      <label for="uploadFile">이미지 파일</label>
+      <input type="file" id="uploadFile" accept="image/*">
+    </div>
+    <div class="upload-modal-msg" id="uploadModalMsg"></div>
+    <div class="upload-modal-actions">
+      <button type="button" class="option-btn" id="uploadCancelBtn" style="width:auto;">취소</button>
+      <button type="button" class="option-btn option-btn-primary" id="uploadSubmitBtn" style="width:auto;">등록하기</button>
+    </div>
   </div>
 </div>
 
@@ -464,10 +506,120 @@
       categoriesData = data.categories || [];
       renderCategoryOptions();
       loadCategoryImages('all', '전체');
+      uploadCategorySelect.innerHTML = categoriesData.map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('');
+      if(currentCategoryId && currentCategoryId !== 'all') uploadCategorySelect.value = currentCategoryId;
     })
     .catch(() => {
       refContent.innerHTML = '<div class="gl-empty">카테고리를 불러오지 못했습니다. api/referenceCategories.js가 배포되었는지 확인해주세요.</div>';
     });
+
+  // ---------- 이미지 올리기 모달 ----------
+  const uploadModal = document.getElementById('uploadModal');
+  const openUploadBtn = document.getElementById('openUploadBtn');
+  const uploadModalClose = document.getElementById('uploadModalClose');
+  const uploadCancelBtn = document.getElementById('uploadCancelBtn');
+  const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
+  const uploadCategorySelect = document.getElementById('uploadCategory');
+  const uploadTypeSelect = document.getElementById('uploadType');
+  const uploadBrandNameInput = document.getElementById('uploadBrandName');
+  const uploadNoteInput = document.getElementById('uploadNote');
+  const uploadOwnWorkInput = document.getElementById('uploadOwnWork');
+  const uploadFileInput = document.getElementById('uploadFile');
+  const uploadModalMsg = document.getElementById('uploadModalMsg');
+
+  uploadTypeSelect.innerHTML += TYPE_ORDER.map(id => '<option value="' + id + '">' + TYPE_LABELS[id] + '</option>').join('');
+
+  function openUploadModal(){
+    uploadModalMsg.textContent = '';
+    uploadModalMsg.className = 'upload-modal-msg';
+    uploadBrandNameInput.value = '';
+    uploadNoteInput.value = '';
+    uploadOwnWorkInput.checked = false;
+    uploadFileInput.value = '';
+    uploadTypeSelect.value = '';
+    if(currentCategoryId && currentCategoryId !== 'all') uploadCategorySelect.value = currentCategoryId;
+    uploadModal.classList.add('show');
+  }
+  function closeUploadModal(){ uploadModal.classList.remove('show'); }
+
+  openUploadBtn.addEventListener('click', openUploadModal);
+  uploadModalClose.addEventListener('click', closeUploadModal);
+  uploadCancelBtn.addEventListener('click', closeUploadModal);
+  uploadModal.addEventListener('click', (e) => { if(e.target === uploadModal) closeUploadModal(); });
+
+  // 캔버스로 리사이즈해서 base64 JPEG로 변환 — 인덱스 페이지의 프리뷰
+  // 준비 로직과 같은 방식(썸네일 700px q0.74, 원본 2000px q0.92).
+  function resizeImageToBase64(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if(w > maxDim || h > maxDim){
+            if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+            else{ w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          const base64 = dataUrl.split(',')[1];
+          if(!base64){ reject(new Error('이미지를 변환하지 못했습니다.')); return; }
+          resolve({ base64, mimeType: 'image/jpeg' });
+        };
+        img.onerror = () => reject(new Error('이미지를 불러올 수 없습니다.'));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  uploadSubmitBtn.addEventListener('click', async () => {
+    const category = uploadCategorySelect.value;
+    const brandName = uploadBrandNameInput.value.trim();
+    const file = uploadFileInput.files[0];
+
+    if(!brandName){ uploadModalMsg.textContent = '브랜드명을 입력해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
+    if(!file){ uploadModalMsg.textContent = '이미지 파일을 선택해주세요.'; uploadModalMsg.className = 'upload-modal-msg error'; return; }
+
+    uploadSubmitBtn.disabled = true;
+    uploadModalMsg.textContent = '업로드 중…';
+    uploadModalMsg.className = 'upload-modal-msg';
+
+    try{
+      const [thumb, full] = await Promise.all([
+        resizeImageToBase64(file, 700, 0.74),
+        resizeImageToBase64(file, 2000, 0.92),
+      ]);
+      const resp = await fetch('/api/uploadReferenceImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category, brandName,
+          note: uploadNoteInput.value.trim(),
+          type: uploadTypeSelect.value,
+          ownWork: uploadOwnWorkInput.checked,
+          thumb, full,
+        }),
+      });
+      const data = await resp.json();
+      if(!resp.ok) throw new Error(data.error || ('status ' + resp.status));
+
+      uploadModalMsg.textContent = '등록됐습니다!';
+      uploadModalMsg.className = 'upload-modal-msg success';
+      setTimeout(() => {
+        closeUploadModal();
+        loadCategoryImages(currentCategoryId || 'all', categoryOptValue.textContent);
+      }, 700);
+    }catch(err){
+      uploadModalMsg.textContent = '업로드에 실패했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류');
+      uploadModalMsg.className = 'upload-modal-msg error';
+    }finally{
+      uploadSubmitBtn.disabled = false;
+    }
+  });
 
   // 헤더 하단 스크롤 진행 바
   (function(){
