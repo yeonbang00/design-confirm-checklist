@@ -263,11 +263,11 @@
       <input type="text" id="uploadBrandName" placeholder="예: COACH">
     </div>
     <div class="upload-field">
-      <label for="uploadNote">메모 (선택)</label>
+      <label for="uploadNote">메모 (파일 선택 시 AI가 자동 작성 — 수정 가능)</label>
       <input type="text" id="uploadNote" placeholder="예: 여름 세일 배너, 가방 클로즈업">
     </div>
     <div class="upload-field">
-      <label for="uploadType">유형 (선택)</label>
+      <label for="uploadType">유형 (파일 선택 시 AI가 자동 분류 — 수정 가능)</label>
       <select id="uploadType"><option value="">선택 안 함</option></select>
     </div>
     <div class="upload-field upload-field-checkbox">
@@ -529,6 +529,8 @@
 
   uploadTypeSelect.innerHTML += TYPE_ORDER.map(id => '<option value="' + id + '">' + TYPE_LABELS[id] + '</option>').join('');
 
+  let pendingResized = null; // { file, thumb, full } — 파일 선택 시 한 번만 리사이즈해서 분석·업로드에 재사용
+
   function openUploadModal(){
     uploadModalMsg.textContent = '';
     uploadModalMsg.className = 'upload-modal-msg';
@@ -537,6 +539,7 @@
     uploadOwnWorkInput.checked = false;
     uploadFileInput.value = '';
     uploadTypeSelect.value = '';
+    pendingResized = null;
     if(currentCategoryId && currentCategoryId !== 'all') uploadCategorySelect.value = currentCategoryId;
     uploadModal.classList.add('show');
   }
@@ -576,6 +579,41 @@
     });
   }
 
+  // 파일을 고르면 바로 리사이즈해두고, 썸네일로 AI 분석을 돌려 메모·유형을
+  // 자동으로 채운다 — 직접 타이핑하지 않아도 되고, 마음에 안 들면 그대로 수정 가능.
+  uploadFileInput.addEventListener('change', async () => {
+    const file = uploadFileInput.files[0];
+    pendingResized = null;
+    if(!file) return;
+
+    uploadModalMsg.textContent = 'AI가 이미지를 분석하는 중…';
+    uploadModalMsg.className = 'upload-modal-msg';
+
+    try{
+      const [thumb, full] = await Promise.all([
+        resizeImageToBase64(file, 700, 0.74),
+        resizeImageToBase64(file, 2000, 0.92),
+      ]);
+      pendingResized = { file, thumb, full };
+
+      const resp = await fetch('/api/analyzeReferenceImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64: thumb.base64, mediaType: thumb.mimeType, brandName: uploadBrandNameInput.value.trim() }),
+      });
+      const data = await resp.json();
+      if(resp.ok){
+        if(data.note) uploadNoteInput.value = data.note;
+        if(data.type) uploadTypeSelect.value = data.type;
+        uploadModalMsg.textContent = '';
+      } else {
+        uploadModalMsg.textContent = 'AI 자동 분석에 실패했어요 — 메모·유형을 직접 입력해주세요.';
+      }
+    }catch(err){
+      uploadModalMsg.textContent = 'AI 자동 분석에 실패했어요 — 메모·유형을 직접 입력해주세요.';
+    }
+  });
+
   uploadSubmitBtn.addEventListener('click', async () => {
     const category = uploadCategorySelect.value;
     const brandName = uploadBrandNameInput.value.trim();
@@ -589,10 +627,11 @@
     uploadModalMsg.className = 'upload-modal-msg';
 
     try{
-      const [thumb, full] = await Promise.all([
-        resizeImageToBase64(file, 700, 0.74),
-        resizeImageToBase64(file, 2000, 0.92),
-      ]);
+      const resized = (pendingResized && pendingResized.file === file) ? pendingResized : {
+        thumb: await resizeImageToBase64(file, 700, 0.74),
+        full: await resizeImageToBase64(file, 2000, 0.92),
+      };
+      const { thumb, full } = resized;
       const resp = await fetch('/api/uploadReferenceImage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
