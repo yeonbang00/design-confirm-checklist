@@ -195,7 +195,7 @@
 
   /* ai summary */
   .ai-summary{position:relative; display:block; border-radius:18px; background:linear-gradient(120deg,#16191F,#0F1216 78%); border:1px solid rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.08); padding:20px 26px; overflow:hidden; margin-top:32px;}
-  .ai-summary-head{display:flex; align-items:center; gap:10px; font:700 10.5px/1 var(--font-mono); letter-spacing:.18em; color:var(--ink); margin-bottom:12px;}
+  .ai-summary-head{display:flex; align-items:center; gap:10px; font:700 10.5px/1 var(--font-mono); letter-spacing:.18em; color:var(--ink); margin-bottom:12px; white-space:nowrap;}
   .ai-summary-idle-flag{margin-left:auto; color:var(--ink-4); letter-spacing:.14em;}
   .ai-summary.active .ai-summary-idle-flag{display:none;}
   .ai-summary-head .dot{width:7px; height:7px; border-radius:50%; background:var(--ink-3); transition:background .4s ease;}
@@ -209,9 +209,9 @@
   /* 반려사례 저장 */
   .rc-save-row{display:none; margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,.08);}
   .rc-save-row.show{display:block;}
-  .rc-save-trigger{display:inline-flex; align-items:center; gap:8px; background:var(--accent); border:1px solid var(--accent); color:var(--accent-ink); font-family:var(--font-display); font-size:13px; font-weight:700; padding:11px 20px; border-radius:12px; cursor:pointer; letter-spacing:-.01em; box-shadow:0 14px 34px -18px rgba(204,255,0,.7); transition:transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease;}
-  .rc-save-trigger:hover{transform:translateY(-2px);}
-  .rc-save-trigger:active{transform:scale(.95); transition:transform .1s ease;}
+  .rc-save-trigger{margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:var(--accent); border:1px solid var(--accent); color:var(--accent-ink); font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:-.01em; padding:6px 12px; border-radius:8px; cursor:pointer; transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
+  .rc-save-trigger:hover{transform:translateY(-1px);}
+  .rc-save-trigger:active{transform:scale(.93); transition:transform .1s ease;}
   .rc-save-panel{display:none; margin-top:14px; background:var(--surface-3); border:1px solid var(--line); border-radius:14px; padding:16px 18px;}
   .rc-save-panel.open{display:block;}
   .rc-save-title{font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:10px;}
@@ -507,14 +507,13 @@
 
   <!-- ---------- AI summary ---------- -->
   <div class="ai-summary" id="aiSummaryBox" data-reveal>
-    <div class="ai-summary-head"><span class="dot" id="summaryDot"></span><span>AI 총평</span><span class="ai-summary-idle-flag" id="summaryIdleFlag">IDLE</span></div>
+    <div class="ai-summary-head"><span class="dot" id="summaryDot"></span><span>AI 총평</span><span class="ai-summary-idle-flag" id="summaryIdleFlag">IDLE</span><button type="button" class="rc-save-trigger" id="rcSaveTrigger" hidden>🗂 반려사례 저장</button></div>
     <div class="ai-summary-body">
       <span id="aiSummaryText">배너를 올리고 분석하면 여기에 총평이 채워집니다.</span>
     </div>
     <div class="summary-refs" id="summaryRefs"></div>
 
     <div class="rc-save-row" id="rcSaveRow">
-      <button type="button" class="rc-save-trigger" id="rcSaveTrigger">🗂 이 사례를 반려사례로 저장</button>
       <div class="rc-save-panel" id="rcSavePanel">
         <div class="rc-save-title">저장할 반려 항목을 선택하세요</div>
         <div class="rc-check-list" id="rcCheckList"></div>
@@ -875,6 +874,7 @@
     document.getElementById('aiSummaryText').textContent = '배너를 올리고 분석하면 여기에 총평이 채워집니다.';
     document.getElementById('summaryRefs').innerHTML = '';
     lastRejectItems = [];
+    document.getElementById('rcSaveTrigger').hidden = true;
     document.getElementById('rcSaveRow').classList.remove('show');
     document.getElementById('rcSavePanel').classList.remove('open');
     ['comparisonBlock','brandGuideReviewBlock','mediaGuideBlock','briefAlignmentBlock','layoutStatsBlock'].forEach(id => {
@@ -1254,6 +1254,7 @@
       rcSaveMsg.className = 'rc-save-msg';
     }
     rcSavePanel.classList.toggle('open', willOpen);
+    document.getElementById('rcSaveRow').classList.toggle('show', willOpen);
   });
 
   rcSaveSubmitBtn.addEventListener('click', async () => {
@@ -1290,7 +1291,7 @@
       if(!response.ok) throw new Error((data && data.error) || ('status ' + response.status));
       rcSaveMsg.textContent = '반려사례로 저장했습니다.';
       rcSaveMsg.className = 'rc-save-msg ok';
-      setTimeout(() => { rcSavePanel.classList.remove('open'); }, 1200);
+      setTimeout(() => { rcSavePanel.classList.remove('open'); document.getElementById('rcSaveRow').classList.remove('show'); }, 1200);
     }catch(e){
       rcSaveMsg.textContent = e.message || '저장하지 못했습니다.';
       rcSaveMsg.className = 'rc-save-msg error';
@@ -1676,7 +1677,8 @@
         const found = ITEMS.find(x => x.n === it.id);
         return { id: it.id, title: found ? found.title : ('항목 ' + it.id), note: it.note || '' };
       });
-    document.getElementById('rcSaveRow').classList.toggle('show', lastRejectItems.length > 0);
+    document.getElementById('rcSaveTrigger').hidden = lastRejectItems.length === 0;
+    document.getElementById('rcSaveRow').classList.remove('show');
     document.getElementById('rcSavePanel').classList.remove('open');
     document.getElementById('rcSaveMsg').textContent = '';
 
