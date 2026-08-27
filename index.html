@@ -209,8 +209,9 @@
   /* 반려사례 저장 */
   .rc-save-row{display:none; margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,.08);}
   .rc-save-row.show{display:block;}
-  .rc-save-trigger{display:inline-flex; align-items:center; gap:8px; background:rgba(194,104,122,.1); border:1px solid rgba(194,104,122,.35); color:var(--reject); font-size:12.5px; font-weight:600; padding:9px 15px; border-radius:10px; cursor:pointer; letter-spacing:-.01em; transition:border-color .2s ease, transform .2s ease;}
-  .rc-save-trigger:hover{border-color:rgba(194,104,122,.6); transform:translateY(-1px);}
+  .rc-save-trigger{display:inline-flex; align-items:center; gap:8px; background:var(--accent); border:1px solid var(--accent); color:var(--accent-ink); font-family:var(--font-display); font-size:13px; font-weight:700; padding:11px 20px; border-radius:12px; cursor:pointer; letter-spacing:-.01em; box-shadow:0 14px 34px -18px rgba(204,255,0,.7); transition:transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease;}
+  .rc-save-trigger:hover{transform:translateY(-2px);}
+  .rc-save-trigger:active{transform:scale(.95); transition:transform .1s ease;}
   .rc-save-panel{display:none; margin-top:14px; background:var(--surface-3); border:1px solid var(--line); border-radius:14px; padding:16px 18px;}
   .rc-save-panel.open{display:block;}
   .rc-save-title{font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:10px;}
