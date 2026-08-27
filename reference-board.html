@@ -182,12 +182,10 @@
   .ref-brand{font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px;}
   .ref-note{font-size:12px; color:var(--text-2); line-height:1.5;}
 
-  .rc-case-badge{position:absolute; top:6px; left:6px; z-index:1; font-size:9px; font-weight:800; letter-spacing:0.03em; color:#fff; background:rgba(194,104,122,.92); padding:2.5px 7px; border-radius:5px; pointer-events:none; white-space:nowrap;}
+  .rc-case-badge{position:absolute; top:6px; right:6px; z-index:1; font-size:9px; font-weight:800; letter-spacing:0.03em; color:#fff; background:rgba(194,104,122,.92); padding:2.5px 7px; border-radius:5px; pointer-events:none; white-space:nowrap;}
   .rc-item-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;}
   .rc-item-tag{font:700 10.5px/1 var(--font-mono); letter-spacing:.03em; color:var(--reject); background:rgba(194,104,122,.12); border:1px solid rgba(194,104,122,.4); border-radius:6px; padding:4px 7px;}
   .rc-reason{font-size:12px; color:var(--text-2); line-height:1.5; margin-top:4px;}
-  .rc-delete-btn{position:absolute; top:6px; right:6px; z-index:2; width:24px; height:24px; border-radius:7px; border:1px solid rgba(255,255,255,.16); background:rgba(20,23,28,.85); color:var(--canvas-text-2); font-size:15px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s ease, color .2s ease, border-color .2s ease;}
-  .rc-delete-btn:hover{background:rgba(194,104,122,.85); border-color:var(--reject); color:#fff;}
 
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
@@ -307,6 +305,8 @@
   <div id="refContent">
     <div class="loading-msg">카테고리를 불러오는 중…</div>
   </div>
+
+  <div id="rejectExclusiveContent" style="display:none;"></div>
 
   <div class="page-footer" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
@@ -793,12 +793,15 @@
   });
   document.addEventListener('click', () => rejectItemOptMenu.classList.remove('open'));
 
+  // selectedItemId가 null이면(업종 전체·유형 전체에 섞여 보이는 경우) 특정
+  // 사유 대신 반려된 항목 번호 태그를 보여주고, 특정 항목으로 좁혀 본 경우엔
+  // 그 항목의 사유를 보여준다.
   function buildRejectCard(item, selectedItemId){
     const wrap = document.createElement('div');
     wrap.className = 'ref-item rc-case-item';
     wrap.setAttribute('data-row','');
 
-    const reasonText = item.reasons && item.reasons[selectedItemId];
+    const reasonText = selectedItemId !== null && item.reasons && item.reasons[selectedItemId];
     const caption = (item.brandName || '') + (reasonText ? ' · ' + reasonText : '');
 
     const thumbBtn = document.createElement('button');
@@ -809,71 +812,64 @@
     thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
     wrap.appendChild(thumbBtn);
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'rc-delete-btn';
-    deleteBtn.setAttribute('aria-label', '삭제');
-    deleteBtn.innerHTML = '&times;';
-    deleteBtn.addEventListener('click', () => deleteRejectCase(item.id, deleteBtn));
-    wrap.appendChild(deleteBtn);
-
     const capDiv = document.createElement('div');
     capDiv.className = 'ref-caption';
     let capHtml = item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '';
-    if(reasonText) capHtml += '<div class="rc-reason">' + escapeHtml(reasonText) + '</div>';
+    if(reasonText){
+      capHtml += '<div class="rc-reason">' + escapeHtml(reasonText) + '</div>';
+    } else {
+      capHtml += '<div class="rc-item-tags">' + (item.itemIds || []).map((id) =>
+        '<span class="rc-item-tag">' + String(id).padStart(2,'0') + '</span>'
+      ).join('') + '</div>';
+    }
     capDiv.innerHTML = capHtml;
     wrap.appendChild(capDiv);
 
     return wrap;
   }
 
-  // 업종 전체·유형 전체로 보고 있을 때만 반려사례를 같은 그리드 끝에 덧붙인다 —
-  // 반려사례는 업종/유형 정보가 없어서 특정 업종·유형으로 좁히면 대응이 안 된다.
+  // 반려사례 필터가 "항목별 반려사례"(꺼짐, null)이면 업종 전체·유형
+  // 전체일 때 다른 레퍼런스와 섞여 보이고(뱃지로만 구분), 특정 항목을
+  // 고르면 업종·유형 상태와 무관하게 그 항목의 반려사례만 단독으로 보여준다
+  // — 업종/유형을 각각 눌렀을 때 "그것만" 보이는 것과 같은 동작 방식.
   function syncRejectCases(){
+    const rejectExclusiveContent = document.getElementById('rejectExclusiveContent');
+    const uploadSection = document.querySelector('.upload-section');
+
+    if(currentRejectItemId !== null){
+      refContent.style.display = 'none';
+      if(uploadSection) uploadSection.style.display = 'none';
+      rejectExclusiveContent.style.display = '';
+      rejectExclusiveContent.innerHTML = '';
+      const matches = rejectCasesData.filter(c => (c.itemIds || []).includes(currentRejectItemId));
+      if(!matches.length){
+        rejectExclusiveContent.innerHTML = '<div class="gl-empty">아직 이 항목에 저장된 반려사례가 없습니다.</div>';
+        return;
+      }
+      const grid = document.createElement('div');
+      grid.className = 'ref-grid';
+      grid.setAttribute('data-stagger','');
+      matches.forEach(item => grid.appendChild(buildRejectCard(item, currentRejectItemId)));
+      rejectExclusiveContent.appendChild(grid);
+      if(window.adcheckReveal) window.adcheckReveal();
+      return;
+    }
+
+    refContent.style.display = '';
+    if(uploadSection) uploadSection.style.display = '';
+    rejectExclusiveContent.style.display = 'none';
+    rejectExclusiveContent.innerHTML = '';
+
     if(!currentGrid) return;
     currentGrid.querySelectorAll('.rc-case-item').forEach(el => el.remove());
-    if(currentCategoryId === 'all' && currentTypeId === 'all' && currentRejectItemId !== null){
+    if(currentCategoryId === 'all' && currentTypeId === 'all' && rejectCasesData.length){
       // 그리드 끝에 덧붙이면 "업종 전체"에 이미 쌓인 수십~수백 장 아래로
       // 파묻혀서 사실상 안 보인다 — 맨 앞에 꽂아서 바로 눈에 띄게 한다.
-      const matches = rejectCasesData.filter(c => (c.itemIds || []).includes(currentRejectItemId));
-      matches.forEach(item => {
-        currentGrid.insertBefore(buildRejectCard(item, currentRejectItemId), currentGrid.firstChild);
+      rejectCasesData.forEach(item => {
+        currentGrid.insertBefore(buildRejectCard(item, null), currentGrid.firstChild);
       });
       if(window.adcheckReveal) window.adcheckReveal();
     }
-  }
-
-  function deleteRejectCase(id, btn){
-    if(!window.confirm('이 반려사례를 삭제할까요?')) return;
-    const password = window.prompt('편집 비밀번호를 입력하세요');
-    if(password === null) return;
-
-    btn.disabled = true; btn.style.opacity = '.4';
-
-    fetch('/api/rejectCases', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, editPassword: password }),
-    })
-      .then(r => r.json().then(data => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
-        if(!ok){
-          window.alert(data.error || '삭제에 실패했습니다.');
-          btn.disabled = false; btn.style.opacity = '';
-          return;
-        }
-        rejectCasesData = rejectCasesData.filter(c => c.id !== id);
-        if(currentRejectItemId !== null && !rejectCasesData.some(c => (c.itemIds||[]).includes(currentRejectItemId))){
-          currentRejectItemId = null;
-          rejectItemOptValue.textContent = '항목별 반려사례';
-        }
-        renderRejectItemOptions();
-        syncRejectCases();
-      })
-      .catch(() => {
-        window.alert('삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
-        btn.disabled = false; btn.style.opacity = '';
-      });
   }
 
   // 헤더 하단 스크롤 진행 바
