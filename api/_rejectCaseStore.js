@@ -31,3 +31,12 @@ export async function addRejectCase(entry) {
   await put('reject-cases.json', bytes, 'application/json', { allowOverwrite: true });
   return entry;
 }
+
+export async function removeRejectCase(id) {
+  const items = await getRejectCases();
+  if (!items.some((it) => it.id === id)) return false;
+  const next = items.filter((it) => it.id !== id);
+  const bytes = Buffer.from(JSON.stringify({ items: next }), 'utf-8');
+  await put('reject-cases.json', bytes, 'application/json', { allowOverwrite: true });
+  return true;
+}
