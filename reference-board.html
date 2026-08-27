@@ -178,6 +178,15 @@
   .ref-brand{font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px;}
   .ref-note{font-size:12px; color:var(--text-2); line-height:1.5;}
 
+  .mode-tabs{display:flex; gap:8px; margin-bottom:24px;}
+  .mode-tab{font-size:13px; font-weight:700; color:var(--canvas-text-2); background:var(--charcoal); border:1px solid var(--charcoal-border); border-radius:10px; padding:10px 18px; cursor:pointer; font-family:inherit; transition:border-color .2s ease, color .2s ease, background .2s ease;}
+  .mode-tab:hover{border-color:#a1a1a6;}
+  .mode-tab.active{color:var(--num-text); background:var(--num-bg); border-color:transparent;}
+
+  .rc-item-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;}
+  .rc-item-tag{font:700 10.5px/1 var(--font-mono); letter-spacing:.03em; color:var(--reject); background:rgba(194,104,122,.12); border:1px solid rgba(194,104,122,.4); border-radius:6px; padding:4px 7px;}
+  .rc-reason{font-size:12px; color:var(--text-2); line-height:1.5; margin-top:4px;}
+
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
   .lightbox{display:none; position:fixed; inset:0; background:rgba(29,29,31,0.85); z-index:100; align-items:center; justify-content:center; padding:40px;}
@@ -235,6 +244,13 @@
   <h1>이미지 레퍼런스</h1>
   <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
 
+  <div class="mode-tabs" id="modeTabs">
+    <button type="button" class="mode-tab active" data-mode="industry">업종별</button>
+    <button type="button" class="mode-tab" data-mode="reject">항목별 반려사례</button>
+  </div>
+
+  <div id="industryModeView">
+
   <div class="upload-section">
     <div class="upload-dropzone" id="uploadDropzone">
       <input type="file" id="uploadFile" accept="image/*" hidden>
@@ -289,6 +305,25 @@
 
   <div id="refContent">
     <div class="loading-msg">카테고리를 불러오는 중…</div>
+  </div>
+
+  </div>
+
+  <div id="rejectModeView" style="display:none;">
+    <p class="sub" style="margin-top:-8px;">체크리스트 분석에서 반려가 나온 배너 중, 리뷰어가 직접 골라 저장해둔 사례입니다. 항목별로 어떤 반려가 자주 나오는지 참고하세요.</p>
+
+    <div class="option-dropdown-row">
+      <div class="option-dropdown-wrap">
+        <button type="button" class="option-btn" id="rejectItemOptBtn">
+          <span class="option-btn-value" id="rejectItemOptValue">항목 전체</span><span class="opt-chevron">▼</span>
+        </button>
+        <div class="option-menu" id="rejectItemOptMenu"><div id="rejectItemOptList"></div></div>
+      </div>
+    </div>
+
+    <div id="rejectContent">
+      <div class="loading-msg">반려사례를 불러오는 중…</div>
+    </div>
   </div>
 
   <div class="page-footer" data-reveal>
@@ -713,6 +748,132 @@
     }finally{
       uploadSubmitBtn.disabled = false;
     }
+  });
+
+  // ---------- 항목별 반려사례 (업종/유형과는 다른 축 — 어떤 체크리스트
+  // 항목에서 반려됐는지로 분류. index.html의 "반려사례로 저장" 버튼으로만
+  // 큐레이션되므로 물량이 많지 않아, 한 번에 다 불러와 클라이언트에서 필터한다.) ----------
+  const RC_ITEM_TITLES = {
+    1:'전략 적합성', 2:'위계 및 구조', 3:'타이포·정렬·여백·명도대비', 4:'정보 정확성',
+    5:'컬러 일관성', 6:'합성 리얼리티', 7:'피사체 보정', 8:'그래픽 완성도', 9:'CTA 및 전환',
+    10:'신체 비율 왜곡', 11:'배경 패턴 반복', 12:'워터마크·서명 흔적', 13:'광원-그림자 방향 일치',
+    14:'매체 최적화', 15:'텍스트·로고 렌더링', 16:'로고 사용 규정', 17:'법적고지·심의 문구',
+  };
+
+  const modeTabs = document.getElementById('modeTabs');
+  const industryModeView = document.getElementById('industryModeView');
+  const rejectModeView = document.getElementById('rejectModeView');
+  const rejectContent = document.getElementById('rejectContent');
+  const rejectItemOptBtn = document.getElementById('rejectItemOptBtn');
+  const rejectItemOptMenu = document.getElementById('rejectItemOptMenu');
+  const rejectItemOptValue = document.getElementById('rejectItemOptValue');
+  const rejectItemOptList = document.getElementById('rejectItemOptList');
+
+  let rejectCasesData = null; // null = 아직 로드 안 됨
+  let currentRejectItemId = 'all';
+
+  function renderRejectItemOptions(){
+    rejectItemOptList.innerHTML = '';
+    const counts = {};
+    (rejectCasesData || []).forEach(c => (c.itemIds || []).forEach(id => { counts[id] = (counts[id]||0) + 1; }));
+    const makeItem = (id, label) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ppm-item' + (currentRejectItemId === id ? ' active' : '');
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        currentRejectItemId = id;
+        rejectItemOptValue.textContent = label.replace(/\s*\(\d+\)$/, '');
+        rejectItemOptMenu.classList.remove('open');
+        renderRejectItemOptions();
+        renderRejectGrid();
+      });
+      rejectItemOptList.appendChild(btn);
+    };
+    makeItem('all', '항목 전체' + ((rejectCasesData||[]).length ? ' (' + rejectCasesData.length + ')' : ''));
+    Object.keys(RC_ITEM_TITLES).map(Number).sort((a,b)=>a-b).forEach(id => {
+      if(!counts[id]) return;
+      makeItem(id, String(id).padStart(2,'0') + ' ' + RC_ITEM_TITLES[id] + ' (' + counts[id] + ')');
+    });
+  }
+
+  rejectItemOptBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    rejectItemOptMenu.classList.toggle('open');
+  });
+  document.addEventListener('click', () => rejectItemOptMenu.classList.remove('open'));
+
+  function renderRejectGrid(){
+    const items = currentRejectItemId === 'all'
+      ? (rejectCasesData || [])
+      : (rejectCasesData || []).filter(c => (c.itemIds || []).includes(currentRejectItemId));
+
+    if(!items.length){
+      rejectContent.innerHTML = '<div class="gl-empty">아직 저장된 반려사례가 없습니다.<br>배너 분석 결과에 반려 항목이 있으면 "반려사례로 저장" 버튼으로 등록할 수 있어요.</div>';
+      return;
+    }
+
+    rejectContent.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'ref-grid';
+    grid.setAttribute('data-stagger','');
+    items.slice().reverse().forEach(item => {
+      const wrap = document.createElement('div');
+      wrap.className = 'ref-item';
+      wrap.setAttribute('data-row','');
+
+      const reasonText = currentRejectItemId !== 'all' ? (item.reasons && item.reasons[currentRejectItemId]) : '';
+      const caption = (item.brandName || '') + (reasonText ? ' · ' + reasonText : '');
+
+      const thumbBtn = document.createElement('button');
+      thumbBtn.type = 'button';
+      thumbBtn.className = 'ref-thumb';
+      thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '반려사례') + '" loading="lazy">';
+      thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
+      wrap.appendChild(thumbBtn);
+
+      const capDiv = document.createElement('div');
+      capDiv.className = 'ref-caption';
+      let capHtml = item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '';
+      if(currentRejectItemId !== 'all' && reasonText){
+        capHtml += '<div class="rc-reason">' + escapeHtml(reasonText) + '</div>';
+      } else {
+        capHtml += '<div class="rc-item-tags">' + (item.itemIds || []).map(id =>
+          '<span class="rc-item-tag">' + String(id).padStart(2,'0') + '</span>'
+        ).join('') + '</div>';
+      }
+      capDiv.innerHTML = capHtml;
+      wrap.appendChild(capDiv);
+
+      grid.appendChild(wrap);
+    });
+    rejectContent.appendChild(grid);
+    if(window.adcheckReveal) window.adcheckReveal();
+  }
+
+  function loadRejectCasesIfNeeded(){
+    if(rejectCasesData !== null) return;
+    rejectContent.innerHTML = '<div class="loading-msg">반려사례를 불러오는 중…</div>';
+    fetch('/api/rejectCases')
+      .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
+      .then(data => {
+        rejectCasesData = data.items || [];
+        renderRejectItemOptions();
+        renderRejectGrid();
+      })
+      .catch(() => {
+        rejectContent.innerHTML = '<div class="gl-empty">반려사례를 불러오지 못했습니다. api/rejectCases.js가 배포되었는지 확인해주세요.</div>';
+      });
+  }
+
+  modeTabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mode-tab');
+    if(!btn) return;
+    modeTabs.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b === btn));
+    const mode = btn.dataset.mode;
+    industryModeView.style.display = mode === 'industry' ? '' : 'none';
+    rejectModeView.style.display = mode === 'reject' ? '' : 'none';
+    if(mode === 'reject') loadRejectCasesIfNeeded();
   });
 
   // 헤더 하단 스크롤 진행 바

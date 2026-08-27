@@ -206,6 +206,30 @@
   .ref-chip.rc-needsfix{background:rgba(217,166,96,.12); border-color:rgba(217,166,96,.4); color:var(--needsfix);}
   .ref-chip.rc-reject{background:rgba(194,104,122,.12); border-color:rgba(194,104,122,.4); color:var(--reject);}
 
+  /* 반려사례 저장 */
+  .rc-save-row{display:none; margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,.08);}
+  .rc-save-row.show{display:block;}
+  .rc-save-trigger{display:inline-flex; align-items:center; gap:8px; background:rgba(194,104,122,.1); border:1px solid rgba(194,104,122,.35); color:var(--reject); font-size:12.5px; font-weight:600; padding:9px 15px; border-radius:10px; cursor:pointer; letter-spacing:-.01em; transition:border-color .2s ease, transform .2s ease;}
+  .rc-save-trigger:hover{border-color:rgba(194,104,122,.6); transform:translateY(-1px);}
+  .rc-save-panel{display:none; margin-top:14px; background:var(--surface-3); border:1px solid var(--line); border-radius:14px; padding:16px 18px;}
+  .rc-save-panel.open{display:block;}
+  .rc-save-title{font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:10px;}
+  .rc-check-list{display:flex; flex-direction:column; gap:6px; margin-bottom:12px;}
+  .rc-check{display:flex; align-items:flex-start; gap:9px; padding:9px 10px; border-radius:9px; background:rgba(255,255,255,.03); border:1px solid transparent; cursor:pointer; transition:border-color .15s ease, background .15s ease;}
+  .rc-check:hover{background:rgba(255,255,255,.05);}
+  .rc-check input{margin-top:3px; accent-color:var(--reject); flex-shrink:0;}
+  .rc-check-body{min-width:0;}
+  .rc-check-title{font-size:12.5px; font-weight:600; color:var(--ink); letter-spacing:-.01em;}
+  .rc-check-note{font-size:11.5px; color:var(--ink-3); margin-top:2px; line-height:1.5;}
+  .rc-save-field{margin-bottom:12px;}
+  .rc-save-field label{display:block; font-size:11.5px; font-weight:600; color:var(--ink-3); margin-bottom:6px;}
+  .rc-save-field input{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:10px 12px; color:var(--ink); font-size:13px; transition:border-color .15s ease;}
+  .rc-save-field input:hover, .rc-save-field input:focus{border-color:rgba(204,255,0,.5); outline:none;}
+  .rc-save-actions{display:flex; align-items:center; gap:10px;}
+  .rc-save-msg{font-size:12px; color:var(--ink-3);}
+  .rc-save-msg.error{color:var(--reject);}
+  .rc-save-msg.ok{color:var(--pass);}
+
   .comparison-block{display:none; margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,.08);}
   .comparison-block.show{display:block;}
   .comparison-title{font:700 10.5px/1 var(--font-mono); letter-spacing:.16em; color:var(--accent); margin-bottom:12px;}
@@ -487,6 +511,22 @@
       <span id="aiSummaryText">배너를 올리고 분석하면 여기에 총평이 채워집니다.</span>
     </div>
     <div class="summary-refs" id="summaryRefs"></div>
+
+    <div class="rc-save-row" id="rcSaveRow">
+      <button type="button" class="rc-save-trigger" id="rcSaveTrigger">🗂 이 사례를 반려사례로 저장</button>
+      <div class="rc-save-panel" id="rcSavePanel">
+        <div class="rc-save-title">저장할 반려 항목을 선택하세요</div>
+        <div class="rc-check-list" id="rcCheckList"></div>
+        <div class="rc-save-field">
+          <label for="rcBrandName">브랜드명(선택)</label>
+          <input type="text" id="rcBrandName" placeholder="예: 올리브영">
+        </div>
+        <div class="rc-save-actions">
+          <button type="button" class="option-btn-primary" id="rcSaveSubmitBtn" style="padding:10px 20px; font-size:13px;">저장</button>
+          <span class="rc-save-msg" id="rcSaveMsg"></span>
+        </div>
+      </div>
+    </div>
 
     <div class="comparison-block" id="briefAlignmentBlock">
       <div class="comparison-title">기획 부합도</div>
@@ -833,6 +873,9 @@
     document.getElementById('aiSummaryBox').classList.remove('active');
     document.getElementById('aiSummaryText').textContent = '배너를 올리고 분석하면 여기에 총평이 채워집니다.';
     document.getElementById('summaryRefs').innerHTML = '';
+    lastRejectItems = [];
+    document.getElementById('rcSaveRow').classList.remove('show');
+    document.getElementById('rcSavePanel').classList.remove('open');
     ['comparisonBlock','brandGuideReviewBlock','mediaGuideBlock','briefAlignmentBlock','layoutStatsBlock'].forEach(id => {
       document.getElementById(id).classList.remove('show');
     });
@@ -1057,6 +1100,8 @@
   const ALLOWED = ['image/png','image/jpeg','image/webp','image/gif'];
   const MAX_BYTES = 8*1024*1024;
   let currentFile = null;
+  let lastPreparedCanvas = null; // 반려사례 저장용 — 마지막으로 분석에 쓰인 캔버스
+  let lastRejectItems = []; // 반려사례 저장용 — 마지막 분석 결과의 반려 항목들
 
   function showDzState(s){
     if(s === 'empty'){
@@ -1159,6 +1204,99 @@
       clearSessionState();
     }
   }
+
+  // ---------- 반려사례로 저장 ----------
+  // 반려 항목이 있는 분석 결과에서, 리뷰어가 "이건 남겨둘 만하다" 싶은 항목만
+  // 골라 이미지 레퍼런스의 항목별 반려사례 아카이브에 저장한다. 분석할 때마다
+  // 자동으로 쌓이지 않고, 이 버튼을 눌렀을 때만 저장된다(큐레이션).
+  const rcSaveTrigger = document.getElementById('rcSaveTrigger');
+  const rcSavePanel = document.getElementById('rcSavePanel');
+  const rcCheckList = document.getElementById('rcCheckList');
+  const rcBrandName = document.getElementById('rcBrandName');
+  const rcSaveSubmitBtn = document.getElementById('rcSaveSubmitBtn');
+  const rcSaveMsg = document.getElementById('rcSaveMsg');
+
+  function canvasToBase64(canvas, maxDim, quality){
+    let w = canvas.width, h = canvas.height;
+    if(w > maxDim || h > maxDim){
+      if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+      else{ w = Math.round(w * maxDim / h); h = maxDim; }
+    }
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    out.getContext('2d').drawImage(canvas, 0, 0, w, h);
+    return out.toDataURL('image/jpeg', quality).split(',')[1];
+  }
+
+  rcSaveTrigger.addEventListener('click', () => {
+    const willOpen = !rcSavePanel.classList.contains('open');
+    if(willOpen){
+      rcCheckList.innerHTML = '';
+      lastRejectItems.forEach(it => {
+        const label = document.createElement('label');
+        label.className = 'rc-check';
+        const input = document.createElement('input');
+        input.type = 'checkbox'; input.value = String(it.id); input.checked = true;
+        const body = document.createElement('div');
+        body.className = 'rc-check-body';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'rc-check-title';
+        titleEl.textContent = String(it.id).padStart(2,'0') + ' ' + it.title;
+        const noteEl = document.createElement('div');
+        noteEl.className = 'rc-check-note';
+        noteEl.textContent = it.note;
+        body.appendChild(titleEl); body.appendChild(noteEl);
+        label.appendChild(input); label.appendChild(body);
+        rcCheckList.appendChild(label);
+      });
+      rcSaveMsg.textContent = '';
+      rcSaveMsg.className = 'rc-save-msg';
+    }
+    rcSavePanel.classList.toggle('open', willOpen);
+  });
+
+  rcSaveSubmitBtn.addEventListener('click', async () => {
+    const checked = Array.from(rcCheckList.querySelectorAll('input:checked')).map(i => Number(i.value));
+    if(!checked.length){
+      rcSaveMsg.textContent = '저장할 항목을 하나 이상 선택해주세요.';
+      rcSaveMsg.className = 'rc-save-msg error';
+      return;
+    }
+    rcSaveSubmitBtn.disabled = true;
+    rcSaveMsg.textContent = '저장 중…';
+    rcSaveMsg.className = 'rc-save-msg';
+    try{
+      let canvas = lastPreparedCanvas;
+      if(!canvas && currentFile){
+        const prepared = await prepareImageForApi(currentFile);
+        canvas = prepared.canvas;
+      }
+      if(!canvas) throw new Error('이미지를 찾을 수 없습니다.');
+      const reasons = {};
+      lastRejectItems.forEach(it => { if(checked.includes(it.id)) reasons[it.id] = it.note; });
+      const response = await fetch('/api/saveRejectCase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemIds: checked,
+          reasons,
+          brandName: rcBrandName.value,
+          thumb: { base64: canvasToBase64(canvas, 700, 0.85), mimeType: 'image/jpeg' },
+          full: { base64: canvasToBase64(canvas, 2000, 0.9), mimeType: 'image/jpeg' },
+        })
+      });
+      const data = await response.json();
+      if(!response.ok) throw new Error((data && data.error) || ('status ' + response.status));
+      rcSaveMsg.textContent = '반려사례로 저장했습니다.';
+      rcSaveMsg.className = 'rc-save-msg ok';
+      setTimeout(() => { rcSavePanel.classList.remove('open'); }, 1200);
+    }catch(e){
+      rcSaveMsg.textContent = e.message || '저장하지 못했습니다.';
+      rcSaveMsg.className = 'rc-save-msg error';
+    }finally{
+      rcSaveSubmitBtn.disabled = false;
+    }
+  });
 
   // ---------- optional 기획안 upload (collapsed by default) — 이미지 캡처 또는 pptx 파일 ----------
   const briefToggle = document.getElementById('briefToggle');
@@ -1489,6 +1627,16 @@
       refsEl.appendChild(chip);
     });
 
+    lastRejectItems = (result.items || [])
+      .filter(it => it.status === 'reject')
+      .map(it => {
+        const found = ITEMS.find(x => x.n === it.id);
+        return { id: it.id, title: found ? found.title : ('항목 ' + it.id), note: it.note || '' };
+      });
+    document.getElementById('rcSaveRow').classList.toggle('show', lastRejectItems.length > 0);
+    document.getElementById('rcSavePanel').classList.remove('open');
+    document.getElementById('rcSaveMsg').textContent = '';
+
     const VERDICT_LABELS = { aligned: '✅ 기획 의도에 부합', partial: '⚠️ 부분적으로 부합', misaligned: '❌ 기획 의도에서 벗어남' };
     const briefBlock = document.getElementById('briefAlignmentBlock');
     const ba = result.briefAlignment;
@@ -1573,6 +1721,7 @@
     setStatus('', false);
     try{
       const prepared = await prepareImageForApi(file);
+      lastPreparedCanvas = prepared.canvas;
       const briefImages = briefFiles.length
         ? await Promise.all(briefFiles.map(entry => prepareImageForApi(entry.file)))
         : [];
