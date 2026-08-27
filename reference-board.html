@@ -178,10 +178,7 @@
   .ref-brand{font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px;}
   .ref-note{font-size:12px; color:var(--text-2); line-height:1.5;}
 
-  .rc-mode-badge{display:inline-flex; align-items:center; gap:6px; background:rgba(194,104,122,.12); border:1px solid rgba(194,104,122,.4); color:var(--reject); font-size:13.5px; font-weight:700; padding:12px 16px; border-radius:10px; cursor:pointer; font-family:inherit; letter-spacing:-.01em; transition:background .2s ease, color .2s ease, border-color .2s ease;}
-  .rc-mode-badge:hover{border-color:var(--reject);}
-  .rc-mode-badge.active{background:var(--reject); color:#fff; border-color:var(--reject);}
-
+  .rc-case-badge{position:absolute; top:6px; left:6px; z-index:1; font-size:9px; font-weight:800; letter-spacing:0.03em; color:#fff; background:rgba(194,104,122,.92); padding:2.5px 7px; border-radius:5px; pointer-events:none; white-space:nowrap;}
   .rc-item-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;}
   .rc-item-tag{font:700 10.5px/1 var(--font-mono); letter-spacing:.03em; color:var(--reject); background:rgba(194,104,122,.12); border:1px solid rgba(194,104,122,.4); border-radius:6px; padding:4px 7px;}
   .rc-reason{font-size:12px; color:var(--text-2); line-height:1.5; margin-top:4px;}
@@ -246,28 +243,25 @@
   <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
 
   <div class="option-dropdown-row">
-    <div class="option-dropdown-wrap" id="categoryOptWrap">
+    <div class="option-dropdown-wrap">
       <button type="button" class="option-btn" id="categoryOptBtn">
         <span class="option-btn-value" id="categoryOptValue">업종 전체</span><span class="opt-chevron">▼</span>
       </button>
       <div class="option-menu" id="categoryOptMenu"><div id="categoryOptList"></div></div>
     </div>
-    <div class="option-dropdown-wrap" id="typeOptWrap">
+    <div class="option-dropdown-wrap">
       <button type="button" class="option-btn" id="typeOptBtn">
         <span class="option-btn-value" id="typeOptValue">유형 전체</span><span class="opt-chevron">▼</span>
       </button>
       <div class="option-menu" id="typeOptMenu"><div id="typeOptList"></div></div>
     </div>
-    <button type="button" class="rc-mode-badge" id="rcModeBadge">항목별 반려사례</button>
-    <div class="option-dropdown-wrap" id="rejectItemOptWrap" style="display:none;">
+    <div class="option-dropdown-wrap">
       <button type="button" class="option-btn" id="rejectItemOptBtn">
-        <span class="option-btn-value" id="rejectItemOptValue">항목 전체</span><span class="opt-chevron">▼</span>
+        <span class="option-btn-value" id="rejectItemOptValue">항목별 반려사례</span><span class="opt-chevron">▼</span>
       </button>
       <div class="option-menu" id="rejectItemOptMenu"><div id="rejectItemOptList"></div></div>
     </div>
   </div>
-
-  <div id="industryModeView">
 
   <div class="upload-section">
     <div class="upload-dropzone" id="uploadDropzone">
@@ -308,14 +302,6 @@
 
   <div id="refContent">
     <div class="loading-msg">카테고리를 불러오는 중…</div>
-  </div>
-
-  </div>
-
-  <div id="rejectModeView" style="display:none;">
-    <div id="rejectContent">
-      <div class="loading-msg">반려사례를 불러오는 중…</div>
-    </div>
   </div>
 
   <div class="page-footer" data-reveal>
@@ -381,6 +367,7 @@
   const refContent = document.getElementById('refContent');
   let categoriesData = [];
   let currentCategoryId = null;
+  let currentGrid = null; // 반려사례를 덧붙일 수 있게 현재 그리드 엘리먼트를 기억해둔다
 
   function renderCategoryOptions(){
     categoryOptList.innerHTML = '';
@@ -459,10 +446,12 @@
       const typeOk = currentTypeId === 'all' || el.dataset.type === currentTypeId;
       el.style.display = (brandOk && typeOk) ? '' : 'none';
     });
+    syncRejectCases();
   }
 
   function loadCategoryImages(id, name){
     currentCategoryId = id;
+    currentGrid = null;
     refContent.innerHTML = '<div class="loading-msg">레퍼런스를 불러오는 중…</div>';
     fetch('/api/referenceImages?category=' + encodeURIComponent(id))
       .then(r => {
@@ -537,6 +526,7 @@
           grid.appendChild(wrap);
         });
         refContent.appendChild(grid);
+        currentGrid = grid;
         updateItemVisibility();
         if(window.adcheckReveal) window.adcheckReveal();
       })
@@ -561,6 +551,15 @@
     .catch(() => {
       refContent.innerHTML = '<div class="gl-empty">카테고리를 불러오지 못했습니다. api/referenceCategories.js가 배포되었는지 확인해주세요.</div>';
     });
+
+  fetch('/api/rejectCases')
+    .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
+    .then(data => {
+      rejectCasesData = data.items || [];
+      renderRejectItemOptions();
+      syncRejectCases();
+    })
+    .catch(() => { /* 반려사례는 부가 기능이라 실패해도 나머지 페이지는 정상 동작해야 함 */ });
 
   // ---------- 이미지 올리기 (드롭존 → 패널) ----------
   const uploadDropzone = document.getElementById('uploadDropzone');
@@ -752,25 +751,18 @@
     14:'매체 최적화', 15:'텍스트·로고 렌더링', 16:'로고 사용 규정', 17:'법적고지·심의 문구',
   };
 
-  const rcModeBadge = document.getElementById('rcModeBadge');
-  const categoryOptWrap = document.getElementById('categoryOptWrap');
-  const typeOptWrap = document.getElementById('typeOptWrap');
-  const rejectItemOptWrap = document.getElementById('rejectItemOptWrap');
-  const industryModeView = document.getElementById('industryModeView');
-  const rejectModeView = document.getElementById('rejectModeView');
-  const rejectContent = document.getElementById('rejectContent');
   const rejectItemOptBtn = document.getElementById('rejectItemOptBtn');
   const rejectItemOptMenu = document.getElementById('rejectItemOptMenu');
   const rejectItemOptValue = document.getElementById('rejectItemOptValue');
   const rejectItemOptList = document.getElementById('rejectItemOptList');
 
-  let rejectCasesData = null; // null = 아직 로드 안 됨
-  let currentRejectItemId = 'all';
+  let rejectCasesData = [];
+  let currentRejectItemId = null; // null = 반려사례 안 보여줌("항목별 반려사례" 기본 상태)
 
   function renderRejectItemOptions(){
     rejectItemOptList.innerHTML = '';
     const counts = {};
-    (rejectCasesData || []).forEach(c => (c.itemIds || []).forEach(id => { counts[id] = (counts[id]||0) + 1; }));
+    rejectCasesData.forEach(c => (c.itemIds || []).forEach(id => { counts[id] = (counts[id]||0) + 1; }));
     const makeItem = (id, label) => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -778,17 +770,16 @@
       btn.textContent = label;
       btn.addEventListener('click', () => {
         currentRejectItemId = id;
-        rejectItemOptValue.textContent = label.replace(/\s*\(\d+\)$/, '');
+        rejectItemOptValue.textContent = id === null ? '항목별 반려사례' : label.replace(/\s*\(\d+\)$/, '');
         rejectItemOptMenu.classList.remove('open');
         renderRejectItemOptions();
-        renderRejectGrid();
+        syncRejectCases();
       });
       rejectItemOptList.appendChild(btn);
     };
-    makeItem('all', '항목 전체' + ((rejectCasesData||[]).length ? ' (' + rejectCasesData.length + ')' : ''));
+    makeItem(null, '항목별 반려사례');
     Object.keys(RC_ITEM_TITLES).map(Number).sort((a,b)=>a-b).forEach(id => {
-      if(!counts[id]) return;
-      makeItem(id, String(id).padStart(2,'0') + ' ' + RC_ITEM_TITLES[id] + ' (' + counts[id] + ')');
+      makeItem(id, String(id).padStart(2,'0') + ' ' + RC_ITEM_TITLES[id] + ' (' + (counts[id]||0) + ')');
     });
   }
 
@@ -798,60 +789,52 @@
   });
   document.addEventListener('click', () => rejectItemOptMenu.classList.remove('open'));
 
-  function renderRejectGrid(){
-    const items = currentRejectItemId === 'all'
-      ? (rejectCasesData || [])
-      : (rejectCasesData || []).filter(c => (c.itemIds || []).includes(currentRejectItemId));
+  function buildRejectCard(item, selectedItemId){
+    const wrap = document.createElement('div');
+    wrap.className = 'ref-item rc-case-item';
+    wrap.setAttribute('data-row','');
 
-    if(!items.length){
-      rejectContent.innerHTML = '<div class="gl-empty">아직 저장된 반려사례가 없습니다.<br>배너 분석 결과에 반려 항목이 있으면 "반려사례로 저장" 버튼으로 등록할 수 있어요.</div>';
-      return;
+    const reasonText = item.reasons && item.reasons[selectedItemId];
+    const caption = (item.brandName || '') + (reasonText ? ' · ' + reasonText : '');
+
+    const thumbBtn = document.createElement('button');
+    thumbBtn.type = 'button';
+    thumbBtn.className = 'ref-thumb';
+    thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '반려사례') + '" loading="lazy">' +
+      '<span class="rc-case-badge">반려사례</span>';
+    thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
+    wrap.appendChild(thumbBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'rc-delete-btn';
+    deleteBtn.setAttribute('aria-label', '삭제');
+    deleteBtn.innerHTML = '&times;';
+    deleteBtn.addEventListener('click', () => deleteRejectCase(item.id, deleteBtn));
+    wrap.appendChild(deleteBtn);
+
+    const capDiv = document.createElement('div');
+    capDiv.className = 'ref-caption';
+    let capHtml = item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '';
+    if(reasonText) capHtml += '<div class="rc-reason">' + escapeHtml(reasonText) + '</div>';
+    capDiv.innerHTML = capHtml;
+    wrap.appendChild(capDiv);
+
+    return wrap;
+  }
+
+  // 업종 전체·유형 전체로 보고 있을 때만 반려사례를 같은 그리드 끝에 덧붙인다 —
+  // 반려사례는 업종/유형 정보가 없어서 특정 업종·유형으로 좁히면 대응이 안 된다.
+  function syncRejectCases(){
+    if(!currentGrid) return;
+    currentGrid.querySelectorAll('.rc-case-item').forEach(el => el.remove());
+    if(currentCategoryId === 'all' && currentTypeId === 'all' && currentRejectItemId !== null){
+      const matches = rejectCasesData.filter(c => (c.itemIds || []).includes(currentRejectItemId));
+      matches.slice().reverse().forEach(item => {
+        currentGrid.appendChild(buildRejectCard(item, currentRejectItemId));
+      });
+      if(window.adcheckReveal) window.adcheckReveal();
     }
-
-    rejectContent.innerHTML = '';
-    const grid = document.createElement('div');
-    grid.className = 'ref-grid';
-    grid.setAttribute('data-stagger','');
-    items.slice().reverse().forEach(item => {
-      const wrap = document.createElement('div');
-      wrap.className = 'ref-item';
-      wrap.setAttribute('data-row','');
-
-      const reasonText = currentRejectItemId !== 'all' ? (item.reasons && item.reasons[currentRejectItemId]) : '';
-      const caption = (item.brandName || '') + (reasonText ? ' · ' + reasonText : '');
-
-      const thumbBtn = document.createElement('button');
-      thumbBtn.type = 'button';
-      thumbBtn.className = 'ref-thumb';
-      thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '반려사례') + '" loading="lazy">';
-      thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
-      wrap.appendChild(thumbBtn);
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.type = 'button';
-      deleteBtn.className = 'rc-delete-btn';
-      deleteBtn.setAttribute('aria-label', '삭제');
-      deleteBtn.innerHTML = '&times;';
-      deleteBtn.addEventListener('click', () => deleteRejectCase(item.id, deleteBtn));
-      wrap.appendChild(deleteBtn);
-
-      const capDiv = document.createElement('div');
-      capDiv.className = 'ref-caption';
-      let capHtml = item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '';
-      if(currentRejectItemId !== 'all' && reasonText){
-        capHtml += '<div class="rc-reason">' + escapeHtml(reasonText) + '</div>';
-      } else {
-        capHtml += '<div class="rc-item-tags">' + (item.itemIds || []).map(id =>
-          '<span class="rc-item-tag">' + String(id).padStart(2,'0') + '</span>'
-        ).join('') + '</div>';
-      }
-      capDiv.innerHTML = capHtml;
-      wrap.appendChild(capDiv);
-
-      grid.appendChild(wrap);
-    });
-    rejectContent.appendChild(grid);
-    if(window.adcheckReveal) window.adcheckReveal();
   }
 
   function deleteRejectCase(id, btn){
@@ -873,46 +856,19 @@
           btn.disabled = false; btn.style.opacity = '';
           return;
         }
-        rejectCasesData = (rejectCasesData || []).filter(c => c.id !== id);
-        if(currentRejectItemId !== 'all' && !rejectCasesData.some(c => (c.itemIds||[]).includes(currentRejectItemId))){
-          currentRejectItemId = 'all';
-          rejectItemOptValue.textContent = '항목 전체';
+        rejectCasesData = rejectCasesData.filter(c => c.id !== id);
+        if(currentRejectItemId !== null && !rejectCasesData.some(c => (c.itemIds||[]).includes(currentRejectItemId))){
+          currentRejectItemId = null;
+          rejectItemOptValue.textContent = '항목별 반려사례';
         }
         renderRejectItemOptions();
-        renderRejectGrid();
+        syncRejectCases();
       })
       .catch(() => {
         window.alert('삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
         btn.disabled = false; btn.style.opacity = '';
       });
   }
-
-  function loadRejectCasesIfNeeded(){
-    if(rejectCasesData !== null) return;
-    rejectContent.innerHTML = '<div class="loading-msg">반려사례를 불러오는 중…</div>';
-    fetch('/api/rejectCases')
-      .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
-      .then(data => {
-        rejectCasesData = data.items || [];
-        renderRejectItemOptions();
-        renderRejectGrid();
-      })
-      .catch(() => {
-        rejectContent.innerHTML = '<div class="gl-empty">반려사례를 불러오지 못했습니다. api/rejectCases.js가 배포되었는지 확인해주세요.</div>';
-      });
-  }
-
-  let rcMode = false;
-  rcModeBadge.addEventListener('click', () => {
-    rcMode = !rcMode;
-    rcModeBadge.classList.toggle('active', rcMode);
-    categoryOptWrap.style.display = rcMode ? 'none' : '';
-    typeOptWrap.style.display = rcMode ? 'none' : '';
-    rejectItemOptWrap.style.display = rcMode ? '' : 'none';
-    industryModeView.style.display = rcMode ? 'none' : '';
-    rejectModeView.style.display = rcMode ? '' : 'none';
-    if(rcMode) loadRejectCasesIfNeeded();
-  });
 
   // 헤더 하단 스크롤 진행 바
   (function(){
