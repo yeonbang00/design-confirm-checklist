@@ -195,7 +195,7 @@
 
   /* ai summary */
   .ai-summary{position:relative; display:block; border-radius:18px; background:linear-gradient(120deg,#16191F,#0F1216 78%); border:1px solid rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.08); padding:20px 26px; overflow:hidden; margin-top:32px;}
-  .ai-summary-head{display:flex; align-items:center; gap:10px; font:700 10.5px/1 var(--font-mono); letter-spacing:.18em; color:var(--ink); margin-bottom:12px; white-space:nowrap;}
+  .ai-summary-head{display:flex; align-items:center; gap:10px; font:700 10.5px/1 var(--font-mono); letter-spacing:.18em; color:var(--ink); margin-bottom:12px;}
   .ai-summary-idle-flag{margin-left:auto; color:var(--ink-4); letter-spacing:.14em;}
   .ai-summary.active .ai-summary-idle-flag{display:none;}
   .ai-summary-head .dot{width:7px; height:7px; border-radius:50%; background:var(--ink-3); transition:background .4s ease;}
@@ -507,11 +507,12 @@
 
   <!-- ---------- AI summary ---------- -->
   <div class="ai-summary" id="aiSummaryBox" data-reveal>
-    <div class="ai-summary-head"><span class="dot" id="summaryDot"></span><span>AI 총평</span><span class="ai-summary-idle-flag" id="summaryIdleFlag">IDLE</span><button type="button" class="rc-save-trigger" id="rcSaveTrigger" hidden>🗂 반려사례 저장</button></div>
+    <div class="ai-summary-head"><span class="dot" id="summaryDot"></span><span>AI 총평</span><span class="ai-summary-idle-flag" id="summaryIdleFlag">IDLE</span></div>
     <div class="ai-summary-body">
       <span id="aiSummaryText">배너를 올리고 분석하면 여기에 총평이 채워집니다.</span>
     </div>
     <div class="summary-refs" id="summaryRefs"></div>
+    <button type="button" class="rc-save-trigger" id="rcSaveTrigger" hidden>🗂 반려사례 저장</button>
 
     <div class="rc-save-row" id="rcSaveRow">
       <div class="rc-save-panel" id="rcSavePanel">
@@ -874,7 +875,10 @@
     document.getElementById('aiSummaryText').textContent = '배너를 올리고 분석하면 여기에 총평이 채워집니다.';
     document.getElementById('summaryRefs').innerHTML = '';
     lastRejectItems = [];
-    document.getElementById('rcSaveTrigger').hidden = true;
+    // innerHTML='' 위에서 이미 refsEl의 자식(반려 칩)을 지웠는데, 저장 버튼도
+    // 분석 결과가 있을 때 그 안으로 옮겨 붙는 노드라 getElementById로 다시
+    // 찾으면 null이 된다 — 처음에 잡아둔 rcSaveTrigger 참조를 그대로 쓴다.
+    rcSaveTrigger.hidden = true;
     document.getElementById('rcSaveRow').classList.remove('show');
     document.getElementById('rcSavePanel').classList.remove('open');
     ['comparisonBlock','brandGuideReviewBlock','mediaGuideBlock','briefAlignmentBlock','layoutStatsBlock'].forEach(id => {
@@ -1677,7 +1681,13 @@
         const found = ITEMS.find(x => x.n === it.id);
         return { id: it.id, title: found ? found.title : ('항목 ' + it.id), note: it.note || '' };
       });
-    document.getElementById('rcSaveTrigger').hidden = lastRejectItems.length === 0;
+    rcSaveTrigger.hidden = lastRejectItems.length === 0;
+    // summary-refs는 :not(:empty)로 구분선을 그리는데, 버튼을 항상 붙여두면
+    // 반려 항목이 없을 때도 "비어있지 않은" 상태가 돼버린다 — 반려 칩이
+    // 있을 때만 같은 줄 맨 끝에 붙인다(margin-left:auto로 오른쪽 정렬).
+    // getElementById가 아니라 위에서 잡아둔 참조를 그대로 옮겨 붙인다 —
+    // innerHTML 리셋으로 떨어져 나간 뒤엔 document에서 다시 못 찾는다.
+    if(lastRejectItems.length > 0) refsEl.appendChild(rcSaveTrigger);
     document.getElementById('rcSaveRow').classList.remove('show');
     document.getElementById('rcSavePanel').classList.remove('open');
     document.getElementById('rcSaveMsg').textContent = '';
