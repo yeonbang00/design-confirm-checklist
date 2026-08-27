@@ -1108,6 +1108,12 @@
   let currentFile = null;
   let lastPreparedCanvas = null; // 반려사례 저장용 — 마지막으로 분석에 쓰인 캔버스
   let lastRejectItems = []; // 반려사례 저장용 — 마지막 분석 결과의 반려 항목들
+  // applyResults()가 세션 복원 경로(아래)에서 페이지 로드 중 곧바로 호출될 수
+  // 있어서, applyResults 안에서 쓰는 DOM 참조는 그 호출 시점보다 먼저
+  // 선언해둬야 한다 — 그렇지 않으면 const가 아직 초기화 전(TDZ)이라
+  // ReferenceError가 나고, 세션 복원의 catch가 이를 삼키면서
+  // clearSessionState()까지 불러 저장된 분석 결과가 통째로 날아간다.
+  const rcSaveTrigger = document.getElementById('rcSaveTrigger');
 
   function showDzState(s){
     if(s === 'empty'){
@@ -1215,7 +1221,7 @@
   // 반려 항목이 있는 분석 결과에서, 리뷰어가 "이건 남겨둘 만하다" 싶은 항목만
   // 골라 이미지 레퍼런스의 항목별 반려사례 아카이브에 저장한다. 분석할 때마다
   // 자동으로 쌓이지 않고, 이 버튼을 눌렀을 때만 저장된다(큐레이션).
-  const rcSaveTrigger = document.getElementById('rcSaveTrigger');
+  // (rcSaveTrigger는 위쪽에서 이미 선언함 — 이유는 그 주석 참고)
   const rcSavePanel = document.getElementById('rcSavePanel');
   const rcCheckList = document.getElementById('rcCheckList');
   const rcBrandName = document.getElementById('rcBrandName');
