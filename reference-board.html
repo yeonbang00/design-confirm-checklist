@@ -833,9 +833,11 @@
     if(!currentGrid) return;
     currentGrid.querySelectorAll('.rc-case-item').forEach(el => el.remove());
     if(currentCategoryId === 'all' && currentTypeId === 'all' && currentRejectItemId !== null){
+      // 그리드 끝에 덧붙이면 "업종 전체"에 이미 쌓인 수십~수백 장 아래로
+      // 파묻혀서 사실상 안 보인다 — 맨 앞에 꽂아서 바로 눈에 띄게 한다.
       const matches = rejectCasesData.filter(c => (c.itemIds || []).includes(currentRejectItemId));
-      matches.slice().reverse().forEach(item => {
-        currentGrid.appendChild(buildRejectCard(item, currentRejectItemId));
+      matches.forEach(item => {
+        currentGrid.insertBefore(buildRejectCard(item, currentRejectItemId), currentGrid.firstChild);
       });
       if(window.adcheckReveal) window.adcheckReveal();
     }
