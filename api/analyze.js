@@ -247,6 +247,17 @@ function comparisonInstruction(advertiserName) {
 - gaps: 브랜드 컬러·아이덴티티를 중심으로, 참고 배너와 다른 점과 그 이유를 2~3문장, 50~70단어 정도로 설명 (표본이 적으니 "부족하다"는 단정 대신 "다르다"는 사실 위주로. 브랜드 컬러·아이덴티티에서 명확히 벗어난 경우에만 보완 방향을 짧게 덧붙이세요). 참고 배너와 다른 점이 전혀 없다면 "참고 배너와 다른 점이 없습니다"라고만 답하세요.`;
 }
 
+// 인물 얼굴의 AI 생성 디테일 뭉개짐(10번)이 원본 이미지 안에서는 계속
+// 놓쳐져서, 얼굴 부분만 잘라 확대한 크롭을 별도 이미지로 함께 보내고
+// 이렇게 그 존재와 순서를 알려준다. labels는 크롭이 첨부된 순서와
+// 정확히 같아야 한다.
+function faceCropInstruction(labels) {
+  const list = labels.map((label, i) => `${i + 1}) ${label}`).join(', ');
+  return `\n\n얼굴 확대 크롭 안내: 마지막에 첨부된 이미지 ${labels.length}장은 원본 배너가 아니라, 원본에서 인물 얼굴 부분만 잘라 확대한 크롭입니다. 순서대로: ${list}. 이 크롭은 주변 장면(배경, 분위기, 다른 요소) 없이 얼굴 디테일만 보기 위한 참고 자료입니다.
+
+10번(신체 비율 왜곡)의 얼굴 판정을 할 때 이 크롭들을 반드시 활용하세요 — 원본 이미지 전체를 볼 때는 훈훈하거나 자연스러운 장면 전체의 인상 때문에 얼굴 디테일이 흐릿하게 뭉개진 걸 놓치기 쉽습니다. 이 크롭에서는 그런 맥락 없이 얼굴 자체만 보이니, 코끝·인중·윗입술·아랫입술·입꼬리·눈 주변 경계가 각각 뚜렷하게 구분되는지, 아니면 서로 뭉개지거나 흐려져 있는지 하나씩 짚어보세요. 크롭에서 발견한 문제는 10번 note의 "얼굴" 항목에 반영하세요. 크롭에서 봐도 문제가 없으면 "얼굴 이상없음"으로 판정해도 됩니다 — 억지로 문제를 만들어내지 마세요.`;
+}
+
 function brandGuidelineInstruction(advertiserName, guideline) {
   return `\n\n${guideline}\n\n(참고: 위 가이드는 "${advertiserName}" 브랜드 전용입니다. 다른 브랜드 시안에는 적용하지 마세요 — 이 요청은 ${advertiserName} 시안이므로 그대로 적용합니다.)`;
 }
@@ -454,7 +465,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, briefPptx, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts, dominantColors } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, briefPptx, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts, dominantColors, faceCrops } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -577,6 +588,12 @@ export default async function handler(req, res) {
   const spellCheckResult = await spellCheckPromise;
   const spellCheckInstruction = spellCheckResult ? formatSpellCheckForPrompt(spellCheckResult) : '';
 
+  const validFaceCrops = Array.isArray(faceCrops)
+    ? faceCrops.filter((f) => f && f.base64 && f.mediaType).slice(0, 3)
+    : [];
+  const hasFaceCrops = validFaceCrops.length > 0;
+  const faceCropIns = hasFaceCrops ? faceCropInstruction(validFaceCrops.map((f) => f.label || '얼굴')) : '';
+
   const promptText =
     BASE_PROMPT +
     (hasSize ? imageSizeInstruction(imageWidth, imageHeight, fileSizeBytes) : '') +
@@ -589,6 +606,7 @@ export default async function handler(req, res) {
     contrastInstruction +
     colorDistanceInstruction +
     spellCheckInstruction +
+    faceCropIns +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline);
 
   // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
@@ -601,6 +619,9 @@ export default async function handler(req, res) {
     });
   }
   images.push({ mediaType, base64 });
+  if (hasFaceCrops) {
+    validFaceCrops.forEach((f) => images.push({ mediaType: f.mediaType, base64: f.base64 }));
+  }
 
   try {
     const parsed = await callOpenAI({

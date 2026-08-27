@@ -1547,11 +1547,53 @@
     }catch(e){ return null; }
   }
 
-  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrFields, contrastFacts, dominantColors, briefPptx){
+  // 10번(신체 비율 왜곡)의 얼굴 디테일 뭉개짐 판정이 원본 전체 이미지만
+  // 보고는 계속 놓쳐서(맥락상 "훈훈한 장면"이라 관대하게 보는 것으로 추정),
+  // 얼굴 위치를 먼저 가볍게 물어본 뒤 그 부분만 잘라 확대해서 별도
+  // 이미지로 함께 보낸다. 실패해도 빈 배열만 오므로 메인 분석은 그대로 진행.
+  async function fetchFaceCrops(canvas, base64, mediaType, analyzedWidth, analyzedHeight){
+    let faces;
+    try{
+      const response = await fetch('/api/detectFaces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64, mediaType, imageWidth: analyzedWidth, imageHeight: analyzedHeight })
+      });
+      if(!response.ok) return [];
+      const data = await response.json();
+      faces = Array.isArray(data.faces) ? data.faces : [];
+    }catch(e){ return []; }
+    if(!faces.length) return [];
+
+    const MIN_ZOOM_PX = 480; // 크롭이 너무 작으면 확대해서 디테일이 더 잘 보이게
+    const crops = [];
+    for(const f of faces){
+      const padX = f.width * 0.18, padY = f.height * 0.18;
+      const left = Math.max(0, Math.round(f.x - padX));
+      const top = Math.max(0, Math.round(f.y - padY));
+      const right = Math.min(canvas.width, Math.round(f.x + f.width + padX));
+      const bottom = Math.min(canvas.height, Math.round(f.y + f.height + padY));
+      const w = right - left, h = bottom - top;
+      if(w < 10 || h < 10) continue;
+
+      const longSide = Math.max(w, h);
+      const scale = longSide < MIN_ZOOM_PX ? MIN_ZOOM_PX / longSide : 1;
+      const outW = Math.round(w * scale), outH = Math.round(h * scale);
+
+      const out = document.createElement('canvas');
+      out.width = outW; out.height = outH;
+      out.getContext('2d').drawImage(canvas, left, top, w, h, 0, 0, outW, outH);
+      const cropBase64 = out.toDataURL('image/jpeg', 0.88).split(',')[1];
+      if(cropBase64) crops.push({ label: f.label || '얼굴', base64: cropBase64, mediaType: 'image/jpeg' });
+    }
+    return crops;
+  }
+
+  async function analyzeImage(base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, fileSizeBytes, analyzedWidth, analyzedHeight, ocrFields, contrastFacts, dominantColors, briefPptx, faceCrops){
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [], briefPptx: briefPptx || null, fileSizeBytes: fileSizeBytes || null, analyzedWidth: analyzedWidth || null, analyzedHeight: analyzedHeight || null, precomputedOcrFields: ocrFields || null, contrastFacts: contrastFacts || null, dominantColors: dominantColors || null })
+      body: JSON.stringify({ base64, mediaType, advertiserId: advertiserId || null, mediaGuideIds: mediaGuideIds || [], imageWidth: imageWidth || null, imageHeight: imageHeight || null, briefImages: briefImages || [], briefPptx: briefPptx || null, fileSizeBytes: fileSizeBytes || null, analyzedWidth: analyzedWidth || null, analyzedHeight: analyzedHeight || null, precomputedOcrFields: ocrFields || null, contrastFacts: contrastFacts || null, dominantColors: dominantColors || null, faceCrops: faceCrops || null })
     });
     let data;
     try{ data = await response.json(); }
@@ -1732,11 +1774,12 @@
       const ocrFields = await fetchOcrFields(prepared.base64, prepared.mediaType);
       const contrastFacts = computeContrastFromOcr(prepared.canvas, ocrFields, prepared.originalHeight);
       const dominantColors = sampleDominantColors(prepared.canvas);
+      const faceCrops = await fetchFaceCrops(prepared.canvas, prepared.base64, prepared.mediaType, prepared.analyzedWidth, prepared.analyzedHeight);
       setStatus('', false);
       let lastErr = null;
       for(let attempt=1; attempt<=3; attempt++){
         try{
-          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight, ocrFields, contrastFacts, dominantColors, briefPptx);
+          const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight, ocrFields, contrastFacts, dominantColors, briefPptx, faceCrops);
           applyResults(result);
           saveSessionState({
             resultJson: result,
