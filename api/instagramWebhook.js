@@ -99,6 +99,17 @@ async function logDebug(entry) {
 }
 
 export default async function handler(req, res) {
+  try {
+    return await handleRequest(req, res);
+  } catch (e) {
+    await logDebug({ stage: 'uncaught', method: req.method, error: String((e && e.stack) || e) });
+    try { res.status(200).json({ ok: false, uncaught: true }); } catch (e2) { /* 이미 응답이 나간 상태일 수 있음 */ }
+  }
+}
+
+async function handleRequest(req, res) {
+  await logDebug({ stage: 'received', method: req.method, url: req.url, headers: Object.keys(req.headers || {}) });
+
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
