@@ -254,12 +254,6 @@ export default async function middleware(request) {
     return jsonResponse({ error: 'Unauthorized' }, 401);
   }
 
-  // 메타(인스타그램)가 직접 호출하는 웹훅 — 마찬가지로 로그인 세션이 없어
-  // 게이트를 통과할 수 없다. 인증은 instagramWebhook.js 안에서 자체적으로
-  // 처리한다(GET은 hub.verify_token, POST는 X-Hub-Signature-256 서명
-  // 검증) — 그래서 여기서는 별도 검증 없이 그대로 통과시킨다.
-  if (pathname === '/api/instagramWebhook') return next();
-
   if (pathname === ADMIN_PENDING_PATH && method === 'POST') {
     const body = await request.json().catch(() => ({}));
     const adminPassword = process.env.ADMIN_PASSWORD;
