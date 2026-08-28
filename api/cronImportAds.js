@@ -24,7 +24,7 @@
 // META_AD_LIBRARY_TOKEN에는 개인 User Access Token(장기 토큰, 최대 60일)을
 // 넣어야 하고, 만료되면 Graph API Explorer에서 재발급해 갱신해야 한다.
 
-import { META_AD_BRANDS } from './_metaAdBrands.js';
+import { META_AD_BRANDS, META_AD_BRAND_PAGE_IDS } from './_metaAdBrands.js';
 import { searchAdsForBrand } from './_metaAdLibrary.js';
 import { getSeenAdIds, addPendingItems, clearStaleQueueItems, clearQueueItemsByBrand } from './_importQueueStore.js';
 
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
     if (newItems.length >= MAX_NEW_PER_RUN) break;
 
     const batch = META_AD_BRANDS.slice(i, i + BRAND_BATCH_SIZE);
-    const results = await Promise.all(batch.map((brandName) => searchAdsForBrand(metaToken, brandName)));
+    const results = await Promise.all(batch.map((brandName) => searchAdsForBrand(metaToken, brandName, 15, META_AD_BRAND_PAGE_IDS[brandName] || null)));
 
     batch.forEach((brandName, idx) => {
       const ads = results[idx];

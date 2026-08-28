@@ -24,17 +24,33 @@
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v26.0';
 
-export async function searchAdsForBrand(token, brandName, limit = 15) {
+// pageId가 있으면(META_AD_BRAND_PAGE_IDS에 등록된 브랜드) search_page_ids로
+// 검색해서 그 페이지의 광고만 정확히 가져온다 — 텍스트 검색과 달리 무관한
+// 계정이 섞일 여지가 원천적으로 없다. pageId가 없으면 기존처럼 느슨한
+// 텍스트 검색(search_terms)으로 대체한다.
+//
+// media_type=image는 search_page_ids와 같이 쓰면 실제로 있는 결과도 0건으로
+// 나오는 API 버그성 동작이 실측으로 확인됐다(media_type=all로는 잡히는데
+// image로는 항상 0건) — 그래서 pageId로 검색할 때는 media_type 필터를 아예
+// 빼고 media_type=all로 받는다. 이 경우 영상 광고가 섞여 들어올 수 있지만,
+// 이미 브랜드 자체는 정확하다는 게 보장되니(사칭·무관 계정 문제 없음)
+// "가끔 영상이 섞이는" 정도는 사람이 링크 열어보면서 쉽게 거를 수 있는
+// 사소한 불편으로 판단했다.
+export async function searchAdsForBrand(token, brandName, limit = 15, pageId = null) {
   const params = new URLSearchParams({
-    search_terms: brandName,
     ad_reached_countries: JSON.stringify(['KR']),
     ad_type: 'ALL',
     ad_active_status: 'ACTIVE',
-    media_type: 'image',
+    media_type: pageId ? 'all' : 'image',
     fields: 'id,page_name,ad_snapshot_url,ad_delivery_start_time',
     limit: String(limit),
     access_token: token,
   });
+  if (pageId) {
+    params.set('search_page_ids', JSON.stringify([pageId]));
+  } else {
+    params.set('search_terms', brandName);
+  }
   try {
     const resp = await fetch(`${GRAPH_API_BASE}/ads_archive?${params.toString()}`);
     if (!resp.ok) {
