@@ -25,11 +25,18 @@ export async function searchAdsForBrand(token, brandName, limit = 15) {
   });
   try {
     const resp = await fetch(`${GRAPH_API_BASE}/ads_archive?${params.toString()}`);
-    if (!resp.ok) return [];
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => '');
+      const result = [];
+      result.error = `HTTP ${resp.status}: ${errText.slice(0, 300)}`;
+      return result;
+    }
     const data = await resp.json();
     return Array.isArray(data.data) ? data.data : [];
   } catch (e) {
-    return [];
+    const result = [];
+    result.error = String((e && e.message) || e);
+    return result;
   }
 }
 

@@ -128,7 +128,7 @@ export default async function handler(req, res) {
         skippedAdIds.push(ad.id);
       }
     }
-    brandLog.push({ brand: brandName, found: ads.length, added: addedForBrand });
+    brandLog.push({ brand: brandName, found: ads.length, added: addedForBrand, ...(ads.error ? { error: ads.error } : {}) });
   }
 
   if (newItems.length || skippedAdIds.length) {
