@@ -88,10 +88,10 @@ export default async function handler(req, res) {
     const challenge = req.query['hub.challenge'];
     const verifyToken = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
     if (mode === 'subscribe' && verifyToken && token === verifyToken) {
-      res.status(200).send(challenge);
+      res.status(200).end(String(challenge));
       return;
     }
-    res.status(403).json({ error: 'Verification failed' });
+    res.status(403).end('Verification failed');
     return;
   }
 
