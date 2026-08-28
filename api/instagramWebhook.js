@@ -81,12 +81,30 @@ async function readRawBody(req) {
   return Buffer.concat(chunks);
 }
 
+// 진단용 기록 — 메타가 실제로 웹훅을 호출했는지, 어디서 막혔는지 사람이
+// 직접 확인할 방법이 없어서(서버 로그 접근 불가) 최근 호출 20건을 여기에
+// 남긴다. 문제 다 해결되면 지워도 되는 임시 코드.
+async function logDebug(entry) {
+  try {
+    const url = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/instagram-webhook-debug.json';
+    const resp = await fetch(url, { cache: 'no-store' });
+    const data = resp.ok ? await resp.json() : { logs: [] };
+    const logs = Array.isArray(data.logs) ? data.logs : [];
+    logs.unshift({ at: new Date().toISOString(), ...entry });
+    const bytes = Buffer.from(JSON.stringify({ logs: logs.slice(0, 20) }), 'utf-8');
+    await put('instagram-webhook-debug.json', bytes, 'application/json', { allowOverwrite: true });
+  } catch (e) {
+    // 진단 기록 자체가 실패해도 본 로직에 영향 주면 안 됨
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
     const verifyToken = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+    await logDebug({ method: 'GET', mode, tokenMatch: token === verifyToken, hasVerifyToken: !!verifyToken });
     if (mode === 'subscribe' && verifyToken && token === verifyToken) {
       res.status(200).end(String(challenge));
       return;
@@ -101,7 +119,10 @@ export default async function handler(req, res) {
   }
 
   const rawBody = await readRawBody(req);
-  if (!verifySignature(req, rawBody)) {
+  const hasAppSecret = !!process.env.INSTAGRAM_APP_SECRET;
+  const sigOk = verifySignature(req, rawBody);
+  if (!sigOk) {
+    await logDebug({ method: 'POST', stage: 'signature', hasAppSecret, sigOk, rawBodyLength: rawBody.length, rawBodyPreview: rawBody.toString('utf-8').slice(0, 500) });
     res.status(401).json({ error: 'Invalid signature' });
     return;
   }
@@ -110,6 +131,7 @@ export default async function handler(req, res) {
   try {
     body = JSON.parse(rawBody.toString('utf-8'));
   } catch (e) {
+    await logDebug({ method: 'POST', stage: 'parse', error: String(e), rawBodyPreview: rawBody.toString('utf-8').slice(0, 500) });
     res.status(400).json({ error: 'Invalid JSON' });
     return;
   }
@@ -120,6 +142,8 @@ export default async function handler(req, res) {
   // 조용히 넘어간다.
   const openaiKey = process.env.OPENAI_API_KEY;
   const added = [];
+  const attachmentLog = [];
+  const skipReasons = [];
 
   try {
     const entries = Array.isArray(body.entry) ? body.entry : [];
@@ -131,12 +155,13 @@ export default async function handler(req, res) {
           : [];
         for (const att of attachments) {
           const mediaUrl = att && att.payload && att.payload.url;
-          if (!mediaUrl) continue;
-          if (att.type === 'video') continue; // 정적 배너만 다룸 — 영상은 건너뜀
+          attachmentLog.push({ type: att && att.type, hasUrl: !!mediaUrl });
+          if (!mediaUrl) { skipReasons.push('no-url'); continue; }
+          if (att.type === 'video') { skipReasons.push('video-type'); continue; } // 정적 배너만 다룸 — 영상은 건너뜀
 
           try {
             const imgResp = await fetch(mediaUrl);
-            if (!imgResp.ok) continue;
+            if (!imgResp.ok) { skipReasons.push('fetch-failed:' + imgResp.status); continue; }
             const bytes = Buffer.from(await imgResp.arrayBuffer());
             const mimeType = imgResp.headers.get('content-type') || guessMimeType(mediaUrl);
             const base64 = bytes.toString('base64');
@@ -162,15 +187,21 @@ export default async function handler(req, res) {
             await addPendingItem(entryObj);
             added.push(id);
           } catch (e) {
-            // 항목 하나 실패해도 나머지는 계속 처리
+            skipReasons.push('process-error:' + String(e && e.message || e));
           }
         }
       }
     }
   } catch (e) {
-    // 전체가 실패해도 200으로 응답 — 메타가 재전송을 반복하며 계속 실패하는
-    // 걸 막기 위함(원인은 서버 로그로 별도 확인)
+    skipReasons.push('top-level-error:' + String(e && e.message || e));
   }
+
+  await logDebug({
+    method: 'POST', stage: 'processed', sigOk, hasAppSecret,
+    entryCount: Array.isArray(body.entry) ? body.entry.length : 0,
+    attachmentLog, skipReasons, added: added.length,
+    bodyPreview: JSON.stringify(body).slice(0, 800),
+  });
 
   res.status(200).json({ ok: true, added: added.length });
 }
