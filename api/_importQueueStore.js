@@ -1,9 +1,9 @@
-// 메타 광고 라이브러리에서 자동 수집한 이미지가 대기하는 큐 — 사람이
-// reference-board.html에서 승인해야 실제 이미지 레퍼런스에 반영된다
-// (반려사례 아카이브와 같은 "자동 수집 + 수동 승인" 철학).
+// 메타 광고 라이브러리에서 자동 수집한 "브랜드명 + 스냅샷 링크"가 대기하는
+// 큐 — 이미지는 들어있지 않다(reference-board.html에서 사람이 링크를 열어
+// 직접 확인하고, 마음에 들면 이미지 레퍼런스 업로드 기능으로 따로 등록).
 //
-// seenAdIds에는 큐에 올라왔던(승인/거절 여부와 무관하게) 광고 id를 전부
-// 기록해서, 크론이 다음에 돌 때 같은 광고를 또 큐에 올리지 않게 한다.
+// seenAdIds에는 큐에 올라왔던 광고 id를 전부 기록해서, 크론이 다음에 돌 때
+// 같은 광고를 또 큐에 올리지 않게 한다.
 //
 // 기존 _referenceUploadsStore.js/_rejectCaseStore.js와 동일한 Blob JSON
 // 매니페스트 패턴.
@@ -56,8 +56,8 @@ export async function addPendingItems(items, skippedAdIds) {
   return state.pending;
 }
 
-// action: 'approve' | 'reject' — 둘 다 pending에서 제거만 하고, 실제 레퍼런스
-// 등록(승인 시)은 호출부(importQueue.js)에서 처리한다.
+// 확인 완료 처리 — pending에서 제거만 한다(실제 레퍼런스 등록은 별도의
+// 업로드 기능에서 처리하므로 여기서는 관여하지 않는다).
 export async function removePendingItem(id) {
   const state = await getState();
   const item = state.pending.find((p) => p.id === id);

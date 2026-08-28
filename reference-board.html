@@ -133,6 +133,26 @@
   .upload-modal-msg.error{color:var(--reject);}
   .upload-modal-msg.success{color:var(--pass);}
 
+  .upload-batch-panel{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:24px;}
+  .upload-batch-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .upload-batch-title{font-size:14px; font-weight:700; color:var(--canvas-text);}
+  .upload-batch-cancel{background:none; border:none; color:var(--canvas-text-2); font-size:13px; cursor:pointer; font-family:inherit; padding:4px 8px;}
+  .upload-batch-cancel:hover{color:var(--canvas-text);}
+  .upload-batch-list{display:flex; flex-direction:column; gap:10px; max-height:520px; overflow-y:auto; margin-bottom:16px;}
+  .ub-row{display:flex; gap:14px; align-items:flex-start; padding:12px; border-radius:12px; background:var(--charcoal); border:1px solid var(--charcoal-border);}
+  .ub-thumb{width:72px; height:72px; object-fit:cover; border-radius:8px; flex-shrink:0; background:var(--surface-2);}
+  .ub-fields{flex:1; min-width:0; display:flex; gap:10px; flex-wrap:wrap;}
+  .ub-fields input[type=text], .ub-fields select{padding:9px 12px; border:1px solid var(--charcoal-border); border-radius:8px; font-size:12.5px; font-family:inherit; background:var(--surface-2); color:var(--canvas-text); box-sizing:border-box;}
+  .ub-fields input[type=text]{flex:1; min-width:120px;}
+  .ub-fields input[type=text]:hover, .ub-fields input[type=text]:focus, .ub-fields select:hover, .ub-fields select:focus{border-color:var(--accent); outline:none;}
+  .ub-status{font-size:11.5px; color:var(--text-3); align-self:center; white-space:nowrap;}
+  .ub-status.pending{color:var(--text-3);}
+  .ub-status.success{color:var(--pass);}
+  .ub-status.error{color:var(--reject);}
+  .ub-remove{background:none; border:none; color:var(--canvas-text-2); font-size:20px; line-height:1; cursor:pointer; padding:2px 6px; flex-shrink:0; align-self:flex-start;}
+  .ub-remove:hover{color:var(--reject);}
+  .upload-batch-footer{display:flex; align-items:center; justify-content:space-between; gap:16px;}
+
   /* 브랜드가이드 페이지와 동일한 토글 스위치 */
   .toggle-row{display:flex; align-items:center; gap:12px; padding:6px 0; font-size:13px; color:var(--canvas-text-2); cursor:pointer;}
   .toggle-switch{position:relative; flex-shrink:0; width:36px; height:20px;}
@@ -190,15 +210,17 @@
   .import-queue-btn{display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); border:1px solid var(--charcoal-border); color:var(--canvas-text); font-size:13px; font-weight:700; padding:10px 16px; border-radius:10px; cursor:pointer; font-family:inherit; margin-bottom:20px; transition:border-color .2s ease, background .2s ease, color .2s ease;}
   .import-queue-btn:hover{border-color:#a1a1a6;}
   .import-queue-btn.active{background:var(--num-bg); border-color:transparent; color:var(--num-text);}
-  .iq-select{width:100%; margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid var(--charcoal-border); background:var(--charcoal); color:var(--canvas-text); font-size:12.5px; font-family:inherit;}
-  .iq-select:hover, .iq-select:focus{border-color:var(--accent); outline:none;}
-  .iq-actions{display:flex; gap:8px; margin-top:10px;}
-  .iq-btn{flex:1; padding:8px 0; border-radius:8px; border:1px solid var(--charcoal-border); background:none; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .15s ease, border-color .15s ease;}
-  .iq-approve{color:var(--num-text); border-color:rgba(204,255,0,.4);}
-  .iq-approve:hover{background:var(--num-bg);}
-  .iq-reject{color:var(--reject); border-color:rgba(194,104,122,.4);}
-  .iq-reject:hover{background:rgba(194,104,122,.12);}
-  .iq-btn:disabled{opacity:.5; cursor:not-allowed;}
+  .iq-list{display:flex; flex-direction:column; gap:10px;}
+  .iq-row{display:flex; align-items:center; gap:14px; padding:14px 18px; border-radius:12px; background:var(--charcoal); border:1px solid var(--charcoal-border);}
+  .iq-row-main{flex:1; min-width:0;}
+  .iq-row-brand{font-size:14px; font-weight:700; color:var(--canvas-text);}
+  .iq-row-date{font-size:12px; color:var(--text-3); margin-top:2px;}
+  .iq-row-actions{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .iq-link-btn{padding:8px 14px; border-radius:8px; border:1px solid rgba(204,255,0,.4); background:none; color:var(--num-text); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; white-space:nowrap; transition:background .15s ease;}
+  .iq-link-btn:hover{background:var(--num-bg);}
+  .iq-dismiss-btn{padding:8px 14px; border-radius:8px; border:1px solid var(--charcoal-border); background:none; color:var(--text-2); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s ease, border-color .15s ease;}
+  .iq-dismiss-btn:hover{border-color:#a1a1a6;}
+  .iq-dismiss-btn:disabled{opacity:.5; cursor:not-allowed;}
 
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
@@ -282,10 +304,22 @@
 
   <div class="upload-section">
     <div class="upload-dropzone" id="uploadDropzone">
-      <input type="file" id="uploadFile" accept="image/*" hidden>
+      <input type="file" id="uploadFile" accept="image/*" multiple hidden>
       <div class="upload-dropzone-icon"></div>
       <div class="upload-dropzone-title">이미지를 끌어다 놓거나 클릭해서 올려주세요</div>
-      <div class="upload-dropzone-sub">이 사이트를 이용하는 팀원이 직접 레퍼런스를 등록할 수 있어요</div>
+      <div class="upload-dropzone-sub">여러 장을 한 번에 선택하면 AI가 업종·브랜드명을 자동으로 제안해요</div>
+    </div>
+
+    <div class="upload-batch-panel" id="uploadBatchPanel" style="display:none;">
+      <div class="upload-batch-header">
+        <span class="upload-batch-title" id="uploadBatchTitle"></span>
+        <button type="button" class="upload-batch-cancel" id="uploadBatchCancelBtn">취소</button>
+      </div>
+      <div class="upload-batch-list" id="uploadBatchList"></div>
+      <div class="upload-batch-footer">
+        <div class="upload-modal-msg" id="uploadBatchMsg"></div>
+        <button type="button" class="option-btn-primary" id="uploadBatchSubmitBtn">전체 등록</button>
+      </div>
     </div>
 
     <div class="upload-panel" id="uploadPanel" style="display:none;">
@@ -706,15 +740,21 @@
     })();
   }
 
+  function routeFilesSelected(fileList){
+    const files = Array.from(fileList || []).filter(f => f.type && f.type.startsWith('image/'));
+    if(!files.length) return;
+    if(files.length === 1) handleFileSelected(files[0]);
+    else handleBatchFilesSelected(files);
+  }
+
   uploadDropzone.addEventListener('click', () => uploadFileInput.click());
-  uploadFileInput.addEventListener('change', () => handleFileSelected(uploadFileInput.files[0]));
+  uploadFileInput.addEventListener('change', () => routeFilesSelected(uploadFileInput.files));
   uploadDropzone.addEventListener('dragover', e => { e.preventDefault(); uploadDropzone.classList.add('dragover'); });
   uploadDropzone.addEventListener('dragleave', () => uploadDropzone.classList.remove('dragover'));
   uploadDropzone.addEventListener('drop', e => {
     e.preventDefault();
     uploadDropzone.classList.remove('dragover');
-    const file = e.dataTransfer.files && e.dataTransfer.files[0];
-    if(file) handleFileSelected(file);
+    routeFilesSelected(e.dataTransfer.files);
   });
 
   uploadCancelBtn.addEventListener('click', resetUploadArea);
@@ -760,6 +800,179 @@
     }finally{
       uploadSubmitBtn.disabled = false;
     }
+  });
+
+  // ---------- 이미지 여러 장 한꺼번에 올리기 (폴더에서 여러 장 선택/드롭 시) ----------
+  // 한 장씩 올리는 위 패널과 달리, 카테고리·브랜드명을 사람이 미리 채우지
+  // 않고 AI가 이미지를 보고 먼저 추측해서 채워둔 뒤, 사람은 훑어보고 틀린
+  // 것만 고쳐서 한 번에 등록한다.
+  const uploadBatchPanel = document.getElementById('uploadBatchPanel');
+  const uploadBatchTitle = document.getElementById('uploadBatchTitle');
+  const uploadBatchList = document.getElementById('uploadBatchList');
+  const uploadBatchMsg = document.getElementById('uploadBatchMsg');
+  const uploadBatchSubmitBtn = document.getElementById('uploadBatchSubmitBtn');
+  const uploadBatchCancelBtn = document.getElementById('uploadBatchCancelBtn');
+
+  let batchItems = []; // [{ file, thumb, full, note, type, row, brandInput, categorySelect, statusEl, removed }]
+
+  function resetBatchArea(){
+    uploadDropzone.style.display = '';
+    uploadBatchPanel.style.display = 'none';
+    uploadBatchList.innerHTML = '';
+    uploadBatchMsg.textContent = '';
+    uploadBatchMsg.className = 'upload-modal-msg';
+    uploadFileInput.value = '';
+    batchItems = [];
+  }
+
+  function buildBatchCategoryOptions(select, selectedId){
+    const noneOpt = document.createElement('option');
+    noneOpt.value = ''; noneOpt.textContent = '업종 선택';
+    select.appendChild(noneOpt);
+    categoriesData.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id; opt.textContent = c.name;
+      if(selectedId === c.id) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  function handleBatchFilesSelected(files){
+    uploadDropzone.style.display = 'none';
+    uploadBatchPanel.style.display = '';
+    uploadBatchList.innerHTML = '';
+    uploadBatchMsg.textContent = '';
+    uploadBatchMsg.className = 'upload-modal-msg';
+    batchItems = [];
+    uploadBatchTitle.textContent = files.length + '장 선택됨 — AI가 분류 중…';
+    let classifiedCount = 0;
+    function noteClassified(){
+      classifiedCount++;
+      if(classifiedCount >= files.length) uploadBatchTitle.textContent = files.length + '장 선택됨 — 확인 후 등록해주세요';
+    }
+
+    files.forEach(file => {
+      const row = document.createElement('div');
+      row.className = 'ub-row';
+
+      const thumbImg = document.createElement('img');
+      thumbImg.className = 'ub-thumb';
+      thumbImg.alt = file.name;
+      thumbImg.src = URL.createObjectURL(file);
+      row.appendChild(thumbImg);
+
+      const fields = document.createElement('div');
+      fields.className = 'ub-fields';
+      const brandInput = document.createElement('input');
+      brandInput.type = 'text';
+      brandInput.placeholder = '브랜드명';
+      const categorySelect = document.createElement('select');
+      buildBatchCategoryOptions(categorySelect, '');
+      const statusEl = document.createElement('span');
+      statusEl.className = 'ub-status pending';
+      statusEl.textContent = '분류 중…';
+      fields.appendChild(brandInput);
+      fields.appendChild(categorySelect);
+      fields.appendChild(statusEl);
+      row.appendChild(fields);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'ub-remove';
+      removeBtn.innerHTML = '&times;';
+      row.appendChild(removeBtn);
+
+      uploadBatchList.appendChild(row);
+
+      const item = { file, note: '', type: '', row, brandInput, categorySelect, statusEl, removed: false };
+      removeBtn.addEventListener('click', () => {
+        item.removed = true;
+        row.remove();
+      });
+      batchItems.push(item);
+
+      (async () => {
+        try{
+          const [thumb, full] = await Promise.all([
+            resizeImageToBase64(file, 700, 0.74),
+            resizeImageToBase64(file, 2000, 0.92),
+          ]);
+          item.thumb = thumb; item.full = full;
+          const resp = await fetch('/api/analyzeReferenceImage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64: thumb.base64, mediaType: thumb.mimeType }),
+          });
+          const data = resp.ok ? await resp.json() : {};
+          item.note = data.note || '';
+          item.type = data.type || '';
+          brandInput.value = data.brandName || '';
+          if(data.category){
+            categorySelect.value = data.category;
+          }
+          statusEl.textContent = '';
+          statusEl.className = 'ub-status pending';
+        }catch(e){
+          statusEl.textContent = '자동분류 실패 — 직접 입력';
+          statusEl.className = 'ub-status error';
+        }finally{
+          noteClassified();
+        }
+      })();
+    });
+  }
+
+  uploadBatchCancelBtn.addEventListener('click', resetBatchArea);
+
+  uploadBatchSubmitBtn.addEventListener('click', async () => {
+    const targets = batchItems.filter(it => !it.removed);
+    if(!targets.length){ uploadBatchMsg.textContent = '등록할 이미지가 없습니다.'; uploadBatchMsg.className = 'upload-modal-msg error'; return; }
+
+    const invalid = targets.find(it => !it.brandInput.value.trim() || !it.categorySelect.value);
+    if(invalid){
+      invalid.statusEl.textContent = '브랜드명·카테고리 확인';
+      invalid.statusEl.className = 'ub-status error';
+      uploadBatchMsg.textContent = '브랜드명과 업종 카테고리를 모두 채워주세요.';
+      uploadBatchMsg.className = 'upload-modal-msg error';
+      return;
+    }
+
+    uploadBatchSubmitBtn.disabled = true;
+    let successCount = 0, failCount = 0;
+
+    for(const item of targets){
+      item.statusEl.textContent = '등록 중…';
+      item.statusEl.className = 'ub-status pending';
+      try{
+        const resp = await fetch('/api/uploadReferenceImage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            category: item.categorySelect.value,
+            brandName: item.brandInput.value.trim(),
+            note: item.note,
+            type: item.type,
+            thumb: item.thumb,
+            full: item.full,
+          }),
+        });
+        const data = await resp.json();
+        if(!resp.ok) throw new Error(data.error || ('status ' + resp.status));
+        item.statusEl.textContent = '등록됨';
+        item.statusEl.className = 'ub-status success';
+        successCount++;
+      }catch(err){
+        item.statusEl.textContent = '실패: ' + (err && err.message ? err.message : '알 수 없는 오류');
+        item.statusEl.className = 'ub-status error';
+        failCount++;
+      }
+    }
+
+    uploadBatchMsg.textContent = successCount + '장 등록 완료' + (failCount ? (', ' + failCount + '장 실패') : '');
+    uploadBatchMsg.className = failCount ? 'upload-modal-msg error' : 'upload-modal-msg success';
+    uploadBatchSubmitBtn.disabled = false;
+
+    if(successCount) loadCategoryImages(currentCategoryId || 'all', categoryOptValue.textContent);
   });
 
   // ---------- 항목별 반려사례 (업종/유형과는 다른 축 — 어떤 체크리스트
@@ -913,92 +1126,73 @@
 
   function renderImportQueue(){
     if(!importQueueData || !importQueueData.length){
-      importQueueContent.innerHTML = '<div class="gl-empty">대기 중인 이미지가 없습니다. 크론이 다음에 돌 때 새로 수집된 이미지가 여기 쌓여요.</div>';
+      importQueueContent.innerHTML = '<div class="gl-empty">대기 중인 링크가 없습니다. 크론이 다음에 돌 때 새로 수집된 광고 링크가 여기 쌓여요.</div>';
       return;
     }
-    importQueueContent.innerHTML = '';
-    const grid = document.createElement('div');
-    grid.className = 'ref-grid';
-    grid.setAttribute('data-stagger','');
-    importQueueData.forEach(item => grid.appendChild(buildImportQueueCard(item)));
-    importQueueContent.appendChild(grid);
+    importQueueContent.innerHTML = '<p class="sub" style="margin:0 0 20px; font-size:13.5px;">링크를 열어 광고를 확인하고, 마음에 들면 화면을 캡처하거나 이미지를 저장해서 위 업로드 기능으로 등록해주세요. 확인이 끝났으면 "확인함"을 눌러 목록에서 지워주세요.</p>';
+    const list = document.createElement('div');
+    list.className = 'iq-list';
+    list.setAttribute('data-stagger','');
+    importQueueData.forEach(item => list.appendChild(buildImportQueueRow(item)));
+    importQueueContent.appendChild(list);
     if(window.adcheckReveal) window.adcheckReveal();
   }
 
-  function buildImportQueueCard(item){
-    const wrap = document.createElement('div');
-    wrap.className = 'ref-item';
-    wrap.setAttribute('data-row','');
+  function buildImportQueueRow(item){
+    const row = document.createElement('div');
+    row.className = 'iq-row';
+    row.setAttribute('data-row','');
 
-    const thumbBtn = document.createElement('button');
-    thumbBtn.type = 'button';
-    thumbBtn.className = 'ref-thumb';
-    thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '수집된 이미지') + '" loading="lazy">';
-    thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, item.brandName || ''));
-    wrap.appendChild(thumbBtn);
-
-    const capDiv = document.createElement('div');
-    capDiv.className = 'ref-caption';
-    capDiv.innerHTML =
-      (item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '') +
-      (item.note ? '<div class="ref-note">' + escapeHtml(item.note) + '</div>' : '');
-
-    const select = document.createElement('select');
-    select.className = 'iq-select';
-    const noneOpt = document.createElement('option');
-    noneOpt.value = ''; noneOpt.textContent = '업종 선택';
-    select.appendChild(noneOpt);
-    categoriesData.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id; opt.textContent = c.name;
-      if(item.suggestedCategory === c.id) opt.selected = true;
-      select.appendChild(opt);
-    });
-    capDiv.appendChild(select);
+    const main = document.createElement('div');
+    main.className = 'iq-row-main';
+    const dateStr = item.adDeliveryStartTime ? ('집행 시작 ' + escapeHtml(item.adDeliveryStartTime)) : '';
+    main.innerHTML =
+      '<div class="iq-row-brand">' + escapeHtml(item.brandName || '브랜드 미상') + '</div>' +
+      (dateStr ? '<div class="iq-row-date">' + dateStr + '</div>' : '');
+    row.appendChild(main);
 
     const actions = document.createElement('div');
-    actions.className = 'iq-actions';
-    const approveBtn = document.createElement('button');
-    approveBtn.type = 'button'; approveBtn.className = 'iq-btn iq-approve'; approveBtn.textContent = '승인';
-    const rejectBtn = document.createElement('button');
-    rejectBtn.type = 'button'; rejectBtn.className = 'iq-btn iq-reject'; rejectBtn.textContent = '거절';
-    actions.appendChild(approveBtn); actions.appendChild(rejectBtn);
-    capDiv.appendChild(actions);
-    wrap.appendChild(capDiv);
+    actions.className = 'iq-row-actions';
 
-    function submit(action){
-      if(action === 'approve' && !select.value){
-        select.style.borderColor = 'var(--reject)';
-        select.focus();
-        return;
-      }
-      approveBtn.disabled = true; rejectBtn.disabled = true;
+    const linkBtn = document.createElement('a');
+    linkBtn.className = 'iq-link-btn';
+    linkBtn.href = item.snapshotUrl;
+    linkBtn.target = '_blank';
+    linkBtn.rel = 'noopener';
+    linkBtn.textContent = '스냅샷 보기 ↗';
+    actions.appendChild(linkBtn);
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.type = 'button';
+    dismissBtn.className = 'iq-dismiss-btn';
+    dismissBtn.textContent = '확인함';
+    dismissBtn.addEventListener('click', () => {
+      dismissBtn.disabled = true;
       fetch('/api/importQueue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: item.id, action, category: select.value || undefined }),
+        body: JSON.stringify({ id: item.id }),
       })
         .then(r => r.json().then(data => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
           if(!ok){
             window.alert(data.error || '처리에 실패했습니다.');
-            approveBtn.disabled = false; rejectBtn.disabled = false;
+            dismissBtn.disabled = false;
             return;
           }
           importQueueData = importQueueData.filter(it => it.id !== item.id);
           document.getElementById('importQueueCount').textContent = '(' + importQueueData.length + ')';
           renderImportQueue();
-          if(action === 'approve' && currentCategoryId) loadCategoryImages(currentCategoryId, categoryOptValue.textContent);
         })
         .catch(() => {
           window.alert('처리 중 오류가 발생했습니다. 다시 시도해주세요.');
-          approveBtn.disabled = false; rejectBtn.disabled = false;
+          dismissBtn.disabled = false;
         });
-    }
-    approveBtn.addEventListener('click', () => submit('approve'));
-    rejectBtn.addEventListener('click', () => submit('reject'));
+    });
+    actions.appendChild(dismissBtn);
 
-    return wrap;
+    row.appendChild(actions);
+    return row;
   }
 
   importQueueBtn.addEventListener('click', () => {
