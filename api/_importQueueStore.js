@@ -65,3 +65,14 @@ export async function removePendingItem(id) {
   await saveState(state);
   return item || null;
 }
+
+// pageName 필드가 없는 항목(= media_type/page_name 필터를 추가하기 전에
+// 쌓인 옛 항목, 영상·무관 계정이 섞여 노이즈가 많음)을 한꺼번에 정리할 때
+// 쓰는 일회성 도구. cronImportAds.js에서 CRON_SECRET으로만 호출 가능.
+export async function clearStaleQueueItems() {
+  const state = await getState();
+  const before = state.pending.length;
+  state.pending = state.pending.filter((p) => !!p.pageName);
+  await saveState(state);
+  return { removed: before - state.pending.length, remaining: state.pending.length };
+}

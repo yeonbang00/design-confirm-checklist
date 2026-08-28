@@ -26,7 +26,7 @@
 
 import { META_AD_BRANDS } from './_metaAdBrands.js';
 import { searchAdsForBrand } from './_metaAdLibrary.js';
-import { getSeenAdIds, addPendingItems } from './_importQueueStore.js';
+import { getSeenAdIds, addPendingItems, clearStaleQueueItems } from './_importQueueStore.js';
 
 const MAX_NEW_PER_RUN = 300; // 대기 큐가 무한정 커지지 않게 하는 안전장치
 const BRAND_BATCH_SIZE = 10; // 브랜드가 많아(100개+) 순차 처리하면 느려서 동시 처리
@@ -36,6 +36,17 @@ export default async function handler(req, res) {
   const authHeader = req.headers.authorization || '';
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  // 일회성 정리 도구 — media_type/page_name 필터를 추가하기 전에 쌓인 옛
+  // 대기 항목(pageName 없음)을 한꺼번에 지운다. middleware.js가 이 경로만
+  // 로그인 게이트에서 예외 처리해뒀기 때문에, 같은 CRON_SECRET을 재사용해서
+  // 여기 얹었다(별도 라우트를 새로 뚫으면 middleware.js 예외 처리를 또
+  // 추가해야 해서).
+  if (req.method === 'POST' && req.body && req.body.action === 'clearStale') {
+    const result = await clearStaleQueueItems();
+    res.status(200).json({ ok: true, ...result });
     return;
   }
 
