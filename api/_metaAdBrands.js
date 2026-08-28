@@ -340,6 +340,7 @@ export const META_AD_BRANDS = [
   'LG에너지솔루션',
   'LG디스플레이',
   '소니코리아',
+  '대성마이맥',
 ];
 
 // 검색어(search_terms)로는 무관한 계정이 자꾸 섞여 나오는 문제를 근본적으로
@@ -624,4 +625,5 @@ export const META_AD_BRAND_PAGE_IDS = {
   'LG에너지솔루션': '102973855312242', // 실제 계정명은 "LG Energy Solution"
   'LG디스플레이': '103619255174799', // 실제 계정명은 "LG Display Newsroom"
   '소니코리아': '203799399639778', // 실제 계정명은 "Sony Korea (소니코리아)"
+  '대성마이맥': '1422469528050451',
 };
