@@ -207,7 +207,7 @@
   .rc-item-tag{font:700 10.5px/1 var(--font-mono); letter-spacing:.03em; color:var(--reject); background:rgba(194,104,122,.12); border:1px solid rgba(194,104,122,.4); border-radius:6px; padding:4px 7px;}
   .rc-reason{font-size:12px; color:var(--text-2); line-height:1.5; margin-top:4px;}
 
-  .import-queue-btn{display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); border:1px solid var(--charcoal-border); color:var(--canvas-text); font-size:13px; font-weight:700; padding:10px 16px; border-radius:10px; cursor:pointer; font-family:inherit; margin-bottom:20px; transition:border-color .2s ease, background .2s ease, color .2s ease;}
+  .import-queue-btn{display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); border:1px solid var(--charcoal-border); color:var(--canvas-text); font-size:13px; font-weight:700; padding:10px 16px; border-radius:10px; cursor:pointer; font-family:inherit; margin-bottom:20px; margin-right:10px; transition:border-color .2s ease, background .2s ease, color .2s ease;}
   .import-queue-btn:hover{border-color:#a1a1a6;}
   .import-queue-btn.active{background:var(--num-bg); border-color:transparent; color:var(--num-text);}
   .iq-list{display:flex; flex-direction:column; gap:10px;}
@@ -223,6 +223,18 @@
   .iq-dismiss-btn{padding:8px 14px; border-radius:8px; border:1px solid var(--charcoal-border); background:none; color:var(--text-2); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s ease, border-color .15s ease;}
   .iq-dismiss-btn:hover{border-color:#a1a1a6;}
   .iq-dismiss-btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  .igq-brand-input{width:100%; margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid var(--charcoal-border); background:var(--charcoal); color:var(--canvas-text); font-size:12.5px; font-family:inherit; box-sizing:border-box;}
+  .igq-brand-input:hover, .igq-brand-input:focus{border-color:var(--accent); outline:none;}
+  .igq-select{width:100%; margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid var(--charcoal-border); background:var(--charcoal); color:var(--canvas-text); font-size:12.5px; font-family:inherit;}
+  .igq-select:hover, .igq-select:focus{border-color:var(--accent); outline:none;}
+  .igq-actions{display:flex; gap:8px; margin-top:10px;}
+  .igq-btn{flex:1; padding:8px 0; border-radius:8px; border:1px solid var(--charcoal-border); background:none; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .15s ease, border-color .15s ease;}
+  .igq-approve{color:var(--num-text); border-color:rgba(204,255,0,.4);}
+  .igq-approve:hover{background:var(--num-bg);}
+  .igq-reject{color:var(--reject); border-color:rgba(194,104,122,.4);}
+  .igq-reject:hover{background:rgba(194,104,122,.12);}
+  .igq-btn:disabled{opacity:.5; cursor:not-allowed;}
 
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
@@ -282,6 +294,7 @@
   <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
 
   <button type="button" class="import-queue-btn" id="importQueueBtn">📥 가져오기 대기 <span id="importQueueCount">(0)</span></button>
+  <button type="button" class="import-queue-btn" id="igQueueBtn">📷 인스타그램 대기 <span id="igQueueCount">(0)</span></button>
 
   <div class="option-dropdown-row" id="mainFilterRow">
     <div class="option-dropdown-wrap">
@@ -360,6 +373,8 @@
   <div id="rejectExclusiveContent" style="display:none;"></div>
 
   <div id="importQueueContent" style="display:none;"></div>
+
+  <div id="igQueueContent" style="display:none;"></div>
 
   <div class="page-footer" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
@@ -1215,6 +1230,8 @@
     if(uploadSection) uploadSection.style.display = willOpen ? 'none' : '';
     refContent.style.display = willOpen ? 'none' : '';
     document.getElementById('rejectExclusiveContent').style.display = 'none';
+    igQueueContent.style.display = 'none';
+    igQueueBtn.classList.remove('active');
     importQueueContent.style.display = willOpen ? '' : 'none';
     importQueueBtn.classList.toggle('active', willOpen);
     if(willOpen){
@@ -1223,6 +1240,143 @@
       syncRejectCases(); // 닫을 때 업종/유형/반려사례 필터 상태에 맞게 화면 복원
     }
   });
+
+  // ---------- 인스타그램 DM 자동수집 큐 ----------
+  const igQueueBtn = document.getElementById('igQueueBtn');
+  const igQueueContent = document.getElementById('igQueueContent');
+  let igQueueData = null;
+
+  function loadIgQueue(){
+    igQueueContent.innerHTML = '<div class="loading-msg">인스타그램 대기 목록을 불러오는 중…</div>';
+    fetch('/api/instagramQueue')
+      .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
+      .then(data => {
+        igQueueData = data.items || [];
+        document.getElementById('igQueueCount').textContent = '(' + igQueueData.length + ')';
+        renderIgQueue();
+      })
+      .catch(() => {
+        igQueueContent.innerHTML = '<div class="gl-empty">인스타그램 대기 목록을 불러오지 못했습니다. api/instagramQueue.js가 배포되었는지 확인해주세요.</div>';
+      });
+  }
+
+  function renderIgQueue(){
+    if(!igQueueData || !igQueueData.length){
+      igQueueContent.innerHTML = '<div class="gl-empty">대기 중인 이미지가 없습니다. 인스타그램에서 DM으로 공유하면 여기 쌓여요.</div>';
+      return;
+    }
+    igQueueContent.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'ref-grid';
+    grid.setAttribute('data-stagger','');
+    igQueueData.forEach(item => grid.appendChild(buildIgQueueCard(item)));
+    igQueueContent.appendChild(grid);
+    if(window.adcheckReveal) window.adcheckReveal();
+  }
+
+  function buildIgQueueCard(item){
+    const wrap = document.createElement('div');
+    wrap.className = 'ref-item';
+    wrap.setAttribute('data-row','');
+
+    const thumbBtn = document.createElement('button');
+    thumbBtn.type = 'button';
+    thumbBtn.className = 'ref-thumb';
+    thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '수집된 이미지') + '" loading="lazy">';
+    thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, item.brandName || ''));
+    wrap.appendChild(thumbBtn);
+
+    const capDiv = document.createElement('div');
+    capDiv.className = 'ref-caption';
+    if(item.note) capDiv.innerHTML = '<div class="ref-note">' + escapeHtml(item.note) + '</div>';
+
+    const brandInput = document.createElement('input');
+    brandInput.type = 'text';
+    brandInput.className = 'igq-brand-input';
+    brandInput.placeholder = '브랜드명';
+    brandInput.value = item.brandName || '';
+    capDiv.appendChild(brandInput);
+
+    const select = document.createElement('select');
+    select.className = 'igq-select';
+    const noneOpt = document.createElement('option');
+    noneOpt.value = ''; noneOpt.textContent = '업종 선택';
+    select.appendChild(noneOpt);
+    categoriesData.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id; opt.textContent = c.name;
+      if(item.suggestedCategory === c.id) opt.selected = true;
+      select.appendChild(opt);
+    });
+    capDiv.appendChild(select);
+
+    const actions = document.createElement('div');
+    actions.className = 'igq-actions';
+    const approveBtn = document.createElement('button');
+    approveBtn.type = 'button'; approveBtn.className = 'igq-btn igq-approve'; approveBtn.textContent = '승인';
+    const rejectBtn = document.createElement('button');
+    rejectBtn.type = 'button'; rejectBtn.className = 'igq-btn igq-reject'; rejectBtn.textContent = '거절';
+    actions.appendChild(approveBtn); actions.appendChild(rejectBtn);
+    capDiv.appendChild(actions);
+    wrap.appendChild(capDiv);
+
+    function submit(action){
+      if(action === 'approve' && (!select.value || !brandInput.value.trim())){
+        if(!select.value) select.style.borderColor = 'var(--reject)';
+        if(!brandInput.value.trim()) brandInput.style.borderColor = 'var(--reject)';
+        return;
+      }
+      approveBtn.disabled = true; rejectBtn.disabled = true;
+      fetch('/api/instagramQueue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, action, category: select.value || undefined, brandName: brandInput.value.trim() || undefined }),
+      })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if(!ok){
+            window.alert(data.error || '처리에 실패했습니다.');
+            approveBtn.disabled = false; rejectBtn.disabled = false;
+            return;
+          }
+          igQueueData = igQueueData.filter(it => it.id !== item.id);
+          document.getElementById('igQueueCount').textContent = '(' + igQueueData.length + ')';
+          renderIgQueue();
+          if(action === 'approve' && currentCategoryId) loadCategoryImages(currentCategoryId, categoryOptValue.textContent);
+        })
+        .catch(() => {
+          window.alert('처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          approveBtn.disabled = false; rejectBtn.disabled = false;
+        });
+    }
+    approveBtn.addEventListener('click', () => submit('approve'));
+    rejectBtn.addEventListener('click', () => submit('reject'));
+
+    return wrap;
+  }
+
+  igQueueBtn.addEventListener('click', () => {
+    const willOpen = igQueueContent.style.display === 'none';
+    const uploadSection = document.querySelector('.upload-section');
+    mainFilterRow.style.display = willOpen ? 'none' : '';
+    if(uploadSection) uploadSection.style.display = willOpen ? 'none' : '';
+    refContent.style.display = willOpen ? 'none' : '';
+    document.getElementById('rejectExclusiveContent').style.display = 'none';
+    importQueueContent.style.display = 'none';
+    importQueueBtn.classList.remove('active');
+    igQueueContent.style.display = willOpen ? '' : 'none';
+    igQueueBtn.classList.toggle('active', willOpen);
+    if(willOpen){
+      loadIgQueue();
+    } else {
+      syncRejectCases();
+    }
+  });
+
+  fetch('/api/instagramQueue')
+    .then(r => r.ok ? r.json() : { items: [] })
+    .then(data => { document.getElementById('igQueueCount').textContent = '(' + (data.items || []).length + ')'; })
+    .catch(() => {});
 
   // 대기 큐가 있는지는 미리 알려주는 게 좋으니, 페이지 로드 시 개수만 가볍게 확인
   fetch('/api/importQueue')
