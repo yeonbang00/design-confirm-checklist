@@ -187,6 +187,19 @@
   .rc-item-tag{font:700 10.5px/1 var(--font-mono); letter-spacing:.03em; color:var(--reject); background:rgba(194,104,122,.12); border:1px solid rgba(194,104,122,.4); border-radius:6px; padding:4px 7px;}
   .rc-reason{font-size:12px; color:var(--text-2); line-height:1.5; margin-top:4px;}
 
+  .import-queue-btn{display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); border:1px solid var(--charcoal-border); color:var(--canvas-text); font-size:13px; font-weight:700; padding:10px 16px; border-radius:10px; cursor:pointer; font-family:inherit; margin-bottom:20px; transition:border-color .2s ease, background .2s ease, color .2s ease;}
+  .import-queue-btn:hover{border-color:#a1a1a6;}
+  .import-queue-btn.active{background:var(--num-bg); border-color:transparent; color:var(--num-text);}
+  .iq-select{width:100%; margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid var(--charcoal-border); background:var(--charcoal); color:var(--canvas-text); font-size:12.5px; font-family:inherit;}
+  .iq-select:hover, .iq-select:focus{border-color:var(--accent); outline:none;}
+  .iq-actions{display:flex; gap:8px; margin-top:10px;}
+  .iq-btn{flex:1; padding:8px 0; border-radius:8px; border:1px solid var(--charcoal-border); background:none; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .15s ease, border-color .15s ease;}
+  .iq-approve{color:var(--num-text); border-color:rgba(204,255,0,.4);}
+  .iq-approve:hover{background:var(--num-bg);}
+  .iq-reject{color:var(--reject); border-color:rgba(194,104,122,.4);}
+  .iq-reject:hover{background:rgba(194,104,122,.12);}
+  .iq-btn:disabled{opacity:.5; cursor:not-allowed;}
+
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
   .lightbox{display:none; position:fixed; inset:0; background:rgba(29,29,31,0.85); z-index:100; align-items:center; justify-content:center; padding:40px;}
@@ -244,7 +257,9 @@
   <h1>이미지 레퍼런스</h1>
   <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
 
-  <div class="option-dropdown-row">
+  <button type="button" class="import-queue-btn" id="importQueueBtn">📥 가져오기 대기 <span id="importQueueCount">(0)</span></button>
+
+  <div class="option-dropdown-row" id="mainFilterRow">
     <div class="option-dropdown-wrap">
       <button type="button" class="option-btn" id="categoryOptBtn">
         <span class="option-btn-value" id="categoryOptValue">업종 전체</span><span class="opt-chevron">▼</span>
@@ -307,6 +322,8 @@
   </div>
 
   <div id="rejectExclusiveContent" style="display:none;"></div>
+
+  <div id="importQueueContent" style="display:none;"></div>
 
   <div class="page-footer" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
@@ -871,6 +888,140 @@
       if(window.adcheckReveal) window.adcheckReveal();
     }
   }
+
+  // ---------- 가져오기 대기 큐 (메타 광고 라이브러리 자동 수집) ----------
+  // 크론이 매일 자동으로 채워두는 큐를 여기서 훑어보고 승인/거절만 한다.
+  // 승인하면 실제 업종별 레퍼런스로 반영되고, 거절하면 버려진다(재수집 안 됨).
+  const importQueueBtn = document.getElementById('importQueueBtn');
+  const importQueueContent = document.getElementById('importQueueContent');
+  const mainFilterRow = document.getElementById('mainFilterRow');
+  let importQueueData = null; // null = 아직 로드 안 됨
+
+  function loadImportQueue(){
+    importQueueContent.innerHTML = '<div class="loading-msg">가져오기 대기 목록을 불러오는 중…</div>';
+    fetch('/api/importQueue')
+      .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
+      .then(data => {
+        importQueueData = data.items || [];
+        document.getElementById('importQueueCount').textContent = '(' + importQueueData.length + ')';
+        renderImportQueue();
+      })
+      .catch(() => {
+        importQueueContent.innerHTML = '<div class="gl-empty">가져오기 대기 목록을 불러오지 못했습니다. api/importQueue.js가 배포되었는지 확인해주세요.</div>';
+      });
+  }
+
+  function renderImportQueue(){
+    if(!importQueueData || !importQueueData.length){
+      importQueueContent.innerHTML = '<div class="gl-empty">대기 중인 이미지가 없습니다. 크론이 다음에 돌 때 새로 수집된 이미지가 여기 쌓여요.</div>';
+      return;
+    }
+    importQueueContent.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'ref-grid';
+    grid.setAttribute('data-stagger','');
+    importQueueData.forEach(item => grid.appendChild(buildImportQueueCard(item)));
+    importQueueContent.appendChild(grid);
+    if(window.adcheckReveal) window.adcheckReveal();
+  }
+
+  function buildImportQueueCard(item){
+    const wrap = document.createElement('div');
+    wrap.className = 'ref-item';
+    wrap.setAttribute('data-row','');
+
+    const thumbBtn = document.createElement('button');
+    thumbBtn.type = 'button';
+    thumbBtn.className = 'ref-thumb';
+    thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '수집된 이미지') + '" loading="lazy">';
+    thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, item.brandName || ''));
+    wrap.appendChild(thumbBtn);
+
+    const capDiv = document.createElement('div');
+    capDiv.className = 'ref-caption';
+    capDiv.innerHTML =
+      (item.brandName ? '<div class="ref-brand">' + escapeHtml(item.brandName) + '</div>' : '') +
+      (item.note ? '<div class="ref-note">' + escapeHtml(item.note) + '</div>' : '');
+
+    const select = document.createElement('select');
+    select.className = 'iq-select';
+    const noneOpt = document.createElement('option');
+    noneOpt.value = ''; noneOpt.textContent = '업종 선택';
+    select.appendChild(noneOpt);
+    categoriesData.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id; opt.textContent = c.name;
+      if(item.suggestedCategory === c.id) opt.selected = true;
+      select.appendChild(opt);
+    });
+    capDiv.appendChild(select);
+
+    const actions = document.createElement('div');
+    actions.className = 'iq-actions';
+    const approveBtn = document.createElement('button');
+    approveBtn.type = 'button'; approveBtn.className = 'iq-btn iq-approve'; approveBtn.textContent = '승인';
+    const rejectBtn = document.createElement('button');
+    rejectBtn.type = 'button'; rejectBtn.className = 'iq-btn iq-reject'; rejectBtn.textContent = '거절';
+    actions.appendChild(approveBtn); actions.appendChild(rejectBtn);
+    capDiv.appendChild(actions);
+    wrap.appendChild(capDiv);
+
+    function submit(action){
+      if(action === 'approve' && !select.value){
+        select.style.borderColor = 'var(--reject)';
+        select.focus();
+        return;
+      }
+      approveBtn.disabled = true; rejectBtn.disabled = true;
+      fetch('/api/importQueue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, action, category: select.value || undefined }),
+      })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if(!ok){
+            window.alert(data.error || '처리에 실패했습니다.');
+            approveBtn.disabled = false; rejectBtn.disabled = false;
+            return;
+          }
+          importQueueData = importQueueData.filter(it => it.id !== item.id);
+          document.getElementById('importQueueCount').textContent = '(' + importQueueData.length + ')';
+          renderImportQueue();
+          if(action === 'approve' && currentCategoryId) loadCategoryImages(currentCategoryId, categoryOptValue.textContent);
+        })
+        .catch(() => {
+          window.alert('처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          approveBtn.disabled = false; rejectBtn.disabled = false;
+        });
+    }
+    approveBtn.addEventListener('click', () => submit('approve'));
+    rejectBtn.addEventListener('click', () => submit('reject'));
+
+    return wrap;
+  }
+
+  importQueueBtn.addEventListener('click', () => {
+    const willOpen = importQueueContent.style.display === 'none';
+    const uploadSection = document.querySelector('.upload-section');
+    mainFilterRow.style.display = willOpen ? 'none' : '';
+    if(uploadSection) uploadSection.style.display = willOpen ? 'none' : '';
+    refContent.style.display = willOpen ? 'none' : '';
+    document.getElementById('rejectExclusiveContent').style.display = 'none';
+    importQueueContent.style.display = willOpen ? '' : 'none';
+    importQueueBtn.classList.toggle('active', willOpen);
+    if(willOpen){
+      loadImportQueue();
+    } else {
+      syncRejectCases(); // 닫을 때 업종/유형/반려사례 필터 상태에 맞게 화면 복원
+    }
+  });
+
+  // 대기 큐가 있는지는 미리 알려주는 게 좋으니, 페이지 로드 시 개수만 가볍게 확인
+  fetch('/api/importQueue')
+    .then(r => r.ok ? r.json() : { items: [] })
+    .then(data => { document.getElementById('importQueueCount').textContent = '(' + (data.items || []).length + ')'; })
+    .catch(() => {});
 
   // 헤더 하단 스크롤 진행 바
   (function(){

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    { "path": "/api/cronImportAds", "schedule": "0 18 * * *" }
+  ],
+  "functions": {
+    "api/cronImportAds.js": { "maxDuration": 60 }
+  }
+}
