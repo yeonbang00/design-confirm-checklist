@@ -76,3 +76,14 @@ export async function clearStaleQueueItems() {
   await saveState(state);
   return { removed: before - state.pending.length, remaining: state.pending.length };
 }
+
+// 특정 검색어(brandName)로 쌓인 항목을 통째로 지울 때 쓰는 일회성 도구 —
+// META_AD_BRANDS에서 검색어 자체를 제외하기로 한 브랜드(예: 검색 결과가
+// 거의 다 무관한 계정으로 확인된 경우)의 기존 대기 항목을 정리할 때 사용.
+export async function clearQueueItemsByBrand(brandNames) {
+  const state = await getState();
+  const before = state.pending.length;
+  state.pending = state.pending.filter((p) => !brandNames.includes(p.brandName));
+  await saveState(state);
+  return { removed: before - state.pending.length, remaining: state.pending.length };
+}

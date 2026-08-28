@@ -26,7 +26,7 @@
 
 import { META_AD_BRANDS } from './_metaAdBrands.js';
 import { searchAdsForBrand } from './_metaAdLibrary.js';
-import { getSeenAdIds, addPendingItems, clearStaleQueueItems } from './_importQueueStore.js';
+import { getSeenAdIds, addPendingItems, clearStaleQueueItems, clearQueueItemsByBrand } from './_importQueueStore.js';
 
 const MAX_NEW_PER_RUN = 300; // 대기 큐가 무한정 커지지 않게 하는 안전장치
 const BRAND_BATCH_SIZE = 10; // 브랜드가 많아(100개+) 순차 처리하면 느려서 동시 처리
@@ -46,6 +46,11 @@ export default async function handler(req, res) {
   // 추가해야 해서).
   if (req.method === 'POST' && req.body && req.body.action === 'clearStale') {
     const result = await clearStaleQueueItems();
+    res.status(200).json({ ok: true, ...result });
+    return;
+  }
+  if (req.method === 'POST' && req.body && req.body.action === 'clearByBrand' && Array.isArray(req.body.brands)) {
+    const result = await clearQueueItemsByBrand(req.body.brands);
     res.status(200).json({ ok: true, ...result });
     return;
   }
