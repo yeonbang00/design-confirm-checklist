@@ -214,6 +214,8 @@
   .iq-row{display:flex; align-items:center; gap:14px; padding:14px 18px; border-radius:12px; background:var(--charcoal); border:1px solid var(--charcoal-border);}
   .iq-row-main{flex:1; min-width:0;}
   .iq-row-brand{font-size:14px; font-weight:700; color:var(--canvas-text);}
+  .iq-row-page{font-size:12px; color:var(--text-3); margin-top:2px;}
+  .iq-row-page-warn{color:var(--needsfix); font-weight:600;}
   .iq-row-date{font-size:12px; color:var(--text-3); margin-top:2px;}
   .iq-row-actions{display:flex; align-items:center; gap:8px; flex-shrink:0;}
   .iq-link-btn{padding:8px 14px; border-radius:8px; border:1px solid rgba(204,255,0,.4); background:none; color:var(--num-text); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; white-space:nowrap; transition:background .15s ease;}
@@ -1146,8 +1148,19 @@
     const main = document.createElement('div');
     main.className = 'iq-row-main';
     const dateStr = item.adDeliveryStartTime ? ('집행 시작 ' + escapeHtml(item.adDeliveryStartTime)) : '';
+    // 검색어(brandName)와 실제 광고주 계정명(pageName)이 동떨어져 보이면
+    // 눈에 띄게 표시 — 메타 검색이 느슨한 텍스트 매칭이라 무관한 계정이
+    // 섞여 들어오는 걸(예: "SSG" 검색에 스팸 계정) 링크를 열어보지 않고도
+    // 걸러낼 수 있게. 자동으로 큐에서 빼지는 않고 표시만 한다(브랜드의
+    // 실제 페이지명이 검색어와 다른 정상 케이스도 있을 수 있어서).
+    const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9가-힣]/g, '');
+    const brandNorm = norm(item.brandName);
+    const pageNorm = norm(item.pageName);
+    const looksMismatched = item.pageName && brandNorm && pageNorm &&
+      !brandNorm.includes(pageNorm) && !pageNorm.includes(brandNorm);
     main.innerHTML =
       '<div class="iq-row-brand">' + escapeHtml(item.brandName || '브랜드 미상') + '</div>' +
+      (item.pageName ? '<div class="iq-row-page' + (looksMismatched ? ' iq-row-page-warn' : '') + '">' + (looksMismatched ? '⚠ ' : '') + '실제 계정: ' + escapeHtml(item.pageName) + '</div>' : '') +
       (dateStr ? '<div class="iq-row-date">' + dateStr + '</div>' : '');
     row.appendChild(main);
 

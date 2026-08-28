@@ -65,6 +65,7 @@ export default async function handler(req, res) {
           entry: {
             id: ad.id,
             brandName,
+            pageName: ad.page_name || null,
             snapshotUrl: ad.ad_snapshot_url,
             adDeliveryStartTime: ad.ad_delivery_start_time || null,
             fetchedAt: new Date().toISOString(),
