@@ -27,8 +27,13 @@
   var DIST = 40;          // 좌→우 이동 거리(px)
   var DIST_DOWN = 22;     // 위→아래 이동 거리(px)
   var EASE = 'cubic-bezier(.22,1.1,.36,1)'; // 살짝 튀는(쫀득한) 도착
+  var SEQ_STEP = 130;     // data-seq-reveal 페이지에서, 같은 순간 뷰포트에 들어온 섹션들 간 시간차(ms)
 
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+  // <html data-seq-reveal> 를 단 페이지에서만, 한 번에 여러 [data-reveal] 섹션이
+  // 뷰포트에 들어와도 동시에 뜨지 않고 순서대로(위→아래 순번) 하나씩 뜨게 한다.
+  // 다른 페이지(디자인체크리스트 등)는 기존처럼 동시에 뜬다 — 지정된 페이지에만 옵트인.
+  var sequential = document.documentElement.hasAttribute('data-seq-reveal');
 
   // dcHidden/dcShown은 "컨테이너를 이번에 처리했는지"가 아니라 "이 낱개 요소가
   // 지금 어떤 상태인지"를 기록한다 — 브랜드가이드·매체가이드처럼 같은 컨테이너의
@@ -86,10 +91,14 @@
     }
     if (!revealIO) {
       revealIO = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (!e.isIntersecting) return;
-          show(e.target);
-          revealIO.unobserve(e.target);
+        var visible = entries.filter(function (e) { return e.isIntersecting; });
+        visible.forEach(function (e) { revealIO.unobserve(e.target); });
+        visible.forEach(function (e, i) {
+          if (sequential && i > 0) {
+            setTimeout(function () { show(e.target); }, i * SEQ_STEP);
+          } else {
+            show(e.target);
+          }
         });
       }, {threshold: 0.06});
     }
