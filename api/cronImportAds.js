@@ -62,21 +62,22 @@ export default async function handler(req, res) {
   }
 
   const seenAdIds = await getSeenAdIds();
-  const newItems = [];
   const brandLog = [];
+  let totalAdded = 0;
 
   for (let i = 0; i < META_AD_BRANDS.length; i += BRAND_BATCH_SIZE) {
-    if (newItems.length >= MAX_NEW_PER_RUN) break;
+    if (totalAdded >= MAX_NEW_PER_RUN) break;
 
     const batch = META_AD_BRANDS.slice(i, i + BRAND_BATCH_SIZE);
     const results = await Promise.all(batch.map((brandName) => searchAdsForBrand(metaToken, brandName, 15, META_AD_BRAND_PAGE_IDS[brandName] || null)));
 
+    const batchItems = [];
     batch.forEach((brandName, idx) => {
       const ads = results[idx];
       let addedForBrand = 0;
       for (const ad of ads) {
         if (!ad.id || seenAdIds.has(ad.id) || !ad.ad_snapshot_url) continue;
-        newItems.push({
+        batchItems.push({
           adId: ad.id,
           entry: {
             id: ad.id,
@@ -87,6 +88,7 @@ export default async function handler(req, res) {
             fetchedAt: new Date().toISOString(),
           },
         });
+        seenAdIds.add(ad.id); // 같은 실행 안에서 다른 브랜드 검색이 같은 광고를 또 잡아도 중복 저장 안 되게
         addedForBrand++;
       }
       brandLog.push({
@@ -96,11 +98,17 @@ export default async function handler(req, res) {
         ...(ads && ads.error ? { error: ads.error } : {}),
       });
     });
+
+    // 배치가 끝날 때마다 바로 저장한다 — 브랜드 목록이 늘어나면서 전체 루프를
+    // 다 돌기 전에 함수 실행시간 제한(maxDuration)에 걸려 죽는 일이 실측으로
+    // 확인됐는데, 예전엔 맨 마지막에 딱 한 번만 저장했어서 타임아웃 나면 그때까지
+    // 처리한 배치분까지 전부 날아갔다. 배치 단위로 저장하면 중간에 죽어도
+    // 그 앞 배치들은 큐에 남는다.
+    if (batchItems.length) {
+      await addPendingItems(batchItems, []);
+      totalAdded += batchItems.length;
+    }
   }
 
-  if (newItems.length) {
-    await addPendingItems(newItems, []);
-  }
-
-  res.status(200).json({ ok: true, added: newItems.length, brands: brandLog });
+  res.status(200).json({ ok: true, added: totalAdded, brands: brandLog });
 }
