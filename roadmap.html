@@ -128,7 +128,7 @@
   .page .roadmap-toggle{color:#5E646C;}
   .page .roadmap-toggle:hover{color:#4A5208;}
   .roadmap-title{font-family:var(--font-display); font-size:17px; font-weight:700; letter-spacing:-.03em; color:var(--ink);}
-  .roadmap-status{font:600 9.5px/1 var(--font-mono); letter-spacing:.12em; color:var(--accent); background:rgba(204,255,0,.1); border:1px solid rgba(204,255,0,.3); border-radius:6px; padding:5px 9px; white-space:nowrap;}
+  .roadmap-status{font:600 9.5px/1 var(--font-mono); letter-spacing:.04em; color:var(--accent); background:rgba(204,255,0,.1); border:1px solid rgba(204,255,0,.3); border-radius:6px; padding:5px 9px; white-space:nowrap;}
   .roadmap-status.active{color:var(--pass); background:rgba(168,207,188,.12); border-color:rgba(168,207,188,.35);}
   .roadmap-status.declined{color:var(--ink-3); background:rgba(255,255,255,.05); border-color:var(--line);}
   .roadmap-desc{font-size:13.5px; font-weight:300; line-height:1.8; color:#C4C7CD; margin-bottom:12px;}
@@ -248,7 +248,7 @@
   .page .section-heading,
   .page .section-heading b{color:#14171C;}
   .page .section-eyebrow b{color:#4A5208;}
-  .page .roadmap-status{background:rgba(204,255,0,.26); border-color:rgba(163,204,0,.6); color:#14171C;}
+  .page .roadmap-status{background:rgba(204,255,0,.26); border-color:transparent; color:#14171C;}
   .page .use-chip{background:rgba(204,255,0,.22); border-color:transparent; color:#14171C;}
 
   /* 카드: 흰 바탕 + 그림자 */
@@ -465,7 +465,7 @@
     <div class="goal-hero-inner">
       <div class="goal-badge"><span class="goal-badge-dot"></span>FINAL GOAL</div>
       <h2 class="goal-heading"><span class="goal-highlight">판정에서 끝내지 않고,</span><br><span class="goal-highlight">성과로 증명한다</span></h2>
-      <p class="goal-desc">배너 분석에서 멈추지 않고, 성과 리포트의 실제 데이터와 함께 읽는 것이 다음 목표입니다. 메타·네이버 클릭률·전환율을 판정 결과와 나란히 놓으면, 어떤 항목을 고쳤을 때 성과가 올라갔는지 확인할 수 있게 됩니다.</p>
+      <p class="goal-desc">배너 분석에서 멈추지 않고, 성과 리포트의 실제 데이터와 함께 읽는 것이 다음 목표입니다.<br>메타·네이버 클릭률·전환율을 판정 결과와 나란히 놓으면, 어떤 항목을 고쳤을 때 성과가 올라갔는지 확인할 수 있게 됩니다.</p>
       <div class="goal-grid">
         <div class="goal-item">
           <div class="goal-item-tag">META</div>
@@ -614,14 +614,6 @@
       <a class="roadmap-link" href="https://higgsfield.ai/blog/mcp-for-marketers" target="_blank" rel="noopener">Higgsfield MCP 소개 ↗</a>
     </div>
 
-    <div class="roadmap-item reviewing" data-row>
-      <div class="roadmap-top">
-        <span class="roadmap-title">메타 광고 라이브러리 API 연동 (이미지 레퍼런스 자동 수집)</span>
-        <span class="roadmap-status">신원 인증 대기 중</span>
-      </div>
-      <div class="roadmap-desc">지금 이미지 레퍼런스는 팀원이 메타 광고 라이브러리·구글 광고 트랜스페어런시 센터에서 직접 찾은 스크린샷을 보내주면 등록하는 수동 방식입니다. 메타 광고 라이브러리 API를 연동하면 브랜드명만 입력해도 그 브랜드가 메타에 지금 집행 중인 광고 소재를 자동으로 가져와 업로드·분류까지 이어붙일 수 있습니다.</div>
-      <div class="roadmap-blocker"><b>왜 아직 안 했나:</b> 메타가 API 접근에 개인 신원 인증(facebook.com/ID)을 요구해 승인을 기다리는 중입니다. 승인 후에도 API가 이미지 파일을 바로 주는지, 광고 스냅샷 페이지 URL만 주는지 확인이 필요합니다 — 후자라면 스냅샷 페이지를 캡처하는 방식으로 우회해야 합니다. 구글 트랜스페어런시 센터·틱톡·유튜브는 공식 API가 없어 이번 연동 범위에서 제외했습니다.</div>
-    </div>
 
     <div class="roadmap-item reviewing" data-row>
       <div class="roadmap-top">
