@@ -73,7 +73,7 @@
     return false;
   }
 
-  var groupIO, revealIO;
+  var groupIO, revealIO, revealBoxIO;
 
   function init() {
     if (!('IntersectionObserver' in window)) {
@@ -103,6 +103,24 @@
         });
       }, {threshold: 0.06});
     }
+    // 좌→우·위→아래 박스 전용 — threshold를 훨씬 높게 잡아서(35%) 화면 끝에 살짝
+    // 걸치자마자 발화되지 않고, 실제로 스크롤해서 눈에 들어와야 등장하게 한다.
+    // 폰트페어링 "추천 조합"처럼 뷰포트가 넉넉하면 로드 직후 이미 걸쳐 있어서
+    // 스크롤 없이 바로 나타나 버리는 문제가 있었다 — 항목가이드 카드처럼 "스크롤해서
+    // 발견하는" 느낌을 주기 위한 것.
+    if (!revealBoxIO) {
+      revealBoxIO = new IntersectionObserver(function (entries) {
+        var visible = entries.filter(function (e) { return e.isIntersecting; });
+        visible.forEach(function (e) { revealBoxIO.unobserve(e.target); });
+        visible.forEach(function (e, i) {
+          if (sequential && i > 0) {
+            setTimeout(function () { show(e.target); }, i * SEQ_STEP);
+          } else {
+            show(e.target);
+          }
+        });
+      }, {threshold: 0.35});
+    }
 
     // 1단계: 대상 전부를 먼저 숨김 상태로 만든다 (아직 관찰·발화는 하지 않음).
     // 컨테이너에 아직 [data-row]가 하나도 없으면(fetch 전) 그냥 건너뛴다 —
@@ -116,24 +134,32 @@
       staggerGroups.push(group);
     });
     var revealEls = [];
+    var revealBoxEls = [];
     document.querySelectorAll('[data-reveal]').forEach(function (el) {
-      if (el.dataset.dcHidden || el.dataset.dcShown) { revealEls.push(el); return; }
+      var isBox = el.getAttribute('data-reveal') === 'left' || el.getAttribute('data-reveal') === 'down';
+      var bucket = isBox ? revealBoxEls : revealEls;
+      if (el.dataset.dcHidden || el.dataset.dcShown) { bucket.push(el); return; }
       el.dataset.dcHidden = '1';
       if (!reduce) {
-        // data-reveal="left" 이면 좌→우로, 값이 없으면(기본) 기존처럼 아래→위로.
-        // 항목가이드·컬러가이드처럼 개별 카드가 하나씩 스크롤 관찰되는 곳만 옵트인시켜서
-        // index.html 푸터·드롭존 등 이 속성을 쓰는 다른 모든 곳의 동작은 그대로 둔다.
-        var revealLeft = el.getAttribute('data-reveal') === 'left';
+        // data-reveal="left"면 좌→우, "down"이면 위→아래(바로 위 data-stagger="down"
+        // 리스트와 방향을 맞출 때 씀 — 기획안헬퍼처럼 위 리스트는 위→아래인데 바로
+        // 아래 카드가 기본값(아래→위)이면 정반대 방향이 부딪혀 보였다), 값이 없으면
+        // 기존처럼 아래→위로. 옵트인한 곳만 바뀌고 나머지(footer 등)는 그대로 둔다.
+        var revealDir = el.getAttribute('data-reveal');
+        var isBoxMotion = revealDir === 'left' || revealDir === 'down';
         el.style.opacity = '0';
-        el.style.transform = revealLeft ? 'translateX(-' + DIST_LEFT_BOX + 'px)' : 'translateY(30px)';
-        // 좌→우 박스는 더 느리고 부드러운 곡선으로 — 기존 .95s cubic-bezier(.2,.8,.2,1)는
-        // 초반에 급하게 튀어나오는 느낌이라 "빠르다"는 피드백을 받았다. 히어로 타이틀에
-        // 쓰는 것과 같은 부드러운 도착 곡선(cubic-bezier(.16,1,.3,1))으로 통일.
-        el.style.transition = revealLeft
-          ? 'opacity 1.15s ease, transform 1.25s cubic-bezier(.16,1,.3,1)'
+        el.style.transform =
+          revealDir === 'left' ? 'translateX(-' + DIST_LEFT_BOX + 'px)' :
+          revealDir === 'down' ? 'translateY(-' + DIST_LEFT_BOX + 'px)' :
+          'translateY(30px)';
+        // 박스 단위(좌→우·위→아래)는 더 느리고 부드러운 곡선으로 — 기존
+        // .95s cubic-bezier(.2,.8,.2,1)는 초반에 급하게 튀어나오는 느낌이라
+        // "빠르다"는 피드백을 받았다. 히어로 타이틀과 같은 부드러운 도착 곡선으로 통일.
+        el.style.transition = isBoxMotion
+          ? 'opacity 1.3s ease, transform 1.45s cubic-bezier(.16,1,.3,1)'
           : 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)';
       }
-      revealEls.push(el);
+      bucket.push(el);
     });
 
     // 2단계: 프레임을 하나 넘겨 브라우저가 숨김 상태를 한 번 그리게 한 뒤에야
@@ -155,6 +181,10 @@
         revealEls.forEach(function (el) {
           if (el.dataset.dcShown) return;
           revealIO.observe(el);
+        });
+        revealBoxEls.forEach(function (el) {
+          if (el.dataset.dcShown) return;
+          revealBoxIO.observe(el);
         });
       });
     }, sequential ? 260 : 0);
