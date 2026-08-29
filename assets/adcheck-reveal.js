@@ -155,7 +155,13 @@
         // 박스 단위(좌→우·위→아래)는 더 느리고 부드러운 곡선으로 — 기존
         // .95s cubic-bezier(.2,.8,.2,1)는 초반에 급하게 튀어나오는 느낌이라
         // "빠르다"는 피드백을 받았다. 히어로 타이틀과 같은 부드러운 도착 곡선으로 통일.
-        el.style.transition = isBoxMotion
+        //
+        // data-reveal-slow: 방향(위치)은 기본(아래→위) 그대로 두고 속도만 늦추고
+        // 싶은 곳에 붙인다 — 디자인체크리스트(드롭존·AI총평·17개 항목 카드)처럼
+        // "방향은 괜찮은데 속도만 빠르다"는 페이지 전용. 다른 곳(footer 등)의
+        // 기본 아래→위 속도는 그대로 유지.
+        var slow = isBoxMotion || el.hasAttribute('data-reveal-slow');
+        el.style.transition = slow
           ? 'opacity 1.3s ease, transform 1.45s cubic-bezier(.16,1,.3,1)'
           : 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)';
       }
