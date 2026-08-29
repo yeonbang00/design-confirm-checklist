@@ -48,7 +48,7 @@
   *{box-sizing:border-box;}
   /* 첫 페인트 전부터 숨겨서 반짝임(FOUC) 방지 — adcheck-reveal.js가 이후 트랜지션을 붙인다.
      자바스크립트가 죽어도 콘텐츠가 영영 안 보이는 사고가 없도록 noscript로 되돌린다. */
-  [data-row],[data-reveal]{opacity:0;}
+  html.js [data-row],html.js [data-reveal]{opacity:0;}
 
   html{scrollbar-gutter:stable;}
   html,body{margin:0;padding:0;background:var(--bg);}
@@ -204,10 +204,94 @@
     .gnb{gap:12px;}
     .dropzone{padding:36px 18px;}
   }
+
+  /* ================= 인터랙션 디벨롭 (2026-08) — index.html 과 공유 =================
+     아래 블록과 문서 끝의 대응 스크립트만 걷어내면 이전 상태로 돌아갑니다. */
+  /* ---- 히어로 진입 모션 (index.html 과 동일한 감각) ---- */
+  @keyframes pageFadeUp{from{opacity:0; transform:translateY(22px);}to{opacity:1; transform:none;}}
+  .page-eyebrow{animation:pageFadeUp .7s cubic-bezier(.16,1,.3,1) .04s both;}
+  .page > h1, h1{animation:pageFadeUp .8s cubic-bezier(.16,1,.3,1) .12s both;}
+  .page > .sub, .sub{animation:pageFadeUp .85s cubic-bezier(.16,1,.3,1) .22s both;}
+  @media (prefers-reduced-motion:reduce){
+    .page-eyebrow, .page > h1, h1, .page > .sub, .sub{animation:none; opacity:1; transform:none;}
+  }
+
+
+  /* ---- 플로팅 라운드 GNB ---- */
+  .gnb-bar{
+    top:14px; padding:0 40px; background:none; backdrop-filter:none;
+    transition:top .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease, transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .gnb-bar-inner{
+    padding:8px 10px 8px 18px; border-radius:999px;
+    background:rgba(16,19,23,.72); backdrop-filter:blur(18px) saturate(1.3);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 18px 44px -26px rgba(0,0,0,.9);
+    transition:background-color .45s ease, border-color .45s ease, box-shadow .45s ease;
+  }
+  .gnb-logo-icon{height:30px;}
+  .gnb-primary{background:none; border:none; box-shadow:none; backdrop-filter:none; padding:0; gap:6px;}
+  .gnb-bar.hide-nav{opacity:0; transform:translateY(-130%); pointer-events:none;}
+
+  /* 메뉴 항목: 테두리 없이 초록만 */
+  .gnb-primary .gnb-link{border:none; box-shadow:none; transition:color .25s ease, background-color .3s ease;}
+  .gnb-primary .gnb-link:hover{color:#CCFF00; background:rgba(204,255,0,.10); box-shadow:none;}
+  .gnb-primary .gnb-link.active,
+  .gnb-primary .gnb-link.active:hover{background:#CCFF00; color:#0B0C0E; box-shadow:none;}
+
+  /* 스크롤 진행선은 화면 최상단으로 */
+  .scroll-progress{
+    position:fixed; top:0; left:0; right:0; z-index:210;
+    max-width:none; margin:0; height:2px; background:none; border-radius:0;
+  }
+  .scroll-progress-bar{height:2px;}
+
+  /* ---- 드롭다운: 부드럽게 열리기 ---- */
+  .gnb-dropdown-menu{
+    display:block; opacity:0; visibility:hidden;
+    transform:translateX(-50%) translateY(-7px) scale(.97); transform-origin:top center;
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s .3s;
+  }
+  .gnb-dropdown:hover .gnb-dropdown-menu,
+  .gnb-dropdown:focus-within .gnb-dropdown-menu,
+  .gnb-dropdown-menu.open{
+    display:block; opacity:1; visibility:visible;
+    transform:translateX(-50%) translateY(0) scale(1);
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .34s cubic-bezier(.16,1,.3,1), visibility 0s;
+  }
+  .gnb-dropdown-toggle::after{transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s ease;}
+  .gnb-dropdown:hover .gnb-dropdown-toggle::after{transform:rotate(180deg); opacity:.9;}
+  .gnb-dropdown-item{transition:background-color .2s ease, color .2s ease, transform .28s cubic-bezier(.2,.8,.2,1);}
+  .gnb-dropdown:hover .gnb-dropdown-item{animation:ddItem .38s cubic-bezier(.16,1,.3,1) both;}
+  .gnb-dropdown-item:nth-child(2){animation-delay:.04s;}
+  .gnb-dropdown-item:nth-child(3){animation-delay:.08s;}
+  .gnb-dropdown-item:nth-child(4){animation-delay:.12s;}
+  .gnb-dropdown-item:hover{transform:translateX(3px);}
+  @keyframes ddItem{from{opacity:0; transform:translateY(-6px);}to{opacity:1; transform:none;}}
+
+  /* ---- 푸터: 한 화면 가득, 내용은 위 / 저작권은 바닥 ---- */
+  .page-footer{
+    position:relative;
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start;
+    margin:0; padding:96px 40px 40px; border-top:none;
+    background:#0B0C0E;
+  }
+  /* 다크 페이지라 별도 배경 블리드 없이 컨테이너만 넓힌다 (가로 스크롤 방지) */
+  .page-footer{width:100vw; margin-left:calc(50% - 50vw);}
+  .footer-logo{height:38px; margin:0 0 16px; opacity:.42;}
+  .footer-copy{margin-top:auto; padding-top:60px; opacity:.6;}
+
+  @media (max-width:760px){
+    .gnb-bar{padding:0 14px;}
+    .gnb-bar-inner{padding:7px 9px 7px 14px;}
+    .page-footer{padding:64px 18px;}
+    .footer-logo{height:30px;}
+  }
 </style>
 </head>
 <body>
-<noscript><style>[data-row],[data-reveal]{opacity:1 !important;}</style></noscript>
+<script>document.documentElement.classList.add('js');</script>
 
 <div class="grain"></div>
 
@@ -305,7 +389,7 @@
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
     이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
-    &copy; 2026 NHNAD. All rights reserved.
+    <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
   </div>
 </div>
 
@@ -766,5 +850,30 @@
   })();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
+
+<script>
+/* ===== 인터랙션 디벨롭 (2026-08) — 푸터에서 GNB 감추기 (index.html 과 공유) ===== */
+(function () {
+  var gnb = document.querySelector('.gnb-bar');
+  var footer = document.querySelector('.page-footer');
+  if (!gnb || !footer) return;
+  var raf = null;
+
+  function frame() {
+    raf = null;
+    var y = window.scrollY, vh = window.innerHeight;
+    var fr = footer.getBoundingClientRect();
+    gnb.classList.toggle('hide-nav', y > 120 && fr.top > 0 && fr.top < vh && fr.bottom <= vh + 2);
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
+
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+  if (window.ResizeObserver) new ResizeObserver(schedule).observe(document.body);
+  [400, 1200, 2500].forEach(function (ms) { setTimeout(schedule, ms); });
+  frame();
+})();
+</script>
 </body>
 </html>

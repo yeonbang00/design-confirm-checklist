@@ -125,7 +125,7 @@
   @font-face{font-family:'KNPSOdaesan-Regular';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2510-2@1.0/KNPSOdaesan-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
   @font-face{font-family:'GabiaDunn-Regular';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2510-1@1.0/GabiaDunn-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
   *{box-sizing:border-box;}
-  [data-row],[data-reveal]{opacity:0;}
+  html.js [data-row],html.js [data-reveal]{opacity:0;}
 
   html{scrollbar-gutter:stable;}
   html,body{margin:0;padding:0;background:var(--bg);}
@@ -194,17 +194,17 @@
   .preset-chip.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
 
   /* 배너 미리보기 */
-  .preview-wrap{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:28px; align-items:start;}
-  .preview-card{position:relative; border-radius:22px; overflow:hidden; min-height:360px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:56px 40px; transition:background 1s ease;}
+  .preview-wrap{display:grid; grid-template-columns:minmax(0,1fr) 380px; grid-template-rows:auto auto; gap:20px 24px; align-items:stretch;}
+  .preview-card{grid-column:1; grid-row:1; position:relative; border-radius:22px; overflow:hidden; min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:56px 40px; transition:background 1s ease;}
   .preview-badge{position:absolute; top:16px; left:18px; font:600 10px/1 var(--font-mono); letter-spacing:.16em; color:rgba(255,255,255,.55); text-transform:uppercase;}
   .preview-headline{margin:0; line-height:1.15; word-break:keep-all;}
   .preview-subtitle{margin:14px 0 0; line-height:1.4; word-break:keep-all; opacity:.92;}
   .preview-cta{margin-top:26px; display:inline-flex; align-items:center; gap:8px; padding:13px 26px; border-radius:999px; background:rgba(255,255,255,.96); color:#0B0C0E; white-space:nowrap; box-shadow:0 0 0 1px rgba(0,0,0,.08);}
-  .preview-bg-row{display:flex; gap:8px; margin-top:14px;}
+  .preview-bg-row{grid-column:1; grid-row:2; display:flex; justify-content:center; align-self:center; gap:8px; margin:0;}
   .preview-bg-swatch{width:26px; height:26px; border-radius:8px; border:2px solid rgba(255,255,255,.18); cursor:pointer; padding:0;}
   .preview-bg-swatch.active{border-color:var(--accent);}
 
-  .role-panels{display:flex; flex-direction:column; gap:14px;}
+  .role-panels{grid-column:2; grid-row:1; display:flex; flex-direction:column; gap:14px;}
   .role-card{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px 18px;}
   .role-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .role-label{font:600 11px/1 var(--font-mono); letter-spacing:.14em; color:var(--ink-3); text-transform:uppercase;}
@@ -218,30 +218,121 @@
   .role-slider-val{width:38px; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-2);}
   .role-text-input{width:100%; margin-top:10px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 10px; color:var(--ink); font-size:13px;}
 
-  .shuffle-btn{width:100%; margin-top:2px; padding:13px; border-radius:12px; border:1px dashed rgba(255,255,255,.22); background:none; color:var(--ink-2); font-size:13.5px; font-weight:600; cursor:pointer; transition:border-color .2s ease,color .2s ease;}
+  .shuffle-btn{grid-column:2; grid-row:2; align-self:center; width:100%; margin-top:0; padding:13px; border-radius:12px; border:1px dashed rgba(255,255,255,.22); background:none; color:var(--ink-2); font-size:13.5px; font-weight:600; cursor:pointer; transition:border-color .2s ease,color .2s ease;}
   .shuffle-btn:hover{border-color:var(--accent); color:var(--accent);}
 
-  .combo-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px;}
-  .combo-card{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px 18px; cursor:pointer; transition:border-color .2s ease,transform .2s ease;}
+  .combo-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:12px;}
+  .combo-card{background:var(--card); border:1px solid var(--card-border); border-radius:14px; padding:15px 17px; cursor:pointer; transition:border-color .2s ease,transform .2s ease;}
   .combo-card:hover{border-color:rgba(204,255,0,.5); transform:translateY(-2px);}
-  .combo-title{font-size:13px; font-weight:700; margin-bottom:10px; color:var(--canvas-text);}
+  .combo-title{font-size:12.5px; font-weight:600; margin-bottom:9px; color:var(--ink-3); letter-spacing:-.01em;}
   .combo-preview{font-size:20px; line-height:1.3; margin-bottom:4px; word-break:keep-all;}
   .combo-sub{font-size:12.5px; color:var(--text-3); margin-bottom:8px; word-break:keep-all;}
-  .combo-fonts{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ink-4); flex-wrap:wrap;}
-  .combo-arrow{opacity:.5;}
+  .combo-preview{margin-top:8px; font-size:19px; line-height:1.3; color:var(--ink); word-break:keep-all;}
+  .combo-sub{margin-top:5px; font-size:13px; color:var(--ink-3); word-break:keep-all;}
 
+  @media (max-width:1100px){
+    .preview-wrap{grid-template-columns:minmax(0,1fr) 330px;}
+  }
   @media (max-width:900px){
-    .preview-wrap{grid-template-columns:1fr;}
+    .preview-wrap{grid-template-columns:1fr; grid-template-rows:none;}
+    .preview-card{grid-column:1; grid-row:auto; aspect-ratio:4/3; min-height:0;}
+    .preview-bg-row{grid-column:1; grid-row:auto; justify-content:flex-start;}
+    .role-panels{grid-column:1; grid-row:auto;}
+    .shuffle-btn{grid-column:1; grid-row:auto;}
   }
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
     .gnb-bar-inner{display:flex; flex-wrap:wrap; gap:16px;}
     .gnb{gap:12px;}
   }
+
+  /* ================= 인터랙션 디벨롭 (2026-08) — index.html 과 공유 =================
+     아래 블록과 문서 끝의 대응 스크립트만 걷어내면 이전 상태로 돌아갑니다. */
+  /* ---- 히어로 진입 모션 (index.html 과 동일한 감각) ---- */
+  @keyframes pageFadeUp{from{opacity:0; transform:translateY(22px);}to{opacity:1; transform:none;}}
+  .page-eyebrow{animation:pageFadeUp .7s cubic-bezier(.16,1,.3,1) .04s both;}
+  .page > h1, h1{animation:pageFadeUp .8s cubic-bezier(.16,1,.3,1) .12s both;}
+  .page > .sub, .sub{animation:pageFadeUp .85s cubic-bezier(.16,1,.3,1) .22s both;}
+  @media (prefers-reduced-motion:reduce){
+    .page-eyebrow, .page > h1, h1, .page > .sub, .sub{animation:none; opacity:1; transform:none;}
+  }
+
+
+  /* ---- 플로팅 라운드 GNB ---- */
+  .gnb-bar{
+    top:14px; padding:0 40px; background:none; backdrop-filter:none;
+    transition:top .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease, transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .gnb-bar-inner{
+    padding:8px 10px 8px 18px; border-radius:999px;
+    background:rgba(16,19,23,.72); backdrop-filter:blur(18px) saturate(1.3);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 18px 44px -26px rgba(0,0,0,.9);
+    transition:background-color .45s ease, border-color .45s ease, box-shadow .45s ease;
+  }
+  .gnb-logo-icon{height:30px;}
+  .gnb-primary{background:none; border:none; box-shadow:none; backdrop-filter:none; padding:0; gap:6px;}
+  .gnb-bar.hide-nav{opacity:0; transform:translateY(-130%); pointer-events:none;}
+
+  /* 메뉴 항목: 테두리 없이 초록만 */
+  .gnb-primary .gnb-link{border:none; box-shadow:none; transition:color .25s ease, background-color .3s ease;}
+  .gnb-primary .gnb-link:hover{color:#CCFF00; background:rgba(204,255,0,.10); box-shadow:none;}
+  .gnb-primary .gnb-link.active,
+  .gnb-primary .gnb-link.active:hover{background:#CCFF00; color:#0B0C0E; box-shadow:none;}
+
+  /* 스크롤 진행선은 화면 최상단으로 */
+  .scroll-progress{
+    position:fixed; top:0; left:0; right:0; z-index:210;
+    max-width:none; margin:0; height:2px; background:none; border-radius:0;
+  }
+  .scroll-progress-bar{height:2px;}
+
+  /* ---- 드롭다운: 부드럽게 열리기 ---- */
+  .gnb-dropdown-menu{
+    display:block; opacity:0; visibility:hidden;
+    transform:translateX(-50%) translateY(-7px) scale(.97); transform-origin:top center;
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s .3s;
+  }
+  .gnb-dropdown:hover .gnb-dropdown-menu,
+  .gnb-dropdown:focus-within .gnb-dropdown-menu,
+  .gnb-dropdown-menu.open{
+    display:block; opacity:1; visibility:visible;
+    transform:translateX(-50%) translateY(0) scale(1);
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .34s cubic-bezier(.16,1,.3,1), visibility 0s;
+  }
+  .gnb-dropdown-toggle::after{transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s ease;}
+  .gnb-dropdown:hover .gnb-dropdown-toggle::after{transform:rotate(180deg); opacity:.9;}
+  .gnb-dropdown-item{transition:background-color .2s ease, color .2s ease, transform .28s cubic-bezier(.2,.8,.2,1);}
+  .gnb-dropdown:hover .gnb-dropdown-item{animation:ddItem .38s cubic-bezier(.16,1,.3,1) both;}
+  .gnb-dropdown-item:nth-child(2){animation-delay:.04s;}
+  .gnb-dropdown-item:nth-child(3){animation-delay:.08s;}
+  .gnb-dropdown-item:nth-child(4){animation-delay:.12s;}
+  .gnb-dropdown-item:hover{transform:translateX(3px);}
+  @keyframes ddItem{from{opacity:0; transform:translateY(-6px);}to{opacity:1; transform:none;}}
+
+  /* ---- 푸터: 한 화면 가득, 내용은 위 / 저작권은 바닥 ---- */
+  .page-footer{
+    position:relative;
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start;
+    margin:0; padding:96px 40px 40px; border-top:none;
+    background:#0B0C0E;
+  }
+  /* 다크 페이지라 별도 배경 블리드 없이 컨테이너만 넓힌다 (가로 스크롤 방지) */
+  .page-footer{width:100vw; margin-left:calc(50% - 50vw);}
+  .footer-logo{height:38px; margin:0 0 16px; opacity:.42;}
+  .footer-copy{margin-top:auto; padding-top:60px; opacity:.6;}
+
+  @media (max-width:760px){
+    .gnb-bar{padding:0 14px;}
+    .gnb-bar-inner{padding:7px 9px 7px 14px;}
+    .page-footer{padding:64px 18px;}
+    .footer-logo{height:30px;}
+  }
 </style>
 </head>
 <body>
-<noscript><style>[data-row],[data-reveal]{opacity:1 !important;}</style></noscript>
+<script>document.documentElement.classList.add('js');</script>
 
 <div class="grain"></div>
 
@@ -282,7 +373,6 @@
     <div class="preset-row" id="presetRow"></div>
 
     <div class="preview-wrap">
-      <div>
         <div class="preview-card" id="previewCard">
           <div class="preview-badge">AD PREVIEW</div>
           <h2 class="preview-headline" id="previewHeadline" contenteditable="true" spellcheck="false"></h2>
@@ -290,8 +380,6 @@
           <div class="preview-cta" id="previewCta" contenteditable="true" spellcheck="false"></div>
         </div>
         <div class="preview-bg-row" id="bgRow"></div>
-        <div class="section-note" style="margin-top:10px;">배경색을 바꿔가며 대비를 확인하고, 텍스트를 직접 클릭해서 실제 카피로 바꿔보세요.</div>
-      </div>
 
       <div class="role-panels">
         <div class="role-card">
@@ -319,7 +407,6 @@
           <div class="role-slider-row"><span>크기</span><input type="range" id="sizeBody" min="12" max="20" value="15"><span class="role-slider-val" id="sizeBodyVal">15px</span></div>
         </div>
         <button type="button" class="shuffle-btn" id="shuffleBtn">🎲 다른 조합 보기 (잠긴 역할은 유지)</button>
-      </div>
     </div>
   </div>
 
@@ -333,7 +420,7 @@
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
     폰트 저작권은 각 제작사에 있습니다 — 실제 사용 전 라이선스 조건(상업적 이용 범위 등)을 다시 한번 확인해주세요.<br>
     이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
-    &copy; 2026 NHNAD. All rights reserved.
+    <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
   </div>
 </div>
 
@@ -560,6 +647,8 @@
     const grid = document.getElementById('comboGrid');
     const note = document.getElementById('comboNote');
     let combos, showMoodLabel = false;
+    const liveHeadline = (document.getElementById('previewHeadline').textContent || '').trim() || '지금 이 순간, 놓치지 마세요';
+    const liveSubtitle = (document.getElementById('previewSubtitle').textContent || '').trim() || '신규 가입 시 첫 달 50% 할인';
     if(state.mood === 'free'){
       combos = Object.entries(PRESETS).filter(([k])=>k!=='free').flatMap(([k,p]) => p.combos.map(c => ({...c, moodLabel:p.label})));
       showMoodLabel = true;
@@ -572,9 +661,8 @@
       const hf = FONT_BY_ID[c.heading], sf = FONT_BY_ID[c.subtitle], bf = FONT_BY_ID[c.body];
       return `<div class="combo-card" data-h="${c.heading}" data-s="${c.subtitle}" data-b="${c.body}">
         <div class="combo-title">${showMoodLabel ? c.moodLabel+' — ' : ''}${c.desc}</div>
-        <div class="combo-preview" style="font-family:${hf.family};font-weight:800;">테스트를 해보자</div>
-        <div class="combo-sub" style="font-family:${sf.family};">부제목도 함께 확인하세요</div>
-        <div class="combo-fonts">${hf.name}<span class="combo-arrow">→</span>${sf.name}<span class="combo-arrow">→</span>${bf.name}</div>
+        <div class="combo-preview" style="font-family:${hf.family};font-weight:800;">${liveHeadline}</div>
+        <div class="combo-sub" style="font-family:${sf.family};">${liveSubtitle}</div>
       </div>`;
     }).join('');
     grid.querySelectorAll('.combo-card').forEach(card => {
@@ -602,6 +690,8 @@
   document.getElementById('selSubtitle').addEventListener('change', e => { state.subtitle = e.target.value; render(); });
   document.getElementById('selBody').addEventListener('change', e => { state.body = e.target.value; render(); });
 
+  document.getElementById('previewHeadline').addEventListener('input', renderCombos);
+  document.getElementById('previewSubtitle').addEventListener('input', renderCombos);
   document.getElementById('sizeHeading').addEventListener('input', e => { state.sizes.heading = +e.target.value; render(); });
   document.getElementById('sizeSubtitle').addEventListener('input', e => { state.sizes.subtitle = +e.target.value; render(); });
   document.getElementById('sizeBody').addEventListener('input', e => { state.sizes.body = +e.target.value; render(); });
@@ -660,5 +750,30 @@
   })();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
+
+<script>
+/* ===== 인터랙션 디벨롭 (2026-08) — 푸터에서 GNB 감추기 (index.html 과 공유) ===== */
+(function () {
+  var gnb = document.querySelector('.gnb-bar');
+  var footer = document.querySelector('.page-footer');
+  if (!gnb || !footer) return;
+  var raf = null;
+
+  function frame() {
+    raf = null;
+    var y = window.scrollY, vh = window.innerHeight;
+    var fr = footer.getBoundingClientRect();
+    gnb.classList.toggle('hide-nav', y > 120 && fr.top > 0 && fr.top < vh && fr.bottom <= vh + 2);
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
+
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+  if (window.ResizeObserver) new ResizeObserver(schedule).observe(document.body);
+  [400, 1200, 2500].forEach(function (ms) { setTimeout(schedule, ms); });
+  frame();
+})();
+</script>
 </body>
 </html>

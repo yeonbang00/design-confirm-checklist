@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AdCheck | 디자인 체크리스트</title>
+<script src="assets/mesh-shader.js"></script>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
@@ -34,7 +35,7 @@
   *{box-sizing:border-box;}
   /* 첫 페인트 전부터 숨겨서 반짝임(FOUC) 방지 — adcheck-reveal.js가 이후 트랜지션을 붙인다.
      자바스크립트가 죽어도 콘텐츠가 영영 안 보이는 사고가 없도록 noscript로 되돌린다. */
-  [data-row],[data-reveal]{opacity:0;}
+  html.js [data-row],html.js [data-reveal]{opacity:0;}
 
   html{scrollbar-gutter:stable;}
   html,body{margin:0;padding:0;background:var(--bg);}
@@ -72,7 +73,7 @@
   .gnb-primary{display:flex; align-items:center; gap:2px; justify-self:center; padding:6px; border-radius:999px; background:rgba(18,21,25,.9); backdrop-filter:blur(18px) saturate(1.2); border:1px solid rgba(255,255,255,.1); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px -26px rgba(0,0,0,.95);}
   .gnb-secondary{display:flex; align-items:center; gap:2px; justify-self:end;}
   .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; letter-spacing:-.015em; white-space:nowrap; border:none; background:none; cursor:pointer; transition:background .25s ease,color .25s ease,box-shadow .25s ease;}
-  .gnb-primary .gnb-link:hover{color:var(--ink); box-shadow:inset 0 0 0 1px rgba(204,255,0,.55);}
+  .gnb-primary .gnb-link:hover{color:var(--ink);}
   .gnb-primary .gnb-link.active{background:#EDEEF0; color:#0B0C0E; font-weight:700;}
   .gnb-primary .gnb-link.active:hover{box-shadow:none;}
   .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none; white-space:nowrap; transition:color .25s ease;}
@@ -113,7 +114,8 @@
   .hero-drift-col.up-slow{animation:driftUp 48s linear infinite;}
   .drift-cell{position:relative; aspect-ratio:1; border-radius:12px; overflow:hidden; background:var(--surface); border:1px solid rgba(255,255,255,.1); flex:none; transition:transform .45s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .3s ease;}
   .drift-cell img{width:100%; height:100%; object-fit:cover; display:block;}
-  .drift-cell:hover{transform:scale(1.06); border-color:rgba(204,255,0,.6); box-shadow:0 0 34px -8px rgba(204,255,0,.45);}
+  .drift-cell:hover{transform:scale(1.045); border-color:rgba(204,255,0,.6); box-shadow:0 0 34px -8px rgba(204,255,0,.45); z-index:1;}
+  .hero-drift-cols{padding:0 5px;}
   .drift-tag{position:absolute; left:7px; bottom:7px; font:500 8px/1 var(--font-mono); letter-spacing:.06em; padding:4px 6px; border-radius:5px; border:1px solid;}
   .drift-cell.v-pass .drift-tag{background:rgba(168,207,188,.16); border-color:rgba(168,207,188,.5); color:var(--pass);}
   .drift-cell.v-needsfix .drift-tag{background:rgba(217,166,96,.16); border-color:rgba(217,166,96,.5); color:var(--needsfix);}
@@ -343,10 +345,438 @@
 
   /* ---------- 푸터 로고 ---------- */
   .footer-logo{display:block; height:36px; width:auto; margin:0 auto 18px; opacity:.5;}
+  /* ================= 인터랙션 디벨롭 (2026-08) =================
+     아래 블록만 걷어내면 이전 상태로 돌아갑니다. */
+
+  /* ---- 히어로 진입 모션 ---- */
+  @keyframes heroRise{from{transform:translateY(112%) rotate(1.4deg);}to{transform:translateY(0) rotate(0);}}
+  @keyframes heroFade{from{opacity:0; transform:translateY(18px);}to{opacity:1; transform:none;}}
+  @keyframes emGlow{0%,100%{text-shadow:0 0 0 rgba(204,255,0,0);}50%{text-shadow:0 0 38px rgba(204,255,0,.45);}}
+  .prompt-hero h1 .hero-line{display:block; overflow:hidden; padding-bottom:.06em;}
+  .prompt-hero h1 .hero-line > span{display:block; animation:heroRise 1.05s cubic-bezier(.16,1,.3,1) both;}
+  .prompt-hero h1 .hero-line:nth-child(1) > span{animation-delay:.06s;}
+  .prompt-hero h1 .hero-line:nth-child(2) > span{animation-delay:.19s;}
+  .prompt-hero h1 em{animation:emGlow 4.2s ease-in-out 1.6s infinite;}
+  .hero-badge{animation:heroFade .85s cubic-bezier(.16,1,.3,1) both;}
+  .hero-sub{animation:heroFade .9s cubic-bezier(.16,1,.3,1) .34s both;}
+  .hero-stats{animation:heroFade .9s cubic-bezier(.16,1,.3,1) .46s both;}
+  .hero-drift{animation:heroFade 1.15s cubic-bezier(.16,1,.3,1) .28s both;}
+  .hero-stat{transition:border-color .3s ease;}
+  .hero-stat-v{font-variant-numeric:tabular-nums;}
+  .hero-glow{will-change:transform;}
+  .hero-drift-cols{will-change:transform;}
+
+  /* 스크롤 시 히어로가 살짝 뒤로 물러남 */
+  .hero-grid{will-change:transform, opacity;}
+
+  /* ---- 라이트 존: AI 총평(.content)부터는 처음부터 흰 배경 ---- */
+  .content{
+    --lit:1;
+    position:relative;
+    color:var(--ink);
+    padding-top:96px;
+    margin-top:96px;
+    border-radius:38px 38px 0 0;
+    background:#FAFAF7;
+    box-shadow:0 -40px 90px -60px rgba(0,0,0,.9);
+    clip-path:inset(0 -100vmax round 38px 38px 0 0);
+  }
+  .content::before{
+    /* -100vmax 좌우 오프셋 방식은 실제 레이아웃 박스를 만들어 documentElement.scrollWidth를
+       뷰포트 폭의 약 2배로 늘리는 가로 스크롤 버그가 있었다(실측 확인) — width:100vw +
+       음수 margin-left 방식으로 교체 (풀블리드 배경의 표준적인 방법, 레이아웃 오버플로 없음) */
+    content:''; position:absolute; width:100vw; left:50%; margin-left:-50vw; top:0; bottom:0;
+    background:#FAFAF7; z-index:-1; border-radius:38px 38px 0 0;
+  }
+  .content > .section-divider:first-child{display:none;}
+
+  /* 라이트 존 토큰 */
+  .content, .page-footer{
+    --bg: color-mix(in oklab, #0B0C0E, #FAFAF7 calc(var(--lit) * 100%));
+    --ink: color-mix(in oklab, #EDEEF0, #16190F calc(var(--lit) * 100%));
+    --ink-2: color-mix(in oklab, #A2A7B0, #454B54 calc(var(--lit) * 100%));
+    --ink-3: color-mix(in oklab, #7E838C, #5E646C calc(var(--lit) * 100%));
+    --ink-4: color-mix(in oklab, #6B707A, #868B92 calc(var(--lit) * 100%));
+    --line: color-mix(in srgb, rgba(255,255,255,.11), rgba(11,12,14,.15) calc(var(--lit) * 100%));
+    --line-soft: color-mix(in srgb, rgba(255,255,255,.07), rgba(11,12,14,.10) calc(var(--lit) * 100%));
+    --surface: color-mix(in oklab, #14171C, #FFFFFF calc(var(--lit) * 100%));
+    --surface-2: color-mix(in oklab, #0F1216, #FFFFFF calc(var(--lit) * 100%));
+    --surface-3: color-mix(in oklab, #15181D, #FFFFFF calc(var(--lit) * 100%));
+    --pass: color-mix(in oklab, #A8CFBC, #55B012 calc(var(--lit) * 100%));
+    --needsfix: color-mix(in oklab, #D9A660, #EFA300 calc(var(--lit) * 100%));
+    --reject: color-mix(in oklab, #C2687A, #F0442F calc(var(--lit) * 100%));
+    --na: color-mix(in oklab, #6B707A, #A2A79A calc(var(--lit) * 100%));
+    --accent-text: color-mix(in oklab, #CCFF00, #5A7A00 calc(var(--lit) * 100%));
+    --body-2: color-mix(in oklab, #C4C7CD, #4C5145 calc(var(--lit) * 100%));
+    --body-3: color-mix(in oklab, #8B9099, #6A6F62 calc(var(--lit) * 100%));
+    --wash: color-mix(in srgb, rgba(255,255,255,.04), rgba(11,12,14,.045) calc(var(--lit) * 100%));
+    --wash-2: color-mix(in srgb, rgba(255,255,255,.06), rgba(11,12,14,.065) calc(var(--lit) * 100%));
+    --wash-3: color-mix(in srgb, rgba(255,255,255,.12), rgba(11,12,14,.13) calc(var(--lit) * 100%));
+    --hairline: color-mix(in srgb, rgba(255,255,255,.06), rgba(11,12,14,.08) calc(var(--lit) * 100%));
+    --card-shadow: 0 30px 60px -44px rgba(11,12,14,calc(var(--lit) * .5));
+  }
+  .content .comparison-title, .content .card-eyebrow b, .content .marquee-track .sep{color:var(--accent-text);}
+  .content .ai-summary{
+    background:linear-gradient(120deg,
+      color-mix(in oklab,#16191F,#FFFFFF calc(var(--lit) * 100%)),
+      color-mix(in oklab,#0F1216,#FFFFFF calc(var(--lit) * 100%)) 78%);
+    border-color:var(--line); box-shadow:var(--card-shadow);
+  }
+  .content .ai-summary-body, .content .ci-text{color:var(--body-2);}
+  .content .row-note, .content .marquee-track{color:var(--body-3);}
+  .content .tier-card{box-shadow:var(--card-shadow);}
+  .content .tier-ghost{color:color-mix(in oklab, #FFFFFF, #0B0C0E calc(var(--lit) * 100%)); opacity:.045;}
+  .content .tier-bar, .content .progress-track{background:color-mix(in srgb, rgba(255,255,255,.07), rgba(11,12,14,.09) calc(var(--lit) * 100%));}
+  .content .row{border-bottom-color:var(--hairline);}
+  .content .row:not([data-status])::before{background:var(--wash-3);}
+  .content .row:hover{background:var(--wash);}
+  .content .stbtn, .content .ls-cell, .content .ref-chip{background:var(--wash);}
+  .content .stbtn[data-status="na"]{background:var(--wash-2); border-color:var(--wash-3);}
+  .content .verdict-badge{background:var(--wash-2);}
+  .content .rc-check{background:color-mix(in srgb, rgba(255,255,255,.03), rgba(11,12,14,.035) calc(var(--lit) * 100%));}
+  .content .rc-check:hover{background:var(--wash);}
+  .content .comparison-block, .content .summary-refs:not(:empty), .content .rc-save-row{border-top-color:var(--line-soft);}
+  .content .section-divider{background:linear-gradient(90deg,transparent,var(--line) 18%,var(--line) 82%,transparent);}
+
+  /* ---- 푸터: 다시 검정 ---- */
+  .page-footer{
+    --lit:0;
+    position:relative; z-index:1;
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start;
+    margin:0; padding:96px 40px 40px; border-top:none;
+    color:var(--ink-4); background:#0B0C0E;
+  }
+  .footer-logo{height:38px; margin:0 0 16px;}
+  .footer-copy{margin-top:auto; padding-top:60px; opacity:.6;}
+  /* 흰 라이트 존 아래라 검정 바탕이 화면 폭을 채워야 한다 (가로 스크롤 없이) */
+  .page-footer{width:100vw; margin-left:calc(50% - 50vw);}
+  .footer-logo{opacity:.42;}
+
+  /* 흰 구간에서는 옅은 틴트를 걷고 순백 카드로 */
+  .content .tier-card{
+    background:#FFFFFF !important;
+    border-color:rgba(11,12,14,.07) !important;
+    box-shadow:0 18px 40px -34px rgba(11,12,14,.45);
+  }
+  .content .tier-card::before{ content:none; }
+  .content .tier-count{transition:color .35s ease;}
+  .content #tPass:hover .tier-count{color:#55B012 !important;}
+  .content #tNeedsfix:hover .tier-count{color:#EFA300 !important;}
+  .content #tReject:hover .tier-count{color:#F0442F !important;}
+  .content #tNa:hover .tier-count{color:#A2A79A !important;}
+  .content #tPass::before{background:var(--pass);}
+  .content #tNeedsfix::before{background:var(--needsfix);}
+  .content #tReject::before{background:var(--reject);}
+  .content .tier-code{color:#8B9083;}
+
+  /* 판정 버튼도 흰 바탕 + 색은 글자와 테두리에만 */
+  .content .stbtn[data-status]{background:#FFFFFF !important;}
+  .content .stbtn[data-status="pass"]{border-color:rgba(85,176,18,.45) !important;}
+  .content .stbtn[data-status="needsfix"]{border-color:rgba(239,163,0,.5) !important;}
+  .content .stbtn[data-status="reject"]{border-color:rgba(240,68,47,.45) !important;}
+  .content .stbtn[data-status="na"]{border-color:rgba(11,12,14,.12) !important; color:var(--na);}
+
+  /* 진행 막대: 흰 구간에서는 네온 대신 잉크 톤 */
+  .checklist-summary{display:none;}
+
+  /* 총평 안 반려 칩은 채움 + 흰 글씨 */
+  .ref-chip.rc-reject{
+    background:var(--reject); border-color:var(--reject); color:#FFFFFF;
+    transition:filter .25s ease, transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .ref-chip.rc-reject:hover{filter:brightness(1.08); transform:translateY(-1px);}
+
+  /* ---- 하단 CTA 밴드 ---- */
+  .cta-band{
+    position:relative; isolation:isolate; overflow:hidden;
+    transform:scale(var(--cta-scale,.72)); will-change:transform;
+    margin:0 auto 40px; max-width:1520px;
+    padding:clamp(56px,7vw,96px) 40px;
+    border-radius:34px; background:#0B0C0E; color:#F4F4F0;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+  }
+  /* 소수점 높이 때문에 .content 와의 이음매에 검은 실선이 비쳐서 1px 겹쳐 올린다 */
+  .cta-band-wrap{background:#FAFAF7; margin-top:-1px; padding:2px 0 130px;}
+/* 셰이더 배경 — assets/mesh-shader.js 가 WebGL 캔버스를 여기에 붙인다 */
+  .cta-shader-mount{position:absolute; inset:0; z-index:-2; overflow:hidden;}
+
+  .cta-badge{
+    display:inline-flex; align-items:center; gap:10px; padding:7px 14px 7px 11px;
+    border-radius:999px; background:rgba(204,255,0,.12); border:1px solid rgba(204,255,0,.4);
+    font:600 10.5px/1 var(--font-mono); letter-spacing:.16em; color:var(--accent);
+  }
+  .cta-badge-dot{width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); animation:pulse 2.2s ease-in-out infinite;}
+  .cta-inner{position:relative; z-index:1; max-width:880px; display:flex; flex-direction:column; align-items:center; gap:22px;}
+  .cta-title{
+    margin:0; text-shadow:0 2px 24px rgba(7,9,7,.55);
+    font-family:var(--font-display); font-weight:800;
+    font-size:clamp(28px,4vw,56px); line-height:1.5; letter-spacing:-.045em; text-wrap:balance;
+  }
+  .cta-title mark{
+    background:#CCFF00; color:#0B0C0E; padding:3px 10px; border-radius:4px;
+    box-decoration-break:clone; -webkit-box-decoration-break:clone;
+  }
+  .cta-sub{margin:0; max-width:62ch; font-size:16px; font-weight:300; line-height:1.75; color:rgba(244,244,240,.66);}
+  .cta-btn{
+    margin-top:10px; display:inline-flex; align-items:center; gap:9px;
+    padding:15px 30px; border-radius:999px; background:#CCFF00; color:#0B0C0E;
+    font-family:var(--font-display); font-size:15px; font-weight:700; letter-spacing:-.02em; text-decoration:none;
+    transition:transform .38s cubic-bezier(.2,.8,.2,1), filter .25s ease;
+  }
+  .cta-btn::after{content:'→'; font-size:16px; transition:transform .38s cubic-bezier(.2,.8,.2,1);}
+  .cta-btn:hover{transform:translateY(-2px); filter:brightness(1.05);}
+  .cta-btn:hover::after{transform:translateX(4px);}
+  @media (max-width:760px){
+    .cta-band{margin:0 14px 24px; max-width:none; padding:56px 22px; border-radius:26px;}
+    .cta-inner{max-width:100%;}
+    .cta-band-wrap{padding-bottom:72px;}
+  }
+
+  /* ---- 17개 항목 행 인터랙션 ---- */
+  .row{transition:opacity .5s ease, background-color .3s ease, box-shadow .3s ease, transform .4s cubic-bezier(.2,.8,.2,1);}
+  .row::before{height:20px; transition:background-color .45s ease, height .4s cubic-bezier(.2,.8,.2,1);}
+  .row:hover{box-shadow:none; transform:translateX(3px);}
+  .row:hover::before{height:34px;}
+  .row .rt{transition:color .3s ease;}
+  .row .stbtn{transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s ease, color .3s ease, background-color .3s ease;}
+  .row:hover .stbtn{transform:translateY(-1px);}
+  .content .row:hover{background:rgba(11,12,14,.035);}
+  /* 판정이 꽂히는 순간 행이 한 번 밝아진다 */
+  .row[data-status]{animation:rowLand .7s cubic-bezier(.2,.8,.2,1);}
+  @keyframes rowLand{
+    0%{opacity:.4; transform:translateY(5px);}
+    100%{opacity:1; transform:none;}
+  }
+
+  /* ---- 반려사례 저장 패널 ---- */
+  .rc-save-trigger{white-space:nowrap; transition:transform .35s cubic-bezier(.2,.8,.2,1), filter .25s ease;}
+  .rc-save-trigger:hover{transform:translateY(-1px); filter:brightness(1.06);}
+  .rc-save-panel.open{animation:panelIn .72s cubic-bezier(.22,1,.36,1);}
+  @keyframes panelIn{
+    from{opacity:0; transform:translateY(-10px);}
+    60%{opacity:1;}
+    to{opacity:1; transform:none;}
+  }
+  .rc-check{transition:background-color .25s ease, border-color .25s ease;}
+  .rc-check:has(input:checked){border-color:var(--reject); background:color-mix(in srgb, transparent, var(--reject) 8%);}
+  .content{color-scheme:light;}
+  .content .rc-save-panel{background:#FFFFFF; border-color:rgba(11,12,14,.08);}
+  .content .rc-check{background:#FFFFFF; border-color:rgba(11,12,14,.09);}
+  .content .rc-check input{width:15px; height:15px; accent-color:var(--reject);}
+  .content .rc-save-field input{background:#FFFFFF; border-color:rgba(11,12,14,.12);}
+  .content .rc-save-field input:hover, .content .rc-save-field input:focus{border-color:var(--accent-text);}
+
+  /* ---- 비교 블록 ---- */
+  .comparison-block.show{animation:panelIn .8s cubic-bezier(.22,1,.36,1);}
+  .comparison-item{padding-left:12px; border-left:2px solid var(--line); transition:border-color .3s ease;}
+  .comparison-item:hover{border-color:var(--accent-text);}
+  .content .ls-cell{background:#FFFFFF; border-color:rgba(11,12,14,.08); transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s ease;}
+  .content .ls-cell:hover{transform:translateY(-2px); border-color:rgba(11,12,14,.18);}
+
+  /* 마퀴는 올려두면 멈춘다 */
+  .marquee-track{animation-play-state:running;}
+  .marquee:hover .marquee-track{animation-play-state:paused;}
+
+  /* ---- AI 총평 / 집계 카드 모션 ---- */
+  .ai-summary-head{position:relative;}
+  .ai-summary{position:relative; overflow:hidden; transition:border-color .4s ease, box-shadow .4s ease, transform .5s cubic-bezier(.2,.8,.2,1);}
+  .ai-summary:hover{transform:translateY(-2px);}
+  /* 결과가 도착하면 총평 텍스트가 좌→우로 닦이며 나타난다 */
+  .ai-summary-body.wipe-in{
+    -webkit-mask-image:linear-gradient(90deg,#000 0 0);
+    animation:wipeIn .85s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes wipeIn{
+    from{opacity:.2; -webkit-mask-image:linear-gradient(90deg,#000 -18%,transparent 0%); mask-image:linear-gradient(90deg,#000 -18%,transparent 0%);}
+    to{opacity:1; -webkit-mask-image:linear-gradient(90deg,#000 118%,transparent 136%); mask-image:linear-gradient(90deg,#000 118%,transparent 136%);}
+  }
+  /* 분석 중에는 총평 카드에 라임 빛이 훑고 지나간다 */
+  .ai-summary.thinking::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(105deg,transparent 38%,rgba(204,255,0,.14) 50%,transparent 62%);
+    animation:aiSheen 1.9s linear infinite;
+  }
+  @keyframes aiSheen{from{transform:translateX(-60%);}to{transform:translateX(60%);}}
+  .ai-summary.thinking .ai-summary-head .dot{background:var(--accent); animation:pulse 1.2s ease-in-out infinite;}
+
+  .tier-card{transition:transform .5s cubic-bezier(.2,.8,.2,1), border-color .4s ease, box-shadow .4s ease;}
+  .tier-card:hover{transform:translateY(-4px);}
+  .content .tier-card:hover, .content .ai-summary:hover{box-shadow:var(--card-shadow);}
+  .tier-ghost{transition:opacity .4s ease;}
+  .tier-bar span{position:relative; overflow:hidden;}
+  .tier-bar span::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent);
+    animation:barSheen 2.6s ease-in-out infinite;
+  }
+  @keyframes barSheen{0%{transform:translateX(-100%);}55%,100%{transform:translateX(220%);}}
+  /* 숫자가 바뀌면 굴러 올라온다 */
+  .tc-d{display:inline-block;}
+  .tc-d.roll{animation:digitRoll .6s ease-out;}
+  @keyframes digitRoll{
+    0%{opacity:.3;}
+    100%{opacity:1;}
+  }
+
+  /* ---- 분석 중: 블러 대신 스캔 ---- */
+  .checklist-card.pending .checklist-inner{
+    filter:none; opacity:.55;
+    transition:opacity .4s ease;
+  }
+  .checklist-card{overflow:hidden;}
+  .checklist-card.pending .row{position:relative;}
+  .checklist-card.pending .row .stbtn,
+  .checklist-card.pending .row .verdict-badge{opacity:.35; transition:opacity .4s ease;}
+  /* 상태 표시는 위쪽 AI 총평 헤드 한 곳에서만 */
+  .checklist-card.pending .checklist-pending-overlay{display:none;}
+  .ai-summary.thinking .ai-summary-idle-flag{visibility:hidden;}
+  .ai-summary.thinking .ai-summary-head::after{
+    content:'체크 중';
+    position:absolute; top:0; right:0;
+    font:600 11px/1 var(--font-mono); letter-spacing:normal;
+    color:var(--accent-ink); background:var(--accent);
+    padding:7px 13px; border-radius:999px;
+    box-shadow:0 8px 24px -12px rgba(204,255,0,.8);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion:reduce){
+    .checklist-card.pending::after{display:none;}
+  }
+
+  /* ---- 여백 넓히기 ----
+     1180px 이하에서는 적용하지 않는다 — 미디어 쿼리 없이 무조건 적용했더니
+     .hero-grid의 고정폭 330px 컬럼 + 96px gap이 좁은 화면 너비보다 커져서
+     남은 1fr 컬럼(제목 영역)이 0px로 찌그러지는 버그가 있었다(실제 확인됨).
+     기존 1180px 이하 1열 전환 규칙(위쪽 @media)과 겹치지 않게 데스크톱 전용으로 감쌈. */
+  @media (min-width:1181px){
+    .prompt-hero{padding-top:104px;}
+    .hero-grid{padding:132px 56px 0; gap:96px; grid-template-columns:minmax(0,1fr) 330px;}
+    .prompt-hero h1{margin-top:44px; line-height:1.1;}
+    .hero-sub{margin-top:38px; line-height:1.9;}
+    .hero-stats{margin-top:80px; padding:34px 0;}
+    .hero-stat{padding:0 30px;}
+    .hero-stat-k{margin-top:12px;}
+    .hero-drift{height:660px;}
+    .hero-drift-cols{grid-template-columns:repeat(2,1fr); gap:14px;}
+    .hero-drift-col{gap:14px;}
+    .drift-cell{aspect-ratio:1;}
+
+    .prompt-wrap{padding:172px 56px 0;}
+    .prompt-divider{margin-bottom:76px;}
+    .upload-inner{gap:52px; padding:64px 68px;}
+    .thumb-wrap{width:150px; height:150px;}
+    .upload-box-sub{margin-top:16px;}
+
+    .content{padding:120px 56px 120px; margin-top:150px;}
+  }
+
+  @media (max-width:1180px){
+    .hero-grid{padding:104px 40px 0; gap:56px;}
+    .prompt-wrap{padding:120px 40px 0;}
+    .upload-inner{gap:36px; padding:48px 44px;}
+    .content{padding:88px 40px 96px; margin-top:110px;}
+  }
+
+  /* ---- 드롭존 커서 스포트라이트 ---- */
+  .upload-box::after{
+    content:''; position:absolute; inset:0; pointer-events:none; opacity:0;
+    background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%), rgba(204,255,0,.13), transparent 68%);
+    transition:opacity .35s ease;
+  }
+  .upload-box:hover::after{opacity:1;}
+  .upload-inner{position:relative; z-index:1;}
+
+  /* ---- 플로팅 라운드 GNB ---- */
+  .gnb-bar{
+    top:14px; padding:0 40px; background:none; backdrop-filter:none;
+    transition:top .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease, transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .gnb-bar-inner{
+    padding:8px 10px 8px 18px; border-radius:999px;
+    background:rgba(16,19,23,.72); backdrop-filter:blur(18px) saturate(1.3);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 18px 44px -26px rgba(0,0,0,.9);
+    transition:background-color .45s ease, border-color .45s ease, box-shadow .45s ease, padding .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .gnb-logo-icon{height:30px; transition:filter .45s ease;}
+  .gnb-primary{background:none; border:none; box-shadow:none; backdrop-filter:none; padding:0; gap:6px;}
+
+  /* 메뉴 항목: 테두리 없이 초록만 */
+  .gnb-primary .gnb-link{
+    border:none; box-shadow:none;
+    transition:color .25s ease, background-color .3s ease;
+  }
+  .gnb-primary .gnb-link:hover{color:#CCFF00; background:rgba(204,255,0,.10); box-shadow:none;}
+  .gnb-primary .gnb-link.active,
+  .gnb-primary .gnb-link.active:hover{background:#CCFF00; color:#0B0C0E; box-shadow:none;}
+  .gnb-bar.on-light .gnb-primary .gnb-link{color:#5E646C;}
+  .gnb-bar.on-light .gnb-primary .gnb-link:hover{color:#0B0C0E; background:none; box-shadow:none;}
+  .gnb-bar.on-light .gnb-primary .gnb-link.active,
+  .gnb-bar.on-light .gnb-primary .gnb-link.active:hover{background:#CCFF00; color:#14171C;}
+
+  .gnb-bar.hide-nav{opacity:0; transform:translateY(-130%); pointer-events:none;}
+
+  /* 흰 구간 위에서는 밝은 알약으로 */
+  .gnb-bar.on-light .gnb-logo-icon{filter:invert(1) brightness(.16);}
+  .gnb-bar.on-light .gnb-bar-inner{
+    background:rgba(255,255,255,.80); border-color:rgba(11,12,14,.10);
+    box-shadow:0 10px 30px -14px rgba(11,12,14,.18), 0 1px 0 rgba(11,12,14,.04);
+  }
+
+  /* 스크롤 진행선은 화면 최상단으로 */
+  .scroll-progress{
+    position:fixed; top:0; left:0; right:0; z-index:210;
+    max-width:none; margin:0; height:2px; background:none; border-radius:0;
+  }
+  .scroll-progress-bar{height:2px;}
+
+  /* ---- 드롭다운: 부드럽게 열리기 ---- */
+  .gnb-dropdown-menu{
+    display:block; opacity:0; visibility:hidden;
+    transform:translateX(-50%) translateY(-7px) scale(.97); transform-origin:top center;
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s .3s;
+  }
+  .gnb-dropdown:hover .gnb-dropdown-menu,
+  .gnb-dropdown:focus-within .gnb-dropdown-menu,
+  .gnb-dropdown-menu.open{
+    display:block; opacity:1; visibility:visible;
+    transform:translateX(-50%) translateY(0) scale(1);
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .34s cubic-bezier(.16,1,.3,1), visibility 0s;
+  }
+  .gnb-dropdown-toggle::after{transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s ease;}
+  .gnb-dropdown:hover .gnb-dropdown-toggle::after{transform:rotate(180deg); opacity:.9;}
+  .gnb-dropdown-item{transition:background-color .2s ease, color .2s ease, transform .28s cubic-bezier(.2,.8,.2,1);}
+  .gnb-dropdown:hover .gnb-dropdown-item{animation:ddItem .38s cubic-bezier(.16,1,.3,1) both;}
+  .gnb-dropdown-item:nth-child(2){animation-delay:.04s;}
+  .gnb-dropdown-item:nth-child(3){animation-delay:.08s;}
+  .gnb-dropdown-item:nth-child(4){animation-delay:.12s;}
+  .gnb-dropdown-item:hover{transform:translateX(3px);}
+  @keyframes ddItem{from{opacity:0; transform:translateY(-6px);}to{opacity:1; transform:none;}}
+  .gnb-bar.on-light .gnb-dropdown-menu-inner{
+    background:rgba(255,255,255,.97); border-color:rgba(11,12,14,.1);
+    box-shadow:0 26px 54px -22px rgba(11,12,14,.4);
+  }
+  .gnb-bar.on-light .gnb-dropdown-item{color:#5E646C;}
+  .gnb-bar.on-light .gnb-dropdown-item:hover{color:#14171C; background:rgba(11,12,14,.05);}
+  .gnb-bar.on-light .gnb-dropdown-item.active{color:#3E5308; background:rgba(204,255,0,.22);}
+
+  @media (max-width:760px){
+    .gnb-bar{padding:0 14px;}
+    .gnb-bar-inner{padding:7px 9px 7px 14px;}
+    .hero-grid{padding:88px 20px 0;}
+    .prompt-wrap{padding:88px 20px 0;}
+    .upload-inner{gap:24px; padding:34px 26px;}
+    .thumb-wrap{width:120px; height:120px;}
+    .content{padding:72px 20px 80px; margin-top:72px; border-radius:26px 26px 0 0; clip-path:inset(0 -100vmax round 26px 26px 0 0);}
+    .content::before{border-radius:26px 26px 0 0;}
+    .page-footer{padding:64px 18px;}
+    .footer-logo{height:30px;}
+  }
 </style>
 </head>
 <body>
-<noscript><style>[data-row],[data-reveal]{opacity:1 !important;}</style></noscript>
+<script>document.documentElement.classList.add('js');</script>
 
 <div class="grain"></div>
 
@@ -376,6 +806,9 @@
   <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
 </div>
 
+
+
+
 <div class="prompt-hero">
   <div class="hero-glow"></div>
   <div class="hero-grid">
@@ -386,7 +819,7 @@
         <span class="sep">/</span>
         <span class="sub">17 CRITERIA</span>
       </div>
-      <h1>Drop a banner.<br>Get <em>17</em> verdicts.</h1>
+      <h1><span class="hero-line"><span>Drop a banner.</span></span><span class="hero-line"><span>Get <em>17</em> verdicts.</span></span></h1>
       <p class="hero-sub">AI 비전 판단에 OCR·맞춤법 검사 같은 정량적 근거를 더해,<br>전략부터 AI 생성 아티팩트까지 브랜드·매체 기준으로 검수합니다.</p>
       <div class="hero-stats">
         <div class="hero-stat"><div class="hero-stat-v">17</div><div class="hero-stat-k">평가 항목</div></div>
@@ -425,27 +858,13 @@
           <div class="drift-cell v-needsfix"><img src="assets/m3-examples/15_textrender__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
           <div class="drift-cell v-pass"><img src="assets/m3-examples/03_contrast__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
         </div>
-        <div class="hero-drift-col up-slow">
-          <div class="drift-cell v-pass"><img src="assets/m3-examples/10_anatomy__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
-          <div class="drift-cell v-reject"><img src="assets/m3-examples/07_retouch__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
-          <div class="drift-cell v-pass"><img src="assets/m3-examples/08_vector__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
-          <div class="drift-cell v-reject"><img src="assets/m3-examples/12_watermark__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
-          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/02_hierarchy__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
-          <div class="drift-cell v-pass"><img src="assets/m3-examples/06_composite__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
-          <div class="drift-cell v-pass"><img src="assets/m3-examples/10_anatomy__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
-          <div class="drift-cell v-reject"><img src="assets/m3-examples/07_retouch__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
-          <div class="drift-cell v-pass"><img src="assets/m3-examples/08_vector__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
-          <div class="drift-cell v-reject"><img src="assets/m3-examples/12_watermark__reject.jpg" alt="" loading="lazy"><span class="drift-tag">REJECT</span></div>
-          <div class="drift-cell v-needsfix"><img src="assets/m3-examples/02_hierarchy__needsfix.jpg" alt="" loading="lazy"><span class="drift-tag">FIX</span></div>
-          <div class="drift-cell v-pass"><img src="assets/m3-examples/06_composite__pass.jpg" alt="" loading="lazy"><span class="drift-tag">PASS</span></div>
-        </div>
       </div>
     </div>
   </div>
 
   <div class="prompt-wrap">
     <div class="prompt-divider"></div>
-    <div class="dropzone-shell">
+    <div class="dropzone-shell" data-reveal>
       <div class="dropzone-orbit"></div>
       <div class="upload-box" id="dropzone">
         <div class="upload-inner">
@@ -501,6 +920,9 @@
   <button type="button" id="briefToggle" hidden></button>
   <div id="briefPanel" hidden></div>
 </div>
+
+
+
 
 <div class="content">
 
@@ -647,13 +1069,26 @@
     <div class="marquee-track"><span>전략 적합성</span><span class="sep">/</span><span>위계 및 구조</span><span class="sep">/</span><span>타이포·정렬·여백·명도대비</span><span class="sep">/</span><span>정보 정확성</span><span class="sep">/</span><span>컬러 일관성</span><span class="sep">/</span><span>합성 리얼리티</span><span class="sep">/</span><span>피사체 보정</span><span class="sep">/</span><span>그래픽 완성도</span><span class="sep">/</span><span>CTA 및 전환</span><span class="sep">/</span><span>신체 비율 왜곡</span><span class="sep">/</span><span>배경 패턴 반복</span><span class="sep">/</span><span>워터마크·서명 흔적</span><span class="sep">/</span><span>광원-그림자 방향 일치</span><span class="sep">/</span><span>매체 최적화</span><span class="sep">/</span><span>텍스트·로고 렌더링</span><span class="sep">/</span><span>로고 사용 규정</span><span class="sep">/</span><span>법적고지·심의 문구</span><span class="sep">/</span><span>전략 적합성</span><span class="sep">/</span><span>위계 및 구조</span><span class="sep">/</span><span>타이포·정렬·여백·명도대비</span><span class="sep">/</span><span>정보 정확성</span><span class="sep">/</span><span>컬러 일관성</span><span class="sep">/</span><span>합성 리얼리티</span><span class="sep">/</span><span>피사체 보정</span><span class="sep">/</span><span>그래픽 완성도</span><span class="sep">/</span><span>CTA 및 전환</span><span class="sep">/</span><span>신체 비율 왜곡</span><span class="sep">/</span><span>배경 패턴 반복</span><span class="sep">/</span><span>워터마크·서명 흔적</span><span class="sep">/</span><span>광원-그림자 방향 일치</span><span class="sep">/</span><span>매체 최적화</span><span class="sep">/</span><span>텍스트·로고 렌더링</span><span class="sep">/</span><span>로고 사용 규정</span><span class="sep">/</span><span>법적고지·심의 문구</span><span class="sep">/</span></div>
   </div>
 
-  <div class="page-footer" id="pageFooter" data-reveal>
-    <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
-    최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
-    이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
-    &copy; 2026 NHNAD. All rights reserved.
-  </div>
 
+</div>
+
+<div class="cta-band-wrap">
+<section class="cta-band" id="ctaBand" aria-labelledby="ctaBandTitle">
+  <div class="cta-shader-mount" id="ctaShaderMount"></div>
+  <div class="cta-scrim"></div>
+  <div class="cta-inner">
+    <div class="cta-badge"><span class="cta-badge-dot"></span>FINAL GOAL</div>
+    <h2 class="cta-title" id="ctaBandTitle">판정에서 끝내지 않고,<br>성과로 증명한다</h2>
+    <p class="cta-sub">배너 분석에서 멈추지 않고, 그 배너가 실제로 낸 성과 데이터까지 함께 읽습니다.</p>
+  </div>
+</section>
+</div>
+
+<div class="page-footer" id="pageFooter" data-reveal>
+  <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
+  최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
+  이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.
+  <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
 </div>
 
 <script>
@@ -1860,6 +2295,264 @@
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
   })();
+</script>
+<script>
+/* ===== 인터랙션 디벨롭 (2026-08) — 히어로 모션 + 플로팅 GNB ===== */
+(function () {
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var clamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+
+  /* 1) 히어로 스탯 카운트업 */
+  (function () {
+    var els = document.querySelectorAll('.hero-stat-v');
+    els.forEach(function (el, i) {
+      var m = /^(\D*)(\d+)(.*)$/.exec(el.textContent.trim());
+      if (!m) return;
+      var pre = m[1], target = parseInt(m[2], 10), post = m[3];
+      if (reduce) return;
+      var dur = 900, start = null, delay = 560 + i * 90;
+      el.textContent = pre + '0' + post;
+      setTimeout(function () {
+        requestAnimationFrame(function step(t) {
+          if (start === null) start = t;
+          var p = clamp((t - start) / dur);
+          var e = 1 - Math.pow(1 - p, 3);
+          el.textContent = pre + Math.round(target * e) + post;
+          if (p < 1) requestAnimationFrame(step);
+        });
+      }, delay);
+    });
+  })();
+
+  /* 2) 히어로 글로우 스크롤 시차 */
+  var glow = document.querySelector('.hero-glow');
+
+  /* 3) 스크롤 연동: 히어로 시차 + GNB 축소/반전/푸터 숨김 */
+  var root = document.documentElement;
+  var content = document.querySelector('.content');
+  var footer = document.getElementById('pageFooter');
+  var grid = document.querySelector('.hero-grid');
+  var gnb = document.querySelector('.gnb-bar');
+  var raf = null;
+
+  function frame() {
+    raf = null;
+    var y = window.scrollY, vh = window.innerHeight;
+
+    if (grid && !reduce) {
+      var p = clamp(y / (vh * 0.9));
+      grid.style.transform = 'translateY(' + (p * -54).toFixed(1) + 'px)';
+      grid.style.opacity = (1 - p * 0.55).toFixed(3);
+    }
+    if (glow && !reduce) glow.style.transform = 'translateY(' + (y * 0.14).toFixed(1) + 'px)';
+    /* GNB 알약: 흰 구간 위에 있으면 밝게, 검은 푸터 위에서는 다시 어둡게 */
+    if (ctaBand && !reduce) {
+      var cb = ctaBand.getBoundingClientRect();
+      if (cb.bottom > -200 && cb.top < vh + 200) {
+        var p = (vh - cb.top) / (vh + cb.height) - 0.5;
+        ctaCX += (ctaTX - ctaCX) * 0.07;
+        ctaCY += (ctaTY - ctaCY) * 0.07;
+        /* 뷰포트 중앙에 가까울수록 커지고, 한 번 다 커지면 그 상태로 고정 (다시 작아지지 않음) */
+        if (!ctaLocked) {
+          var centerDist = clamp(Math.abs((cb.top + cb.bottom) / 2 - vh / 2) / (vh / 2));
+          var t = clamp(1 - centerDist);
+          ctaBand.style.setProperty('--cta-scale', (0.72 + t * 0.28).toFixed(3));
+          if (t >= 0.98) { ctaBand.style.setProperty('--cta-scale', '1'); ctaLocked = true; }
+        }
+      }
+    }
+    if (gnb) {
+      var navB = 62;
+      var lightNow = false;
+      if (content) {
+        var cr = content.getBoundingClientRect();
+        lightNow = cr.top < navB && cr.bottom > navB;
+      }
+      if (footer) {
+        var fr = footer.getBoundingClientRect();
+        if (fr.top < navB) lightNow = false;
+        /* 푸터가 완전히 보이면 GNB를 감춘다 (문서 상단에서는 절대 숨기지 않음) */
+        gnb.classList.toggle('hide-nav', y > 120 && fr.top > 0 && fr.top < vh && fr.bottom <= vh + 2);
+      }
+      gnb.classList.toggle('on-light', lightNow);
+    }
+    }
+
+  function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+  /* 이미지·폰트가 늦게 들어오며 문서 높이가 바뀌면 다시 계산 */
+  if (window.ResizeObserver) new ResizeObserver(schedule).observe(document.body);
+  [400, 1200, 2500].forEach(function (ms) { setTimeout(schedule, ms); });
+  frame();
+
+  /* 4-0) CTA 배경 셰이더
+        밴드가 화면에 가까워질 때만 WebGL 캔버스를 붙이고, 벗어나면 떼어낸다. */
+  (function () {
+    var mount = document.getElementById('ctaShaderMount');
+    if (!mount || reduce || !window.MeshShader) return;
+    var band = mount.closest('.cta-band');
+    var instance = null;
+
+    function start() {
+      if (instance) return;
+      instance = MeshShader.mount(mount, {
+        colors: ['#03120E', '#0E7C5A', '#7CE577', '#F4FFC7'],
+        shape: [1.16, 0.34, 0.50, 0.00],
+        surface: [2.40, 1.16, 0.00, 1.00],
+        finish: [0.00, 0.00, 0.000, 0.09],
+        transform: [1453.0, 0.00, 0.00, 0.0],
+        speed: 0.73
+      });
+    }
+    function stop() { if (instance) { instance.stop(); instance = null; } }
+
+    if (!('IntersectionObserver' in window)) { start(); return; }
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { en.isIntersecting ? start() : stop(); });
+    }, { rootMargin: '400px 0px' }).observe(band || mount);
+  })();
+
+  /* 4-a) 하단 CTA 밴드 — 스크롤 시차 + 커서 추적 (관성으로 부드럽게) */
+  var ctaBand = document.getElementById('ctaBand');
+  var ctaTX = 0, ctaTY = 0, ctaCX = 0, ctaCY = 0, ctaHot = false, ctaLocked = false;
+  if (ctaBand && !reduce) {
+    ctaBand.addEventListener('mousemove', function (e) {
+      var r = ctaBand.getBoundingClientRect();
+      ctaTX = (e.clientX - r.left) / r.width - 0.5;
+      ctaTY = (e.clientY - r.top) / r.height - 0.5;
+      ctaBand.style.setProperty('--cx', (((e.clientX - r.left) / r.width) * 100).toFixed(1) + '%');
+      ctaBand.style.setProperty('--cy', (((e.clientY - r.top) / r.height) * 100).toFixed(1) + '%');
+      ctaHot = true;
+    }, { passive: true });
+    ctaBand.addEventListener('mouseleave', function () { ctaTX = 0; ctaTY = 0; });
+    /* 커서가 멈춘 뒤에도 관성이 잦아들도록 잠깐 더 돌린다 */
+    (function spin() {
+      if (ctaHot && (Math.abs(ctaCX - ctaTX) > 0.001 || Math.abs(ctaCY - ctaTY) > 0.001)) schedule();
+      requestAnimationFrame(spin);
+    })();
+  }
+
+  /* 4) 히어로 이미지를 이미지 레퍼런스 보드의 실제 배너로 교체
+        GET /api/referenceImages?category=all -> { items: [{ thumbUrl, ownWork, ... }] }
+        ownWork(NHN AD 자체 제작)는 제외하고, PASS/FIX/REJECT 태그는 무작위로 붙인다. */
+  (function () {
+    var cells = [].slice.call(document.querySelectorAll('.hero-drift .drift-cell'));
+    if (!cells.length) return;
+    var TAGS = [['v-pass', 'PASS'], ['v-pass', 'PASS'], ['v-needsfix', 'FIX'], ['v-reject', 'REJECT']];
+
+    fetch('/api/referenceImages?category=all')
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(r.status)); })
+      .then(function (data) {
+        var pool = (data.items || [])
+          .filter(function (it) { return it && it.thumbUrl && !it.ownWork; })
+          .map(function (it) { return it.thumbUrl; });
+        if (pool.length < 4) return;
+        for (var i = pool.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+        }
+        /* 각 컬럼은 같은 목록을 두 번 이어 붙여 무한 스크롤처럼 보인다.
+           앞뒤 복제본이 같은 배너·같은 판정이어야 이음매가 안 보인다. */
+        var perCol = cells.length / 2, unique = perCol / 2;
+        cells.forEach(function (cellEl, idx) {
+          var u = (idx % unique) + (idx < perCol ? 0 : unique);
+          var url = pool[u % pool.length];
+          if (!url) return;
+          var img = cellEl.querySelector('img');
+          if (img) img.src = url;
+          var tag = TAGS[(u * 7 + 3) % TAGS.length];
+          cellEl.className = 'drift-cell ' + tag[0];
+          var tagEl = cellEl.querySelector('.drift-tag');
+          if (tagEl) tagEl.textContent = tag[1];
+        });
+      })
+      .catch(function () { /* API가 없으면 기본 예시 이미지를 그대로 둔다 */ });
+  })();
+
+  /* 4) 미리보기 모드 — Shift + D 를 누르면 샘플 결과가 채워진다 (개발 확인용) */
+  (function () {
+    var STATUSES = ['pass','pass','reject','pass','needsfix','pass','pass','na','reject','pass','needsfix','pass','pass','pass','needsfix','pass','reject'];
+    var NOTES = {
+      pass: '기준을 충족합니다.',
+      needsfix: '경미한 수정이 필요합니다.',
+      reject: '가이드 위반이 확인되어 재작업이 필요합니다.',
+      na: '이 시안에는 해당하지 않는 항목입니다.'
+    };
+    function run() {
+      if (typeof applyResults !== 'function' || typeof ITEMS === 'undefined') { setTimeout(run, 200); return; }
+      var checklist = document.querySelector('.checklist-card');
+      if (checklist) checklist.classList.add('pending');
+      setTimeout(function () {
+        applyResults({
+          summary: '전반적으로 브랜드 가이드를 따르고 있으나, 명도 대비와 로고 여백에서 반려 사유가 확인됩니다. CTA 버튼의 최소 터치 영역은 충족하며, 텍스트 렌더링은 일부 자소 간격 보정이 필요합니다.',
+          items: ITEMS.map(function (x, i) {
+            var s = STATUSES[i % STATUSES.length];
+            return { id: x.n, status: s, note: NOTES[s] };
+          })
+        });
+      }, 2600);
+    }
+    window.__demo = run;
+    document.addEventListener('keydown', function (e) {
+      if (e.shiftKey && (e.key === 'D' || e.key === 'd') && !/input|textarea/i.test((e.target.tagName || ''))) {
+        e.preventDefault();
+        run();
+      }
+    });
+    if (/[?&]demo\b/.test(location.search)) window.addEventListener('load', run);
+  })();
+
+  /* 4) 총평·집계 카드에 반응 붙이기 */
+  (function () {
+    var body = document.querySelector('.ai-summary-body');
+    var textEl = document.getElementById('aiSummaryText');
+    var card = document.getElementById('aiSummaryBox');
+    var checklist = document.querySelector('.checklist-card');
+
+    if (body && textEl && !reduce) {
+      new MutationObserver(function () {
+        body.classList.remove('wipe-in');
+        void body.offsetWidth;
+        body.classList.add('wipe-in');
+      }).observe(textEl, { childList: true, characterData: true, subtree: true });
+    }
+    /* 체크리스트가 분석 중이면 총평 카드도 같이 생각하는 표정 */
+    if (card && checklist) {
+      new MutationObserver(function () {
+        card.classList.toggle('thinking', checklist.classList.contains('pending'));
+      }).observe(checklist, { attributes: true, attributeFilter: ['class'] });
+    }
+    /* 집계 숫자가 바뀌면 자리별로 굴린다 */
+    var grid = document.getElementById('tierGrid');
+    if (grid && !reduce) {
+      new MutationObserver(function (muts) {
+        muts.forEach(function (m) {
+          var d = m.target.nodeType === 3 ? m.target.parentElement : m.target;
+          if (!d || !d.classList || !d.classList.contains('tc-d')) return;
+          /* 집계가 연달아 바뀌는 동안은 참았다가, 멈춘 뒤 한 번만 굴린다 */
+          clearTimeout(d.__rollT);
+          d.__rollT = setTimeout(function () {
+            d.classList.remove('roll');
+            void d.offsetWidth;
+            d.classList.add('roll');
+          }, 260);
+        });
+      }).observe(grid, { childList: true, characterData: true, subtree: true });
+    }
+  })();
+
+  /* 4) 드롭존 커서 스포트라이트 */
+  var box = document.getElementById('dropzone');
+  if (box && !reduce) {
+    box.addEventListener('mousemove', function (e) {
+      var r = box.getBoundingClientRect();
+      box.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+      box.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+    }, { passive: true });
+  }
+})();
 </script>
 <script src="assets/adcheck-reveal.js"></script>
 </body>

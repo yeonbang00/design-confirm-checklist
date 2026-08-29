@@ -23,10 +23,10 @@
  *      (일반 링크 이동 방식이면 아무것도 안 해도 됩니다.)
  */
 (function () {
-  var STEP = 70;          // 항목 간 시간차(ms)
+  var STEP = 55;          // 항목 간 시간차(ms)
   var DIST = 40;          // 좌→우 이동 거리(px)
   var DIST_DOWN = 22;     // 위→아래 이동 거리(px)
-  var EASE = 'cubic-bezier(.16,1,.3,1)';
+  var EASE = 'cubic-bezier(.22,1.1,.36,1)'; // 살짝 튀는(쫀득한) 도착
 
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
 
@@ -132,11 +132,8 @@
       });
     });
 
-    // 안전장치: 어떤 이유로든 트리거되지 않은 요소를 1.4초 후 강제 표시
-    clearTimeout(init._t);
-    init._t = setTimeout(function () {
-      document.querySelectorAll('[data-row],[data-reveal]').forEach(show);
-    }, 1400);
+    // IntersectionObserver를 지원하는 브라우저에서는 관찰에 맡긴다.
+    // (미지원 브라우저는 위에서 이미 즉시 전부 표시 처리함)
   }
 
   window.adcheckReveal = init;
