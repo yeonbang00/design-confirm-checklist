@@ -133,17 +133,25 @@
     // 2단계: 프레임을 하나 넘겨 브라우저가 숨김 상태를 한 번 그리게 한 뒤에야
     // 관찰을 시작하거나 화면 안 항목을 발화한다 — 이 틈이 없으면 opacity:0→1
     // 전환이 같은 틱에서 합쳐져 트랜지션 없이 툭 튀어 보인다("잠깐 움찔").
-    requestAnimationFrame(function () {
-      staggerGroups.forEach(function (group) {
-        if (!hasUnshown(group.querySelectorAll('[data-row]'))) return;
-        if (group.getBoundingClientRect().top < innerHeight * 1.2) { fire(group); return; }
-        groupIO.observe(group); // 이미 관찰 중이면 스펙상 no-op이라 중복 호출 안전
+    //
+    // data-seq-reveal 페이지는 여기에 추가로 260ms를 더 준다 — 안 그러면 이미
+    // 뷰포트 안에 있는(스크롤 없이 바로 보이는) 맨 위 섹션들은 페이지가 그려지자마자
+    // 거의 동시에 관찰·발화돼서, 사용자가 화면을 보기도 전에 애니메이션이 끝나버려
+    // "이 부분은 좌우로 안 움직인다"고 느껴지는 문제가 실측으로 확인됐다. 스크롤로
+    // 만나는 아래쪽 요소는 이미 사용자가 지켜보는 타이밍에 발화되니 영향 없다.
+    setTimeout(function () {
+      requestAnimationFrame(function () {
+        staggerGroups.forEach(function (group) {
+          if (!hasUnshown(group.querySelectorAll('[data-row]'))) return;
+          if (group.getBoundingClientRect().top < innerHeight * 1.2) { fire(group); return; }
+          groupIO.observe(group); // 이미 관찰 중이면 스펙상 no-op이라 중복 호출 안전
+        });
+        revealEls.forEach(function (el) {
+          if (el.dataset.dcShown) return;
+          revealIO.observe(el);
+        });
       });
-      revealEls.forEach(function (el) {
-        if (el.dataset.dcShown) return;
-        revealIO.observe(el);
-      });
-    });
+    }, sequential ? 260 : 0);
 
     // IntersectionObserver를 지원하는 브라우저에서는 관찰에 맡긴다.
     // (미지원 브라우저는 위에서 이미 즉시 전부 표시 처리함)
