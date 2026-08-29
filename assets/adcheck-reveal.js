@@ -103,11 +103,12 @@
         });
       }, {threshold: 0.06});
     }
-    // 좌→우·위→아래 박스 전용 — threshold를 훨씬 높게 잡아서(35%) 화면 끝에 살짝
-    // 걸치자마자 발화되지 않고, 실제로 스크롤해서 눈에 들어와야 등장하게 한다.
-    // 폰트페어링 "추천 조합"처럼 뷰포트가 넉넉하면 로드 직후 이미 걸쳐 있어서
-    // 스크롤 없이 바로 나타나 버리는 문제가 있었다 — 항목가이드 카드처럼 "스크롤해서
-    // 발견하는" 느낌을 주기 위한 것.
+    // 좌→우·위→아래 박스 전용 — 화면 끝에 살짝 걸치자마자 발화되지 않고, 실제로
+    // 스크롤해서 눈에 들어와야 등장하게 한다. 처음엔 면적비 threshold(35%)로
+    // 했었는데, 로드맵 "사용 중인 기능"처럼 뷰포트보다 훨씬 큰(세로로 긴) 섹션은
+    // 자기 높이의 35%가 동시에 화면에 걸치는 순간이 아예 존재하지 않아 영영
+    // 나타나지 않는 문제가 있었다. rootMargin으로 "뷰포트 하단에서 조금 위"를
+    // 기준선 삼는 방식으로 바꾸면 대상의 크기와 무관하게 항상 도달 가능하다.
     if (!revealBoxIO) {
       revealBoxIO = new IntersectionObserver(function (entries) {
         var visible = entries.filter(function (e) { return e.isIntersecting; });
@@ -119,7 +120,7 @@
             show(e.target);
           }
         });
-      }, {threshold: 0.35});
+      }, {threshold: 0, rootMargin: '0px 0px -15% 0px'});
     }
 
     // 1단계: 대상 전부를 먼저 숨김 상태로 만든다 (아직 관찰·발화는 하지 않음).
@@ -179,17 +180,45 @@
     // 만나는 아래쪽 요소는 이미 사용자가 지켜보는 타이밍에 발화되니 영향 없다.
     setTimeout(function () {
       requestAnimationFrame(function () {
+        // data-seq-reveal 페이지에서는 "이미 화면 안에 있는" 대상(개별 reveal +
+        // stagger 그룹)을 종류 상관없이 DOM 순서로 한 줄에 세워 순서대로 발화한다.
+        // 원래는 revealIO·groupIO가 서로 다른 관찰자라 독립적으로 즉시 발화돼서,
+        // 안내문구(data-reveal) 바로 뒤에 오는 1~5 리스트(data-stagger)가 동시에
+        // 나오는 문제가 있었다(기획안헬퍼 사례). 화면 밖(스크롤로 만나는) 대상은
+        // 그대로 각자의 관찰자에게 맡긴다 — 스크롤 자체가 이미 시간차를 만들어준다.
+        if (sequential) {
+          var initialBatch = [];
+          revealEls.concat(revealBoxEls).forEach(function (el) {
+            if (el.dataset.dcShown) return;
+            var top = el.getBoundingClientRect().top;
+            if (top < innerHeight * 1.15) initialBatch.push({el: el, top: top, kind: 'el'});
+          });
+          staggerGroups.forEach(function (group) {
+            if (!hasUnshown(group.querySelectorAll('[data-row]'))) return;
+            var top = group.getBoundingClientRect().top;
+            if (top < innerHeight * 1.2) initialBatch.push({el: group, top: top, kind: 'group'});
+          });
+          initialBatch.sort(function (a, b) { return a.top - b.top; });
+          initialBatch.forEach(function (item, i) {
+            item.el.dataset.dcQueued = '1'; // 아래 개별 관찰자 등록에서 중복 발화되지 않게 표시
+            setTimeout(function () {
+              if (item.kind === 'group') fire(item.el); else show(item.el);
+            }, i * SEQ_STEP);
+          });
+        }
+
         staggerGroups.forEach(function (group) {
+          if (group.dataset.dcQueued) return;
           if (!hasUnshown(group.querySelectorAll('[data-row]'))) return;
-          if (group.getBoundingClientRect().top < innerHeight * 1.2) { fire(group); return; }
+          if (!sequential && group.getBoundingClientRect().top < innerHeight * 1.2) { fire(group); return; }
           groupIO.observe(group); // 이미 관찰 중이면 스펙상 no-op이라 중복 호출 안전
         });
         revealEls.forEach(function (el) {
-          if (el.dataset.dcShown) return;
+          if (el.dataset.dcShown || el.dataset.dcQueued) return;
           revealIO.observe(el);
         });
         revealBoxEls.forEach(function (el) {
-          if (el.dataset.dcShown) return;
+          if (el.dataset.dcShown || el.dataset.dcQueued) return;
           revealBoxIO.observe(el);
         });
       });
