@@ -295,14 +295,14 @@
   <h1>항목 가이드</h1>
   <p class="sub">체크리스트 17개 항목은 감이 아니라 근거로 판정되며, 그 출처를 낱낱이 정리했습니다.</p>
 
-  <table class="legend-table" data-reveal>
+  <table class="legend-table" data-reveal="left">
     <tr><th>등급</th><th>의미</th></tr>
     <tr><td><span class="dot" style="background:var(--pass);"></span>통과</td><td>기준을 충족함</td></tr>
     <tr><td><span class="dot" style="background:var(--needsfix);"></span>검토 필요</td><td>명확한 위반은 아니지만 확인이 필요함</td></tr>
     <tr><td><span class="dot" style="background:var(--reject);"></span>반려</td><td>명백한 기준 위반, 반드시 수정 필요</td></tr>
     <tr><td><span class="dot" style="background:var(--na);"></span>해당 없음</td><td>이미지 구성상 이 항목이 적용되지 않음(예: 인물 없는 시안의 신체 비율 항목)</td></tr>
   </table>
-  <div class="legend-note" data-reveal>
+  <div class="legend-note" data-reveal="left">
     AdCheck는 항목마다 <b>수치 기반</b>(OCR·WCAG 등으로 실측값을 직접 대조), <b>규정 대조</b>(브랜드·매체 가이드라인과 비교), <b>AI 시각 판단</b>(수치화하지 않고 이미지를 직접 보고 판단), 이 세 가지 방식을 조합해 판정합니다. 각 판정 근거 박스에는 그 기준이 어디서 왔는지 실제 출처를 밝혀뒀지만, 이는 참고용 기준일 뿐 절대 규칙은 아닙니다. 브랜드 가이드나 기획 의도와 다르다면 언제든 브랜드 가이드·기획 의도가 우선입니다. 근거 박스가 두 개인 항목은 첫 번째가 공식 문헌·규정에서 온 근거, 두 번째가 AdCheck가 실제 배너를 분석하며 다듬어온 기준입니다.<br><br>단, 아래 각 항목의 확인 사항·근거 박스는 지금까지 실제로 반복 발견된 문제 패턴을 정리한 것일 뿐 전체 목록이 아닙니다. 전략·디자인 기본기 그룹(1~3, 5, 8, 9번)은 여기 적힌 항목에 정확히 해당하지 않아도 디자인 원칙(Gestalt 원리·시각 위계·여백의 기능적 사용 등)에 비춰 뚜렷한 문제가 보이면 판정에 반영됩니다.
   </div>
 
@@ -310,7 +310,7 @@
   <div class="group-title">전략 · 디자인 기본기</div>
   <div class="group-desc">크리에이티브 자체의 완성도를 보는 9개 항목입니다.</div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">01</span><span class="item-title">전략 적합성</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>목적과 타깃 톤이 일치하는가</li><li>여러 혜택 포인트가 하나의 오퍼로 수렴하는가</li></ul>
@@ -320,7 +320,7 @@
     <div class="evidence-box">기획안(PPT 캡처 또는 pptx)을 함께 업로드하면, 기획안에서 추출한 방향성과 실제 시안이 얼마나 부합하는지까지 함께 대조합니다.</div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">02</span><span class="item-title">위계 및 구조</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>헤드라인→비주얼→CTA 흐름인가</li><li>우선순위가 크기로 구분되는가</li><li>강조 뱃지·라벨이 여러 개일 때 하나의 주가 명확한가</li><li>문구 덩어리가 4개 이상 잘게 쪼개져 3초 안에 읽기 부담스럽지 않은가</li></ul>
@@ -353,7 +353,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">03</span><span class="item-title">타이포·정렬·여백·명도대비</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets">
@@ -379,7 +379,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">04</span><span class="item-title">정보 정확성</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>가격·일정 정보에 오류 없는가</li><li>배너 안 카피 전체에서 숫자·조건이 서로 모순되지 않는가</li></ul>
@@ -388,7 +388,7 @@
     <div class="evidence-box"><b>2단계 오탈자 검증 절차:</b> 이미지 속 모든 텍스트를 먼저 그대로 옮겨 적게 한 뒤(textTranscript), 그 내용을 다시 처음부터 훑으며 자음·모음 하나 차이 같은 오탈자를 대조합니다.<br><br><b>표기 컨벤션:</b> 금액은 "3만 원대"(원 표기 시 띄어쓰기 필수), 물결표는 숫자와 붙여쓰기("~70%", "1~2개"), 말줄임표는 광고 카피 특성상 약식(..)도 허용합니다. 이 띄어쓰기 여부는 이미지를 눈으로 다시 읽지 않고 OCR 측정 텍스트의 인식 문자열을 근거로 판단합니다 — 자간이 넓은 폰트는 눈으로 보면 실제 공백 유무가 헷갈리기 쉽기 때문입니다. 단, "7.27(월) ~ 8.2(일)"처럼 날짜와 날짜 사이의 물결표는 예외입니다 — 할인율·수량 범위와 달리 날짜 범위는 공백을 줘서 여유 있게 표기하는 것도 정상적인 디자인 선택이라 공백 유무를 지적하지 않습니다.</div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">05</span><span class="item-title">컬러 일관성</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>브랜드 컬러를 준수했는가</li><li>브랜드 컬러가 없어도 색상 조합 자체가 조화로운가</li></ul>
@@ -397,7 +397,7 @@
     <div class="evidence-box">브랜드 컬러가 없는 시안도 색상 조화는 확인합니다. 서로 관련 없는 색이 4개 넘게 뒤섞여 있거나 웜톤·쿨톤이 뚜렷한 이유 없이 섞여 있으면 검토 필요로 판정합니다. 사진 속 색은 디자이너가 임의로 바꿀 수 없는 원본이라 이 기준에서 제외하고, 텍스트·도형·배경처럼 디자이너가 직접 고른 색상만 대상으로 합니다.</div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">06</span><span class="item-title">합성 리얼리티</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>톤·질감이 배경과 어울리는가</li><li>그림자·반사가 자연스러운가</li><li>누끼(컷아웃) 경계가 매끄럽게 처리됐는가 (헤어 잔여배경, 거친 윤곽선 등)</li></ul>
@@ -410,7 +410,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">07</span><span class="item-title">피사체 보정</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>보정이 과도하지 않은가</li><li>재질 텍스처가 자연스러운가</li></ul>
@@ -423,7 +423,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">08</span><span class="item-title">그래픽 완성도</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>아이콘·일러스트 마감이 깨끗한가</li><li>벡터에 깨짐이 없는가</li></ul>
@@ -435,7 +435,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">09</span><span class="item-title">CTA 및 전환</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>CTA가 있다면 문구가 행동을 유도하는가</li><li>CTA가 있다면 버튼이 눈에 띄는가</li></ul>
@@ -467,7 +467,7 @@
   <div class="group-title">AI 생성 아티팩트</div>
   <div class="group-desc">AI로 생성·보정한 이미지 특유의 티가 나는 문제를 잡는 4개 항목입니다.</div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">10</span><span class="item-title">신체 비율 왜곡</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>얼굴(이목구비)이 뒤틀리지 않았는가</li><li>손가락·팔다리 비율이 정상인가</li><li>자세가 물리적으로 가능한가</li><li>위치·비율은 맞아도 이목구비·손 디테일이 흐릿하게 뭉개져 알아보기 어렵지 않은가</li><li>신발 등 양쪽이 쌍을 이루는 요소의 경계·디테일이 뭉개져 있지 않은가</li></ul>
@@ -480,7 +480,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">11</span><span class="item-title">배경 패턴 반복</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>텍스처가 반복되지 않는가</li><li>패턴 경계가 매끄러운가</li></ul>
@@ -492,7 +492,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">12</span><span class="item-title">워터마크·서명 흔적</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>AI 워터마크가 없는가</li><li>스톡 이미지 출처 표시가 없는가</li></ul>
@@ -504,7 +504,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">13</span><span class="item-title">광원-그림자 방향 일치</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>그림자를 가진 피사체가 2개 이상일 때, 광원 방향이 서로 모순되지 않는가</li></ul>
@@ -520,7 +520,7 @@
   <div class="group-title">광고주 전달 전 필수 확인</div>
   <div class="group-desc">크리에이티브 품질과 별개로, 매체·브랜드·법적 규정을 지켰는지 반드시 확인해야 하는 4개 항목입니다.</div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">14</span><span class="item-title">매체 최적화</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>매체 규격(사이즈·용량)에 맞는가</li><li>안전 여백 안에 배치됐는가</li></ul>
@@ -528,7 +528,7 @@
     <div class="evidence-box">선택한 매체 가이드(구글 GDN, 카울리, 타겟팅게이츠, TNK 등 실제 공식 자료 기반)의 세이프존 좌표와 OCR 실측 좌표를 대조합니다. OCR 측정 오차를 감안해 2px 이내 침범은 확실한 위반으로 단정하지 않고, 3px 이상 침범부터 반려로 판정합니다.</div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">15</span><span class="item-title">텍스트·로고 렌더링</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>생성된 글자가 정확한가</li><li>AI 생성 과정에서 로고 형태가 뭉개지거나 깨지지 않았는가</li></ul>
@@ -540,7 +540,7 @@
     </div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">16</span><span class="item-title">로고 사용 규정</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>로고가 누락되지 않았는가</li><li>로고 여백이 다른 요소와 부자연스럽게 붙어 보이지 않는가</li><li>색상·비율을 (의도적으로) 변경하지 않았는가</li></ul>
@@ -548,7 +548,7 @@
     <div class="evidence-box">광고주별 브랜드 가이드에 등록된 로고 사용 규정과 대조합니다. 등록된 가이드가 없는 광고주는 일반적인 로고 사용 관행(여백, 최소 크기, 왜곡 금지)을 기준으로 판단합니다. 15번과 겹쳐 보일 수 있지만 원인이 다릅니다 — 15번은 AI가 생성하면서 로고가 뭉개지거나 깨진 경우(AI 생성 이미지에만 해당), 16번은 색상·비율을 임의로 바꾸는 등 브랜드 규정을 지키지 않은 경우(AI 생성 여부와 무관하게 항상 해당)입니다.</div>
   </div>
 
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="item-head"><span class="item-num">17</span><span class="item-title">법적고지·심의 문구</span></div>
     <div class="item-label">확인 사항</div>
     <ul class="bullets"><li>필수 고지사항이 포함됐는가</li><li>심의 문구 크기가 기준 이상인가</li></ul>
@@ -559,7 +559,7 @@
   <!-- ===================== 참고 디자인 시스템 ===================== -->
   <div class="group-title">참고한 디자인 시스템</div>
   <div class="group-desc">공개된 디자인 시스템 공식 문서에서, 배너처럼 정적인 카드형 콘텐츠에 적용 가능한 원칙만 발췌했습니다. 각 시스템 전체를 따라야 한다는 뜻은 아닙니다.</div>
-  <div class="item-card" data-reveal>
+  <div class="item-card" data-reveal="left">
     <div class="evidence-box"><b>Material Design:</b> 8dp 기준 그리드, 터치 타겟 48dp, 강조색은 소수만 쓰고 나머지는 중립색으로 절제.</div>
     <div class="evidence-box"><b>Apple Human Interface Guidelines:</b> 44pt 터치 타겟, 명확한 타이포그래피 위계(Large Title → Title → Headline → Body).</div>
     <div class="evidence-box"><b>IBM Carbon Design System:</b> 2px 기준 스페이싱 스케일, 명확한 타이포그래피 스케일 테이블을 문서로 공개.</div>

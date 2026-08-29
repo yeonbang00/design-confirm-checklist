@@ -110,8 +110,12 @@
       if (el.dataset.dcHidden || el.dataset.dcShown) { revealEls.push(el); return; }
       el.dataset.dcHidden = '1';
       if (!reduce) {
+        // data-reveal="left" 이면 좌→우로, 값이 없으면(기본) 기존처럼 아래→위로.
+        // 항목가이드·컬러가이드처럼 개별 카드가 하나씩 스크롤 관찰되는 곳만 옵트인시켜서
+        // index.html 푸터·드롭존 등 이 속성을 쓰는 다른 모든 곳의 동작은 그대로 둔다.
+        var revealLeft = el.getAttribute('data-reveal') === 'left';
         el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
+        el.style.transform = revealLeft ? 'translateX(-' + DIST + 'px)' : 'translateY(30px)';
         el.style.transition = 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)';
       }
       revealEls.push(el);

@@ -116,10 +116,10 @@
   .drift-cell img{width:100%; height:100%; object-fit:cover; display:block;}
   .drift-cell:hover{transform:scale(1.045); border-color:rgba(204,255,0,.6); box-shadow:0 0 34px -8px rgba(204,255,0,.45); z-index:1;}
   .hero-drift-cols{padding:0 5px;}
-  .drift-tag{position:absolute; left:7px; bottom:7px; font:500 8px/1 var(--font-mono); letter-spacing:.06em; padding:4px 6px; border-radius:5px; border:1px solid;}
-  .drift-cell.v-pass .drift-tag{background:rgba(168,207,188,.16); border-color:rgba(168,207,188,.5); color:var(--pass);}
-  .drift-cell.v-needsfix .drift-tag{background:rgba(217,166,96,.16); border-color:rgba(217,166,96,.5); color:var(--needsfix);}
-  .drift-cell.v-reject .drift-tag{background:rgba(194,104,122,.16); border-color:rgba(194,104,122,.5); color:var(--reject);}
+  .drift-tag{position:absolute; left:7px; bottom:7px; font:700 8px/1 var(--font-mono); letter-spacing:.06em; padding:5px 8px; border-radius:999px; border:none;}
+  .drift-cell.v-pass .drift-tag{background:var(--pass); color:#0B0C0E;}
+  .drift-cell.v-needsfix .drift-tag{background:var(--needsfix); color:#0B0C0E;}
+  .drift-cell.v-reject .drift-tag{background:var(--reject); color:#0B0C0E;}
 
   /* ---------- dropzone ---------- */
   .prompt-wrap{position:relative; max-width:1520px; margin:0 auto; padding:100px 40px 0;}
@@ -2352,12 +2352,16 @@
         var p = (vh - cb.top) / (vh + cb.height) - 0.5;
         ctaCX += (ctaTX - ctaCX) * 0.07;
         ctaCY += (ctaTY - ctaCY) * 0.07;
-        /* 뷰포트 중앙에 가까울수록 커지고, 한 번 다 커지면 그 상태로 고정 (다시 작아지지 않음) */
+        /* 뷰포트 중앙에 가까울수록 커지고, 한 번 다 커지면 그 상태로 고정 (다시 작아지지 않음).
+           예전엔 "정확히 중앙을 지나는 딱 한 프레임"(t>=0.98)에서만 고정해서, 스크롤이
+           빠르면 그 좁은 구간을 건너뛰어 고정이 아예 안 걸리고 다시 작아지는 문제가 있었다.
+           지금까지 본 최댓값(ctaMaxT)을 누적해서 절대 줄어들지 않게 하고, 임계값도 낮춤. */
         if (!ctaLocked) {
           var centerDist = clamp(Math.abs((cb.top + cb.bottom) / 2 - vh / 2) / (vh / 2));
           var t = clamp(1 - centerDist);
-          ctaBand.style.setProperty('--cta-scale', (0.72 + t * 0.28).toFixed(3));
-          if (t >= 0.98) { ctaBand.style.setProperty('--cta-scale', '1'); ctaLocked = true; }
+          if (t > ctaMaxT) ctaMaxT = t;
+          ctaBand.style.setProperty('--cta-scale', (0.72 + ctaMaxT * 0.28).toFixed(3));
+          if (ctaMaxT >= 0.92) { ctaBand.style.setProperty('--cta-scale', '1'); ctaLocked = true; }
         }
       }
     }
@@ -2416,7 +2420,7 @@
 
   /* 4-a) 하단 CTA 밴드 — 스크롤 시차 + 커서 추적 (관성으로 부드럽게) */
   var ctaBand = document.getElementById('ctaBand');
-  var ctaTX = 0, ctaTY = 0, ctaCX = 0, ctaCY = 0, ctaHot = false, ctaLocked = false;
+  var ctaTX = 0, ctaTY = 0, ctaCX = 0, ctaCY = 0, ctaHot = false, ctaLocked = false, ctaMaxT = 0;
   if (ctaBand && !reduce) {
     ctaBand.addEventListener('mousemove', function (e) {
       var r = ctaBand.getBoundingClientRect();

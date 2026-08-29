@@ -135,46 +135,9 @@
   }
 
   /* ================= 인터랙션 디벨롭 (2026-08) — index.html 과 공유 =================
-     아래 블록과 문서 끝의 대응 스크립트만 걷어내면 이전 상태로 돌아갑니다. */
-  /* ---- 로드맵과 동일하게 본문을 흰 배경으로 ---- */
-  html, body{background:#FAFAF7;}
-  .page{
-    background:var(--bg);
-    --bg:#FAFAF7;
-    --surface:#FFFFFF; --surface-2:#FFFFFF; --surface-3:#FFFFFF;
-    --line:rgba(11,12,14,.13); --line-soft:rgba(11,12,14,.08);
-    --ink:#16190F; --ink-2:#3A3F32; --ink-3:#53584A; --ink-4:#6E7365;
-    --card:#FFFFFF; --card-border:rgba(11,12,14,.09);
-    --text:#16190F; --text-2:#4C5145; --text-3:#6A6F62;
-    color:var(--ink);
-  }
-  .page .history-category{background:#FFFFFF;}
-  .page .history-delete{background:#FFFFFF; border-color:rgba(11,12,14,.1); color:#6E7365;}
-  .page .history-delete:hover{background:rgba(226,61,46,.08); border-color:rgba(226,61,46,.35); color:#E23D2E;}
-  .page .gl-empty, .page .loading-msg{background:rgba(11,12,14,.035); color:#53584A;}
-  .page .history-date{color:#4A5208;}
-
-  /* 흰 페이지라 GNB도 밝은 알약으로 */
-  .gnb-bar-inner{
-    background:rgba(255,255,255,.80) !important;
-    border-color:rgba(11,12,14,.10) !important;
-    box-shadow:0 10px 30px -14px rgba(11,12,14,.18), 0 1px 0 rgba(11,12,14,.04) !important;
-  }
-  .gnb-logo-icon{filter:invert(1) brightness(.16);}
-  .gnb-primary .gnb-link{border:none !important; box-shadow:none !important; color:#5E646C;}
-  .gnb-primary .gnb-link:hover{color:#0B0C0E; background:none !important; box-shadow:none !important;}
-  .gnb-primary .gnb-link.active,
-  .gnb-primary .gnb-link.active:hover{background:#14171C; color:#F4F4F0; box-shadow:none !important; font-weight:700;}
-  .gnb-secondary .gnb-link{color:#767C85;}
-  .gnb-secondary .gnb-link:hover, .gnb-secondary .gnb-link.active{color:#14171C;}
-  .gnb-dropdown-menu-inner{
-    background:rgba(255,255,255,.97); border-color:rgba(11,12,14,.1);
-    box-shadow:0 26px 54px -22px rgba(11,12,14,.4);
-  }
-  .gnb-dropdown-item{color:#5E646C;}
-  .gnb-dropdown-item:hover{color:#14171C; background:rgba(11,12,14,.05);}
-  .gnb-dropdown-item.active{color:#4A5208; background:rgba(204,255,0,.22);}
-  .scroll-progress-bar{background:linear-gradient(90deg,#A3CC00,#16190F);}
+     원래 여기 로드맵과 같은 라이트 테마 전환 블록이 있었으나, 다크 배경이 더 잘 보인다는
+     피드백으로 히스토리는 원래대로 다크 유지 — 라이트 오버라이드만 제거하고 아래 공용
+     모션(GNB·페이지 타이틀 진입 등)은 그대로 둔다. */
 
   /* ---- 히어로 진입 모션 (index.html 과 동일한 감각) ---- */
   @keyframes pageFadeUp{from{opacity:0; transform:translateY(22px);}to{opacity:1; transform:none;}}
