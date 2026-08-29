@@ -24,7 +24,8 @@
  */
 (function () {
   var STEP = 55;          // 항목 간 시간차(ms)
-  var DIST = 40;          // 좌→우 이동 거리(px)
+  var DIST = 40;          // data-row(작은 리스트 행) 좌→우 이동 거리(px)
+  var DIST_LEFT_BOX = 64; // data-reveal="left"(큰 박스 단위) 좌→우 이동 거리(px) — 리스트 행보다 크게 움직여야 "부드러운 슬라이드"로 느껴진다
   var DIST_DOWN = 22;     // 위→아래 이동 거리(px)
   var EASE = 'cubic-bezier(.22,1.1,.36,1)'; // 살짝 튀는(쫀득한) 도착
   var SEQ_STEP = 200;     // data-seq-reveal 페이지에서, 같은 순간 뷰포트에 들어온 섹션들 간 시간차(ms) — 큰 섹션 단위라 130ms로는 순차적으로 느껴지지 않는다는 피드백으로 늘림
@@ -124,8 +125,13 @@
         // index.html 푸터·드롭존 등 이 속성을 쓰는 다른 모든 곳의 동작은 그대로 둔다.
         var revealLeft = el.getAttribute('data-reveal') === 'left';
         el.style.opacity = '0';
-        el.style.transform = revealLeft ? 'translateX(-' + DIST + 'px)' : 'translateY(30px)';
-        el.style.transition = 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)';
+        el.style.transform = revealLeft ? 'translateX(-' + DIST_LEFT_BOX + 'px)' : 'translateY(30px)';
+        // 좌→우 박스는 더 느리고 부드러운 곡선으로 — 기존 .95s cubic-bezier(.2,.8,.2,1)는
+        // 초반에 급하게 튀어나오는 느낌이라 "빠르다"는 피드백을 받았다. 히어로 타이틀에
+        // 쓰는 것과 같은 부드러운 도착 곡선(cubic-bezier(.16,1,.3,1))으로 통일.
+        el.style.transition = revealLeft
+          ? 'opacity 1.15s ease, transform 1.25s cubic-bezier(.16,1,.3,1)'
+          : 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)';
       }
       revealEls.push(el);
     });
