@@ -27,7 +27,7 @@
   var DIST = 40;          // 좌→우 이동 거리(px)
   var DIST_DOWN = 22;     // 위→아래 이동 거리(px)
   var EASE = 'cubic-bezier(.22,1.1,.36,1)'; // 살짝 튀는(쫀득한) 도착
-  var SEQ_STEP = 130;     // data-seq-reveal 페이지에서, 같은 순간 뷰포트에 들어온 섹션들 간 시간차(ms)
+  var SEQ_STEP = 200;     // data-seq-reveal 페이지에서, 같은 순간 뷰포트에 들어온 섹션들 간 시간차(ms) — 큰 섹션 단위라 130ms로는 순차적으로 느껴지지 않는다는 피드백으로 늘림
 
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
   // <html data-seq-reveal> 를 단 페이지에서만, 한 번에 여러 [data-reveal] 섹션이
