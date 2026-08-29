@@ -23,11 +23,11 @@
     --ink-2: #A2A7B0;
     --ink-3: #7E838C;
     --ink-4: #6B707A;
-    --accent: #CCFF00;
+    --accent: #C3FF4D;
     --accent-ink: #0B0C0E;
-    --pass: #A8CFBC;
-    --needsfix: #D9A660;
-    --reject: #C2687A;
+    --pass: #00A371;
+    --needsfix: #F7A900;
+    --reject: #F22F6B;
     --na: #6B707A;
     --font-display: 'Sora', 'Pretendard', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -402,11 +402,11 @@
     --surface: color-mix(in oklab, #14171C, #FFFFFF calc(var(--lit) * 100%));
     --surface-2: color-mix(in oklab, #0F1216, #FFFFFF calc(var(--lit) * 100%));
     --surface-3: color-mix(in oklab, #15181D, #FFFFFF calc(var(--lit) * 100%));
-    --pass: color-mix(in oklab, #A8CFBC, #55B012 calc(var(--lit) * 100%));
-    --needsfix: color-mix(in oklab, #D9A660, #EFA300 calc(var(--lit) * 100%));
-    --reject: color-mix(in oklab, #C2687A, #F0442F calc(var(--lit) * 100%));
+    --pass: #00A371;
+    --needsfix: #F7A900;
+    --reject: #F22F6B;
     --na: color-mix(in oklab, #6B707A, #A2A79A calc(var(--lit) * 100%));
-    --accent-text: color-mix(in oklab, #CCFF00, #5A7A00 calc(var(--lit) * 100%));
+    --accent-text: color-mix(in oklab, #C3FF4D, #4D7400 calc(var(--lit) * 100%));
     --body-2: color-mix(in oklab, #C4C7CD, #4C5145 calc(var(--lit) * 100%));
     --body-3: color-mix(in oklab, #8B9099, #6A6F62 calc(var(--lit) * 100%));
     --wash: color-mix(in srgb, rgba(255,255,255,.04), rgba(11,12,14,.045) calc(var(--lit) * 100%));
@@ -461,9 +461,9 @@
   }
   .content .tier-card::before{ content:none; }
   .content .tier-count{transition:color .35s ease;}
-  .content #tPass:hover .tier-count{color:#55B012 !important;}
-  .content #tNeedsfix:hover .tier-count{color:#EFA300 !important;}
-  .content #tReject:hover .tier-count{color:#F0442F !important;}
+  .content #tPass:hover .tier-count{color:#00A371 !important;}
+  .content #tNeedsfix:hover .tier-count{color:#F7A900 !important;}
+  .content #tReject:hover .tier-count{color:#F22F6B !important;}
   .content #tNa:hover .tier-count{color:#A2A79A !important;}
   .content #tPass::before{background:var(--pass);}
   .content #tNeedsfix::before{background:var(--needsfix);}
@@ -1078,8 +1078,8 @@
   <div class="cta-scrim"></div>
   <div class="cta-inner">
     <div class="cta-badge"><span class="cta-badge-dot"></span>FINAL GOAL</div>
-    <h2 class="cta-title" id="ctaBandTitle">판정에서 끝내지 않고,<br>성과로 증명한다</h2>
-    <p class="cta-sub">배너 분석에서 멈추지 않고, 그 배너가 실제로 낸 성과 데이터까지 함께 읽습니다.</p>
+    <h2 class="cta-title" id="ctaBandTitle">Don't stop at the verdict.<br>Prove it with performance.</h2>
+    <p class="cta-sub">배너 분석에서 멈추지 않고, 성과 리포트의 실제 데이터와 함께 읽습니다.</p>
   </div>
 </section>
 </div>

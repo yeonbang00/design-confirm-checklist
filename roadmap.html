@@ -22,7 +22,7 @@
     --ink-2: #A2A7B0;
     --ink-3: #7E838C;
     --ink-4: #6B707A;
-    --accent: #CCFF00;
+    --accent: #C3FF4D;
     --accent-strong: #B8E600;
     --accent-ink: #0B0C0E;
     --card: #14171C;
@@ -36,9 +36,9 @@
     --charcoal-border: rgba(255,255,255,.11);
     --num-bg: rgba(204,255,0,.1);
     --num-text: #CCFF00;
-    --pass: #A8CFBC;
-    --needsfix: #D9A660;
-    --reject: #C2687A;
+    --pass: #00A371;
+    --needsfix: #F7A900;
+    --reject: #F22F6B;
     --na: #6B707A;
     --danger: #C2687A;
     --ok: #A8CFBC;
@@ -235,7 +235,7 @@
     --canvas-text:#16190F; --canvas-text-2:#4C5145;
     --charcoal:#FFFFFF; --charcoal-border:rgba(11,12,14,.09);
     --num-bg:rgba(204,255,0,.28); --num-text:#4A5208;
-    --pass:#55B012; --needsfix:#C98A00; --reject:#E23D2E; --na:#8E948C;
+    --pass:#00A371; --needsfix:#F7A900; --reject:#F22F6B; --na:#8E948C;
     --danger:#E23D2E; --ok:#55B012;
     color:var(--ink);
   }
@@ -280,17 +280,17 @@
     background:linear-gradient(168deg,#14171C,#0D0F13 82%);
     border-color:rgba(255,255,255,.11);
     --ink:#EDEEF0; --ink-2:#A2A7B0; --ink-3:#7E838C; --ink-4:#6B707A;
-    --pass:#A8CFBC; --needsfix:#D9A660; --reject:#C2687A;
+    --pass:#00A371; --needsfix:#F7A900; --reject:#F22F6B;
   }
   .page .use-panel .use-stat,
   .page .use-panel .use-diff-row{background:rgba(255,255,255,.035) !important; border-color:rgba(255,255,255,.08) !important;}
-  .page .use-panel .use-diff-before{color:#C2687A;}
-  .page .use-panel .use-diff-after{color:#A8CFBC;}
+  .page .use-panel .use-diff-before{color:#F22F6B;}
+  .page .use-panel .use-diff-after{color:#00A371;}
   /* 아래 요소들은 자기 자신에 변수를 들고 있어서, 패널 안에서 다시 덮어써야 한다 */
   .page .use-panel .use-stat-value,
   .page .use-panel .use-diff-count,
-  .page .use-panel .use-panel-box-label{--pass:#A8CFBC; --needsfix:#D9A660; --reject:#C2687A;}
-  .page .use-panel .use-diff-count{color:#C2687A;}
+  .page .use-panel .use-panel-box-label{--pass:#00A371; --needsfix:#F7A900; --reject:#F22F6B;}
+  .page .use-panel .use-diff-count{color:#F22F6B;}
   .page .use-panel .use-diff-legend span{color:#8B9099;}
   .page .use-panel-label{color:#7E838C !important;}
 
@@ -311,10 +311,10 @@
   .page .use-stat-value,
   .page .use-diff-count,
   .page .use-panel-box-label{
-    --pass:#2F7A05; --needsfix:#8A5F00; --reject:#B32718;
+    --pass:#006244; --needsfix:#946500; --reject:#A30A39;
   }
-  .page .use-diff-before{color:#B32718;}
-  .page .use-diff-after{color:#2F7A05;}
+  .page .use-diff-before{color:#A30A39;}
+  .page .use-diff-after{color:#006244;}
   .page .use-diff-legend span{color:#4C5145;}
 
 
@@ -464,8 +464,8 @@
   <div class="goal-hero" data-reveal="left">
     <div class="goal-hero-inner">
       <div class="goal-badge"><span class="goal-badge-dot"></span>FINAL GOAL</div>
-      <h2 class="goal-heading"><span class="goal-highlight">판정에서 끝내지 않고,</span><br><span class="goal-highlight">성과로 증명한다</span></h2>
-      <p class="goal-desc">배너 분석에서 멈추지 않고, 그 배너가 실제로 낸 성과 데이터까지 함께 읽습니다. 메타·네이버 클릭률·전환율을 판정 결과와 나란히 놓으면, 어떤 항목을 고쳤을 때 성과가 올라갔는지 확인할 수 있습니다.</p>
+      <h2 class="goal-heading"><span class="goal-highlight">Don't stop at the verdict.</span><br><span class="goal-highlight">Prove it with performance.</span></h2>
+      <p class="goal-desc">배너 분석에서 멈추지 않고, 성과 리포트의 실제 데이터와 함께 읽습니다. 메타·네이버 클릭률·전환율을 판정 결과와 나란히 놓으면, 어떤 항목을 고쳤을 때 성과가 올라갔는지 확인할 수 있습니다.</p>
       <div class="goal-grid">
         <div class="goal-item">
           <div class="goal-item-tag">META</div>
