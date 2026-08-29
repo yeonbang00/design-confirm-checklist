@@ -27,7 +27,7 @@
   var DIST = 40;          // data-row(작은 리스트 행) 좌→우 이동 거리(px)
   var DIST_LEFT_BOX = 64; // data-reveal="left"(큰 박스 단위) 좌→우 이동 거리(px) — 리스트 행보다 크게 움직여야 "부드러운 슬라이드"로 느껴진다
   var DIST_DOWN = 22;     // 위→아래 이동 거리(px)
-  var EASE = 'cubic-bezier(.22,1.1,.36,1)'; // 살짝 튀는(쫀득한) 도착
+  var TRANSITION = 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)'; // 리스트 캐스케이드부터 박스 등장까지 전부 이 속도로 통일 — 요소 종류별로 제각각이라 "어떤 건 빠르고 어떤 건 느리다"는 피드백을 받음
   var SEQ_STEP = 200;     // data-seq-reveal 페이지에서, 같은 순간 뷰포트에 들어온 섹션들 간 시간차(ms) — 큰 섹션 단위라 130ms로는 순차적으로 느껴지지 않는다는 피드백으로 늘림
 
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -49,7 +49,7 @@
     el.style.transform = dir === 'down'
       ? 'translateY(-' + DIST_DOWN + 'px)'
       : 'translateX(-' + DIST + 'px)';
-    el.style.transition = 'opacity .85s ease, transform .95s ' + EASE;
+    el.style.transition = TRANSITION;
   }
 
   function show(el) {
@@ -147,24 +147,12 @@
         // 아래 카드가 기본값(아래→위)이면 정반대 방향이 부딪혀 보였다), 값이 없으면
         // 기존처럼 아래→위로. 옵트인한 곳만 바뀌고 나머지(footer 등)는 그대로 둔다.
         var revealDir = el.getAttribute('data-reveal');
-        var isBoxMotion = revealDir === 'left' || revealDir === 'down';
         el.style.opacity = '0';
         el.style.transform =
           revealDir === 'left' ? 'translateX(-' + DIST_LEFT_BOX + 'px)' :
           revealDir === 'down' ? 'translateY(-' + DIST_LEFT_BOX + 'px)' :
           'translateY(30px)';
-        // 박스 단위(좌→우·위→아래)는 더 느리고 부드러운 곡선으로 — 기존
-        // .95s cubic-bezier(.2,.8,.2,1)는 초반에 급하게 튀어나오는 느낌이라
-        // "빠르다"는 피드백을 받았다. 히어로 타이틀과 같은 부드러운 도착 곡선으로 통일.
-        //
-        // data-reveal-slow: 방향(위치)은 기본(아래→위) 그대로 두고 속도만 늦추고
-        // 싶은 곳에 붙인다 — 디자인체크리스트(드롭존·AI총평·17개 항목 카드)처럼
-        // "방향은 괜찮은데 속도만 빠르다"는 페이지 전용. 다른 곳(footer 등)의
-        // 기본 아래→위 속도는 그대로 유지.
-        var slow = isBoxMotion || el.hasAttribute('data-reveal-slow');
-        el.style.transition = slow
-          ? 'opacity 1.3s ease, transform 1.45s cubic-bezier(.16,1,.3,1)'
-          : 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)';
+        el.style.transition = TRANSITION;
       }
       bucket.push(el);
     });
