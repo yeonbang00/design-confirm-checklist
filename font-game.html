@@ -80,6 +80,10 @@
   .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
   .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
   .gnb-bar.hide-nav{opacity:0; transform:translateY(-130%); pointer-events:none;}
+
+  /* .page의 padding-bottom이 풀블리드 푸터 뒤에도 남아 스크롤이 푸터 끝에서
+     딱 안 멈추고 더 내려가던 문제 — 다른 페이지들과 동일하게 수정 */
+  .page{padding-bottom:0;}
   .gnb-bar{transition:top .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease, transform .4s cubic-bezier(.2,.8,.2,1);}
 
   .scroll-progress{position:fixed; top:0; left:0; right:0; z-index:210; height:2px; background:none;}
@@ -109,10 +113,9 @@
   .g-btn-ghost{background:transparent; border:1px solid var(--line); color:var(--ink-2);}
   .g-btn-ghost:hover{color:var(--ink); border-color:var(--ink-3); filter:none;}
 
-  .g-topline{display:flex; align-items:center; justify-content:space-between; margin-bottom:30px;}
+  .g-topline{display:flex; align-items:center; justify-content:center; margin-bottom:30px;}
   .g-progress-label{font:600 11.5px/1 var(--font-mono); letter-spacing:.08em; color:var(--ink-3);}
   .g-progress-label b{color:var(--ink);}
-  .g-score{font:700 12px/1 var(--font-mono); letter-spacing:.06em; color:var(--accent); background:rgba(195,255,77,.1); border:1px solid rgba(195,255,77,.28); border-radius:999px; padding:8px 14px;}
 
   .g-prompt{text-align:center; font-size:13px; color:var(--ink-3); margin-bottom:6px;}
   .g-mystery{min-height:110px; display:flex; align-items:center; justify-content:center; text-align:center; padding:14px 10px; margin-bottom:28px; color:var(--ink); font-size:clamp(34px,7vw,52px); line-height:1.3; word-break:keep-all; overflow-wrap:anywhere;}
@@ -121,8 +124,7 @@
   .g-choice{position:relative; text-align:left; appearance:none; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:12px; padding:16px 18px; font-size:15px; font-weight:500; cursor:pointer; transition:border-color .15s ease, background .15s ease;}
   .g-choice:hover:not(:disabled){border-color:var(--ink-3); background:var(--surface-3);}
   .g-choice:disabled{cursor:default;}
-  .g-choice.correct{border-color:var(--pass); background:rgba(0,163,113,.14); color:#8fe9c9;}
-  .g-choice.wrong{border-color:var(--reject); background:rgba(242,47,107,.14); color:#ffb1c7;}
+  .g-choice.selected{border-color:var(--accent); background:rgba(195,255,77,.1);}
 
   .g-timer-track{height:5px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:26px;}
   .g-timer-bar{height:100%; width:100%; background:var(--accent); transform-origin:left; transition:width .1s linear, background-color .3s ease;}
@@ -136,10 +138,40 @@
   .g-result-actions{display:flex; justify-content:center; gap:10px; flex-wrap:wrap;}
   .g-share-msg{margin-top:14px; font-size:12.5px; color:var(--accent); min-height:1.4em;}
 
+  .g-detail-heading{font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-.02em; color:var(--ink); margin:56px 0 18px; padding-top:24px; border-top:1px solid var(--line-soft);}
+  .g-detail-list{display:flex; flex-direction:column; gap:14px;}
+  .g-detail-item{border:1px solid var(--card-border); border-radius:16px; padding:22px 24px; background:var(--surface);}
+  .g-detail-top{display:flex; align-items:center; gap:10px; margin-bottom:20px;}
+  .g-detail-icon{width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; flex:none;}
+  .g-detail-icon.ok{color:var(--pass); border:1.5px solid var(--pass);}
+  .g-detail-icon.no{color:var(--reject); border:1.5px solid var(--reject);}
+  .g-detail-num{font:700 14px/1 var(--font-display); color:var(--ink);}
+  .g-detail-word{text-align:center; font-size:clamp(24px,4vw,34px); color:var(--ink); margin-bottom:18px; word-break:keep-all;}
+  .g-detail-cols{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .g-detail-col{background:var(--surface-2); border-radius:10px; padding:12px 14px;}
+  .g-detail-col-label{font-size:11px; color:var(--ink-3); margin-bottom:6px;}
+  .g-detail-answer{display:flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600;}
+  .g-detail-dot{width:7px; height:7px; border-radius:50%; flex:none;}
+  .g-detail-answer.ok{color:#8fe9c9;}
+  .g-detail-answer.ok .g-detail-dot{background:var(--pass);}
+  .g-detail-answer.no{color:#ffb1c7;}
+  .g-detail-answer.no .g-detail-dot{background:var(--reject);}
+
   .hidden{display:none !important;}
 
-  .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
-  .footer-logo{display:block; height:36px; width:auto; margin:0 auto 18px; opacity:.5;}
+  .page-footer{
+    position:relative; text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4);
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    margin:0; padding:96px 40px 40px; border-top:none; background:#0B0C0E;
+    width:100vw; margin-left:calc(50% - 50vw);
+  }
+  .footer-logo{height:38px; width:auto; margin:0 0 16px; opacity:.42;}
+  .footer-copy{margin-top:auto; padding-top:60px; opacity:.6;}
+
+  @media (max-width:760px){
+    .page-footer{padding:64px 18px;}
+    .footer-logo{height:30px;}
+  }
 
   @media (max-width:640px){
     .page{padding:110px 18px 70px;}
@@ -147,6 +179,8 @@
     .gnb-bar-inner{padding:7px 9px 7px 14px; display:flex; flex-wrap:wrap;}
     .game-card{padding:32px 20px; border-radius:18px;}
     .g-intro-rules{gap:20px;}
+    .g-detail-cols{grid-template-columns:1fr;}
+    .g-detail-item{padding:18px;}
   }
 
   /* ---------- 눈누 폰트오락실 큐레이션 68종 — font-pairing.html과 동일, 전부 jsdelivr 공개 CDN 확인 완료 ---------- */
@@ -277,7 +311,6 @@
     <div class="hidden" id="screenQuiz">
       <div class="g-topline">
         <div class="g-progress-label">문제 <b id="qIndex">1</b> / <span id="qTotal">10</span></div>
-        <div class="g-score">SCORE <span id="qScore">0</span></div>
       </div>
       <div class="g-prompt">이 폰트의 이름은 무엇일까요?</div>
       <div class="g-mystery" id="mysteryWord"></div>
@@ -286,12 +319,12 @@
     </div>
 
     <div class="hidden g-result" id="screenResult">
-      <div class="g-prompt">RESULT</div>
-      <div class="g-result-score"><span id="resultScore">0</span><span> / 10</span></div>
+      <div class="g-prompt">최종 정답률</div>
+      <div class="g-result-score"><span id="resultScore">0</span><span>/10</span></div>
       <div class="g-result-rank" id="resultRank"></div>
       <div class="g-result-desc" id="resultDesc"></div>
       <div class="g-result-actions">
-        <button type="button" class="g-btn" id="retryBtn">다시하기</button>
+        <button type="button" class="g-btn" id="retryBtn">다시 도전하기</button>
         <button type="button" class="g-btn g-btn-ghost" id="shareBtn">결과 공유</button>
       </div>
       <div class="g-share-msg" id="shareMsg"></div>
@@ -299,9 +332,15 @@
 
   </div>
 
+  <div class="hidden" id="screenDetail">
+    <div class="g-detail-heading">상세 결과</div>
+    <div class="g-detail-list" id="detailList"></div>
+  </div>
+
   <div class="page-footer show" data-reveal>
     <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
-    폰트 저작권은 각 제작사에 있습니다. 재미로 만든 코너라 정답 판정에 이견이 있을 수 있어요.<br>
+    폰트 저작권은 각 제작사에 있습니다 — 실제 사용 전 라이선스 조건(상업적 이용 범위 등)을 다시 한번 확인해주세요.<br>
+    이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.<br>
     <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
   </div>
 </div>
@@ -430,7 +469,7 @@
 
   let questions = [];
   let qi = 0;
-  let score = 0;
+  let results = []; // { word, font, picked } — 정답 여부는 끝나고 한꺼번에 계산
   let timerId = null;
   let timeLeft = TIME_LIMIT;
   let answered = false;
@@ -438,11 +477,12 @@
   const screenIntro = document.getElementById('screenIntro');
   const screenQuiz = document.getElementById('screenQuiz');
   const screenResult = document.getElementById('screenResult');
+  const screenDetail = document.getElementById('screenDetail');
   const mysteryWord = document.getElementById('mysteryWord');
   const choicesEl = document.getElementById('choices');
   const timerBar = document.getElementById('timerBar');
   const qIndexEl = document.getElementById('qIndex');
-  const qScoreEl = document.getElementById('qScore');
+  const detailList = document.getElementById('detailList');
 
   function buildQuestions(){
     const picks = shuffle(FONTS).slice(0, TOTAL_Q);
@@ -457,9 +497,10 @@
   function startGame(){
     questions = buildQuestions();
     qi = 0;
-    score = 0;
+    results = [];
     screenIntro.classList.add('hidden');
     screenResult.classList.add('hidden');
+    screenDetail.classList.add('hidden');
     screenQuiz.classList.remove('hidden');
     showQuestion();
   }
@@ -469,7 +510,6 @@
     timeLeft = TIME_LIMIT;
     const q = questions[qi];
     qIndexEl.textContent = qi + 1;
-    qScoreEl.textContent = score;
     mysteryWord.textContent = q.word;
     mysteryWord.style.fontFamily = q.font.family + ", 'Pretendard', sans-serif";
 
@@ -480,7 +520,7 @@
       btn.className = 'g-choice';
       btn.textContent = opt.name;
       btn.dataset.id = opt.id;
-      btn.addEventListener('click', () => selectAnswer(opt.id));
+      btn.addEventListener('click', () => selectAnswer(opt));
       choicesEl.appendChild(btn);
     });
 
@@ -503,31 +543,33 @@
     }
   }
 
-  function selectAnswer(pickedId){
+  // 정답·오답은 여기서 보여주지 않는다 — 마지막 결과 화면에서 한꺼번에 공개해야
+  // 진행 중에는 "내가 몇 개 맞혔는지" 긴장감이 유지된다(참고 사이트 방식).
+  function selectAnswer(picked){
     if(answered) return;
     answered = true;
     clearInterval(timerId);
     const q = questions[qi];
-    const correct = q.font.id;
-    if(pickedId === correct) score++;
-    qScoreEl.textContent = score;
+    results.push({ word: q.word, font: q.font, picked });
 
     Array.from(choicesEl.children).forEach(btn => {
       btn.disabled = true;
-      if(btn.dataset.id === correct) btn.classList.add('correct');
-      else if(btn.dataset.id === pickedId) btn.classList.add('wrong');
+      if(picked && btn.dataset.id === picked.id) btn.classList.add('selected');
     });
 
     setTimeout(() => {
       qi++;
       if(qi < questions.length) showQuestion();
       else showResult();
-    }, 900);
+    }, 500);
   }
 
   function showResult(){
     screenQuiz.classList.add('hidden');
     screenResult.classList.remove('hidden');
+    screenDetail.classList.remove('hidden');
+
+    const score = results.filter(r => r.picked && r.picked.id === r.font.id).length;
     document.getElementById('resultScore').textContent = score;
     let rank, desc;
     if(score >= 9){ rank = '폰트 장인 🏆'; desc = '눈누 폰트 이름을 거의 다 외우고 계시네요.'; }
@@ -537,12 +579,31 @@
     document.getElementById('resultRank').textContent = rank;
     document.getElementById('resultDesc').textContent = desc;
     document.getElementById('shareMsg').textContent = '';
+
+    detailList.innerHTML = '';
+    results.forEach((r, i) => {
+      const isCorrect = r.picked && r.picked.id === r.font.id;
+      const item = document.createElement('div');
+      item.className = 'g-detail-item';
+      item.innerHTML =
+        '<div class="g-detail-top">' +
+          '<span class="g-detail-icon ' + (isCorrect ? 'ok' : 'no') + '">' + (isCorrect ? '✓' : '✕') + '</span>' +
+          '<span class="g-detail-num">문제 ' + (i + 1) + '</span>' +
+        '</div>' +
+        '<div class="g-detail-word" style="font-family:' + r.font.family + ", 'Pretendard', sans-serif" + '">' + r.word + '</div>' +
+        '<div class="g-detail-cols">' +
+          '<div class="g-detail-col"><div class="g-detail-col-label">정답</div><div class="g-detail-answer ok"><span class="g-detail-dot"></span>' + r.font.name + '</div></div>' +
+          '<div class="g-detail-col"><div class="g-detail-col-label">내가 선택한 폰트</div><div class="g-detail-answer ' + (isCorrect ? 'ok' : 'no') + '"><span class="g-detail-dot"></span>' + (r.picked ? r.picked.name : '시간 초과') + '</div></div>' +
+        '</div>';
+      detailList.appendChild(item);
+    });
   }
 
   document.getElementById('startBtn').addEventListener('click', startGame);
   document.getElementById('retryBtn').addEventListener('click', startGame);
 
   document.getElementById('shareBtn').addEventListener('click', async () => {
+    const score = results.filter(r => r.picked && r.picked.id === r.font.id).length;
     const text = '폰트 오락실에서 ' + score + '/10 맞혔어요! (AdCheck 폰트 오락실)';
     const shareMsg = document.getElementById('shareMsg');
     try {

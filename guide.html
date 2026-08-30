@@ -275,6 +275,10 @@
   @keyframes ddItem{from{opacity:0; transform:translateY(-6px);}to{opacity:1; transform:none;}}
 
   /* ---- 푸터: 한 화면 가득, 내용은 위 / 저작권은 바닥 ---- */
+  /* .page의 padding-bottom(100px)이 풀블리드 푸터 뒤에도 그대로 남아있어서,
+     스크롤이 푸터 끝에서 딱 안 멈추고 빈 공간만큼 더 내려가는 문제가 있었다 —
+     .page-footer가 .page의 마지막 자식이라 부모 padding을 그대로 물려받음. */
+  .page{padding-bottom:0;}
   .page-footer{
     position:relative;
     min-height:100vh; display:flex; flex-direction:column;
