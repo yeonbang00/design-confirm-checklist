@@ -2085,6 +2085,21 @@
     return null;
   }
 
+  // 판정 결과를 익명으로 적재한다 — 어떤 항목이 자주 걸리는지 실제 분포를 보고
+  // 프롬프트를 고치기 위한 용도. 누가 올렸는지는 서버에서도 저장하지 않는다.
+  // 부가 기능이라 실패해도 사용자 흐름을 막지 않고 조용히 넘어간다.
+  function logAnalysis(result, meta){
+    try{
+      const items = (result.items || []).map(it => ({ id: it.id, status: it.status, note: it.note || '' }));
+      if(!items.length) return;
+      fetch('/api/analysisLog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ items }, meta)),
+      }).catch(() => {});
+    }catch(e){ /* 로그 실패는 무시 */ }
+  }
+
   function applyResults(result){
     document.querySelector('.checklist-card').classList.remove('pending');
 
@@ -2243,6 +2258,13 @@
         try{
           const result = await analyzeImage(prepared.base64, prepared.mediaType, advertiserSelect.value, getSelectedMediaGuideIds(), prepared.originalWidth, prepared.originalHeight, briefImages, file.size, prepared.analyzedWidth, prepared.analyzedHeight, ocrFields, contrastFacts, dominantColors, briefPptx, faceCrops);
           applyResults(result);
+          logAnalysis(result, {
+            advertiserId: advertiserSelect.value,
+            mediaGuideIds: getSelectedMediaGuideIds(),
+            imageWidth: prepared.originalWidth,
+            imageHeight: prepared.originalHeight,
+            hasBrief: (briefImages && briefImages.length > 0) || !!briefPptx,
+          });
           saveSessionState({
             resultJson: result,
             previewDataUrl: 'data:' + prepared.mediaType + ';base64,' + prepared.base64,
