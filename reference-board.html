@@ -385,7 +385,7 @@
       </button>
       <div class="option-menu" id="rejectItemOptMenu"><div id="rejectItemOptList"></div></div>
     </div>
-    <button type="button" class="import-queue-btn" id="importQueueBtn">가져오기 대기 <span id="importQueueCount">(0)</span></button>
+    <button type="button" class="import-queue-btn" id="importQueueBtn">가져오기 대기 <span id="importQueueCount"></span></button>
   </div>
 
   <div class="upload-section">
@@ -1323,11 +1323,9 @@
     }
   });
 
-  // 대기 큐가 있는지는 미리 알려주는 게 좋으니, 페이지 로드 시 개수만 가볍게 확인
-  fetch('/api/importQueue')
-    .then(r => r.ok ? r.json() : { items: [] })
-    .then(data => { document.getElementById('importQueueCount').textContent = '(' + (data.items || []).length + ')'; })
-    .catch(() => {});
+  // 예전엔 페이지 로드 시 개수만 미리 가볍게 보여줬는데, 이제 큐 자체가
+  // 관리자 전용이라 인증 없이 개수만 먼저 보여주는 것도 정보 노출이라
+  // 없앴다 — 버튼을 열어 비밀번호를 확인해야만 실제 개수가 표시된다.
 
   // 헤더 하단 스크롤 진행 바
   (function(){
