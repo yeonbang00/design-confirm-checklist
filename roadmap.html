@@ -320,6 +320,29 @@
 
   .page .section-divider{background:linear-gradient(90deg,transparent,rgba(11,12,14,.13) 18%,rgba(11,12,14,.13) 82%,transparent);}
 
+  /* 로드맵은 콘텐츠가 흰 배경이라 GNB도 흰 알약, 맨 아래 검은 푸터에 들어가면
+     다시 어두운 알약으로 — index.html의 on-light 토글과 동일한 방식(아래 스크립트). */
+  .gnb-bar.on-light .gnb-primary .gnb-link{border:none !important; box-shadow:none !important; color:#5E646C;}
+  .gnb-bar.on-light .gnb-primary .gnb-link:hover{color:#0B0C0E; background:none !important; box-shadow:none !important;}
+  .gnb-bar.on-light .gnb-primary .gnb-link.active,
+  .gnb-bar.on-light .gnb-primary .gnb-link.active:hover{background:#14171C; color:#F4F4F0; box-shadow:none !important; font-weight:700;}
+  .gnb-bar.on-light .gnb-secondary .gnb-link{color:#767C85;}
+  .gnb-bar.on-light .gnb-secondary .gnb-link:hover, .gnb-bar.on-light .gnb-secondary .gnb-link.active{color:#14171C;}
+  .gnb-bar.on-light .gnb-logo-icon{filter:invert(1) brightness(.16);}
+  .gnb-bar.on-light .gnb-bar-inner{
+    background:rgba(255,255,255,.55) !important; backdrop-filter:blur(20px) saturate(1.4);
+    border-color:rgba(11,12,14,.10) !important;
+    box-shadow:0 10px 30px -14px rgba(11,12,14,.18), 0 1px 0 rgba(11,12,14,.04) !important;
+  }
+  .gnb-bar.on-light .gnb-dropdown-menu-inner{
+    background:rgba(255,255,255,.97); border-color:rgba(11,12,14,.1);
+    box-shadow:0 26px 54px -22px rgba(11,12,14,.4);
+  }
+  .gnb-bar.on-light .gnb-dropdown-item{color:#5E646C;}
+  .gnb-bar.on-light .gnb-dropdown-item:hover{color:#14171C; background:rgba(11,12,14,.05);}
+  .gnb-bar.on-light .gnb-dropdown-item.active{color:#4A5208; background:rgba(204,255,0,.22);}
+  .gnb-bar.on-light .scroll-progress-bar{background:linear-gradient(90deg,#A3CC00,#16190F);}
+
 
   /* ================= 인터랙션 디벨롭 (2026-08) — index.html 과 공유 =================
      아래 블록과 문서 끝의 대응 스크립트만 걷어내면 이전 상태로 돌아갑니다. */
@@ -697,6 +720,30 @@
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
+  })();
+
+  // GNB 알약 색: 흰 콘텐츠 위에서는 밝게, 맨 아래 검은 푸터에 들어가면 다시
+  // 어둡게 — index.html의 on-light 토글과 같은 방식. 로드맵은 페이지 전체가
+  // (푸터 전까지) 흰 배경이라 content 위/아래 경계 체크 없이, 푸터가 GNB
+  // 기준선을 넘어오는 순간만 감지하면 된다.
+  (function(){
+    var gnb = document.querySelector('.gnb-bar');
+    var footer = document.querySelector('.page-footer');
+    if(!gnb || !footer) return;
+    var raf = null;
+    function frame(){
+      raf = null;
+      var navB = 62;
+      var lightNow = true;
+      var fr = footer.getBoundingClientRect();
+      if(fr.top < navB) lightNow = false;
+      gnb.classList.toggle('on-light', lightNow);
+    }
+    function schedule(){ if(!raf) raf = requestAnimationFrame(frame); }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    window.addEventListener('load', schedule);
+    frame();
   })();
 </script>
 <script src="assets/adcheck-reveal.js?v=9"></script>
