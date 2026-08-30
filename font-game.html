@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko" data-seq-reveal>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 폰트 오락실</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0C0E;
+    --surface: #14171C;
+    --surface-2: #0F1216;
+    --surface-3: #15181D;
+    --line: rgba(255,255,255,.11);
+    --line-soft: rgba(255,255,255,.07);
+    --ink: #EDEEF0;
+    --ink-2: #A2A7B0;
+    --ink-3: #7E838C;
+    --ink-4: #6B707A;
+    --accent: #C3FF4D;
+    --accent-strong: #B8E600;
+    --accent-ink: #0B0C0E;
+    --card: #14171C;
+    --card-border: rgba(255,255,255,.11);
+    --text: #EDEEF0;
+    --text-2: #A2A7B0;
+    --text-3: #7E838C;
+    --pass: #00A371;
+    --needsfix: #F7A900;
+    --reject: #F22F6B;
+    --font-display: 'Sora','Pretendard',sans-serif;
+    --font-mono: 'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html.js [data-row],html.js [data-reveal]{opacity:0;}
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; word-break:keep-all; overflow-x:hidden;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--accent); color:var(--accent-ink);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  button,input,select,textarea{font-family:inherit;}
+  @keyframes pulse{0%,100%{opacity:.35;}50%{opacity:1;}}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
+
+  .grain{position:fixed; inset:0; z-index:600; pointer-events:none; background-image:url(assets/grain.svg); background-size:180px 180px; opacity:.09; mix-blend-mode:overlay;}
+
+  .page{max-width:760px; margin:0 auto; padding:120px 40px 100px;}
+
+  .gnb-bar{position:fixed; top:14px; left:0; right:0; z-index:200; padding:0 40px;}
+  .gnb-bar-inner{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; max-width:1520px; margin:0 auto; gap:20px; padding:8px 10px 8px 18px; border-radius:999px; background:rgba(16,19,23,.72); backdrop-filter:blur(18px) saturate(1.3); border:1px solid rgba(255,255,255,.10); box-shadow:0 18px 44px -26px rgba(0,0,0,.9); transition:background-color .45s ease, border-color .45s ease, box-shadow .45s ease;}
+  .gnb-logo{display:flex; align-items:center; justify-self:start; text-decoration:none;}
+  .gnb-logo-icon{height:30px; width:auto; display:block;}
+  .gnb-logo-text{display:none;}
+  .gnb{display:flex; align-items:center;}
+  .gnb-primary{gap:6px; justify-self:center; padding:0;}
+  .gnb-secondary{gap:2px; justify-self:end;}
+  .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; letter-spacing:-.015em; white-space:nowrap; border:none; background:none; cursor:pointer; transition:color .25s ease,background-color .3s ease;}
+  .gnb-primary .gnb-link:hover{color:#CCFF00; background:rgba(204,255,0,.10);}
+  .gnb-primary .gnb-link.active,.gnb-primary .gnb-link.active:hover{background:#CCFF00; color:#0B0C0E; font-weight:700;}
+  .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none; white-space:nowrap; transition:color .25s ease;}
+  .gnb-secondary .gnb-link:hover{color:var(--ink);}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{display:flex; align-items:center; gap:5px; font-family:inherit;}
+  .gnb-dropdown-toggle::after{content:'\25BC'; font-size:8px; opacity:.55; transition:transform .3s ease;}
+  .gnb-dropdown:hover .gnb-dropdown-toggle::after{transform:rotate(180deg);}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%) translateY(-7px) scale(.97); transform-origin:top center; padding-top:12px; display:block; opacity:0; visibility:hidden; z-index:40; transition:opacity .26s ease, transform .3s ease, visibility 0s .3s;}
+  .gnb-dropdown-menu-inner{padding:8px; border-radius:16px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95); min-width:158px; display:flex; flex-direction:column; gap:2px;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu, .gnb-dropdown-menu.open{opacity:1; visibility:visible; transform:translateX(-50%) translateY(0) scale(1); transition:opacity .26s ease, transform .34s cubic-bezier(.16,1,.3,1), visibility 0s;}
+  .gnb-dropdown-item{display:block; width:100%; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; text-decoration:none; transition:background .2s ease,color .2s ease;}
+  .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
+  .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
+  .gnb-bar.hide-nav{opacity:0; transform:translateY(-130%); pointer-events:none;}
+  .gnb-bar{transition:top .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease, transform .4s cubic-bezier(.2,.8,.2,1);}
+
+  .scroll-progress{position:fixed; top:0; left:0; right:0; z-index:210; height:2px; background:none;}
+  .scroll-progress-bar{height:2px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
+  .page-eyebrow{font:500 11px/1 var(--font-mono); letter-spacing:.2em; color:var(--ink-3); margin-bottom:22px;}
+  .page-eyebrow b{color:var(--accent); font-weight:500;}
+  h1{font-family:var(--font-display); font-size:clamp(36px,4.6vw,60px); font-weight:800; letter-spacing:-.055em; line-height:1; margin:0; color:var(--ink);}
+  .sub{margin:24px 0 44px; max-width:60ch; font-size:16.5px; font-weight:300; line-height:1.85; color:var(--ink-2);}
+
+  @keyframes pageFadeUp{from{opacity:0; transform:translateY(22px);}to{opacity:1; transform:none;}}
+  .page-eyebrow{animation:pageFadeUp .7s cubic-bezier(.16,1,.3,1) .04s both;}
+  .page > h1{animation:pageFadeUp .8s cubic-bezier(.16,1,.3,1) .12s both;}
+  .page > .sub{animation:pageFadeUp .85s cubic-bezier(.16,1,.3,1) .22s both;}
+  @media (prefers-reduced-motion:reduce){.page-eyebrow,.page>h1,.page>.sub{animation:none; opacity:1; transform:none;}}
+
+  /* ---------- 게임 카드 ---------- */
+  .game-card{background:var(--surface); border:1px solid var(--card-border); border-radius:22px; padding:44px 36px; position:relative; overflow:hidden;}
+
+  .g-intro{text-align:center;}
+  .g-intro-rules{display:flex; justify-content:center; gap:28px; flex-wrap:wrap; margin:28px 0 34px; font:500 12.5px/1 var(--font-mono); color:var(--ink-3); letter-spacing:.04em;}
+  .g-intro-rules b{display:block; font:700 20px/1 var(--font-display); color:var(--accent); margin-bottom:6px; letter-spacing:-.02em;}
+
+  .g-btn{appearance:none; border:none; cursor:pointer; border-radius:999px; padding:15px 32px; font:700 15px/1 'Pretendard',sans-serif; background:var(--accent); color:var(--accent-ink); transition:filter .2s ease, transform .2s ease;}
+  .g-btn:hover{filter:brightness(1.08);}
+  .g-btn:active{transform:scale(.97);}
+  .g-btn-ghost{background:transparent; border:1px solid var(--line); color:var(--ink-2);}
+  .g-btn-ghost:hover{color:var(--ink); border-color:var(--ink-3); filter:none;}
+
+  .g-topline{display:flex; align-items:center; justify-content:space-between; margin-bottom:30px;}
+  .g-progress-label{font:600 11.5px/1 var(--font-mono); letter-spacing:.08em; color:var(--ink-3);}
+  .g-progress-label b{color:var(--ink);}
+  .g-score{font:700 12px/1 var(--font-mono); letter-spacing:.06em; color:var(--accent); background:rgba(195,255,77,.1); border:1px solid rgba(195,255,77,.28); border-radius:999px; padding:8px 14px;}
+
+  .g-prompt{text-align:center; font-size:13px; color:var(--ink-3); margin-bottom:6px;}
+  .g-mystery{min-height:110px; display:flex; align-items:center; justify-content:center; text-align:center; padding:14px 10px; margin-bottom:28px; color:var(--ink); font-size:clamp(34px,7vw,52px); line-height:1.3; word-break:keep-all; overflow-wrap:anywhere;}
+
+  .g-choices{display:grid; gap:10px;}
+  .g-choice{position:relative; text-align:left; appearance:none; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:12px; padding:16px 18px; font-size:15px; font-weight:500; cursor:pointer; transition:border-color .15s ease, background .15s ease;}
+  .g-choice:hover:not(:disabled){border-color:var(--ink-3); background:var(--surface-3);}
+  .g-choice:disabled{cursor:default;}
+  .g-choice.correct{border-color:var(--pass); background:rgba(0,163,113,.14); color:#8fe9c9;}
+  .g-choice.wrong{border-color:var(--reject); background:rgba(242,47,107,.14); color:#ffb1c7;}
+
+  .g-timer-track{height:5px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:26px;}
+  .g-timer-bar{height:100%; width:100%; background:var(--accent); transform-origin:left; transition:width .1s linear, background-color .3s ease;}
+  .g-timer-bar.low{background:var(--reject);}
+
+  .g-result{text-align:center;}
+  .g-result-score{font-family:var(--font-display); font-weight:800; font-size:clamp(56px,10vw,88px); letter-spacing:-.04em; line-height:1; color:var(--accent); margin:8px 0 4px;}
+  .g-result-score span{font-size:.4em; color:var(--ink-3); font-weight:600;}
+  .g-result-rank{font-size:16px; font-weight:600; color:var(--ink); margin-bottom:8px;}
+  .g-result-desc{font-size:13.5px; color:var(--ink-3); margin-bottom:30px;}
+  .g-result-actions{display:flex; justify-content:center; gap:10px; flex-wrap:wrap;}
+  .g-share-msg{margin-top:14px; font-size:12.5px; color:var(--accent); min-height:1.4em;}
+
+  .hidden{display:none !important;}
+
+  .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  .footer-logo{display:block; height:36px; width:auto; margin:0 auto 18px; opacity:.5;}
+
+  @media (max-width:640px){
+    .page{padding:110px 18px 70px;}
+    .gnb-bar{padding:0 14px;}
+    .gnb-bar-inner{padding:7px 9px 7px 14px; display:flex; flex-wrap:wrap;}
+    .game-card{padding:32px 20px; border-radius:18px;}
+    .g-intro-rules{gap:20px;}
+  }
+
+  /* ---------- 눈누 폰트오락실 큐레이션 68종 — font-pairing.html과 동일, 전부 jsdelivr 공개 CDN 확인 완료 ---------- */
+  @font-face{font-family:'Paperlogy-Bold';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-1Thin.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'GmarketSansMedium';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'MemomentKukkuk';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2508-2@1.0/memomentKkukKkuk.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Jalnan';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_four@1.2/JalnanOTF00.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'S-CoreDream-3Light';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Ongle_ParkDaHyun';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SBAggroB';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroB.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Atoz';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-6@1.0/에이투지체-1Thin.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Cafe24Ssurround';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24Ssurround.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'OkDandan';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2508-2@1.0/OkDanDan-Bold.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'JejuDoldam';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2210-EF@1.0/EF_jejudoldam.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'PyeongChangPeace-Bold';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-02@1.0/PyeongChangPeace-Bold.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'LeeSeoyun';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Maruminya';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.1/x12y12pxMaruMinyaHangul.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'ElegantSerif';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.0/GraceSerif-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'PoliceEmotion';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-6@1.0/Griun_PolSensibility-Rg.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'BMJUA';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMJUA.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'KerisKedu';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-3@1.0/KERISKEDU_R.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Kkubullim';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/BMkkubulimTTF-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Ongle_Positivity';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.1/Ownglyph_positive.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Ria';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/RiaSans-ExtraBold.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'WildGak';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2510-1@1.0/KIMWILDgag-Bold.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'KBLJumpExtended';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-5@1.0/KBLJump_EB_ExtendedTTF.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Ongle_Konkon';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2412-1@1.0/Ownglyph_corncorn-Rg.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'GangwonEduAll';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEdu_OTFLightA.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'JalnanGothic';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_231029@1.1/JalnanGothic.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'MapleStory';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFLight.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'HeirofLight-Regular';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/HeirofLightRegular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SchoolSafeNotices';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-5@1.0/HakgyoansimAllimjangTTF-R.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Ongle_Uiyeon';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105@1.1/Uiyeun.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Kyobo2025LeeYubin';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2604-1@1.1/KyoboHandwriting2025lyb.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Fixedsys';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'NanumSquareNeo-Variable';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_11-01@1.0/NanumSquareNeo-Variable.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SeoulNotice';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2505-1@1.0/SeoulAlrimTTF-Medium.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'BMDOHYEON';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMDOHYEON.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'InkLipquid';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/InkLipquid.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'ONEMobilePOP';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SchoolSafeRoundSmile';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-5@1.0/HakgyoansimDunggeunmisoTTF-R.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'LotteriaChwab';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/LOTTERIACHAB.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'NanumSquareRound';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'OmuDayeppeum';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/omyu_pretty.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'KerisKeduLine';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-3@1.0/KERISKEDU_Line.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'CookieRun-Regular';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'PoliceFair';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-6@1.0/Griun_PolFairness-Rg.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'TmonMonsori';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'RidiBatang';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Yeongwol';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2507-2@1.0/YeongwolTTF-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'GangwonEduStrong';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEduPowerExtraBoldA.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'TheJamsil';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302_01@1.0/TheJamsil2Light.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'VictoryDay';src:url('https://cdn.jsdelivr.net/gh/tillvictorycomes/TillVictoryComes-font/tillvictorycomes-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'NEXONLv1GothicOTF';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/NEXON Lv1 Gothic OTF.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'PartialSans';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-1@1.1/PartialSansKR-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'GyeonggiTitle';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-3@1.0/Title_Light.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Yangjin';src:url('https://cdn.jsdelivr.net/gh/supernovice-lab/font@0.9/yangjin.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'MeetMe';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2402_1@1.0/Ownglyph_meetme-Rg.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'RomanticGumi';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/GumiRomanceTTF.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'ZenSerif';src:url('https://cdn.noonnu.cc/fonts/ZEN-SERIF-TTF-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Independence';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.1/Dokrip.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'SlowGothic';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Binggrae';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Binggrae.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'HSSanttokki-2.0';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2405@1.0/HSSanTokki20-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'LaundryGothic';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2403-2@1.0/TTLaundryGothicR.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'ChangwonDangamAsak';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/CWDangamAsac-Bold.woff') format('woff');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'OKGUNG';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-02@1.0/OKGUNG.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'HSGooltokki';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2210-2@1.0/HSGooltokki.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'HSJandari';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2510-2@1.0/HSJandari.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'KNPSOdaesan-Regular';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2510-2@1.0/KNPSOdaesan-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'GabiaDunn-Regular';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2510-1@1.0/GabiaDunn-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js');</script>
+
+<div class="grain"></div>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb gnb-primary">
+      <a href="index.html" class="gnb-link">디자인 체크리스트</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div></div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">폰트</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="font-pairing.html" class="gnb-dropdown-item">폰트 페어링</a>
+          <a href="font-game.html" class="gnb-dropdown-item active">폰트 오락실</a>
+        </div></div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      </nav>
+      <nav class="gnb gnb-secondary">
+        <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">로드맵</a>
+    </nav>
+  </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
+</div>
+
+<div class="page">
+
+  <div class="page-eyebrow"><b>&#10022;</b>&nbsp;FONT GAME · 재미용</div>
+  <h1>폰트 오락실</h1>
+  <p class="sub">폰트페어링에 쓰인 눈누 인기 폰트 68종 중 랜덤으로 뽑은 10문제, 이름을 맞혀보세요. 업무랑은 상관없는 순수 재미용 코너입니다.</p>
+
+  <div class="game-card">
+
+    <div class="g-intro" id="screenIntro">
+      <div class="g-intro-rules">
+        <div><b>10</b>문제</div>
+        <div><b>4</b>지선다</div>
+        <div><b id="introTimerLabel">7</b>초 제한</div>
+      </div>
+      <button type="button" class="g-btn" id="startBtn">게임 시작</button>
+    </div>
+
+    <div class="hidden" id="screenQuiz">
+      <div class="g-topline">
+        <div class="g-progress-label">문제 <b id="qIndex">1</b> / <span id="qTotal">10</span></div>
+        <div class="g-score">SCORE <span id="qScore">0</span></div>
+      </div>
+      <div class="g-prompt">이 폰트의 이름은 무엇일까요?</div>
+      <div class="g-mystery" id="mysteryWord"></div>
+      <div class="g-choices" id="choices"></div>
+      <div class="g-timer-track"><div class="g-timer-bar" id="timerBar"></div></div>
+    </div>
+
+    <div class="hidden g-result" id="screenResult">
+      <div class="g-prompt">RESULT</div>
+      <div class="g-result-score"><span id="resultScore">0</span><span> / 10</span></div>
+      <div class="g-result-rank" id="resultRank"></div>
+      <div class="g-result-desc" id="resultDesc"></div>
+      <div class="g-result-actions">
+        <button type="button" class="g-btn" id="retryBtn">다시하기</button>
+        <button type="button" class="g-btn g-btn-ghost" id="shareBtn">결과 공유</button>
+      </div>
+      <div class="g-share-msg" id="shareMsg"></div>
+    </div>
+
+  </div>
+
+  <div class="page-footer show" data-reveal>
+    <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
+    폰트 저작권은 각 제작사에 있습니다. 재미로 만든 코너라 정답 판정에 이견이 있을 수 있어요.<br>
+    <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+
+  // 헤더 하단 스크롤 진행 바
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+
+<script>
+  // ---------- 폰트 카탈로그 (font-pairing.html의 눈누 68종과 동일한 id/name/family) ----------
+  const FONTS = [
+    { id:'paperlogybold', name:'페이퍼로지', family:"'Paperlogy-Bold'" },
+    { id:'gmarketsansmedium', name:'G마켓 산스', family:"'GmarketSansMedium'" },
+    { id:'memomentkukkuk', name:'메모먼트 꾹꾹체', family:"'MemomentKukkuk'" },
+    { id:'jalnan', name:'여기어때 잘난체', family:"'Jalnan'" },
+    { id:'scoredream3light', name:'에스코어드림', family:"'S-CoreDream-3Light'" },
+    { id:'ongleparkdahyun', name:'온글잎 박다현체', family:"'Ongle_ParkDaHyun'" },
+    { id:'sbaggrob', name:'어그로체', family:"'SBAggroB'" },
+    { id:'atoz', name:'에이투지체', family:"'Atoz'" },
+    { id:'cafe24ssurround', name:'카페24 써라운드', family:"'Cafe24Ssurround'" },
+    { id:'okdandan', name:'Ok단단체', family:"'OkDandan'" },
+    { id:'jejudoldam', name:'제주돌담체', family:"'JejuDoldam'" },
+    { id:'pyeongchangpeacebold', name:'평창평화체', family:"'PyeongChangPeace-Bold'" },
+    { id:'leeseoyun', name:'이서윤체', family:"'LeeSeoyun'" },
+    { id:'maruminya', name:'마루미냐 한글', family:"'Maruminya'" },
+    { id:'elegantserif', name:'우아한 세리프', family:"'ElegantSerif'" },
+    { id:'policeemotion', name:'그리운 경찰감성체', family:"'PoliceEmotion'" },
+    { id:'bmjua', name:'주아체', family:"'BMJUA'" },
+    { id:'keriskedu', name:'케리스 케듀체', family:"'KerisKedu'" },
+    { id:'kkubullim', name:'꾸불림체', family:"'Kkubullim'" },
+    { id:'onglepositivity', name:'온글잎 긍정', family:"'Ongle_Positivity'" },
+    { id:'ria', name:'리아체', family:"'Ria'" },
+    { id:'wildgak', name:'와일드각', family:"'WildGak'" },
+    { id:'kbljumpextended', name:'KBL점프체 Extended', family:"'KBLJumpExtended'" },
+    { id:'onglekonkon', name:'온글잎 콘콘체', family:"'Ongle_Konkon'" },
+    { id:'gangwoneduall', name:'강원교육 모두체', family:"'GangwonEduAll'" },
+    { id:'jalnangothic', name:'여기어때 잘난체 고딕', family:"'JalnanGothic'" },
+    { id:'maplestory', name:'넥슨 메이플스토리', family:"'MapleStory'" },
+    { id:'heiroflightregular', name:'빛의 계승자체', family:"'HeirofLight-Regular'" },
+    { id:'schoolsafenotices', name:'학교안심 알림장', family:"'SchoolSafeNotices'" },
+    { id:'ongleuiyeon', name:'온글잎 의연체', family:"'Ongle_Uiyeon'" },
+    { id:'kyobo2025leeyubin', name:'교보문고 손글씨 2025', family:"'Kyobo2025LeeYubin'" },
+    { id:'fixedsys', name:'둥근모꼴', family:"'Fixedsys'" },
+    { id:'nanumsquareneovariable', name:'나눔스퀘어 네오', family:"'NanumSquareNeo-Variable'" },
+    { id:'seoulnotice', name:'서울알림체', family:"'SeoulNotice'" },
+    { id:'bmdohyeon', name:'도현체', family:"'BMDOHYEON'" },
+    { id:'inklipquid', name:'잉크립퀴드체', family:"'InkLipquid'" },
+    { id:'onemobilepop', name:'원스토어 모바일', family:"'ONEMobilePOP'" },
+    { id:'schoolsaferoundsmile', name:'학교안심 둥근미소', family:"'SchoolSafeRoundSmile'" },
+    { id:'lotteriachwab', name:'롯데리아 촵땡겨체', family:"'LotteriaChwab'" },
+    { id:'nanumsquareround', name:'나눔스퀘어라운드', family:"'NanumSquareRound'" },
+    { id:'omudayeppeum', name:'오뮤 다예쁨체', family:"'OmuDayeppeum'" },
+    { id:'keriskeduline', name:'케리스 케듀체 line', family:"'KerisKeduLine'" },
+    { id:'cookierunregular', name:'쿠키런', family:"'CookieRun-Regular'" },
+    { id:'policefair', name:'그리운 경찰공평체', family:"'PoliceFair'" },
+    { id:'tmonmonsori', name:'티몬체', family:"'TmonMonsori'" },
+    { id:'ridibatang', name:'리디바탕', family:"'RidiBatang'" },
+    { id:'yeongwol', name:'영월체', family:"'Yeongwol'" },
+    { id:'gangwonedustrong', name:'강원교육튼튼체', family:"'GangwonEduStrong'" },
+    { id:'thejamsil', name:'더잠실체', family:"'TheJamsil'" },
+    { id:'victoryday', name:'승리의 그날까지', family:"'VictoryDay'" },
+    { id:'nexonlv1gothicotf', name:'넥슨 Lv.1 고딕', family:"'NEXONLv1GothicOTF'" },
+    { id:'partialsans', name:'파셜산스', family:"'PartialSans'" },
+    { id:'gyeonggititle', name:'경기천년제목', family:"'GyeonggiTitle'" },
+    { id:'yangjin', name:'양진체', family:"'Yangjin'" },
+    { id:'meetme', name:'밑미 폰트', family:"'MeetMe'" },
+    { id:'romanticgumi', name:'낭만있구미체', family:"'RomanticGumi'" },
+    { id:'zenserif', name:'Zen Serif', family:"'ZenSerif'" },
+    { id:'independence', name:'독립체', family:"'Independence'" },
+    { id:'slowgothic', name:'느림보고딕', family:"'SlowGothic'" },
+    { id:'binggrae', name:'빙그레체', family:"'Binggrae'" },
+    { id:'hssanttokki20', name:'HS산토끼체 2.0', family:"'HSSanttokki-2.0'" },
+    { id:'laundrygothic', name:'런드리고딕', family:"'LaundryGothic'" },
+    { id:'changwondangamasak', name:'창원단감아삭체', family:"'ChangwonDangamAsak'" },
+    { id:'okgung', name:'OK궁', family:"'OKGUNG'" },
+    { id:'hsgooltokki', name:'HS굴토끼체', family:"'HSGooltokki'" },
+    { id:'hsjandari', name:'HS잔다리체', family:"'HSJandari'" },
+    { id:'knpsodaesanregular', name:'국립공원 오대산체', family:"'KNPSOdaesan-Regular'" },
+    { id:'gabiadunnregular', name:'가비아 던체', family:"'GabiaDunn-Regular'" },
+  ];
+
+  const WORDS = [
+    '안녕하세요','커피 한잔','오늘 하루','고양이','여름 세일','신제품 출시','사랑해','좋은 아침',
+    '행복하세요','도전','여행을 떠나요','축하합니다','봄바람','첫눈 오는 날','우정','힘내세요',
+    '꿈꾸는 밤','달콤한 디저트','시원한 바다','반가워요','우리 함께','작은 행복','오늘도 파이팅','따뜻한 말 한마디'
+  ];
+
+  const TOTAL_Q = 10;
+  const TIME_LIMIT = 7; // 초
+  document.getElementById('introTimerLabel').textContent = TIME_LIMIT;
+  document.getElementById('qTotal').textContent = TOTAL_Q;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  let questions = [];
+  let qi = 0;
+  let score = 0;
+  let timerId = null;
+  let timeLeft = TIME_LIMIT;
+  let answered = false;
+
+  const screenIntro = document.getElementById('screenIntro');
+  const screenQuiz = document.getElementById('screenQuiz');
+  const screenResult = document.getElementById('screenResult');
+  const mysteryWord = document.getElementById('mysteryWord');
+  const choicesEl = document.getElementById('choices');
+  const timerBar = document.getElementById('timerBar');
+  const qIndexEl = document.getElementById('qIndex');
+  const qScoreEl = document.getElementById('qScore');
+
+  function buildQuestions(){
+    const picks = shuffle(FONTS).slice(0, TOTAL_Q);
+    return picks.map(font => {
+      const distractors = shuffle(FONTS.filter(f => f.id !== font.id)).slice(0, 3);
+      const options = shuffle([font, ...distractors]);
+      const word = WORDS[Math.floor(Math.random() * WORDS.length)];
+      return { font, options, word };
+    });
+  }
+
+  function startGame(){
+    questions = buildQuestions();
+    qi = 0;
+    score = 0;
+    screenIntro.classList.add('hidden');
+    screenResult.classList.add('hidden');
+    screenQuiz.classList.remove('hidden');
+    showQuestion();
+  }
+
+  function showQuestion(){
+    answered = false;
+    timeLeft = TIME_LIMIT;
+    const q = questions[qi];
+    qIndexEl.textContent = qi + 1;
+    qScoreEl.textContent = score;
+    mysteryWord.textContent = q.word;
+    mysteryWord.style.fontFamily = q.font.family + ", 'Pretendard', sans-serif";
+
+    choicesEl.innerHTML = '';
+    q.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'g-choice';
+      btn.textContent = opt.name;
+      btn.dataset.id = opt.id;
+      btn.addEventListener('click', () => selectAnswer(opt.id));
+      choicesEl.appendChild(btn);
+    });
+
+    timerBar.style.transition = 'none';
+    timerBar.style.width = '100%';
+    timerBar.classList.remove('low');
+    requestAnimationFrame(() => { timerBar.style.transition = 'width 1s linear, background-color .3s ease'; });
+    clearInterval(timerId);
+    timerId = setInterval(tick, 1000);
+  }
+
+  function tick(){
+    timeLeft -= 1;
+    const pct = Math.max(0, (timeLeft / TIME_LIMIT) * 100);
+    timerBar.style.width = pct + '%';
+    if(timeLeft <= 2) timerBar.classList.add('low');
+    if(timeLeft <= 0){
+      clearInterval(timerId);
+      selectAnswer(null);
+    }
+  }
+
+  function selectAnswer(pickedId){
+    if(answered) return;
+    answered = true;
+    clearInterval(timerId);
+    const q = questions[qi];
+    const correct = q.font.id;
+    if(pickedId === correct) score++;
+    qScoreEl.textContent = score;
+
+    Array.from(choicesEl.children).forEach(btn => {
+      btn.disabled = true;
+      if(btn.dataset.id === correct) btn.classList.add('correct');
+      else if(btn.dataset.id === pickedId) btn.classList.add('wrong');
+    });
+
+    setTimeout(() => {
+      qi++;
+      if(qi < questions.length) showQuestion();
+      else showResult();
+    }, 900);
+  }
+
+  function showResult(){
+    screenQuiz.classList.add('hidden');
+    screenResult.classList.remove('hidden');
+    document.getElementById('resultScore').textContent = score;
+    let rank, desc;
+    if(score >= 9){ rank = '폰트 장인 🏆'; desc = '눈누 폰트 이름을 거의 다 외우고 계시네요.'; }
+    else if(score >= 7){ rank = '폰트 덕후'; desc = '평소에 폰트 많이 보시는 게 티가 나요.'; }
+    else if(score >= 4){ rank = '폰트 좀 아는 사람'; desc = '자주 쓰는 폰트는 확실히 아시는군요.'; }
+    else { rank = '폰트 초보'; desc = '한 판 더 하면서 눈에 익혀보세요.'; }
+    document.getElementById('resultRank').textContent = rank;
+    document.getElementById('resultDesc').textContent = desc;
+    document.getElementById('shareMsg').textContent = '';
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('retryBtn').addEventListener('click', startGame);
+
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    const text = '폰트 오락실에서 ' + score + '/10 맞혔어요! (AdCheck 폰트 오락실)';
+    const shareMsg = document.getElementById('shareMsg');
+    try {
+      if(navigator.share){
+        await navigator.share({ text });
+        shareMsg.textContent = '';
+      } else {
+        await navigator.clipboard.writeText(text);
+        shareMsg.textContent = '결과 문구를 클립보드에 복사했어요.';
+      }
+    } catch(e) {
+      // 사용자가 공유를 취소한 경우 등 — 조용히 무시
+    }
+  });
+</script>
+<script src="assets/adcheck-reveal.js?v=9"></script>
+
+<script>
+/* ===== 인터랙션 디벨롭 (2026-08) — 푸터에서 GNB 감추기 (index.html 과 공유) ===== */
+(function () {
+  var gnb = document.querySelector('.gnb-bar');
+  var footer = document.querySelector('.page-footer');
+  if (!gnb || !footer) return;
+  var raf = null;
+
+  function frame() {
+    raf = null;
+    var y = window.scrollY, vh = window.innerHeight;
+    var fr = footer.getBoundingClientRect();
+    gnb.classList.toggle('hide-nav', y > 120 && fr.top > 0 && fr.top < vh && fr.bottom <= vh + 2);
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
+
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  window.addEventListener('load', schedule);
+  if (window.ResizeObserver) new ResizeObserver(schedule).observe(document.body);
+  [400, 1200, 2500].forEach(function (ms) { setTimeout(schedule, ms); });
+  frame();
+})();
+</script>
+</body>
+</html>
