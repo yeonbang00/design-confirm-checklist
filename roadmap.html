@@ -186,7 +186,11 @@
   /* 옆 맞춤법 검사 패널과 비슷한 세로 길이를 주되, 이미지 전체(신분증+판독
      결과)가 잘리지 않고 다 보이도록 contain으로 채운다 — 이미지 자체 배경이
      패널과 같은 어두운 색이라 여백이 생겨도 이어붙은 것처럼 자연스럽다. */
-  .use-panel-img{height:320px; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.1); background:#0B0C0E;}
+  /* 옆 맞춤법 검사 패널과 세로 길이를 픽셀 단위로 맞춤(패널 padding 22px×2
+     제외한 실측값). 이미지 자체가 투명 배경 PNG라 박스 배경과 경계선이
+     안 생기게 별도 테두리·배경색 없이 패널 배경(var(--surface-2))을 그대로
+     비치게 둔다. */
+  .use-panel-img{height:234px; border-radius:10px; overflow:hidden;}
   .use-panel-img img{display:block; width:100%; height:100%; object-fit:contain;}
   .use-panel-box{position:absolute; border-radius:3px;}
   .use-panel-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:14px;}
@@ -527,7 +531,7 @@
             <a class="use-link" href="https://www.ncloud.com/product/aiService/ocr" target="_blank" rel="noopener">네이버 클로바 OCR 서비스 안내 ↗</a>
           </div>
           <div class="use-panel">
-            <div class="use-panel-img"><img src="assets/roadmap-ocr-demo.jpg" alt="OCR이 이미지 속 텍스트 영역을 인식해 좌표와 함께 추출하는 예시" loading="lazy"></div>
+            <div class="use-panel-img"><img src="assets/roadmap-ocr-demo.png" alt="OCR이 이미지 속 텍스트 영역을 인식해 좌표와 함께 추출하는 예시" loading="lazy"></div>
           </div>
         </div>
       </div>
