@@ -183,8 +183,11 @@
      AdCheck의 실제 적용(텍스트 박스 좌표)은 옆의 설명 글에서 다룸 */
   /* 옆 규칙 기반 맞춤법 검사 패널(텍스트 목록형)과 카드 높이를 맞추기 위해
      이미지 쪽도 고정 높이 + object-fit:cover로 잘라서 채움 */
-  .use-panel-img{height:198px; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.1);}
-  .use-panel-img img{display:block; width:100%; height:100%; object-fit:cover; object-position:center 40%;}
+  /* 옆 맞춤법 검사 패널과 비슷한 세로 길이를 주되, 이미지 전체(신분증+판독
+     결과)가 잘리지 않고 다 보이도록 contain으로 채운다 — 이미지 자체 배경이
+     패널과 같은 어두운 색이라 여백이 생겨도 이어붙은 것처럼 자연스럽다. */
+  .use-panel-img{height:320px; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.1); background:#0B0C0E;}
+  .use-panel-img img{display:block; width:100%; height:100%; object-fit:contain;}
   .use-panel-box{position:absolute; border-radius:3px;}
   .use-panel-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:14px;}
   .use-stat{padding:11px 12px; border-radius:9px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.08);}
