@@ -16,14 +16,15 @@ const QUEUE_URL = `${BLOB_PUBLIC_BASE}/import-queue.json`;
 async function getState() {
   try {
     const resp = await fetch(QUEUE_URL, { cache: 'no-store' });
-    if (!resp.ok) return { pending: [], seenAdIds: [] };
+    if (!resp.ok) return { pending: [], seenAdIds: [], cursor: 0 };
     const data = await resp.json();
     return {
       pending: Array.isArray(data.pending) ? data.pending : [],
       seenAdIds: Array.isArray(data.seenAdIds) ? data.seenAdIds : [],
+      cursor: Number.isInteger(data.cursor) ? data.cursor : 0,
     };
   } catch (e) {
-    return { pending: [], seenAdIds: [] };
+    return { pending: [], seenAdIds: [], cursor: 0 };
   }
 }
 
@@ -40,6 +41,21 @@ export async function getPendingItems() {
 export async function getSeenAdIds() {
   const state = await getState();
   return new Set(state.seenAdIds);
+}
+
+// 크론 1회 실행이 시간 제한 안에 브랜드 목록을 전부 못 도는 게 실측으로
+// 확인돼서(광고 라이브러리 API가 느리거나 타임아웃되는 브랜드가 많음),
+// 매번 0번부터 시작하면 뒤쪽 브랜드는 영원히 처리되지 못한다. 이번 실행이
+// 어디까지 처리했는지 커서로 남겨서 다음 실행이 그 이어서 시작하게 한다.
+export async function getBrandCursor() {
+  const state = await getState();
+  return state.cursor;
+}
+
+export async function saveBrandCursor(cursor) {
+  const state = await getState();
+  state.cursor = cursor;
+  await saveState(state);
 }
 
 // items: [{ adId, entry }] — entry는 큐에 올릴 대기 항목, adId는 dedup용 원본 광고 id.

@@ -26,10 +26,12 @@
 
 import { META_AD_BRANDS, META_AD_BRAND_PAGE_IDS } from './_metaAdBrands.js';
 import { searchAdsForBrand } from './_metaAdLibrary.js';
-import { getSeenAdIds, addPendingItems, clearStaleQueueItems, clearQueueItemsByBrand } from './_importQueueStore.js';
+import { getSeenAdIds, addPendingItems, clearStaleQueueItems, clearQueueItemsByBrand, getBrandCursor, saveBrandCursor } from './_importQueueStore.js';
 
 const MAX_NEW_PER_RUN = 300; // 대기 큐가 무한정 커지지 않게 하는 안전장치
 const BRAND_BATCH_SIZE = 10; // 브랜드가 많아(100개+) 순차 처리하면 느려서 동시 처리
+const TIME_BUDGET_MS = 260000; // maxDuration(300초)보다 여유를 둬서, 시간 안에 못 끝내면
+                                // Vercel이 강제로 죽이기(504) 전에 우리가 먼저 깔끔하게 멈춘다
 
 export default async function handler(req, res) {
   const cronSecret = process.env.CRON_SECRET;
@@ -64,11 +66,24 @@ export default async function handler(req, res) {
   const seenAdIds = await getSeenAdIds();
   const brandLog = [];
   let totalAdded = 0;
+  const startTime = Date.now();
 
-  for (let i = 0; i < META_AD_BRANDS.length; i += BRAND_BATCH_SIZE) {
+  // 브랜드가 300개+인데 광고 라이브러리 API가 느리거나 타임아웃되는 경우가
+  // 많아서, 한 번의 실행으로 전체를 다 돌지 못하는 게 실측으로 확인됐다.
+  // 매번 0번부터 시작하면 뒤쪽 브랜드는 영영 처리되지 못하므로, 지난 실행이
+  // 멈춘 지점(커서)부터 이어서 처리하고 목록 끝에 닿으면 앞으로 순환한다.
+  const N = META_AD_BRANDS.length;
+  const cursor = await getBrandCursor();
+  const order = Array.from({ length: N }, (_, k) => (cursor + k) % N);
+  let processed = 0;
+  let hitTimeBudget = false;
+
+  for (let i = 0; i < order.length; i += BRAND_BATCH_SIZE) {
     if (totalAdded >= MAX_NEW_PER_RUN) break;
+    if (Date.now() - startTime > TIME_BUDGET_MS) { hitTimeBudget = true; break; }
 
-    const batch = META_AD_BRANDS.slice(i, i + BRAND_BATCH_SIZE);
+    const batchIdx = order.slice(i, i + BRAND_BATCH_SIZE);
+    const batch = batchIdx.map((idx) => META_AD_BRANDS[idx]);
     const results = await Promise.all(batch.map((brandName) => searchAdsForBrand(metaToken, brandName, 15, META_AD_BRAND_PAGE_IDS[brandName] || null)));
 
     const batchItems = [];
@@ -108,7 +123,11 @@ export default async function handler(req, res) {
       await addPendingItems(batchItems, []);
       totalAdded += batchItems.length;
     }
+    processed += batch.length;
   }
 
-  res.status(200).json({ ok: true, added: totalAdded, brands: brandLog });
+  const nextCursor = (cursor + processed) % N;
+  await saveBrandCursor(nextCursor);
+
+  res.status(200).json({ ok: true, added: totalAdded, processed, total: N, hitTimeBudget, nextCursor, brands: brandLog });
 }
