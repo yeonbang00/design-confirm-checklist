@@ -142,6 +142,36 @@
   .log-flag.needsfix{background:rgba(247,169,0,.13); color:#F0C069;}
   .log-flag.clean{background:rgba(0,163,113,.13); color:#7FDCBB;}
   .log-summary-text{font-size:12.5px; line-height:1.7; color:var(--text-2);}
+  .log-entry{position:relative;}
+  .log-del{
+    position:absolute; top:10px; right:10px; width:26px; height:26px; flex:none;
+    border-radius:7px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.03);
+    color:var(--text-3); font-size:15px; line-height:1; cursor:pointer; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; transition:background .2s ease,color .2s ease,border-color .2s ease;
+  }
+  .log-del:hover{background:rgba(242,47,107,.14); border-color:rgba(242,47,107,.4); color:var(--danger);}
+  .log-del:disabled{opacity:.4; cursor:default;}
+  /* 집계표 행을 눌러 그 항목이 걸린 소재만 보는 동선 */
+  .log-table tbody tr{cursor:pointer; transition:background .18s ease;}
+  .log-table tbody tr:hover{background:rgba(255,255,255,.04);}
+  .log-table tbody tr.sel{background:rgba(204,255,0,.09);}
+  .log-filter{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    font-size:12.5px; color:var(--text-2); margin-bottom:12px;
+    padding:10px 14px; border-radius:10px; background:rgba(204,255,0,.08);
+  }
+  .log-filter b{color:var(--text); font-weight:700;}
+  .log-filter button{
+    border:none; background:rgba(255,255,255,.12); color:var(--text);
+    border-radius:7px; padding:5px 11px; font-size:12px; font-weight:600;
+    cursor:pointer; font-family:inherit;
+  }
+  .log-more{
+    width:100%; margin-top:4px; padding:12px; border-radius:11px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03);
+    color:var(--text-2); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  .log-more:hover{background:rgba(255,255,255,.07); color:var(--text);}
   .user-row{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:14px; padding:16px 18px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
   .user-info{font-size:13.5px;}
   .user-name{font-weight:700; margin-right:6px;}
@@ -335,7 +365,7 @@
         + '</tr></thead><tbody>';
       rows.forEach(r => {
         const name = ITEM_NAMES[r.id] || ('항목 ' + r.id);
-        html += '<tr>'
+        html += '<tr data-item-id="' + r.id + '">'
           + '<td class="n">' + String(r.id).padStart(2,'0') + ' ' + escapeHtml(name) + '</td>'
           + '<td><div style="display:flex;align-items:center;gap:9px;"><div class="log-bar"><span style="width:' + r.flagRate + '%"></span></div><span>' + r.flagRate + '%</span></div></td>'
           + '<td>' + r.needsfix + '</td><td>' + r.reject + '</td><td>' + r.pass + '</td><td>' + r.na + '</td>'
@@ -343,7 +373,24 @@
       });
       html += '</tbody></table>';
       box.innerHTML = html;
-      renderLogEntries(data.items || []);
+
+      // 집계표에서 항목을 누르면 그 항목이 걸린 소재만 추려 보여준다 —
+      // "3번이 67%나 걸리네" → 실제 소재 확인, 이 동선이 고도화의 핵심이다.
+      box.querySelectorAll('.log-table tbody tr').forEach(tr => {
+        tr.addEventListener('click', () => {
+          const id = Number(tr.dataset.itemId);
+          filterItemId = (filterItemId === id) ? null : id;   // 같은 행 재클릭 = 해제
+          box.querySelectorAll('.log-table tbody tr').forEach(x =>
+            x.classList.toggle('sel', Number(x.dataset.itemId) === filterItemId));
+          shownCount = PAGE;
+          renderLogEntries();
+        });
+      });
+
+      allEntries = data.items || [];
+      filterItemId = null;
+      shownCount = PAGE;
+      renderLogEntries();
     }catch(err){
       box.innerHTML = '<div class="empty">서버에 연결하지 못했습니다.</div>';
     }
@@ -351,10 +398,36 @@
 
   // 소재별 기록 — 집계만으로는 "왜 그렇게 판정됐는지" 알 수 없어서,
   // 썸네일과 걸린 항목(검토·반려)을 함께 보여준다.
-  function renderLogEntries(items){
+  // 전부 한 번에 그리면 수백 건이 세로로 쌓여 못 쓰게 되므로 20건씩 끊고,
+  // 집계표에서 고른 항목이 있으면 그 항목이 걸린 소재만 남긴다.
+  const PAGE = 20;
+  let allEntries = [];
+  let filterItemId = null;
+  let shownCount = PAGE;
+
+  function renderLogEntries(){
     const box = document.getElementById('logEntries');
-    if(!items.length){ box.innerHTML = '<div class="empty">기록이 없습니다.</div>'; return; }
-    box.innerHTML = items.map(e => {
+    const filtered = filterItemId === null
+      ? allEntries
+      : allEntries.filter(e => (e.verdicts || []).some(v =>
+          v.id === filterItemId && (v.status === 'reject' || v.status === 'needsfix')));
+
+    let head = '';
+    if(filterItemId !== null){
+      head = '<div class="log-filter">'
+        + String(filterItemId).padStart(2,'0') + ' ' + escapeHtml(ITEM_NAMES[filterItemId] || '')
+        + '에서 걸린 소재 <b>' + filtered.length + '</b>건'
+        + '<button type="button" id="logFilterClear">전체 보기</button></div>';
+    }
+
+    if(!filtered.length){
+      box.innerHTML = head + '<div class="empty">해당하는 기록이 없습니다.</div>';
+      bindFilterClear();
+      return;
+    }
+
+    const slice = filtered.slice(0, shownCount);
+    box.innerHTML = head + slice.map(e => {
       const flagged = (e.verdicts || []).filter(v => v.status === 'reject' || v.status === 'needsfix');
       const thumb = e.thumbUrl
         ? '<div class="log-thumb"><img src="' + escapeHtml(e.thumbUrl) + '" alt="분석한 소재" loading="lazy"></div>'
@@ -375,9 +448,58 @@
         + '<div class="log-meta">' + meta + '</div>'
         + '<div class="log-flags">' + flags + '</div>'
         + (e.summary ? '<div class="log-summary-text">' + escapeHtml(e.summary) + '</div>' : '')
-        + '</div></div>';
+        + '</div>'
+        + '<button type="button" class="log-del" data-log-id="' + escapeHtml(e.id) + '" title="이 기록 삭제">&times;</button>'
+        + '</div>';
     }).join('');
+
+    if(filtered.length > shownCount){
+      box.innerHTML += '<button type="button" class="log-more" id="logMoreBtn">'
+        + '더 보기 (' + (filtered.length - shownCount) + '건 남음)</button>';
+      document.getElementById('logMoreBtn').addEventListener('click', () => {
+        shownCount += PAGE;
+        renderLogEntries();
+      });
+    }
+    bindFilterClear();
   }
+
+  function bindFilterClear(){
+    const btn = document.getElementById('logFilterClear');
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      filterItemId = null;
+      shownCount = PAGE;
+      document.querySelectorAll('.log-table tbody tr.sel').forEach(x => x.classList.remove('sel'));
+      renderLogEntries();
+    });
+  }
+
+  // 테스트로 돌린 소재나 의미 없는 기록이 쌓이면 분포 통계까지 왜곡되므로
+  // 개별 삭제를 둔다.
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.log-del');
+    if(!btn) return;
+    if(!window.confirm('이 분석 기록을 삭제할까요? 판정 분포에서도 함께 빠집니다.')) return;
+    btn.disabled = true;
+    try{
+      const response = await fetch('/api/analysisLog', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
+        body: JSON.stringify({ id: btn.dataset.logId })
+      });
+      const data = await response.json();
+      if(!response.ok){
+        window.alert(data.error || '삭제에 실패했습니다.');
+        btn.disabled = false;
+        return;
+      }
+      await loadAnalysisLog();   // 집계도 같이 갱신돼야 하므로 전체 재로드
+    }catch(err){
+      window.alert('삭제 중 오류가 발생했습니다.');
+      btn.disabled = false;
+    }
+  });
 
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('.btn[data-action]');

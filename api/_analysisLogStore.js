@@ -46,6 +46,23 @@ export async function addAnalysisLog(entry) {
   return entry;
 }
 
+// 테스트로 돌린 소재나 의미 없는 기록을 지운다 — 그대로 두면 판정 분포가
+// 왜곡돼서 "어느 항목을 고쳐야 하나"를 잘못 읽게 된다.
+//
+// 매니페스트에서만 빼고 썸네일 Blob 파일 자체는 남는다(= 화면에서 사라지고
+// 집계에서도 빠지지만, URL을 아는 사람은 파일에 접근 가능). 반려사례
+// 삭제(_rejectCaseStore.js)도 지금 같은 방식이라 동작을 맞춘 것이다.
+// 파일까지 지우려면 Blob delete API를 별도로 붙여야 한다.
+export async function removeAnalysisLog(id) {
+  const items = await getAnalysisLog();
+  const target = items.find((it) => it.id === id);
+  if (!target) return null;
+  const next = items.filter((it) => it.id !== id);
+  const bytes = Buffer.from(JSON.stringify({ items: next }), 'utf-8');
+  await put('analysis-log.json', bytes, 'application/json', { allowOverwrite: true });
+  return target;
+}
+
 // 항목별 판정 분포를 집계한다 — 관리자 화면에서 "어떤 항목이 자주 걸리는가"를
 // 한눈에 보기 위한 것. 저장된 원본을 그대로 훑어 계산하므로 별도 인덱스가 없다.
 export function summarizeLog(items) {

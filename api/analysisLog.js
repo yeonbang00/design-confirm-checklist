@@ -16,7 +16,7 @@
 //     통째로 쌓을 이유는 없어 축소본만 둔다. 소재는 "누가 올렸나"가 아니라
 //     "무엇을 판정했나"이므로 위 익명 원칙과 충돌하지 않는다.
 
-import { addAnalysisLog, getAnalysisLog, summarizeLog } from './_analysisLogStore.js';
+import { addAnalysisLog, getAnalysisLog, removeAnalysisLog, summarizeLog } from './_analysisLogStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { put } from './_blobPut.js';
 
@@ -117,6 +117,38 @@ export default async function handler(req, res) {
     const summary = summarizeLog(items);
     // 최근 것이 위로 오게 — 관리자 화면에서 최근 경향부터 본다.
     res.status(200).json({ summary, items: items.slice().reverse().slice(0, 300) });
+    return;
+  }
+
+  // 테스트로 돌린 기록 등을 관리자가 골라 지운다 — 남겨두면 판정 분포가 왜곡된다.
+  if (req.method === 'DELETE') {
+    if (rejectIfNotSameOrigin(req, res)) return;
+
+    const expected = process.env.ADMIN_PASSWORD;
+    if (!expected) {
+      res.status(500).json({ error: '서버에 ADMIN_PASSWORD 환경변수가 설정되어 있지 않습니다.' });
+      return;
+    }
+    if (req.headers['x-admin-password'] !== expected) {
+      res.status(403).json({ error: '관리자 비밀번호가 올바르지 않습니다.' });
+      return;
+    }
+
+    const id = req.body && req.body.id;
+    if (!id) {
+      res.status(400).json({ error: '삭제할 기록을 지정해주세요.' });
+      return;
+    }
+    try {
+      const removed = await removeAnalysisLog(String(id));
+      if (!removed) {
+        res.status(400).json({ error: '존재하지 않는 기록입니다.' });
+        return;
+      }
+      res.status(200).json({ ok: true });
+    } catch (e) {
+      res.status(500).json({ error: '삭제에 실패했습니다.' });
+    }
     return;
   }
 
