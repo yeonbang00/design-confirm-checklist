@@ -78,15 +78,18 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     if (rejectIfNotSameOrigin(req, res)) return;
 
-    const expectedPassword = process.env.BRAND_GUIDE_EDIT_PASSWORD;
+    // 브랜드 삭제는 팀 공용 편집 비밀번호(BRAND_GUIDE_EDIT_PASSWORD)가 아니라
+    // 관리자 전용 비밀번호로 막는다 — 추가는 팀원 누구나 해도 되지만, 삭제는
+    // 기존 체크리스트·피드백이 함께 사라지는 되돌리기 어려운 작업이라서.
+    const expectedPassword = process.env.ADMIN_PASSWORD;
     if (!expectedPassword) {
-      res.status(500).json({ error: '서버에 BRAND_GUIDE_EDIT_PASSWORD 환경변수가 설정되어 있지 않습니다.' });
+      res.status(500).json({ error: '서버에 ADMIN_PASSWORD 환경변수가 설정되어 있지 않습니다.' });
       return;
     }
 
     const { id, editPassword } = req.body || {};
     if (editPassword !== expectedPassword) {
-      res.status(403).json({ error: '편집 비밀번호가 올바르지 않습니다.' });
+      res.status(403).json({ error: '관리자 비밀번호가 올바르지 않습니다.' });
       return;
     }
     if (!id) {

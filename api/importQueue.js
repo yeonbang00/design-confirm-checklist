@@ -12,8 +12,24 @@
 import { getPendingItems, removePendingItem } from './_importQueueStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
+// 사이트 로그인만 되면 누구나 대기 큐(다른 광고주 미공개 크리에이티브 링크가
+// 섞여 있음)를 열어볼 수 있던 걸 막기 위해, 관리자 비밀번호를 별도로 요구한다.
+function checkAdminPassword(req, res) {
+  const expected = process.env.ADMIN_PASSWORD;
+  if (!expected) {
+    res.status(500).json({ error: '서버에 ADMIN_PASSWORD 환경변수가 설정되어 있지 않습니다.' });
+    return false;
+  }
+  if (req.headers['x-admin-password'] !== expected) {
+    res.status(403).json({ error: '관리자 비밀번호가 올바르지 않습니다.' });
+    return false;
+  }
+  return true;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
+    if (!checkAdminPassword(req, res)) return;
     const items = await getPendingItems();
     res.status(200).json({ items });
     return;
@@ -21,6 +37,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     if (rejectIfNotSameOrigin(req, res)) return;
+    if (!checkAdminPassword(req, res)) return;
 
     const { id } = req.body || {};
     if (!id) {

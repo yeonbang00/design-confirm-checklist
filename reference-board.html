@@ -1196,12 +1196,26 @@
   const importQueueContent = document.getElementById('importQueueContent');
   const mainFilterRow = document.getElementById('mainFilterRow');
   let importQueueData = null; // null = 아직 로드 안 됨
+  let importQueueAdminPassword = null; // 이 탭에서 한 번 확인된 관리자 비밀번호(재요청 방지용, 저장은 안 함)
 
   function loadImportQueue(){
+    // 이 탭에서 이미 확인된 비밀번호가 있으면 다시 묻지 않는다 — 열 때마다
+    // 매번 물으면 번거로우니, 새로고침 전까지만 기억(저장은 안 함).
+    let password = importQueueAdminPassword;
+    if(password === null){
+      password = window.prompt('가져오기 대기 목록은 관리자만 볼 수 있습니다. 관리자 비밀번호를 입력하세요.');
+      if(password === null) return; // cancelled the prompt
+    }
     importQueueContent.innerHTML = '<div class="loading-msg">가져오기 대기 목록을 불러오는 중…</div>';
-    fetch('/api/importQueue')
-      .then(r => { if(!r.ok) throw new Error('status ' + r.status); return r.json(); })
-      .then(data => {
+    fetch('/api/importQueue', { headers: { 'X-Admin-Password': password } })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if(!ok){
+          importQueueAdminPassword = null;
+          importQueueContent.innerHTML = '<div class="gl-empty">' + (data.error || '불러오지 못했습니다.') + '</div>';
+          return;
+        }
+        importQueueAdminPassword = password;
         importQueueData = data.items || [];
         document.getElementById('importQueueCount').textContent = '(' + importQueueData.length + ')';
         renderImportQueue();
@@ -1268,7 +1282,7 @@
       dismissBtn.disabled = true;
       fetch('/api/importQueue', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': importQueueAdminPassword },
         body: JSON.stringify({ id: item.id }),
       })
         .then(r => r.json().then(data => ({ ok: r.ok, data })))

@@ -711,7 +711,7 @@
       ? ('"' + b.name + '" 브랜드를 삭제할까요? 등록된 체크리스트·피드백 내용도 함께 사라집니다.')
       : ('"' + b.name + '" 브랜드를 목록에서 삭제할까요?' + (b.imageCount > 0 ? ' 등록된 참고 배너 ' + b.imageCount + '장은 보관되지만 더 이상 노출되지 않습니다.' : '') + ' (코드로 등록된 브랜드라 복원이 필요하면 Claude에게 요청해주세요)');
     if(!window.confirm(warning)) return;
-    const password = window.prompt('편집 비밀번호를 입력하세요');
+    const password = window.prompt('삭제는 관리자 비밀번호가 필요합니다.');
     if(password === null) return; // cancelled the prompt
 
     fetch('/api/advertisers', {
