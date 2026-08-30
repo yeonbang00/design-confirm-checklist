@@ -231,7 +231,6 @@
   }
   .gnb-logo-icon{height:30px;}
   .gnb-primary{background:none; border:none; box-shadow:none; backdrop-filter:none; padding:0; gap:6px;}
-  .gnb-bar.hide-nav{opacity:0; transform:translateY(-130%); pointer-events:none;}
 
   /* 메뉴 항목: 테두리 없이 초록만 */
   .gnb-primary .gnb-link{border:none; box-shadow:none; transition:color .25s ease, background-color .3s ease;}
@@ -861,29 +860,5 @@
 </script>
 <script src="assets/adcheck-reveal.js?v=9"></script>
 
-<script>
-/* ===== 인터랙션 디벨롭 (2026-08) — 푸터에서 GNB 감추기 (index.html 과 공유) ===== */
-(function () {
-  var gnb = document.querySelector('.gnb-bar');
-  var footer = document.querySelector('.page-footer');
-  if (!gnb || !footer) return;
-  var raf = null;
-
-  function frame() {
-    raf = null;
-    var y = window.scrollY, vh = window.innerHeight;
-    var fr = footer.getBoundingClientRect();
-    gnb.classList.toggle('hide-nav', y > 120 && fr.top > 0 && fr.top < vh && fr.bottom <= vh + 2);
-  }
-  function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
-
-  window.addEventListener('scroll', schedule, { passive: true });
-  window.addEventListener('resize', schedule);
-  window.addEventListener('load', schedule);
-  if (window.ResizeObserver) new ResizeObserver(schedule).observe(document.body);
-  [400, 1200, 2500].forEach(function (ms) { setTimeout(schedule, ms); });
-  frame();
-})();
-</script>
 </body>
 </html>

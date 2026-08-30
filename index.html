@@ -715,7 +715,6 @@
   .gnb-bar.on-light .gnb-primary .gnb-link.active,
   .gnb-bar.on-light .gnb-primary .gnb-link.active:hover{background:#CCFF00; color:#14171C;}
 
-  .gnb-bar.hide-nav{opacity:0; transform:translateY(-130%); pointer-events:none;}
 
   /* 흰 구간 위에서는 밝은 알약으로 */
   .gnb-bar.on-light .gnb-logo-icon{filter:invert(1) brightness(.16);}
@@ -2381,8 +2380,6 @@
       if (footer) {
         var fr = footer.getBoundingClientRect();
         if (fr.top < navB) lightNow = false;
-        /* 푸터가 완전히 보이면 GNB를 감춘다 (문서 상단에서는 절대 숨기지 않음) */
-        gnb.classList.toggle('hide-nav', y > 120 && fr.top > 0 && fr.top < vh && fr.bottom <= vh + 2);
       }
       gnb.classList.toggle('on-light', lightNow);
     }
