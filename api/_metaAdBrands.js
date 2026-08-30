@@ -89,7 +89,6 @@ export const META_AD_BRANDS = [
   '넷마블',
   '엔씨',
   'LFmall',
-  'Ssd shop',
   '옥션',
   'W 컨셉',
   '빨간펜',
