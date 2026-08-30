@@ -121,14 +121,22 @@
 
   /* 문제 전환 시 폰트가 로딩되며 툭 튀는 느낌을 줄이기 위한 페이드 —
      폰트를 미리 로드해둔 뒤 살짝 사라졌다 나타나는 모션으로 감춘다. */
-  #questionBody{transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1);}
-  #questionBody.q-hide{opacity:0; transform:translateY(10px);}
+  /* 미스터리 단어만 살짝 움직이며 페이드 — 4지선다는 위치가 흔들리면 안 되니
+     투명도만 바뀌고 자리는 고정. */
+  .g-mystery{transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1);}
+  .g-mystery.q-hide{opacity:0; transform:translateY(10px);}
+  .g-choices{transition:opacity .18s ease;}
+  .g-choices.q-hide{opacity:0;}
 
   .g-choices{display:grid; gap:10px;}
   .g-choice{position:relative; text-align:left; appearance:none; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:12px; padding:16px 18px; font-size:15px; font-weight:500; cursor:pointer; transition:border-color .15s ease, background .15s ease;}
   .g-choice:hover:not(:disabled){border-color:var(--ink-3); background:var(--surface-3);}
   .g-choice:disabled{cursor:default;}
   .g-choice.selected{border-color:var(--accent); background:rgba(195,255,77,.1);}
+
+  /* 선택했을 때 쫀득하게 눌렸다 튀어 오르는 느낌 */
+  @keyframes choicePop{0%{transform:scale(1);}40%{transform:scale(.94);}70%{transform:scale(1.035);}100%{transform:scale(1);}}
+  .g-choice.pop{animation:choicePop .38s cubic-bezier(.34,1.56,.64,1);}
 
   .g-timer-track{height:5px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:26px;}
   .g-timer-bar{height:100%; width:100%; background:var(--accent); transform-origin:left; transition:width .1s linear, background-color .3s ease;}
@@ -317,10 +325,8 @@
         <div class="g-progress-label">문제 <b id="qIndex">1</b> / <span id="qTotal">10</span></div>
       </div>
       <div class="g-prompt">이 폰트의 이름은 무엇일까요?</div>
-      <div id="questionBody">
-        <div class="g-mystery" id="mysteryWord"></div>
-        <div class="g-choices" id="choices"></div>
-      </div>
+      <div class="g-mystery" id="mysteryWord"></div>
+      <div class="g-choices" id="choices"></div>
       <div class="g-timer-track"><div class="g-timer-bar" id="timerBar"></div></div>
     </div>
 
@@ -484,7 +490,6 @@
   const screenQuiz = document.getElementById('screenQuiz');
   const screenResult = document.getElementById('screenResult');
   const screenDetail = document.getElementById('screenDetail');
-  const questionBody = document.getElementById('questionBody');
   const mysteryWord = document.getElementById('mysteryWord');
   const choicesEl = document.getElementById('choices');
   const timerBar = document.getElementById('timerBar');
@@ -529,7 +534,9 @@
 
     // 이전 문제를 살짝 내리며 사라지게 한 뒤, 폰트가 이미 준비돼 있는 상태로
     // 다음 문제를 올려 보여준다 — 폰트 스왑 자체를 모션 뒤로 감춘다.
-    questionBody.classList.add('q-hide');
+    // 4지선다는 위치가 흔들리면 안 되니 투명도만 바뀌고 자리는 고정.
+    mysteryWord.classList.add('q-hide');
+    choicesEl.classList.add('q-hide');
     await new Promise((r) => setTimeout(r, 180));
     await preloadFont(q.font);
 
@@ -547,7 +554,10 @@
       choicesEl.appendChild(btn);
     });
 
-    requestAnimationFrame(() => { questionBody.classList.remove('q-hide'); });
+    requestAnimationFrame(() => {
+      mysteryWord.classList.remove('q-hide');
+      choicesEl.classList.remove('q-hide');
+    });
 
     timeLeft = TIME_LIMIT;
     timerBar.style.transition = 'none';
@@ -580,7 +590,9 @@
 
     Array.from(choicesEl.children).forEach(btn => {
       btn.disabled = true;
-      if(picked && btn.dataset.id === picked.id) btn.classList.add('selected');
+      if(picked && btn.dataset.id === picked.id){
+        btn.classList.add('selected', 'pop');
+      }
     });
 
     setTimeout(() => {
