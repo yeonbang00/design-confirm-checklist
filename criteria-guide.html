@@ -140,40 +140,46 @@
      .page가 1180px라 좌우 여백이 130px 이상 남는 화면(1440px+)에서만 띄운다 —
      좁은 화면에서는 본문과 겹치므로 감춘다. */
   .spy{
-    position:fixed; left:26px; top:50%; transform:translateY(-50%);
+    position:fixed; left:34px; top:50%; transform:translateY(-50%);
     z-index:150; display:none; user-select:none;
   }
   @media (min-width:1440px){ .spy{display:block;} }
   /* 그룹 구분은 라벨 대신 여백+헤어라인으로 — 레일이 좁아 그룹명을 넣으면
      단어 중간에서 잘려 오히려 지저분해진다(항목명은 hover tooltip에 있음). */
-  .spy-group{margin-bottom:9px; padding-bottom:9px; border-bottom:1px solid rgba(255,255,255,.09);}
+  .spy-group{margin-bottom:13px; padding-bottom:13px; border-bottom:1px solid rgba(255,255,255,.1);}
   .spy-group:last-child{margin-bottom:0; padding-bottom:0; border-bottom:none;}
   .spy-item{
-    display:flex; align-items:center; gap:9px; position:relative;
-    padding:3.5px 0; cursor:pointer; background:none; border:none; font-family:inherit;
+    display:flex; align-items:center; gap:13px; position:relative;
+    padding:6px 0; cursor:pointer; background:none; border:none; font-family:inherit;
   }
   .spy-num{
-    font:500 10px/1 var(--font-mono); color:var(--ink-4); width:15px;
+    font:600 13px/1 var(--font-mono); color:var(--ink-4); width:21px;
     font-variant-numeric:tabular-nums; transition:color .3s ease;
   }
   .spy-bar{
-    width:13px; height:2px; border-radius:2px; background:rgba(255,255,255,.18);
+    width:20px; height:3px; border-radius:3px; background:rgba(255,255,255,.2);
     transition:width .35s cubic-bezier(.2,.8,.2,1), background-color .3s ease;
   }
   .spy-item:hover .spy-num{color:var(--ink-2);}
-  .spy-item:hover .spy-bar{width:20px; background:rgba(255,255,255,.4);}
+  .spy-item:hover .spy-bar{width:30px; background:rgba(255,255,255,.42);}
   .spy-item.on .spy-num{color:var(--accent); font-weight:700;}
-  .spy-item.on .spy-bar{width:26px; background:var(--accent);}
+  .spy-item.on .spy-bar{width:42px; background:var(--accent);}
   /* 항목명은 hover할 때만 옆으로 흘러나온다 — 평소엔 숫자만 있는 얇은 레일 */
   .spy-tip{
-    position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%) translateX(-5px);
-    white-space:nowrap; font-size:11.5px; font-weight:500; color:var(--ink);
+    position:absolute; left:calc(100% + 12px); top:50%; transform:translateY(-50%) translateX(-5px);
+    white-space:nowrap; font-size:12.5px; font-weight:500; color:var(--ink);
     background:rgba(20,23,28,.97); border:1px solid rgba(255,255,255,.13);
-    border-radius:7px; padding:6px 10px; opacity:0; pointer-events:none;
+    border-radius:8px; padding:7px 12px; opacity:0; pointer-events:none;
     box-shadow:0 12px 30px -14px rgba(0,0,0,.9);
     transition:opacity .22s ease, transform .28s cubic-bezier(.2,.8,.2,1);
   }
   .spy-item:hover .spy-tip, .spy-item:focus-visible .spy-tip{opacity:1; transform:translateY(-50%) translateX(0);}
+  /* 세로가 짧은 화면에서는 레일(17개 ≈ 460px)이 화면 밖으로 넘칠 수 있어 되돌린다 */
+  @media (max-height:620px){
+    .spy-item{padding:3px 0; gap:9px;}
+    .spy-num{font-size:11px; width:17px;}
+    .spy-group{margin-bottom:8px; padding-bottom:8px;}
+  }
   @media (prefers-reduced-motion:reduce){
     .spy-bar,.spy-num,.spy-tip{transition:none;}
   }

@@ -2095,7 +2095,7 @@
       fetch('/api/analysisLog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.assign({ items }, meta)),
+        body: JSON.stringify(Object.assign({ items, summary: result.summary || '' }, meta)),
       }).catch(() => {});
     }catch(e){ /* 로그 실패는 무시 */ }
   }
@@ -2264,6 +2264,9 @@
             imageWidth: prepared.originalWidth,
             imageHeight: prepared.originalHeight,
             hasBrief: (briefImages && briefImages.length > 0) || !!briefPptx,
+            // 어떤 소재가 어떻게 판정됐는지 봐야 프롬프트를 고칠 수 있어서
+            // 작은 썸네일만 같이 남긴다(원본은 저장하지 않음).
+            thumbBase64: canvasToBase64(prepared.canvas, 400, 0.7),
           });
           saveSessionState({
             resultJson: result,

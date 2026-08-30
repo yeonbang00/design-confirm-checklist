@@ -11,14 +11,18 @@
 //     실수로 식별 정보가 새어 들어오지 않게 하는 장치다.
 //  3) 시각은 날짜까지만 남긴다. 시:분까지 남기면 "몇 시에 올렸는지"로
 //     소수 인원 팀에서는 사실상 개인이 특정되기 때문이다.
-//  4) 이미지 자체는 저장하지 않는다(용량·저작권·유출 위험).
+//  4) 썸네일은 저장하되 작게(가로 400px)만 남긴다 — 판정이 왜 틀렸는지는
+//     소재를 봐야 알 수 있어서 집계만으로는 고도화가 안 된다. 다만 원본을
+//     통째로 쌓을 이유는 없어 축소본만 둔다. 소재는 "누가 올렸나"가 아니라
+//     "무엇을 판정했나"이므로 위 익명 원칙과 충돌하지 않는다.
 
 import { addAnalysisLog, getAnalysisLog, summarizeLog } from './_analysisLogStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
+import { put } from './_blobPut.js';
 
 const VALID_STATUS = ['pass', 'needsfix', 'reject', 'na'];
 
-export const config = { api: { bodyParser: { sizeLimit: '1mb' } } };
+export const config = { api: { bodyParser: { sizeLimit: '2mb' } } };
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -57,13 +61,31 @@ export default async function handler(req, res) {
     // 날짜까지만 (KST 기준) — 위 3)번 규칙
     const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
     const date = kst.toISOString().slice(0, 10);
+    const id = (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+
+    // 썸네일 업로드 — 실패해도 로그 자체는 남긴다(썸네일 없이).
+    let thumbUrl = null;
+    if (typeof body.thumbBase64 === 'string' && body.thumbBase64.length > 100) {
+      try {
+        const bytes = Buffer.from(body.thumbBase64, 'base64');
+        // 400px/품질0.7이면 보통 20~50KB — 이보다 크면 클라이언트가 잘못 보낸 것
+        if (bytes.length <= 400 * 1024) {
+          thumbUrl = await put(`analysis-log/${id}.jpg`, bytes, 'image/jpeg');
+        }
+      } catch (e) {
+        thumbUrl = null;
+      }
+    }
 
     try {
       await addAnalysisLog({
-        id: Math.random().toString(36).slice(2, 14),
+        id,
         date,
         verdicts,
         counts,
+        thumbUrl,
+        // 총평은 "왜 이렇게 판정했는가"의 요약이라 고도화에 가장 쓸모가 크다
+        summary: body.summary ? String(body.summary).slice(0, 600) : null,
         // 아래는 배너 자체의 속성이라 개인과 무관하고, 고도화에 직접 쓰인다.
         advertiserId: body.advertiserId ? String(body.advertiserId).slice(0, 80) : null,
         mediaGuideIds: Array.isArray(body.mediaGuideIds)
