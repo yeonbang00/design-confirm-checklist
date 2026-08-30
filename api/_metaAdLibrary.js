@@ -52,7 +52,19 @@ export async function searchAdsForBrand(token, brandName, limit = 15, pageId = n
     params.set('search_terms', brandName);
   }
   try {
-    const resp = await fetch(`${GRAPH_API_BASE}/ads_archive?${params.toString()}`);
+    // 광고 라이브러리 API가 가끔 500을 내는 요청은 10~13초씩 걸린 뒤에야
+    // 실패로 확정되는 게 실측으로 확인됐다 — 브랜드가 300개+라 이런 느린
+    // 실패가 배치마다 하나씩만 섞여도 전체 실행시간(60초 제한)을 넘겨
+    // 함수가 통째로 타임아웃돼 버린다. 8초 안에 응답이 없으면 그냥 실패
+    // 처리하고 다음 브랜드로 넘어가게 한다.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    let resp;
+    try {
+      resp = await fetch(`${GRAPH_API_BASE}/ads_archive?${params.toString()}`, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!resp.ok) {
       const errText = await resp.text().catch(() => '');
       const result = [];
