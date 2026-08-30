@@ -179,6 +179,11 @@
   .use-panel{position:relative; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.11); background:var(--surface-2); padding:22px;}
   .use-panel-label{font:600 9px/1 var(--font-mono); letter-spacing:.16em; color:var(--ink-4);}
   .use-panel-canvas{position:relative; margin-top:16px; height:186px; border-radius:10px; background:linear-gradient(140deg,#1B2027,#12151A); border:1px solid rgba(255,255,255,.07); overflow:hidden;}
+  /* OCR이 일반적으로 무엇을 하는 기술인지 보여주는 예시 이미지 —
+     AdCheck의 실제 적용(텍스트 박스 좌표)은 옆의 설명 글에서 다룸 */
+  .use-panel-img{margin-top:16px; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.1);}
+  .use-panel-img img{display:block; width:100%; height:auto;}
+  .use-panel-caption{margin-top:10px; font-size:11.5px; line-height:1.6; color:var(--ink-4);}
   .use-panel-box{position:absolute; border-radius:3px;}
   .use-panel-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:14px;}
   .use-stat{padding:11px 12px; border-radius:9px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.08);}
@@ -518,17 +523,9 @@
             <a class="use-link" href="https://www.ncloud.com/product/aiService/ocr" target="_blank" rel="noopener">네이버 클로바 OCR 서비스 안내 ↗</a>
           </div>
           <div class="use-panel">
-            <div class="use-panel-label">DETECTED TEXT BOXES</div>
-            <div class="use-panel-canvas">
-              <div class="use-panel-box" style="left:9%;top:14%;width:56%;height:19%;border:1px solid rgba(204,255,0,.75);background:rgba(204,255,0,.09);"></div>
-              <div class="use-panel-box" style="left:9%;top:41%;width:72%;height:12%;border:1px solid rgba(204,255,0,.55);background:rgba(204,255,0,.06);"></div>
-              <div class="use-panel-box" style="left:15%;top:60%;width:44%;height:11%;border:1px solid rgba(190,139,68,.85);background:rgba(190,139,68,.12);"></div>
-              <div style="position:absolute;left:15%;top:74%;font:600 7.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;color:#D9A660;">Δ 6px 좌우 불균형</div>
-            </div>
-            <div class="use-panel-stats">
-              <div class="use-stat"><div class="use-stat-label">CONTRAST</div><div class="use-stat-value" style="color:var(--needsfix);">3.9:1</div></div>
-              <div class="use-stat"><div class="use-stat-label">TEXT DENSITY</div><div class="use-stat-value" style="color:var(--pass);">17%</div></div>
-            </div>
+            <div class="use-panel-label">OCR 텍스트 인식 예시</div>
+            <div class="use-panel-img"><img src="assets/roadmap-ocr-demo.jpg" alt="OCR이 이미지 속 텍스트 영역을 인식해 좌표와 함께 추출하는 예시" loading="lazy"></div>
+            <div class="use-panel-caption">OCR은 이미지 속 문자 영역을 찾아 좌표와 함께 텍스트로 추출하는 기술입니다. AdCheck는 이 좌표를 배너의 정렬·여백 실측에 씁니다(왼쪽 설명 참고) — 위 이미지는 가상의 샘플로 만든 신분증 인식 예시입니다.</div>
           </div>
         </div>
       </div>
