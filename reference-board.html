@@ -1198,12 +1198,12 @@
   let importQueueData = null; // null = 아직 로드 안 됨
   let importQueueAdminPassword = null; // 이 탭에서 한 번 확인된 관리자 비밀번호(재요청 방지용, 저장은 안 함)
 
-  function loadImportQueue(){
+  async function loadImportQueue(){
     // 이 탭에서 이미 확인된 비밀번호가 있으면 다시 묻지 않는다 — 열 때마다
     // 매번 물으면 번거로우니, 새로고침 전까지만 기억(저장은 안 함).
     let password = importQueueAdminPassword;
     if(password === null){
-      password = window.prompt('가져오기 대기 목록은 관리자만 볼 수 있습니다. 관리자 비밀번호를 입력하세요.');
+      password = await adcheckPromptPassword('가져오기 대기 목록은 관리자만 볼 수 있습니다. 관리자 비밀번호를 입력하세요.');
       if(password === null) return; // cancelled the prompt
     }
     importQueueContent.innerHTML = '<div class="loading-msg">가져오기 대기 목록을 불러오는 중…</div>';
@@ -1340,6 +1340,7 @@
   })();
 </script>
 <script src="assets/adcheck-reveal.js?v=9"></script>
+<script src="assets/adcheck-password-modal.js?v=1"></script>
 
 <script>
 /* ===== 인터랙션 디벨롭 (2026-08) — 푸터에서 GNB 감추기 (index.html 과 공유) ===== */

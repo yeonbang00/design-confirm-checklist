@@ -334,12 +334,12 @@
       });
   }
 
-  historyList.addEventListener('click', (e) => {
+  historyList.addEventListener('click', async (e) => {
     const btn = e.target.closest('.history-delete');
     if(!btn) return;
     const id = btn.dataset.id;
     if(!window.confirm('이 히스토리 항목을 삭제할까요?')) return;
-    const password = window.prompt('편집 비밀번호를 입력하세요');
+    const password = await adcheckPromptPassword('편집 비밀번호를 입력하세요');
     if(password === null) return;
 
     btn.disabled = true; btn.style.opacity = '.4';
@@ -379,6 +379,7 @@
   })();
 </script>
 <script src="assets/adcheck-reveal.js?v=9"></script>
+<script src="assets/adcheck-password-modal.js?v=1"></script>
 
 <script>
 /* ===== 인터랙션 디벨롭 (2026-08) — 푸터에서 GNB 감추기 (index.html 과 공유) ===== */
