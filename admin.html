@@ -543,14 +543,15 @@
         e.hasBrief ? '<span>기획안 포함</span>' : '',
         '<span>반려 <b>' + ((e.counts && e.counts.reject) || 0) + '</b> · 검토 <b>' + ((e.counts && e.counts.needsfix) || 0) + '</b></span>'
       ].filter(Boolean).join('');
-      const flags = flagged.length
-        ? flagged.map(v => '<span class="log-flag ' + v.status + '">'
-            + String(v.id).padStart(2,'0') + ' ' + escapeHtml(ITEM_NAMES[v.id] || '')
-            + (v.note ? ' — ' + escapeHtml(v.note) : '') + '</span>').join('')
-        : '<span class="log-flag clean">반려 없음</span>';
+      // 반려가 없으면 이 줄 자체를 그리지 않는다 — 바로 위 meta에 이미
+      // "반려 0 · 검토 3"이 있어서, 여기에 또 "반려 없음"을 띄우면 같은 말을
+      // 두 번 하는 데다 초록 칩이 판정 배지처럼 읽혀 오해를 준다.
+      const flags = flagged.map(v => '<span class="log-flag ' + v.status + '">'
+        + String(v.id).padStart(2,'0') + ' ' + escapeHtml(ITEM_NAMES[v.id] || '')
+        + (v.note ? ' — ' + escapeHtml(v.note) : '') + '</span>').join('');
       return '<div class="log-entry">' + thumb + '<div class="log-entry-body">'
         + '<div class="log-meta">' + meta + '</div>'
-        + '<div class="log-flags">' + flags + '</div>'
+        + (flags ? '<div class="log-flags">' + flags + '</div>' : '')
         + (flips ? '<div class="log-flips"><span class="log-flips-k">사람이 수정</span>' + flips + '</div>' : '')
         + (e.summary ? '<div class="log-summary-text">' + escapeHtml(e.summary) + '</div>' : '')
         + '</div>'
