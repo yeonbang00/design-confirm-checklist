@@ -268,12 +268,14 @@
   .review-shot-frame img{width:100%; display:block; cursor:zoom-in;}
   .review-shot-marks{position:absolute; inset:0; pointer-events:none;}
   /* 300px로 줄어든 배너 위에서는 얇은 테두리가 전혀 안 보인다. 나머지를 어둡게
-     덮고 짚은 자리만 밝게 남겨서, 어디를 보라는 건지 한눈에 들어오게 한다. */
-  .review-dim{position:absolute; inset:0; background:rgba(11,12,14,.62); animation:dimin .3s ease;}
-  .review-hole{position:absolute; background:transparent; box-shadow:0 0 0 4000px rgba(11,12,14,.62); border-radius:2px;}
-  .review-mark{position:absolute; border:2.5px solid #FF2D6F; border-radius:2px; box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 18px 3px rgba(255,45,111,.65); animation:markin .4s cubic-bezier(.2,.8,.2,1), markpulse 1.5s ease-in-out .4s 3;}
-  @keyframes markin{from{opacity:0; transform:scale(1.5);}to{opacity:1; transform:scale(1);}}
-  @keyframes markpulse{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 18px 3px rgba(255,45,111,.65);}50%{box-shadow:0 0 0 3px rgba(255,255,255,1), 0 0 26px 7px rgba(255,45,111,.95);}}
+     덮고 짚은 자리만 밝게 남겨서, 어디를 보라는 건지 한눈에 들어오게 한다.
+     구멍이 여러 개여도 균일하게 어두워야 해서 SVG 마스크로 뚫는다 — box-shadow로
+     뚫으면 구멍마다 그림자가 겹쳐 짚은 개수에 따라 어둡기가 달라진다. */
+  .review-dim{position:absolute; inset:0; width:100%; height:100%; animation:dimin .3s ease;}
+  /* 어두운 바탕 위이므로 흰 링 없이 브랜드 네온 하나로 충분하다 */
+  .review-mark{position:absolute; border:2px solid #C3FF4D; border-radius:2px; box-shadow:0 0 12px 2px rgba(195,255,77,.7); animation:markin .4s cubic-bezier(.2,.8,.2,1), markpulse 1.5s ease-in-out .4s 3;}
+  @keyframes markin{from{opacity:0; transform:scale(1.4);}to{opacity:1; transform:scale(1);}}
+  @keyframes markpulse{0%,100%{box-shadow:0 0 12px 2px rgba(195,255,77,.7);}50%{box-shadow:0 0 22px 6px rgba(195,255,77,1);}}
   @keyframes dimin{from{opacity:0;}to{opacity:1;}}
   .review-shot-cap{margin-top:10px; font-size:11.5px; line-height:1.6; color:var(--text-3);}
   .review-shot-cap b{color:var(--text-2); font-weight:600;}
@@ -2275,6 +2277,30 @@
     cap.appendChild(document.createTextNode(' — ' + msg));
   }
 
+  // 같은 줄(세로로 겹침)에 있고 가로 간격이 글자 높이보다 좁으면 한 덩어리로 본다
+  function mergeBoxes(list){
+    const boxes = list.slice().sort((a, b) => (Math.abs(a.y - b.y) > 6 ? a.y - b.y : a.x - b.x));
+    const out = [];
+    boxes.forEach(b => {
+      const last = out[out.length - 1];
+      if(last){
+        const sameLine = Math.abs((last.y + last.h / 2) - (b.y + b.h / 2)) < Math.max(last.h, b.h) * 0.6;
+        const gap = b.x - (last.x + last.w);
+        if(sameLine && gap < Math.max(last.h, b.h) * 1.2){
+          const right = Math.max(last.x + last.w, b.x + b.w);
+          const bottom = Math.max(last.y + last.h, b.y + b.h);
+          last.y = Math.min(last.y, b.y);
+          last.x = Math.min(last.x, b.x);
+          last.w = right - last.x;
+          last.h = bottom - last.y;
+          return;
+        }
+      }
+      out.push(Object.assign({}, b));
+    });
+    return out;
+  }
+
   function highlightItem(itemId){
     const box = document.getElementById('reviewShot');
     const cap = document.getElementById('reviewShotCap');
@@ -2290,30 +2316,53 @@
     }
     const sx = img.clientWidth / (reviewShotData.w || img.naturalWidth || 1);
     const sy = img.clientHeight / (reviewShotData.h || img.naturalHeight || 1);
-    // 짚은 자리 하나만 있을 때는 나머지를 어둡게 덮어 시선을 몰아준다.
-    // 여러 곳이면 구멍을 여러 개 뚫을 수 없어(그림자가 겹쳐 더 어두워짐)
-    // 딤 없이 강조 테두리만 쓴다.
     const PAD = 3;
-    if(hits.length === 1){
-      const h0 = hits[0];
-      const hole = document.createElement('div');
-      hole.className = 'review-hole';
-      hole.style.left = (h0.x * sx - PAD) + 'px';
-      hole.style.top = (h0.y * sy - PAD) + 'px';
-      hole.style.width = (h0.w * sx + PAD * 2) + 'px';
-      hole.style.height = (h0.h * sy + PAD * 2) + 'px';
-      marks.appendChild(hole);
-    }
-    hits.forEach(hit => {
+    // 화면 좌표로 옮긴 뒤, 같은 줄에서 가까이 붙은 것끼리 하나로 합친다.
+    // 인용구 하나가 OCR 필드 여러 개에 걸치면(예: '7. 13(월) ~ 7. 19(일)')
+    // 네모가 8개로 흩어져서 오히려 읽기 어려워진다.
+    const boxes = mergeBoxes(hits.map(h => ({
+      x: h.x * sx - PAD, y: h.y * sy - PAD,
+      w: h.w * sx + PAD * 2, h: h.h * sy + PAD * 2,
+    })));
+
+    // 딤은 SVG 마스크로 뚫는다 — 구멍이 몇 개든 어둡기가 균일하다
+    const W = img.clientWidth, H = img.clientHeight;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'review-dim');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    const maskId = 'reviewDimMask';
+    const mask = document.createElementNS(NS, 'mask');
+    mask.setAttribute('id', maskId);
+    const base = document.createElementNS(NS, 'rect');
+    base.setAttribute('width', W); base.setAttribute('height', H); base.setAttribute('fill', 'white');
+    mask.appendChild(base);
+    boxes.forEach(b => {
+      const hole = document.createElementNS(NS, 'rect');
+      hole.setAttribute('x', b.x); hole.setAttribute('y', b.y);
+      hole.setAttribute('width', b.w); hole.setAttribute('height', b.h);
+      hole.setAttribute('rx', '2'); hole.setAttribute('fill', 'black');
+      mask.appendChild(hole);
+    });
+    const defs = document.createElementNS(NS, 'defs');
+    defs.appendChild(mask);
+    svg.appendChild(defs);
+    const shade = document.createElementNS(NS, 'rect');
+    shade.setAttribute('width', W); shade.setAttribute('height', H);
+    shade.setAttribute('fill', 'rgba(11,12,14,.66)');
+    shade.setAttribute('mask', 'url(#' + maskId + ')');
+    svg.appendChild(shade);
+    marks.appendChild(svg);
+
+    boxes.forEach(b => {
       const el = document.createElement('div');
       el.className = 'review-mark';
-      el.style.left = (hit.x * sx - PAD) + 'px';
-      el.style.top = (hit.y * sy - PAD) + 'px';
-      el.style.width = (hit.w * sx + PAD * 2) + 'px';
-      el.style.height = (hit.h * sy + PAD * 2) + 'px';
+      el.style.left = b.x + 'px'; el.style.top = b.y + 'px';
+      el.style.width = b.w + 'px'; el.style.height = b.h + 'px';
       marks.appendChild(el);
     });
-    setCaption(name, '사유가 지목한 문구 ' + hits.length + '곳을 표시했어요.');
+    setCaption(name, '사유가 지목한 자리 ' + boxes.length + '곳을 표시했어요.');
   }
 
   document.addEventListener('click', (e) => {
