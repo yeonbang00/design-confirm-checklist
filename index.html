@@ -264,11 +264,17 @@
   .review-shot{display:none;}
   /* 검수 화면이라 소재를 있는 그대로 보여준다 — 테두리·배경·라운드는 소재의
      실제 가장자리와 어긋나 보이게 만들고, 라운드는 모서리 내용을 잘라먹는다. */
-  .review-shot-frame{position:relative; line-height:0;}
+  .review-shot-frame{position:relative; line-height:0; overflow:hidden;}
   .review-shot-frame img{width:100%; display:block; cursor:zoom-in;}
   .review-shot-marks{position:absolute; inset:0; pointer-events:none;}
-  .review-mark{position:absolute; border:2px solid var(--reject); border-radius:3px; box-shadow:0 0 0 2px rgba(255,255,255,.5); animation:markin .45s cubic-bezier(.2,.8,.2,1);}
-  @keyframes markin{from{opacity:0; transform:scale(1.25);}to{opacity:1; transform:scale(1);}}
+  /* 300px로 줄어든 배너 위에서는 얇은 테두리가 전혀 안 보인다. 나머지를 어둡게
+     덮고 짚은 자리만 밝게 남겨서, 어디를 보라는 건지 한눈에 들어오게 한다. */
+  .review-dim{position:absolute; inset:0; background:rgba(11,12,14,.62); animation:dimin .3s ease;}
+  .review-hole{position:absolute; background:transparent; box-shadow:0 0 0 4000px rgba(11,12,14,.62); border-radius:2px;}
+  .review-mark{position:absolute; border:2.5px solid #FF2D6F; border-radius:2px; box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 18px 3px rgba(255,45,111,.65); animation:markin .4s cubic-bezier(.2,.8,.2,1), markpulse 1.5s ease-in-out .4s 3;}
+  @keyframes markin{from{opacity:0; transform:scale(1.5);}to{opacity:1; transform:scale(1);}}
+  @keyframes markpulse{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 18px 3px rgba(255,45,111,.65);}50%{box-shadow:0 0 0 3px rgba(255,255,255,1), 0 0 26px 7px rgba(255,45,111,.95);}}
+  @keyframes dimin{from{opacity:0;}to{opacity:1;}}
   .review-shot-cap{margin-top:10px; font-size:11.5px; line-height:1.6; color:var(--text-3);}
   .review-shot-cap b{color:var(--text-2); font-weight:600;}
   /* 배너 패널은 .checklist-card 밖에 둔다 — 그 카드에는 분석 중 스캔 효과 때문에
@@ -277,7 +283,7 @@
   /* 반드시 .on일 때만 2단으로 — 패널이 숨겨진 분석 전 화면에서 그리드를 켜두면
      카드가 첫 컬럼(300px)으로 밀려들어가 체크리스트가 좁게 찌그러진다. */
   @media (min-width:1140px){
-    .content .review-layout.on{display:grid; grid-template-columns:300px minmax(0,1fr); gap:32px; align-items:start; margin-top:52px;}
+    .content .review-layout.on{display:grid; grid-template-columns:340px minmax(0,1fr); gap:32px; align-items:start; margin-top:52px;}
     .content .review-layout.on .card{margin-top:0;}
     .content .review-layout.on .review-shot{display:block; position:sticky; top:88px;}
   }
@@ -2216,17 +2222,38 @@
     if(marks) marks.innerHTML = '';
   }
 
-  // 사유 문장 안에 실제로 등장하는 OCR 문구만 고른다. AI가 좌표를 주지는
-  // 않지만 문구는 인용하는 경우가 많아서, 그 교집합으로 위치를 역추적한다.
+  // 사유에 "따옴표로 인용된" 문구만 위치를 짚는다.
+  //
+  // 처음에는 사유 문장에 등장하는 OCR 문구를 전부 짚었는데, 엉뚱한 곳을
+  // 가리켰다 — 예를 들어 컬러 일관성 사유의 "배경 보라·핑크와 네이버페이
+  // 초록…"에서 '네이버페이'는 위치를 가리킨 게 아니라 색을 설명하려고 쓴
+  // 단어인데도 그 자리에 네모가 그려졌다. 반면 AI가 특정 문구를 지목할
+  // 때는 거의 항상 따옴표를 쓴다("'최상입니다' 표현에 근거 표기 없음").
+  // 그래서 인용 부호를 신호로 삼는다 — 못 찾으면 아무것도 안 짚는 게
+  // 엉뚱한 곳을 짚는 것보다 낫다.
+  function quotedPhrases(note){
+    const out = [];
+    const re = /["'\u201c\u201d\u2018\u2019\u300c\u300e]([^"'\u201c\u201d\u2018\u2019\u300d\u300f]{1,40})["'\u201d\u2019\u300d\u300f]/g;
+    let m;
+    while((m = re.exec(note)) !== null){
+      const t = m[1].trim();
+      if(t.length >= 2) out.push(t);
+    }
+    return out;
+  }
+
   function marksForItem(itemId){
     if(!reviewShotData || !Array.isArray(reviewShotData.ocrFields)) return [];
     const note = (aiNotes[itemId] || '') + ' ' + (document.getElementById('note-'+itemId) ? document.getElementById('note-'+itemId).textContent : '');
-    if(note.trim().length < 4) return [];
+    const phrases = quotedPhrases(note);
+    if(!phrases.length) return [];
     const hits = [];
     reviewShotData.ocrFields.forEach(f => {
       const t = String(f.inferText || '').trim();
       if(t.length < 2) return;
-      if(note.indexOf(t) === -1) return;
+      // 인용구가 OCR 한 덩어리보다 길 수도, 짧을 수도 있어 양방향으로 본다
+      const matched = phrases.some(q => q.indexOf(t) !== -1 || t.indexOf(q) !== -1);
+      if(!matched) return;
       const verts = (f.boundingPoly && f.boundingPoly.vertices) || [];
       if(verts.length < 4) return;
       const xs = verts.map(v => v.x), ys = verts.map(v => v.y);
@@ -2258,21 +2285,35 @@
     const hits = marksForItem(itemId);
     const name = (document.querySelector('#row-'+itemId+' .rt') || {}).textContent || ('' + itemId + '번');
     if(!hits.length){
-      setCaption(name, '이 항목은 특정 문구를 지목하지 않았어요. 배너 전체를 보고 판단한 항목입니다.');
+      setCaption(name, '사유가 특정 문구를 지목하지 않았어요. 배너 전체를 보고 판단한 항목입니다.');
       return;
     }
     const sx = img.clientWidth / (reviewShotData.w || img.naturalWidth || 1);
     const sy = img.clientHeight / (reviewShotData.h || img.naturalHeight || 1);
+    // 짚은 자리 하나만 있을 때는 나머지를 어둡게 덮어 시선을 몰아준다.
+    // 여러 곳이면 구멍을 여러 개 뚫을 수 없어(그림자가 겹쳐 더 어두워짐)
+    // 딤 없이 강조 테두리만 쓴다.
+    const PAD = 3;
+    if(hits.length === 1){
+      const h0 = hits[0];
+      const hole = document.createElement('div');
+      hole.className = 'review-hole';
+      hole.style.left = (h0.x * sx - PAD) + 'px';
+      hole.style.top = (h0.y * sy - PAD) + 'px';
+      hole.style.width = (h0.w * sx + PAD * 2) + 'px';
+      hole.style.height = (h0.h * sy + PAD * 2) + 'px';
+      marks.appendChild(hole);
+    }
     hits.forEach(hit => {
       const el = document.createElement('div');
       el.className = 'review-mark';
-      el.style.left = (hit.x * sx) + 'px';
-      el.style.top = (hit.y * sy) + 'px';
-      el.style.width = (hit.w * sx) + 'px';
-      el.style.height = (hit.h * sy) + 'px';
+      el.style.left = (hit.x * sx - PAD) + 'px';
+      el.style.top = (hit.y * sy - PAD) + 'px';
+      el.style.width = (hit.w * sx + PAD * 2) + 'px';
+      el.style.height = (hit.h * sy + PAD * 2) + 'px';
       marks.appendChild(el);
     });
-    setCaption(name, '사유에 언급된 문구 ' + hits.length + '곳을 표시했어요.');
+    setCaption(name, '사유가 지목한 문구 ' + hits.length + '곳을 표시했어요.');
   }
 
   document.addEventListener('click', (e) => {
