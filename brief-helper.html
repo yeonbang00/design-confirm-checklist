@@ -175,6 +175,8 @@
   .gl-heading{font-size:12px; font-weight:700; letter-spacing:0.04em; color:var(--num-text); background:var(--num-bg); display:inline-block; border-radius:20px; padding:4px 12px; margin:18px 0 10px;}
   .gl-heading:first-child{margin-top:0;}
   .gl-p{font-size:14.5px; line-height:1.85; color:var(--text); margin:0 0 12px;}
+  /* 카드 라벨 바로 아래 오는 핵심 방향 문단 — 별도 띠 제목 없이 이 문단이 곧 서두다 */
+  .gl-lead{font-size:15px; margin-bottom:2px;}
   .gl-list{margin:0 0 14px; padding-left:20px;}
   .gl-list li{font-size:14.5px; line-height:1.85; color:var(--text); margin-bottom:4px;}
 
@@ -653,7 +655,7 @@
 
     resultSection.innerHTML =
       '<div class="card" data-reveal="down"><div class="result-label">카피·비주얼 추가제안</div>' +
-      (data.coreDirection ? '<div class="gl-heading">핵심 제작 방향</div><p class="gl-p">' + escapeHtml(data.coreDirection) + '</p>' : '') +
+      (data.coreDirection ? '<p class="gl-p gl-lead">' + escapeHtml(data.coreDirection) + '</p>' : '') +
       formatDirection(data.creativeDirection) + '</div>' +
       visualRefCard +
       '<div class="card" data-reveal="down"><div class="result-label">주의할 점</div>' + pitfallsHtml + gapsHtml + '</div>';
@@ -762,17 +764,10 @@
       '첨부된 기획안(PPT 캡처) 이미지 안에 기획자가 직접 배치해둔 가안(초안 시안)이 있다면, 그 가안과 똑같은 레이아웃·구성·요소 배치를 그대로 따라 배너 하나를 다시 그려줘. 기획안에 함께 들어있는 레퍼런스 이미지들은 텍스트 배치 참고용인지 톤·분위기 참고용인지 케이스마다 다르니 그대로 따라 하지 말고, 톤이나 색감 참고 정도로만 가볍게 반영해줘.',
       data.coreDirection ? ('핵심 방향: ' + data.coreDirection) : '',
       '텍스트는 정확한 한글 카피를 그대로 넣으려 하지 말고, 헤드라인·서브카피·CTA가 들어갈 자리와 크기 정도만 짧고 단순한 더미 텍스트나 도형으로 표시해줘 — 실제 문구는 디자이너가 나중에 직접 넣을 거라 텍스트 정확도보다 레이아웃 배치가 훨씬 중요해.',
+      '결과물은 1:1 정사각형 배너 한 장이야 — 메타(인스타그램·페이스북) 피드용 1080x1080 대표안 규격이니 가로로 긴 구도를 억지로 밀어 넣지 말고 정사각 화면에 맞게 요소를 다시 배치해줘.',
       '결과물은 실제 광고 배너처럼 보이는 이미지 딱 한 장이어야 해. 컬러 팔레트 칩, 타이포그래피 스케일 표, 아이콘 목록, 여러 시안을 나열한 사이드바 같은 "디자인 시스템 설명 카드"나 "무드보드 콜라주" 형태로 만들지 마 — 배너 하나만 화면 전체에 꽉 차게 그려줘.',
     ];
     return parts.filter(Boolean).join('\n\n');
-  }
-
-  function pickBannerSize(width, height){
-    if(!width || !height) return '1024x1024';
-    const ratio = width / height;
-    if(ratio > 1.15) return '1536x1024';
-    if(ratio < 0.87) return '1024x1536';
-    return '1024x1024';
   }
 
   async function runBannerGeneration(){
@@ -791,7 +786,11 @@
           base64: latestPreparedImage.base64,
           mediaType: latestPreparedImage.mediaType,
           prompt: buildBannerPrompt(latestBriefData),
-          size: pickBannerSize(latestPreparedImage.width, latestPreparedImage.height)
+          // 무드보드는 항상 1:1로 뽑는다. 예전엔 업로드한 기획안 캡처의 비율을
+          // 그대로 따라갔는데, 기획안은 대개 16:9 PPT 슬라이드라 가로로 긴
+          // 무드보드가 나왔다 — 슬라이드 비율은 만들려는 배너의 비율과 아무
+          // 상관이 없다. 실무에서 대표안은 보통 메타 1080x1080이라 정사각이 기본.
+          size: '1024x1024'
         })
       });
       let data;
