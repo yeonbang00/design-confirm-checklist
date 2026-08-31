@@ -267,9 +267,14 @@ function comparisonInstruction(advertiserName) {
 // 정확히 같아야 한다.
 function faceCropInstruction(labels) {
   const list = labels.map((label, i) => `${i + 1}) ${label}`).join(', ');
-  return `\n\n얼굴 확대 크롭 안내: 마지막에 첨부된 이미지 ${labels.length}장은 원본 배너가 아니라, 원본에서 인물 얼굴 부분만 잘라 확대한 크롭입니다. 순서대로: ${list}. 이 크롭은 주변 장면(배경, 분위기, 다른 요소) 없이 얼굴 디테일만 보기 위한 참고 자료입니다.
+  return `\n\n확대 크롭 안내: 마지막에 첨부된 이미지 ${labels.length}장은 원본 배너가 아니라, 원본에서 인물의 얼굴·손 부분만 잘라 확대한 크롭입니다. 순서대로: ${list}. 이 크롭은 주변 장면(배경, 분위기, 다른 요소) 없이 해당 부위의 디테일만 보기 위한 참고 자료입니다.
 
-10번(신체 비율 왜곡)의 얼굴 판정을 할 때 이 크롭들을 반드시 활용하세요 — 원본 이미지 전체를 볼 때는 훈훈하거나 자연스러운 장면 전체의 인상 때문에 얼굴 디테일이 흐릿하게 뭉개진 걸 놓치기 쉽습니다. 이 크롭에서는 그런 맥락 없이 얼굴 자체만 보이니, 코끝·인중·윗입술·아랫입술·입꼬리·눈 주변 경계가 각각 뚜렷하게 구분되는지, 아니면 서로 뭉개지거나 흐려져 있는지 하나씩 짚어보세요. 크롭에서 발견한 문제는 10번 note의 "얼굴" 항목에 반영하세요. 크롭에서 봐도 문제가 없으면 "얼굴 이상없음"으로 판정해도 됩니다 — 억지로 문제를 만들어내지 마세요.`;
+10번(신체 비율 왜곡)을 판정할 때 이 크롭들을 반드시 활용하세요 — 원본 전체를 볼 때는 장면 전체의 인상 때문에 부위별 디테일이 뭉개진 걸 놓치기 쉽고, 화면에서 작게 잡힌 부위는 원본 해상도로는 확인 자체가 어렵습니다.
+
+- 얼굴 크롭: 코끝·인중·윗입술·아랫입술·입꼬리·눈 주변 경계가 각각 뚜렷하게 구분되는지, 아니면 서로 뭉개지거나 흐려져 있는지 하나씩 짚어보세요.
+- 손 크롭: 손가락 개수가 맞는지, 각 손가락의 마디가 꺾이는 방향이 해부학적으로 가능한지, 손가락 길이 비율이 자연스러운지, 물건을 쥔 손이라면 손가락이 물건을 감싸는 방식이 물리적으로 말이 되는지 하나씩 짚어보세요. 손은 AI 생성에서 가장 자주 무너지는 부위이니 특히 엄격하게 보세요.
+
+크롭에서 발견한 문제는 10번 note의 해당 부위 항목("얼굴" 또는 "손")에 반영하세요. 크롭에서 봐도 문제가 없으면 "이상없음"으로 판정해도 됩니다 — 억지로 문제를 만들어내지 마세요.`;
 }
 
 function brandGuidelineInstruction(advertiserName, guideline) {
@@ -606,7 +611,7 @@ export default async function handler(req, res) {
     ? faceCrops.filter((f) => f && f.base64 && f.mediaType).slice(0, 3)
     : [];
   const hasFaceCrops = validFaceCrops.length > 0;
-  const faceCropIns = hasFaceCrops ? faceCropInstruction(validFaceCrops.map((f) => f.label || '얼굴')) : '';
+  const faceCropIns = hasFaceCrops ? faceCropInstruction(validFaceCrops.map((f) => f.label || '부위')) : '';
 
   const promptText =
     BASE_PROMPT +
