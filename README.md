@@ -6,7 +6,7 @@
 
 | 페이지 | 설명 |
 |---|---|
-| `index.html` | 디자인 체크리스트 — 배너 시안을 올리면 17개 항목을 AI가 자동 판정 |
+| `index.html` | 배너 분석 — 배너 시안을 올리면 17개 항목을 AI가 자동 판정 |
 | `brief-helper.html` | 기획안 헬퍼 — 기획안(PPT) 캡처를 올리면 제작 방향 + 비주얼 레퍼런스 추천 |
 | `guide.html` | 브랜드 가이드 — 브랜드별 디자인 기준을 팀이 체크리스트로 직접 편집 |
 | `media-guide.html` | 매체 가이드 — 매체별 소재 등록 규격 참고 |
@@ -84,7 +84,7 @@ Vercel Hobby 플랜은 **서버리스 함수를 정확히 12개까지만** 허�
 
 ```
 01designclaude/
-├─ index.html               # 디자인 체크리스트
+├─ index.html               # 배너 분석
 ├─ brief-helper.html        # 기획안 헬퍼
 ├─ guide.html                # 브랜드 가이드
 ├─ media-guide.html          # 매체 가이드
