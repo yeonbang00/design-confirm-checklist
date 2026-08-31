@@ -6,7 +6,15 @@
 // response text when JSON parsing fails — so existing catch blocks in
 // callers (which check err.status for 429/5xx retry logic) work unchanged.
 
-const OPENAI_MODEL = 'gpt-5.6-sol';
+// 모델은 환경변수로 바꿀 수 있게 둔다 — sol/terra/luna는 요청·응답 형태가
+// 완전히 같아서(Responses API, reasoning.effort, json_object 모두 동일) 이
+// 상수 하나만 갈면 교체가 끝난다. 되돌리기도 환경변수 한 줄이라, 새 모델을
+// 붙일 때마다 코드를 고칠 필요가 없다.
+//
+// 기본값을 terra로 둔 이유: sol 대비 입력·출력 단가가 정확히 절반인데
+// (입력 $4→$2, 출력 $20→$12 / 1M) 프롬프트도 API 형태도 그대로 쓸 수 있다.
+// sol이 필요하면 OPENAI_MODEL=gpt-5.6-sol 로 즉시 되돌린다.
+export const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-5.6-terra';
 const OPENAI_URL = 'https://api.openai.com/v1/responses';
 
 // images: [{ base64, mediaType }, ...]

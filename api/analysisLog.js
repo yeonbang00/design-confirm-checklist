@@ -104,6 +104,8 @@ export default async function handler(req, res) {
         imageWidth: Number.isFinite(Number(body.imageWidth)) ? Number(body.imageWidth) : null,
         imageHeight: Number.isFinite(Number(body.imageHeight)) ? Number(body.imageHeight) : null,
         hasBrief: !!body.hasBrief,
+        // 어느 모델이 내린 판정인지 — 모델 교체 전후 판정 분포를 비교하는 데 쓴다
+        model: body.model ? String(body.model).slice(0, 40) : null,
       });
       // id를 돌려줘야 클라이언트가 이후 판정 수정을 이 기록에 붙일 수 있다
       res.status(200).json({ ok: true, id });

@@ -15,7 +15,7 @@ import { MEDIA_GUIDES } from './_mediaGuides.js';
 import { extractBriefDirection } from './_briefAnalysis.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { getBrandGuideState } from './_brandGuideStore.js';
-import { callOpenAI } from './_openaiClient.js';
+import { callOpenAI, OPENAI_MODEL } from './_openaiClient.js';
 import { runOcr, formatOcrForPrompt } from './_clovaOcr.js';
 import { checkSpelling, formatSpellCheckForPrompt } from './_spellChecker.js';
 import { extractSlidesFromPptx, matchSlide } from './_pptxParser.js';
@@ -645,6 +645,9 @@ export default async function handler(req, res) {
 
     if (briefError) parsed.briefError = briefError;
     if (briefDirection && briefDirection.layoutStats) parsed.layoutStats = briefDirection.layoutStats;
+    // 어떤 모델의 판정인지 분석 로그에 남기기 위해 함께 내려보낸다 — 모델을
+    // 바꿨을 때 판정 분포가 어떻게 달라졌는지 나중에 대조하려면 이게 있어야 한다.
+    parsed.model = OPENAI_MODEL;
     res.status(200).json(parsed);
   } catch (err) {
     const status = (err && err.status) || 500;

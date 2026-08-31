@@ -549,6 +549,8 @@
         e.advertiserId ? '<span>브랜드 <b>' + escapeHtml(e.advertiserId) + '</b></span>' : '',
         (e.imageWidth && e.imageHeight) ? '<span>' + e.imageWidth + '×' + e.imageHeight + '</span>' : '',
         e.hasBrief ? '<span>기획안 포함</span>' : '',
+        // 모델을 바꾼 전후로 판정이 어떻게 달라졌는지 건별로 대조할 수 있게
+        e.model ? '<span>' + escapeHtml(String(e.model).replace(/^gpt-5\.6-/, '')) + '</span>' : '',
         '<span>반려 <b>' + ((e.counts && e.counts.reject) || 0) + '</b> · 검토 <b>' + ((e.counts && e.counts.needsfix) || 0) + '</b></span>'
       ].filter(Boolean).join('');
       // 반려가 없으면 이 줄 자체를 그리지 않는다 — 바로 위 meta에 이미
