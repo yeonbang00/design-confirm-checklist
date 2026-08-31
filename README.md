@@ -20,7 +20,7 @@
 이미지 분석용 API 키는 절대 브라우저(프론트엔드)에 있으면 안 됩니다. 그래서 각 페이지는 우리 서버의 `/api/*`만 호출하고, 그 서버 함수 안에서만 OpenAI API를 진짜 키로 호출하는 구조입니다. 키는 배포 플랫폼의 "환경변수"에만 저장되고, 코드나 브라우저 어디에도 노출되지 않습니다.
 
 ```
-브라우저 ──POST 이미지──▶ /api/analyze (우리 서버) ──API 키로 호출──▶ OpenAI API (GPT-5.6 Sol)
+브라우저 ──POST 이미지──▶ /api/analyze (우리 서버) ──API 키로 호출──▶ OpenAI API (GPT-5.6 Terra)
 ```
 
 정적 자산(이미지, 브랜드 가이드 상태, 히스토리 등)은 Vercel Blob Storage에 저장됩니다 — 별도 데이터베이스가 없습니다.
@@ -29,7 +29,8 @@
 
 | 이름 | 용도 |
 |---|---|
-| `OPENAI_API_KEY` | 배너/기획안 분석용 OpenAI API 키 (GPT-5.6 Sol) |
+| `OPENAI_API_KEY` | 배너/기획안 분석용 OpenAI API 키 |
+| `OPENAI_MODEL` | (선택) 분석 모델. 미지정 시 `gpt-5.6-terra`. sol/luna로 바꾸려면 이 값만 교체 |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob Storage 읽기/쓰기 (Blob Storage를 프로젝트에 연결하면 자동 생성됨) |
 | `BRAND_GUIDE_EDIT_PASSWORD` | 브랜드/매체 가이드 저장, 히스토리 삭제 등 편집 작업에 쓰는 팀 공유 비밀번호 |
 | `ADMIN_PASSWORD` | `admin.html`(가입 승인 관리 페이지) 접근 비밀번호 — 사이트 로그인과 별개 |
