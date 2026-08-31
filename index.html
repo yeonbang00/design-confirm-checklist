@@ -293,6 +293,10 @@
   .stbtn[data-status="na"]{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); color:var(--ink-2);}
   .verdict-menu{position:absolute; top:calc(100% + 6px); right:0; z-index:30; display:none; padding:6px; gap:4px; flex-direction:column; border-radius:12px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95);}
   .verdict-menu.open{display:flex;}
+  /* 열린 메뉴가 있는 행은 위로 올린다 — .row가 position:relative인데 z-index가
+     없어서, DOM 순서상 뒤에 오는 행들의 판정 배지가 메뉴를 뚫고 그려지던 문제.
+     (열렸을 때만 올려서 평소 쌓임 순서는 건드리지 않는다) */
+  .row:has(.verdict-menu.open){z-index:40;}
   .verdict-menu button{min-width:92px; text-align:left; font-size:12px; font-weight:600; padding:8px 12px; border-radius:8px; border:none; background:none; color:var(--ink-2); cursor:pointer; transition:background .2s ease,color .2s ease;}
   .verdict-menu button:hover{background:rgba(255,255,255,.07); color:var(--ink);}
   .row[data-status="pass"]::before{background:var(--pass);}
@@ -476,6 +480,14 @@
   .content .stbtn[data-status="needsfix"]{border-color:rgba(239,163,0,.5) !important;}
   .content .stbtn[data-status="reject"]{border-color:rgba(240,68,47,.45) !important;}
   .content .stbtn[data-status="na"]{border-color:rgba(11,12,14,.12) !important; color:var(--na);}
+  /* 판정 변경 팝오버도 라이트존에서는 밝게 — 원래 다크 전용 색만 있어서
+     흰 배경 위에 검은 메뉴가 그대로 떠 이질적으로 보였다. */
+  .content .verdict-menu{
+    background:#FFFFFF; border-color:rgba(11,12,14,.12);
+    box-shadow:0 24px 48px -20px rgba(11,12,14,.28);
+  }
+  .content .verdict-menu button{color:#4C5145;}
+  .content .verdict-menu button:hover{background:rgba(11,12,14,.06); color:#16190F;}
 
   /* 진행 막대: 흰 구간에서는 네온 대신 잉크 톤 */
   .checklist-summary{display:none;}
