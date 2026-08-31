@@ -2075,7 +2075,11 @@
   // 보고는 계속 놓쳐서(맥락상 "훈훈한 장면"이라 관대하게 보는 것으로 추정),
   // 얼굴 위치를 먼저 가볍게 물어본 뒤 그 부분만 잘라 확대해서 별도
   // 이미지로 함께 보낸다. 실패해도 빈 배열만 오므로 메인 분석은 그대로 진행.
+  // 얼굴 검출 좌표 — 판정 옆 배너에서 7·10번을 누를 때 얼굴을 짚는 데 쓴다
+  let lastFaceRects = [];
+
   async function fetchFaceCrops(canvas, base64, mediaType, analyzedWidth, analyzedHeight){
+    lastFaceRects = [];
     let faces;
     try{
       const response = await fetch('/api/detectFaces', {
@@ -2108,7 +2112,12 @@
       out.width = outW; out.height = outH;
       out.getContext('2d').drawImage(canvas, left, top, w, h, 0, 0, outW, outH);
       const cropBase64 = out.toDataURL('image/jpeg', 0.88).split(',')[1];
-      if(cropBase64) crops.push({ label: f.label || '얼굴', base64: cropBase64, mediaType: 'image/jpeg' });
+      if(cropBase64){
+        crops.push({ label: f.label || '얼굴', base64: cropBase64, mediaType: 'image/jpeg' });
+        // 좌표는 API로 보내지 않고 화면 표시용으로만 따로 보관한다 — OCR 박스와
+        // 같은 좌표계(분석 캔버스 기준)라 그대로 배너 위에 겹칠 수 있다.
+        lastFaceRects.push({ x: left, y: top, w: w, h: h });
+      }
     }
     return crops;
   }
@@ -2301,6 +2310,11 @@
     return out;
   }
 
+  // 7번(피사체 보정)·10번(신체 비율 왜곡)은 문구가 아니라 사람을 보는 항목이라
+  // 인용구가 없다. 대신 얼굴 검출 좌표가 이미 있으니 그걸로 짚는다. 손·발은
+  // 좌표가 없어 짚지 못하므로, 캡션에서 그 한계를 분명히 밝힌다.
+  const FACE_ITEMS = [7, 10];
+
   function highlightItem(itemId){
     const box = document.getElementById('reviewShot');
     const cap = document.getElementById('reviewShotCap');
@@ -2308,10 +2322,18 @@
     clearReviewMarks();
     const img = document.getElementById('reviewShotImg');
     const marks = document.getElementById('reviewShotMarks');
-    const hits = marksForItem(itemId);
+    let hits = marksForItem(itemId);
+    let faceMode = false;
+    const faces = (reviewShotData && Array.isArray(reviewShotData.faceRects)) ? reviewShotData.faceRects : [];
+    if(!hits.length && FACE_ITEMS.indexOf(itemId) !== -1 && faces.length){
+      hits = faces.map(f => ({ x: f.x, y: f.y, w: f.w, h: f.h }));
+      faceMode = true;
+    }
     const name = (document.querySelector('#row-'+itemId+' .rt') || {}).textContent || ('' + itemId + '번');
     if(!hits.length){
-      setCaption(name, '사유가 특정 문구를 지목하지 않았어요. 배너 전체를 보고 판단한 항목입니다.');
+      // "배너 전체를 보고 판단했다"고 쓰면 사실이 아니다 — 그림자 방향이나 로고처럼
+      // 특정 부분을 보고 내린 판정도 많고, 다만 우리가 그 위치를 모를 뿐이다.
+      setCaption(name, '짚을 수 있는 위치가 없어요. 문구와 얼굴만 표시할 수 있으니 사유를 보고 이미지에서 직접 확인해주세요.');
       return;
     }
     const sx = img.clientWidth / (reviewShotData.w || img.naturalWidth || 1);
@@ -2362,7 +2384,11 @@
       el.style.width = b.w + 'px'; el.style.height = b.h + 'px';
       marks.appendChild(el);
     });
-    setCaption(name, '사유가 지목한 자리 ' + boxes.length + '곳을 표시했어요.');
+    // 항목마다 못 짚는 대상이 달라서 한계를 그 항목 기준으로 적는다
+    const faceLimit = (itemId === 10) ? '손·발은' : '얼굴 외 피사체는';
+    setCaption(name, faceMode
+      ? ('검출된 얼굴 ' + boxes.length + '곳이에요. ' + faceLimit + ' 위치를 짚을 수 없으니 사유와 대조해 확인해주세요.')
+      : ('사유가 지목한 자리 ' + boxes.length + '곳을 표시했어요.'));
   }
 
   document.addEventListener('click', (e) => {
@@ -2551,6 +2577,7 @@
             dataUrl: 'data:' + prepared.mediaType + ';base64,' + prepared.base64,
             w: prepared.analyzedWidth, h: prepared.analyzedHeight,
             ocrFields: ocrFields,
+            faceRects: lastFaceRects.slice(),
           });
           collapseHeroToResults();
           logAnalysis(result, {
