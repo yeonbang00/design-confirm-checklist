@@ -143,7 +143,19 @@
 
   /* ---------- 소재별 분석 기록 ---------- */
   .log-entry{display:flex; gap:16px; background:var(--card); border:1px solid rgba(255,255,255,.11); border-radius:14px; padding:14px; margin-bottom:10px;}
-  .log-thumb{width:120px; height:120px; flex:none; border-radius:9px; overflow:hidden; background:rgba(255,255,255,.05); display:flex; align-items:center; justify-content:center;}
+  .log-thumb{position:relative; width:120px; height:120px; flex:none; border-radius:9px; overflow:hidden; background:rgba(255,255,255,.05); display:flex; align-items:center; justify-content:center; text-decoration:none;}
+  .log-zoom{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(11,12,14,.72); color:#EDEEF0; font-size:11.5px; font-weight:600;
+    opacity:0; transition:opacity .2s ease;
+  }
+  .log-thumb:hover .log-zoom{opacity:1;}
+  /* AI 판정을 사람이 고친 내역 — 통계만으로는 원인을 못 찾으니 건별로 보여준다 */
+  .log-flips{display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-bottom:9px;}
+  .log-flips-k{font-size:10.5px; font-weight:600; letter-spacing:.06em; color:var(--text-3);}
+  .log-flip{font-size:11.5px; padding:4px 8px; border-radius:6px; background:rgba(138,162,255,.14); color:#A9BCFF; line-height:1.4;}
+  .log-flip b{font-weight:700; color:#CBD7FF;}
+  .log-flipn{color:#A9BCFF;}
   .log-thumb img{width:100%; height:100%; object-fit:contain; display:block;}
   .log-thumb.none{font-size:11px; color:var(--text-3);}
   .log-entry-body{flex:1; min-width:0;}
@@ -404,6 +416,7 @@
   // ---------- 판정 분포 ----------
   // 17개 항목 각각이 얼마나 자주 걸렸는지(검토+반려 비율)를 높은 순으로 보여준다.
   // 프롬프트를 어느 항목부터 손볼지 정하는 근거로 쓰기 위한 화면.
+  const STATUS_LABEL = { pass:'통과', needsfix:'검토필요', reject:'반려', na:'해당없음', null:'—', '':'—' };
   const ITEM_NAMES = {
     1:'전략 적합성', 2:'위계 및 구조', 3:'타이포·정렬·여백·명도대비', 4:'정보 정확성',
     5:'컬러 일관성', 6:'합성 리얼리티', 7:'피사체 보정', 8:'그래픽 완성도',
@@ -437,13 +450,16 @@
         + '</div>';
       const rows = (s.rows || []).slice().sort((a,b) => b.flagRate - a.flagRate);
       html += '<table class="log-table"><thead><tr>'
-        + '<th>항목</th><th>걸림비율</th><th>검토</th><th>반려</th><th>통과</th><th>해당없음</th>'
+        + '<th>항목</th><th>걸림비율</th><th>수정됨</th><th>검토</th><th>반려</th><th>통과</th><th>해당없음</th>'
         + '</tr></thead><tbody>';
       rows.forEach(r => {
         const name = ITEM_NAMES[r.id] || ('항목 ' + r.id);
+        // "수정됨"은 사람이 AI 판정을 뒤집은 횟수 — 이 값이 크면 그 항목의
+        // 기준이 실제와 안 맞는다는 뜻이라, 걸림비율보다 직접적인 신호다.
         html += '<tr data-item-id="' + r.id + '">'
           + '<td class="n">' + String(r.id).padStart(2,'0') + ' ' + escapeHtml(name) + '</td>'
           + '<td><div style="display:flex;align-items:center;gap:9px;"><div class="log-bar"><span style="width:' + r.flagRate + '%"></span></div><span>' + r.flagRate + '%</span></div></td>'
+          + '<td>' + (r.flips ? '<b class="log-flipn">' + r.flips + '</b>' : '0') + '</td>'
           + '<td>' + r.needsfix + '</td><td>' + r.reject + '</td><td>' + r.pass + '</td><td>' + r.na + '</td>'
           + '</tr>';
       });
@@ -507,9 +523,19 @@
       // 반려만 보여준다 — 검토 필요까지 같이 나오면 목록이 길어져서
       // 정작 고쳐야 할 반려 건이 묻힌다(검토 필요 개수는 위 meta에 숫자로 남음).
       const flagged = (e.verdicts || []).filter(v => v.status === 'reject');
+      // 썸네일만으로는 정렬 3px 같은 문제를 확인할 수 없어서, 누르면 큰 이미지를
+      // 새 탭으로 연다(없으면 썸네일이라도 연다).
+      const big = e.fullUrl || e.thumbUrl;
       const thumb = e.thumbUrl
-        ? '<div class="log-thumb"><img src="' + escapeHtml(e.thumbUrl) + '" alt="분석한 소재" loading="lazy"></div>'
+        ? '<a class="log-thumb" href="' + escapeHtml(big) + '" target="_blank" rel="noopener" title="크게 보기">'
+          + '<img src="' + escapeHtml(e.thumbUrl) + '" alt="분석한 소재" loading="lazy"><span class="log-zoom">크게 보기</span></a>'
         : '<div class="log-thumb none">이미지 없음</div>';
+      // AI 판정을 사람이 고친 내역 — "무엇이 왜 틀렸는지" 조사의 출발점
+      const flips = (e.flips || []).map(f => {
+        const nm = ITEM_NAMES[f.itemId] || '';
+        return '<span class="log-flip">' + String(f.itemId).padStart(2,'0') + ' ' + escapeHtml(nm)
+          + ' <b>' + STATUS_LABEL[f.from] + ' → ' + STATUS_LABEL[f.to] + '</b></span>';
+      }).join('');
       const meta = [
         '<span>' + escapeHtml(e.date || '') + '</span>',
         e.advertiserId ? '<span>브랜드 <b>' + escapeHtml(e.advertiserId) + '</b></span>' : '',
@@ -525,6 +551,7 @@
       return '<div class="log-entry">' + thumb + '<div class="log-entry-body">'
         + '<div class="log-meta">' + meta + '</div>'
         + '<div class="log-flags">' + flags + '</div>'
+        + (flips ? '<div class="log-flips"><span class="log-flips-k">사람이 수정</span>' + flips + '</div>' : '')
         + (e.summary ? '<div class="log-summary-text">' + escapeHtml(e.summary) + '</div>' : '')
         + '</div>'
         + '<button type="button" class="log-del" data-log-id="' + escapeHtml(e.id) + '" title="이 기록 삭제">&times;</button>'

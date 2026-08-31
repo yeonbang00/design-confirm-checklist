@@ -63,6 +63,31 @@ export async function removeAnalysisLog(id) {
   return target;
 }
 
+// 리뷰어가 AI 판정을 직접 고친 내역을 해당 기록에 붙인다.
+// 같은 항목을 여러 번 고치면 마지막 상태만 남긴다 — 중간 과정은 의미가 없고,
+// from은 "AI가 원래 뭐라고 했는지"를 유지해야 하므로 첫 기록의 값을 지킨다.
+export async function addVerdictFlip(logId, flip) {
+  const items = await getAnalysisLog();
+  const target = items.find((it) => it.id === logId);
+  if (!target) return false;
+  if (!Array.isArray(target.flips)) target.flips = [];
+  const existing = target.flips.find((f) => f.itemId === flip.itemId);
+  if (existing) {
+    existing.to = flip.to;
+    existing.at = flip.at;
+  } else {
+    target.flips.push(flip);
+  }
+  // AI 판정과 같은 값으로 되돌린 건 "뒤집음"이 아니므로 제거한다
+  target.flips = target.flips.filter((f) => {
+    const original = (target.verdicts || []).find((v) => v.id === f.itemId);
+    return !original || original.status !== f.to;
+  });
+  const bytes = Buffer.from(JSON.stringify({ items }), 'utf-8');
+  await put('analysis-log.json', bytes, 'application/json', { allowOverwrite: true });
+  return true;
+}
+
 // 항목별 판정 분포를 집계한다 — 관리자 화면에서 "어떤 항목이 자주 걸리는가"를
 // 한눈에 보기 위한 것. 저장된 원본을 그대로 훑어 계산하므로 별도 인덱스가 없다.
 export function summarizeLog(items) {
@@ -70,9 +95,14 @@ export function summarizeLog(items) {
   const totals = { pass: 0, needsfix: 0, reject: 0, na: 0 };
   items.forEach((entry) => {
     (entry.verdicts || []).forEach((v) => {
-      if (!byItem[v.id]) byItem[v.id] = { id: v.id, pass: 0, needsfix: 0, reject: 0, na: 0 };
+      if (!byItem[v.id]) byItem[v.id] = { id: v.id, pass: 0, needsfix: 0, reject: 0, na: 0, flips: 0 };
       if (byItem[v.id][v.status] !== undefined) byItem[v.id][v.status]++;
       if (totals[v.status] !== undefined) totals[v.status]++;
+    });
+    // 사람이 AI 판정을 고친 횟수 — 이 수치가 높은 항목이 곧 기준을 손봐야 할 항목
+    (entry.flips || []).forEach((f) => {
+      if (!byItem[f.itemId]) byItem[f.itemId] = { id: f.itemId, pass: 0, needsfix: 0, reject: 0, na: 0, flips: 0 };
+      byItem[f.itemId].flips++;
     });
   });
   const rows = Object.values(byItem).sort((a, b) => a.id - b.id);

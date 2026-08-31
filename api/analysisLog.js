@@ -11,18 +11,25 @@
 //     실수로 식별 정보가 새어 들어오지 않게 하는 장치다.
 //  3) 시각은 날짜까지만 남긴다. 시:분까지 남기면 "몇 시에 올렸는지"로
 //     소수 인원 팀에서는 사실상 개인이 특정되기 때문이다.
-//  4) 썸네일은 저장하되 작게(가로 400px)만 남긴다 — 판정이 왜 틀렸는지는
-//     소재를 봐야 알 수 있어서 집계만으로는 고도화가 안 된다. 다만 원본을
-//     통째로 쌓을 이유는 없어 축소본만 둔다. 소재는 "누가 올렸나"가 아니라
-//     "무엇을 판정했나"이므로 위 익명 원칙과 충돌하지 않는다.
+//  4) 이미지는 목록용 썸네일(400px)과 조사용 축소본(1600px) 두 장을 남긴다 —
+//     판정이 왜 틀렸는지는 소재를 봐야 알 수 있고, 정렬 3px 차이 같은 문제는
+//     작은 썸네일로는 확인이 불가능하다. 원본 그대로는 저장하지 않는다.
+//     소재는 "누가 올렸나"가 아니라 "무엇을 판정했나"이므로 익명 원칙과
+//     충돌하지 않는다.
+//
+// PATCH /api/analysisLog — 리뷰어가 판정을 직접 고치면 그 사실을 기록에 붙인다.
+// 별도 피드백 버튼(👎)을 두는 대신 이미 있는 "판정 변경" 동작을 신호로 쓴다:
+// 추가 클릭이 없고, "틀렸다"가 아니라 "반려→통과처럼 어느 방향으로 틀렸다"까지
+// 남아서 프롬프트를 고칠 때 훨씬 쓸모가 있다.
 
-import { addAnalysisLog, getAnalysisLog, removeAnalysisLog, summarizeLog } from './_analysisLogStore.js';
+import { addAnalysisLog, getAnalysisLog, removeAnalysisLog, addVerdictFlip, summarizeLog } from './_analysisLogStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { put } from './_blobPut.js';
 
 const VALID_STATUS = ['pass', 'needsfix', 'reject', 'na'];
 
-export const config = { api: { bodyParser: { sizeLimit: '2mb' } } };
+// 썸네일 + 1600px 원본급 이미지를 base64로 함께 받으므로 여유를 둔다
+export const config = { api: { bodyParser: { sizeLimit: '8mb' } } };
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -63,19 +70,23 @@ export default async function handler(req, res) {
     const date = kst.toISOString().slice(0, 10);
     const id = (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
 
-    // 썸네일 업로드 — 실패해도 로그 자체는 남긴다(썸네일 없이).
-    let thumbUrl = null;
-    if (typeof body.thumbBase64 === 'string' && body.thumbBase64.length > 100) {
+    // 이미지 업로드 — 실패해도 로그 자체는 남긴다(이미지 없이).
+    // 목록용 썸네일과, 눌러서 확대할 원본급 이미지를 따로 올린다: 정렬 3px 차이
+    // 같은 문제는 작은 썸네일로 확인이 안 돼서 조사에 큰 이미지가 필요하다.
+    async function upload(base64, name, maxBytes) {
+      if (typeof base64 !== 'string' || base64.length < 100) return null;
       try {
-        const bytes = Buffer.from(body.thumbBase64, 'base64');
-        // 400px/품질0.7이면 보통 20~50KB — 이보다 크면 클라이언트가 잘못 보낸 것
-        if (bytes.length <= 400 * 1024) {
-          thumbUrl = await put(`analysis-log/${id}.jpg`, bytes, 'image/jpeg');
-        }
+        const bytes = Buffer.from(base64, 'base64');
+        if (bytes.length > maxBytes) return null;   // 클라이언트가 잘못 보낸 경우 방어
+        return await put(`analysis-log/${id}${name}.jpg`, bytes, 'image/jpeg');
       } catch (e) {
-        thumbUrl = null;
+        return null;
       }
     }
+    const [thumbUrl, fullUrl] = await Promise.all([
+      upload(body.thumbBase64, '', 400 * 1024),
+      upload(body.fullBase64, '-full', 3 * 1024 * 1024),
+    ]);
 
     try {
       await addAnalysisLog({
@@ -84,6 +95,7 @@ export default async function handler(req, res) {
         verdicts,
         counts,
         thumbUrl,
+        fullUrl,
         // 총평은 "왜 이렇게 판정했는가"의 요약이라 고도화에 가장 쓸모가 크다
         summary: body.summary ? String(body.summary).slice(0, 600) : null,
         // 아래는 배너 자체의 속성이라 개인과 무관하고, 고도화에 직접 쓰인다.
@@ -95,7 +107,8 @@ export default async function handler(req, res) {
         imageHeight: Number.isFinite(Number(body.imageHeight)) ? Number(body.imageHeight) : null,
         hasBrief: !!body.hasBrief,
       });
-      res.status(200).json({ ok: true });
+      // id를 돌려줘야 클라이언트가 이후 판정 수정을 이 기록에 붙일 수 있다
+      res.status(200).json({ ok: true, id });
     } catch (e) {
       // 로그 적재는 부가 기능이라, 실패해도 사용자 분석 흐름을 막지 않는다.
       res.status(500).json({ error: '로그 저장에 실패했습니다.' });
@@ -117,6 +130,36 @@ export default async function handler(req, res) {
     const summary = summarizeLog(items);
     // 최근 것이 위로 오게 — 관리자 화면에서 최근 경향부터 본다.
     res.status(200).json({ summary, items: items.slice().reverse().slice(0, 300) });
+    return;
+  }
+
+  // 리뷰어가 판정을 고치면 그 내역을 해당 기록에 붙인다. 관리자 비밀번호는
+  // 요구하지 않는다 — 판정을 고치는 건 모든 팀원이 하는 일이고, 여기서도
+  // 누가 고쳤는지는 저장하지 않는다.
+  if (req.method === 'PATCH') {
+    if (rejectIfNotSameOrigin(req, res)) return;
+
+    const body = req.body || {};
+    const logId = body.logId ? String(body.logId) : '';
+    const itemId = Number(body.itemId);
+    const from = String(body.from || '');
+    const to = String(body.to || '');
+    if (!logId || !Number.isInteger(itemId) || !VALID_STATUS.includes(to)) {
+      res.status(400).json({ error: '요청이 올바르지 않습니다.' });
+      return;
+    }
+    try {
+      const ok = await addVerdictFlip(logId, {
+        itemId,
+        from: VALID_STATUS.includes(from) ? from : null,
+        to,
+        // 같은 항목을 여러 번 고치면 마지막 값만 의미가 있으므로 덮어쓴다
+        at: new Date().toISOString(),
+      });
+      res.status(200).json({ ok });
+    } catch (e) {
+      res.status(500).json({ error: '기록에 실패했습니다.' });
+    }
     return;
   }
 
