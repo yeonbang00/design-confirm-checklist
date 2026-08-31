@@ -156,12 +156,14 @@
     font:600 13px/1 var(--font-mono); color:var(--ink-4); width:21px;
     font-variant-numeric:tabular-nums; transition:color .3s ease;
   }
+  /* 두께는 항상 2px로 얇게 두고, 현재 위치는 길이와 색으로만 구분한다 —
+     막대를 굵게 하면 비활성 항목까지 굵은 대시처럼 보여 레일이 무거워진다. */
   .spy-bar{
-    width:20px; height:3px; border-radius:3px; background:rgba(255,255,255,.2);
+    width:16px; height:2px; border-radius:2px; background:rgba(255,255,255,.14);
     transition:width .35s cubic-bezier(.2,.8,.2,1), background-color .3s ease;
   }
   .spy-item:hover .spy-num{color:var(--ink-2);}
-  .spy-item:hover .spy-bar{width:30px; background:rgba(255,255,255,.42);}
+  .spy-item:hover .spy-bar{width:26px; background:rgba(255,255,255,.38);}
   .spy-item.on .spy-num{color:var(--accent); font-weight:700;}
   .spy-item.on .spy-bar{width:42px; background:var(--accent);}
   /* 항목명은 hover할 때만 옆으로 흘러나온다 — 평소엔 숫자만 있는 얇은 레일 */
