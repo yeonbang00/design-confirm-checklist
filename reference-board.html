@@ -227,13 +227,6 @@
 
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
-  .lightbox{display:none; position:fixed; inset:0; background:rgba(29,29,31,0.85); z-index:100; align-items:center; justify-content:center; padding:40px;}
-  .lightbox.show{display:flex;}
-  .lightbox-inner{max-width:100%; max-height:100%; display:flex; flex-direction:column; align-items:center; gap:14px;}
-  .lightbox img{max-width:100%; max-height:75vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-  .lightbox img[src=""]{display:none;}
-  .lightbox-caption{color:rgba(255,255,255,.045); font-size:13px; text-align:center;}
-  .lightbox-close{position:absolute; top:24px; right:28px; background:none; border:none; color:var(--surface); font-size:32px; line-height:1; cursor:pointer; padding:8px;}
 
   @media (max-width:640px){
     .page{padding:28px 18px 70px;}
@@ -463,14 +456,6 @@
   </div>
 </div>
 
-<div class="lightbox" id="lightbox">
-  <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">&times;</button>
-  <div class="lightbox-inner">
-    <img id="lightboxImg" src="" alt="확대된 레퍼런스 이미지">
-    <div class="lightbox-caption" id="lightboxCaption"></div>
-  </div>
-</div>
-
 <script>
   document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -492,24 +477,6 @@
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
-
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImg = document.getElementById('lightboxImg');
-  const lightboxCaption = document.getElementById('lightboxCaption');
-  const lightboxClose = document.getElementById('lightboxClose');
-
-  function openLightbox(fullSrc, caption){
-    lightboxCaption.textContent = caption || '';
-    lightbox.classList.add('show');
-    lightboxImg.src = fullSrc;
-  }
-  function closeLightbox(){
-    lightbox.classList.remove('show');
-    lightboxImg.src = '';
-  }
-  lightboxClose.addEventListener('click', closeLightbox);
-  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
-  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
 
   const categoryOptBtn = document.getElementById('categoryOptBtn');
   const categoryOptMenu = document.getElementById('categoryOptMenu');
@@ -662,7 +629,7 @@
           thumbBtn.className = 'ref-thumb';
           thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '레퍼런스') + '" loading="lazy">' +
             (item.ownWork ? '<span class="nhn-badge">NHN AD</span>' : '');
-          thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
+          thumbBtn.addEventListener('click', () => adcheckLightbox(item.fullUrl, caption));
           wrap.appendChild(thumbBtn);
           // 전체 보기에서는 브랜드가 뒤섞여 태그가 빽빽해지므로 메모만 남긴다
           const showBrand = id !== 'all';
@@ -1135,7 +1102,7 @@
     thumbBtn.className = 'ref-thumb';
     thumbBtn.innerHTML = '<img src="' + item.thumbUrl + '" alt="' + escapeHtml(item.brandName || '반려사례') + '" loading="lazy">' +
       '<span class="rc-case-badge">반려사례</span>';
-    thumbBtn.addEventListener('click', () => openLightbox(item.fullUrl, caption));
+    thumbBtn.addEventListener('click', () => adcheckLightbox(item.fullUrl, caption));
     wrap.appendChild(thumbBtn);
 
     const capDiv = document.createElement('div');
@@ -1348,6 +1315,7 @@
     onScroll();
   })();
 </script>
+<script src="assets/adcheck-lightbox.js?v=1"></script>
 <script src="assets/adcheck-reveal.js?v=9"></script>
 <script src="assets/adcheck-password-modal.js?v=1"></script>
 
