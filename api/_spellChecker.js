@@ -46,21 +46,24 @@ function isPunctuationOnlySuggestion(orgStr, candWord) {
   return candWord.replace(/[.?!]+$/, '') === orgStr;
 }
 
-// 공백만 다른 제안(예: "3만원"→"3만 원")도 올리지 않는다.
+// 공백을 "없애라"는 제안만 걸러낸다. 공백을 "넣어라"는 제안은 그대로 올린다.
 //
-// 이 검사기에 넘기는 문장은 OCR 필드를 읽기 순서로 이어붙여 만든 것이라
-// 띄어쓰기가 원본 그대로가 아니다 — buildReadingOrderText가 필드 사이에
-// 공백을 넣기 때문에 디자인상 붙어 있던 글자가 떨어지고, 반대로 한 필드
-// 안에서 OCR이 공백을 흘리면 떨어져 있던 글자가 붙는다. 즉 이 문장의
-// 띄어쓰기는 애초에 배너의 띄어쓰기가 아니다.
+// 실제 CLOVA 응답을 확인해보니 띄어쓰기를 필드 경계로 정확히 보존한다:
+//   "최대 3만 원 혜택" → '최대' '3만' '원' '혜택' (4개)
+//   "최대 3만원 혜택"  → '최대' '3만원' '혜택'    (3개)
+// 즉 붙여 쓴 글자는 한 필드로 오므로, "3만원 → 3만 원"처럼 공백을 넣으라는
+// 제안은 배너가 실제로 붙여 쓴 것이 맞고 신뢰할 수 있다.
 //
-// 실제로 "최대 3만 원"처럼 제대로 띄어 쓴 배너에 대고 계속 "띄어 쓰라"는
-// 지적이 나왔다. 판단 근거가 될 수 없는 신호라 아예 넘기지 않고, 띄어쓰기는
-// 이미지를 직접 보고 판단하도록 프롬프트에 따로 안내한다.
-function isSpacingOnlySuggestion(orgStr, candWord) {
+// 반대로 buildReadingOrderText는 필드 사이마다 공백을 넣기 때문에, 디자인상
+// 자간이 벌어졌을 뿐인 곳이나 서로 다른 블록이 이어진 곳에 없던 공백이
+// 생긴다. 그래서 "공백을 없애라"는 제안은 우리가 만든 공백을 지적하는
+// 것일 수 있어 신뢰할 수 없다.
+function isSpaceRemovalSuggestion(orgStr, candWord) {
   if (!orgStr || !candWord) return false;
   const strip = (t) => t.replace(/\s+/g, '');
-  return strip(orgStr) === strip(candWord);
+  if (strip(orgStr) !== strip(candWord)) return false;   // 글자 자체가 다르면 대상 아님
+  const spaces = (t) => (t.match(/\s/g) || []).length;
+  return spaces(candWord) < spaces(orgStr);
 }
 
 function parseSpellerXml(xml) {
@@ -82,7 +85,7 @@ function parseSpellerXml(xml) {
     })
     .filter((e) => e.orgStr && e.candWord
       && !isPunctuationOnlySuggestion(e.orgStr, e.candWord)
-      && !isSpacingOnlySuggestion(e.orgStr, e.candWord));
+      && !isSpaceRemovalSuggestion(e.orgStr, e.candWord));
 }
 
 export async function checkSpelling(fields) {
@@ -124,7 +127,7 @@ ${lines.join('\n')}
 
 주의 — 이 결과는 참고 신호일 뿐입니다. 그대로 신뢰해서 기계적으로 판정하지 말고 아래를 감안해 실제 문제인 경우만 4번에서 지적하세요:
 - OCR 텍스트를 화면상 읽는 순서로 이어붙여 검사한 결과라, 서로 다른 디자인 블록(예: 헤드라인과 CTA 문구)이 하나의 문장처럼 이어지면서 실제로는 없는 오류로 보일 수 있습니다.
-- 띄어쓰기만 다른 제안은 이 목록에서 미리 걸러냈습니다. 이어붙이는 과정에서 없던 공백이 생기거나 있던 공백이 사라져서, 이 문장의 띄어쓰기는 배너의 실제 띄어쓰기가 아니기 때문입니다. 띄어쓰기는 반드시 이미지에 인쇄된 글자를 직접 보고 판단하고, 검사기 결과를 근거로 띄어쓰기를 지적하지 마세요.
+- 공백을 없애라는 제안(예: "3만 원"→"3만원")은 미리 걸러냈습니다. 이어붙이는 과정에서 없던 공백이 생길 수 있어 신뢰할 수 없기 때문입니다. 반대로 공백을 넣으라는 제안(예: "3만원"→"3만 원")은 배너가 실제로 붙여 쓴 것이 맞으니, 이미지에서 그 부분을 확인한 뒤 지적하세요.
 - 브랜드명·상품명·신조어처럼 사전에 없는 고유명사는 검사기가 오류로 잡아도 실제로는 정상입니다.
-- 이미지 안 실제 텍스트를 다시 확인했을 때도 명백히 자모가 틀린 경우(예: "구매하고"가 "구매햐고")처럼 확실한 오탈자만 지적하고, note에 검사기가 제안한 대치어를 근거로 남기세요. 애매하면 지적하지 말고 넘어가세요.`;
+- 이미지 안 실제 텍스트를 다시 확인했을 때도 명백히 자모가 틀렸거나(예: "구매하고"가 "구매햐고") 붙여 쓴 게 확인되는 띄어쓰기 오류만 지적하고, note에 검사기가 제안한 대치어를 근거로 남기세요. 애매하면 지적하지 말고 넘어가세요.`;
 }
