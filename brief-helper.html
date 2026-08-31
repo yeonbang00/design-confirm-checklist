@@ -343,7 +343,7 @@
 
   <div class="preview-list" data-stagger="down">
     <div class="preview-item" data-row><span class="preview-num">1</span><div><b>레이아웃 무드보드 생성</b> — 분석과 함께 AI가 레이아웃·구도·톤 참고용 이미지를 자동으로 만들어드려요</div></div>
-    <div class="preview-item" data-row><span class="preview-num">2</span><div><b>카피·비주얼 추가제안</b> — 핵심 제작 방향과 함께, 기획안 레퍼런스에는 없는 새로운 비주얼 아이디어·카피 제안까지</div></div>
+    <div class="preview-item" data-row><span class="preview-num">2</span><div><b>핵심 제작 방향</b> — 무엇부터 잡아야 하는지, 그리고 기획안 레퍼런스에는 없는 새로운 비주얼 아이디어·카피 제안까지</div></div>
     <div class="preview-item" data-row><span class="preview-num">3</span><div><b>비주얼 레퍼런스 추천</b> — 업종·톤에 맞는, 이미 검증된 우리 레퍼런스 이미지</div></div>
     <div class="preview-item" data-row><span class="preview-num">4</span><div><b>주의할 점</b> — 제작하다가 놓치기 쉬운 실수, 기획안 자체의 확인 필요 사항까지</div></div>
   </div>
@@ -541,6 +541,7 @@
     setStatus('', false);
     resultSection.innerHTML = '';
     genBannerCard.style.display = 'none';
+    moodboardIdeaIndex = 0;
     analyzeBtn.textContent = '분석 시작';
 
     currentFile = file;
@@ -655,7 +656,7 @@
       : '<div class="gl-heading">기획안 확인 필요</div><div class="result-text">' + escapeHtml(gapsText) + '</div>';
 
     resultSection.innerHTML =
-      '<div class="card" data-reveal="down"><div class="result-label">카피·비주얼 추가제안</div>' +
+      '<div class="card" data-reveal="down"><div class="result-label">핵심 제작 방향</div>' +
       (data.coreDirection ? '<p class="gl-p gl-lead">' + escapeHtml(data.coreDirection) + '</p>' : '') +
       formatDirection(data.creativeDirection) + '</div>' +
       visualRefCard +
@@ -811,22 +812,37 @@
     return '이 배너의 실제 제작 규격은 ' + t.label + '이야. ' + shape + ' 화면이라는 전제로 요소를 배치해줘 — 다른 비율의 구도를 그대로 눌러 담지 말고 이 비율에 맞게 다시 잡아줘.';
   }
 
-  function extractVisualIdea(creativeDirection){
-    if(!creativeDirection) return '';
+  // 비주얼 제안은 1~3개가 나온다. 세 개를 한 장에 다 그리게 하면 화면이
+  // 뒤엉켜서 정작 각 아이디어가 어떻게 보이는지 확인이 안 된다 — 한 번에
+  // 하나씩만 그리고, "다시 생성하기"를 누르면 다음 제안으로 넘어간다.
+  function extractVisualIdeas(creativeDirection){
+    if(!creativeDirection) return [];
     // creativeDirection은 "[비주얼 제안] ... [카피 제안] ..." 형식(_briefAnalysis.js).
     // 카피 제안은 이미지 생성과 무관하므로 비주얼 제안 구간만 떼어낸다.
     const m = String(creativeDirection).match(/\[비주얼 제안\]([\s\S]*?)(?=\n\s*\[|$)/);
-    return m ? m[1].trim() : '';
+    if(!m) return [];
+    return m[1].split(/\n\s*-\s+/).map((x) => x.replace(/^\s*-\s*/, '').trim()).filter((x) => x.length > 8);
   }
+  let moodboardIdeaIndex = 0;
+
+  // 요소를 전부 "반드시 넣어라"고 주면 모델이 화면을 빈틈없이 채워서, 정작
+  // 우리 체크리스트 2번(위계 및 구조 — 헤드라인→서브→CTA 시선 동선, 3초 내
+  // 파악)에서 걸릴 시안이 나온다. 상위 몇 개만 주고 나머지는 버려도 된다고
+  // 명시해야 위계가 산다.
+  const MAX_ELEMENTS = 5;
 
   function buildBannerPrompt(data){
-    const visualIdea = extractVisualIdea(data.creativeDirection);
-    const elements = Array.isArray(data.bannerElements) ? data.bannerElements.filter(Boolean) : [];
+    const ideas = extractVisualIdeas(data.creativeDirection);
+    const visualIdea = ideas.length ? ideas[moodboardIdeaIndex % ideas.length] : '';
+    const all = Array.isArray(data.bannerElements) ? data.bannerElements.filter(Boolean) : [];
+    const elements = all.slice(0, MAX_ELEMENTS);
     const parts = [
       '첨부된 기획안(PPT 캡처)을 참고해서 광고 배너 시안 한 장을 그려줘. 다만 기획안 안에 기획자가 그려둔 가안(초안)이 있더라도 그걸 그대로 베끼지 마. 가안은 "무엇이 들어가야 하는지"를 알려주는 참고일 뿐이고, 구도와 연출은 아래 비주얼 방향에 따라 새로 잡아줘.',
-      visualIdea ? ('이번 시안에서 시도할 비주얼 방향 (이게 가장 중요해 — 이 아이디어가 실제로 어떻게 보이는지를 확인하려고 만드는 시안이야):\n' + visualIdea) : '',
+      visualIdea ? ('이번 시안에서 시도할 비주얼 방향 (이게 가장 중요해 — 이 아이디어 하나가 실제로 어떻게 보이는지 확인하려고 만드는 시안이야. 다른 아이디어를 섞지 말고 이것만 밀어붙여줘):\n' + visualIdea) : '',
       data.coreDirection ? ('핵심 방향: ' + data.coreDirection) : '',
-      elements.length ? ('배너에 반드시 들어가야 하는 요소 (앞에 있을수록 크고 지배적으로 — 이 순서가 정보 위계야):\n' + elements.map((e, i) => (i + 1) + '. ' + e).join('\n')) : '',
+      elements.length ? ('배너에 담을 요소 (위에 있을수록 우선순위가 높아):\n' + elements.map((e, i) => (i + 1) + '. ' + e).join('\n')
+        + '\n아래쪽 항목은 화면이 복잡해지면 과감히 빼도 돼. 요소를 다 넣는 것보다 위계가 살아있는 게 훨씬 중요해.') : '',
+      '레이아웃 규율 — 이건 반드시 지켜줘: 한 화면에서 시선이 멈추는 덩어리는 3개까지야. 헤드라인 하나가 압도적으로 크고, 그 다음이 주인공 비주얼(제품컷 등) 하나, 마지막이 CTA. 나머지는 작게 정리하거나 아예 빼. 카드·뱃지·말풍선·썸네일을 여러 개 늘어놓지 말고, 같은 성격의 요소는 하나로 합쳐줘. 여백이 넉넉히 남는 게 정상이고, 화면을 빈틈없이 채우면 실패한 시안이야. 3초 안에 무슨 광고인지 파악되지 않으면 잘못 그린 거야.',
       '기획안에 함께 들어있는 레퍼런스 이미지는 톤·색감 참고 정도로만 가볍게 반영하고, 구도를 그대로 따라 하지는 마. 기획의도·요청사항·매체 등록용 문구처럼 가안 밖에 적힌 설명 텍스트는 배너에 인쇄되는 문구가 아니니 이미지 안에 넣지 마.',
       '텍스트는 정확한 한글 카피를 그대로 넣으려 하지 말고, 헤드라인·서브카피·CTA가 들어갈 자리와 크기 정도만 짧고 단순한 더미 텍스트나 도형으로 표시해줘 — 실제 문구는 디자이너가 나중에 직접 넣을 거라 텍스트 정확도보다 레이아웃 배치가 훨씬 중요해.',
       bannerSizeInstruction(data),
@@ -871,11 +887,18 @@
       const sizeNote = t
         ? '기획안에 적힌 제작 규격 ' + escapeHtml(t.label) + ' 기준으로 그렸어요.'
         : '기획안에 제작 규격이 적혀 있지 않아 정사각(1:1)으로 그렸어요.';
+      // 비주얼 제안이 여러 개면 지금 몇 번째를 그린 건지 알려준다 — 이걸
+      // 모르면 "다시 생성하기"가 같은 걸 또 뽑는 버튼처럼 보인다.
+      const ideaCount = extractVisualIdeas(latestBriefData.creativeDirection).length;
+      const ideaNote = ideaCount > 1
+        ? ' 비주얼 제안 ' + ((moodboardIdeaIndex % ideaCount) + 1) + '/' + ideaCount + '번째로 그렸고, 다시 생성하면 다음 제안으로 넘어가요.'
+        : '';
       genBannerResult.innerHTML =
         '<div class="gen-banner-img-wrap"><span class="gen-banner-badge">레이아웃 무드보드</span>' +
         '<img src="' + escapeHtml(data.imageUrl) + '" alt="AI가 생성한 레이아웃 무드보드"></div>' +
-        '<div class="gen-banner-note">' + sizeNote + '</div>';
+        '<div class="gen-banner-note">' + sizeNote + escapeHtml(ideaNote) + '</div>';
       latestMoodboardUrl = data.imageUrl;
+      moodboardIdeaIndex++;   // 다음 "다시 생성하기"는 다음 제안으로
     }catch(err){
       genBannerResult.innerHTML = '<div class="gen-banner-error">생성에 실패했습니다: ' + escapeHtml(err && err.message ? err.message : '알 수 없는 오류') + '</div>';
       latestMoodboardUrl = null;
