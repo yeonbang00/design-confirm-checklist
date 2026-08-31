@@ -9,7 +9,7 @@
 // 확인 완료 처리 — 대기 큐에서만 제거한다(같은 광고 id는 seenAdIds에 이미
 // 기록돼 있어서 다음 크론에서 다시 올라오지 않음).
 
-import { getPendingItems, removePendingItem } from './_importQueueStore.js';
+import { getPendingItems, removePendingItem, getLastRun } from './_importQueueStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 // 사이트 로그인만 되면 누구나 대기 큐(다른 광고주 미공개 크리에이티브 링크가
@@ -31,7 +31,9 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     if (!checkAdminPassword(req, res)) return;
     const items = await getPendingItems();
-    res.status(200).json({ items });
+    // lastRun은 관리자 페이지의 "메타 수집 상태" 배너에서 쓴다
+    const lastRun = await getLastRun();
+    res.status(200).json({ items, lastRun });
     return;
   }
 

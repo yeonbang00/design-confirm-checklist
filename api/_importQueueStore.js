@@ -18,13 +18,16 @@ async function getState() {
     const resp = await fetch(QUEUE_URL, { cache: 'no-store' });
     if (!resp.ok) return { pending: [], seenAdIds: [], cursor: 0 };
     const data = await resp.json();
+    // lastRun까지 여기서 같이 복원해야 한다 — getState()가 아는 키만 추려서
+    // 돌려주기 때문에, 빠뜨리면 다음 saveState() 때 통째로 지워진다.
     return {
       pending: Array.isArray(data.pending) ? data.pending : [],
       seenAdIds: Array.isArray(data.seenAdIds) ? data.seenAdIds : [],
       cursor: Number.isInteger(data.cursor) ? data.cursor : 0,
+      lastRun: data.lastRun || null,
     };
   } catch (e) {
-    return { pending: [], seenAdIds: [], cursor: 0 };
+    return { pending: [], seenAdIds: [], cursor: 0, lastRun: null };
   }
 }
 
@@ -55,6 +58,21 @@ export async function getBrandCursor() {
 export async function saveBrandCursor(cursor) {
   const state = await getState();
   state.cursor = cursor;
+  await saveState(state);
+}
+
+// 크론이 마지막으로 언제·어떻게 끝났는지 기록한다. 메타 토큰은 최대 60일짜리라
+// 만료되면 수집이 조용히 멈추는데(에러가 어디에도 안 뜸), 실제로 그 상태로
+// 며칠을 흘려보낸 적이 있어서 만든 장치다. 관리자 페이지에서 이 값을 읽어
+// "마지막 수집: 성공/실패"를 보여준다.
+export async function getLastRun() {
+  const state = await getState();
+  return state.lastRun || null;
+}
+
+export async function saveLastRun(lastRun) {
+  const state = await getState();
+  state.lastRun = lastRun;
   await saveState(state);
 }
 

@@ -128,6 +128,19 @@
   .log-bar{height:6px; border-radius:3px; background:rgba(255,255,255,.09); overflow:hidden; min-width:90px;}
   .log-bar span{display:block; height:100%; background:var(--danger); border-radius:3px;}
 
+  /* ---------- 메타 수집 상태 ---------- */
+  .meta-card{background:var(--card); border:1px solid rgba(255,255,255,.11); border-radius:14px; padding:18px 20px;}
+  .meta-card.bad{border-color:rgba(242,47,107,.35); background:rgba(242,47,107,.06);}
+  .meta-head{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:10px;}
+  .meta-head b{font-size:14px; color:var(--text);}
+  .meta-dot{width:8px; height:8px; border-radius:50%; background:var(--ok); flex:none;}
+  .meta-card.bad .meta-dot{background:var(--danger);}
+  .meta-when{font-size:12px; color:var(--text-3); margin-left:auto; font-variant-numeric:tabular-nums;}
+  .meta-msg{font-size:13.5px; line-height:1.7; color:var(--text-2); margin-bottom:12px;}
+  .meta-stats{display:flex; flex-wrap:wrap; gap:14px; font-size:12.5px; color:var(--text-3); font-variant-numeric:tabular-nums;}
+  .meta-stats b{color:var(--text-2); font-weight:700;}
+  .meta-err{margin-top:12px; padding:10px 12px; border-radius:8px; background:rgba(0,0,0,.28); font-size:11.5px; line-height:1.6; color:var(--text-3); word-break:break-all;}
+
   /* ---------- 소재별 분석 기록 ---------- */
   .log-entry{display:flex; gap:16px; background:var(--card); border:1px solid rgba(255,255,255,.11); border-radius:14px; padding:14px; margin-bottom:10px;}
   .log-thumb{width:120px; height:120px; flex:none; border-radius:9px; overflow:hidden; background:rgba(255,255,255,.05); display:flex; align-items:center; justify-content:center;}
@@ -218,6 +231,11 @@
     <div id="rejectedList"></div>
   </div>
 
+  <div class="section" id="metaSection">
+    <div class="section-title">메타 광고 수집 <span class="log-note">— 토큰이 만료되면 수집이 조용히 멈추므로 상태를 남겨둡니다</span></div>
+    <div id="metaStatus"></div>
+  </div>
+
   <div class="section" id="logSection">
     <div class="section-title">판정 분포 <span class="log-note">— 프롬프트 고도화용. 누가 분석했는지는 기록하지 않습니다.</span></div>
     <div id="logSummary"></div>
@@ -242,6 +260,7 @@
   const approvedSection = document.getElementById('approvedSection');
   const rejectedSection = document.getElementById('rejectedSection');
   const logSection = document.getElementById('logSection');
+  const metaSection = document.getElementById('metaSection');
   const pendingList = document.getElementById('pendingList');
   const approvedList = document.getElementById('approvedList');
   const rejectedList = document.getElementById('rejectedList');
@@ -305,7 +324,9 @@
       pendingSection.classList.add('show');
       approvedSection.classList.add('show');
       rejectedSection.classList.add('show');
+      metaSection.classList.add('show');
       logSection.classList.add('show');
+      loadMetaStatus();
       loadAnalysisLog();
       refreshBtn.style.display = '';
       currentUsers = data.users || [];
@@ -324,6 +345,61 @@
   });
 
   refreshBtn.addEventListener('click', () => { loadUsers(); });
+
+  // ---------- 메타 광고 수집 상태 ----------
+  // 토큰이 만료되면 크론이 실패해도 화면 어디에도 표시가 안 나서, 며칠씩
+  // 모르고 지나가는 일이 실제로 있었다. 마지막 실행 날짜와 결과만 보여준다.
+  async function loadMetaStatus(){
+    const box = document.getElementById('metaStatus');
+    box.innerHTML = '<div class="empty">불러오는 중…</div>';
+    try{
+      const response = await fetch('/api/importQueue', { headers: { 'X-Admin-Password': adminPassword } });
+      const data = await response.json();
+      if(!response.ok){
+        box.innerHTML = '<div class="empty">' + escapeHtml(data.error || '불러오지 못했습니다.') + '</div>';
+        return;
+      }
+      const r = data.lastRun;
+      if(!r){
+        box.innerHTML = '<div class="empty">아직 크론이 실행된 기록이 없습니다. 다음 실행(매일 새벽 3시) 후 표시됩니다.</div>';
+        return;
+      }
+      const d = new Date(r.at);
+      const when = isNaN(d.getTime()) ? r.at
+        : d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0')
+          + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      // 며칠째 안 돌았는지 — 크론 자체가 멈춘 경우도 잡아낸다
+      const daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000);
+      const stale = !isNaN(d.getTime()) && daysAgo >= 2;
+
+      const bad = !r.ok || stale;
+      let msg;
+      if(!r.ok){
+        msg = '수집이 실패했습니다 — 메타 토큰이 만료됐을 가능성이 높습니다. '
+            + '브랜드 ' + (r.failedCount||0) + '개가 같은 이유로 실패했습니다.';
+      } else if(stale){
+        msg = daysAgo + '일째 실행 기록이 없습니다. 크론이 멈췄는지 확인해주세요.';
+      } else {
+        msg = '정상 동작 중입니다.';
+      }
+
+      box.innerHTML = '<div class="meta-card ' + (bad ? 'bad' : 'ok') + '">'
+        + '<div class="meta-head"><span class="meta-dot"></span>'
+        + '<b>' + (bad ? '확인 필요' : '정상') + '</b>'
+        + '<span class="meta-when">마지막 실행 ' + escapeHtml(when) + '</span></div>'
+        + '<div class="meta-msg">' + escapeHtml(msg) + '</div>'
+        + '<div class="meta-stats">'
+          + '<span>수집 <b>' + (r.added||0) + '</b>건</span>'
+          + '<span>처리 브랜드 <b>' + (r.processed||0) + '</b> / ' + (r.total||0) + '</span>'
+          + (r.failedCount ? '<span>실패 <b>' + r.failedCount + '</b></span>' : '')
+          + (r.hitTimeBudget ? '<span>시간 초과로 중단</span>' : '')
+        + '</div>'
+        + (r.sampleError ? '<div class="meta-err">' + escapeHtml(r.sampleError) + '</div>' : '')
+        + '</div>';
+    }catch(err){
+      box.innerHTML = '<div class="empty">서버에 연결하지 못했습니다.</div>';
+    }
+  }
 
   // ---------- 판정 분포 ----------
   // 17개 항목 각각이 얼마나 자주 걸렸는지(검토+반려 비율)를 높은 순으로 보여준다.
@@ -428,7 +504,9 @@
 
     const slice = filtered.slice(0, shownCount);
     box.innerHTML = head + slice.map(e => {
-      const flagged = (e.verdicts || []).filter(v => v.status === 'reject' || v.status === 'needsfix');
+      // 반려만 보여준다 — 검토 필요까지 같이 나오면 목록이 길어져서
+      // 정작 고쳐야 할 반려 건이 묻힌다(검토 필요 개수는 위 meta에 숫자로 남음).
+      const flagged = (e.verdicts || []).filter(v => v.status === 'reject');
       const thumb = e.thumbUrl
         ? '<div class="log-thumb"><img src="' + escapeHtml(e.thumbUrl) + '" alt="분석한 소재" loading="lazy"></div>'
         : '<div class="log-thumb none">이미지 없음</div>';
@@ -443,7 +521,7 @@
         ? flagged.map(v => '<span class="log-flag ' + v.status + '">'
             + String(v.id).padStart(2,'0') + ' ' + escapeHtml(ITEM_NAMES[v.id] || '')
             + (v.note ? ' — ' + escapeHtml(v.note) : '') + '</span>').join('')
-        : '<span class="log-flag clean">전 항목 통과</span>';
+        : '<span class="log-flag clean">반려 없음</span>';
       return '<div class="log-entry">' + thumb + '<div class="log-entry-body">'
         + '<div class="log-meta">' + meta + '</div>'
         + '<div class="log-flags">' + flags + '</div>'

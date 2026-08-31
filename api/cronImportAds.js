@@ -26,7 +26,7 @@
 
 import { META_AD_BRANDS, META_AD_BRAND_PAGE_IDS } from './_metaAdBrands.js';
 import { searchAdsForBrand } from './_metaAdLibrary.js';
-import { getSeenAdIds, addPendingItems, clearStaleQueueItems, clearQueueItemsByBrand, getBrandCursor, saveBrandCursor } from './_importQueueStore.js';
+import { getSeenAdIds, addPendingItems, clearStaleQueueItems, clearQueueItemsByBrand, getBrandCursor, saveBrandCursor, saveLastRun } from './_importQueueStore.js';
 
 const MAX_NEW_PER_RUN = 300; // 대기 큐가 무한정 커지지 않게 하는 안전장치
 const BRAND_BATCH_SIZE = 10; // 브랜드가 많아(100개+) 순차 처리하면 느려서 동시 처리
@@ -128,6 +128,29 @@ export default async function handler(req, res) {
 
   const nextCursor = (cursor + processed) % N;
   await saveBrandCursor(nextCursor);
+
+  // 이번 실행이 어떻게 끝났는지 남긴다 — 관리자 페이지에서 "수집이 조용히
+  // 멈춰 있는 상태"를 알아채기 위한 것. 특히 토큰 만료는 에러 화면이 어디에도
+  // 안 떠서, 이 기록이 없으면 며칠씩 모르고 지나간다.
+  const failed = brandLog.filter((b) => b.error);
+  // 브랜드 대부분이 같은 이유로 실패하면 개별 브랜드 문제가 아니라 토큰·권한
+  // 문제일 가능성이 높다(실제로 ads_read 권한 누락 때 전 브랜드가 400이었다).
+  const looksLikeAuth = processed > 0 && failed.length >= processed * 0.8;
+  try {
+    await saveLastRun({
+      at: new Date().toISOString(),
+      ok: !looksLikeAuth,
+      added: totalAdded,
+      processed,
+      total: N,
+      failedCount: failed.length,
+      hitTimeBudget,
+      // 원인 파악용으로 실패 사유 하나만 샘플로 남긴다(전부 남기면 너무 길어짐)
+      sampleError: failed.length ? String(failed[0].error).slice(0, 200) : null,
+    });
+  } catch (e) {
+    // 상태 기록 실패가 수집 결과 반환을 막을 이유는 없다
+  }
 
   res.status(200).json({ ok: true, added: totalAdded, processed, total: N, hitTimeBudget, nextCursor, brands: brandLog });
 }
