@@ -1,0 +1,52 @@
+/* AdCheck 공용 푸터 레이아웃
+ *
+ * 푸터는 100vh 검정인데 로고와 면책 문구 몇 줄만 들어 있어서 높이의 72%가 빈
+ * 검정이었다. 참고한 레퍼런스(prolibu)도 같은 100vh 검정에 599px의 빈 구간을
+ * 두지만, 그 위에 브랜드 블록과 링크 4컬럼이 있어서 여백이 여유로 읽힌다.
+ * 구조만 따라 하고 채우는 걸 빠뜨렸던 셈이라 여백이 의도가 아니라 미완성으로
+ * 보였다.
+ *
+ * 면책 문구는 옮기지 않고 브랜드 블록에 그대로 둔다. 가운데 정렬이라 사이트
+ * 태그라인처럼 읽히던 걸 좌측 정렬 각주로 되돌리는 것이 오히려 제 역할에 맞다.
+ *
+ * 페이지마다 <style>이 따로 있어서 규칙을 11번 복제하는 대신 이 파일 하나로
+ * 두고, 각 페이지에서 inline <style> "뒤에" 링크해 같은 특이성일 때 이기게 한다.
+ */
+
+.page-footer .footer-top{
+  width:100%; max-width:1180px; margin:0 auto; text-align:left;
+  display:grid; grid-template-columns:minmax(0,1.5fr) repeat(4, minmax(0,1fr));
+  gap:34px 26px;
+}
+
+.page-footer .footer-brand{display:flex; flex-direction:column; align-items:flex-start;}
+.page-footer .footer-logo{height:34px; width:auto; margin:0 0 14px; display:block;}
+.page-footer .footer-note{margin:0; font-size:11.5px; line-height:1.85; max-width:36ch;}
+
+.page-footer .footer-col{display:flex; flex-direction:column; gap:10px;}
+.page-footer .footer-col-title{
+  font:600 10px/1 var(--font-mono, ui-monospace, monospace);
+  letter-spacing:.14em; color:var(--accent, #C3FF4D); margin-bottom:2px;
+}
+.page-footer .footer-col a{
+  font-size:12.5px; line-height:1.45; color:inherit; text-decoration:none;
+  opacity:.72; transition:opacity .2s ease, color .2s ease;
+}
+.page-footer .footer-col a:hover{opacity:1; color:#EDEEF0;}
+/* 지금 보고 있는 페이지는 밝게 — 푸터에서도 현재 위치를 알 수 있게 */
+.page-footer .footer-col a.is-current{opacity:1; color:#EDEEF0; font-weight:600;}
+
+/* 하단 저작권 줄은 위 그리드와 같은 폭에 맞춰 구분선을 긋는다 */
+.page-footer .footer-copy{
+  width:100%; max-width:1180px; margin:auto auto 0; padding-top:26px;
+  border-top:1px solid rgba(255,255,255,.09); text-align:left;
+}
+
+@media (max-width:1000px){
+  .page-footer .footer-top{grid-template-columns:repeat(2, minmax(0,1fr)); gap:30px 24px;}
+  .page-footer .footer-brand{grid-column:1 / -1;}
+}
+@media (max-width:560px){
+  .page-footer .footer-top{grid-template-columns:1fr;}
+  .page-footer .footer-note{max-width:none;}
+}
