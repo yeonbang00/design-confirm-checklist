@@ -13,7 +13,10 @@
   var raf = null;
   function update() {
     raf = null;
-    gnb.classList.toggle('is-hidden', footer.getBoundingClientRect().top < NAV_BOTTOM);
+    var hide = footer.getBoundingClientRect().top < NAV_BOTTOM;
+    gnb.classList.toggle('is-hidden', hide);
+    // 푸터 상단 여백은 GNB를 피하려고 둔 것이라 함께 줄인다 (CSS에서 처리)
+    document.documentElement.classList.toggle('gnb-hidden', hide);
   }
   function onScroll() {
     if (raf === null) raf = requestAnimationFrame(update);
