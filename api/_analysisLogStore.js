@@ -75,6 +75,7 @@ export async function addVerdictFlip(logId, flip) {
   if (existing) {
     existing.to = flip.to;
     existing.at = flip.at;
+    if (flip.aiNote) existing.aiNote = flip.aiNote;
   } else {
     target.flips.push(flip);
   }

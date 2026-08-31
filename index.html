@@ -2100,6 +2100,7 @@
 
   let currentLogId = null;   // 이번 분석의 로그 id (판정 수정을 여기에 붙인다)
   let aiVerdicts = {};       // AI가 원래 내린 판정 — 수정 여부를 가리는 기준
+  let aiNotes = {};          // AI가 각 항목에 적은 사유 — 뒤집힌 항목만 서버로 보낸다
 
   // 판정 결과를 익명으로 적재한다 — 어떤 항목이 자주 걸리는지 실제 분포를 보고
   // 프롬프트를 고치기 위한 용도. 누가 올렸는지는 서버에서도 저장하지 않는다.
@@ -2111,10 +2112,15 @@
       fetch('/api/analysisLog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.assign({ items, summary: result.summary || '' }, meta)),
+        body: JSON.stringify(Object.assign({ items }, meta)),
       })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if(d && d.id){ currentLogId = d.id; aiVerdicts = {}; items.forEach(it => { aiVerdicts[it.id] = it.status; }); } })
+        .then(d => {
+          if(!d || !d.id) return;
+          currentLogId = d.id;
+          aiVerdicts = {}; aiNotes = {};
+          items.forEach(it => { aiVerdicts[it.id] = it.status; aiNotes[it.id] = it.note || ''; });
+        })
         .catch(() => {});
     }catch(e){ /* 로그 실패는 무시 */ }
   }
@@ -2129,7 +2135,10 @@
       fetch('/api/analysisLog', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ logId: currentLogId, itemId, from: aiVerdicts[itemId] || null, to }),
+        // AI가 그 항목에 적은 사유를 함께 보낸다 — 왜 어긋났는지는 이게 있어야
+        // 알 수 있고, 17개 note를 전부 저장하면 매니페스트가 크게 불어나서
+        // 실제로 뒤집힌 항목에 대해서만 남긴다.
+        body: JSON.stringify({ logId: currentLogId, itemId, from: aiVerdicts[itemId] || null, to, aiNote: aiNotes[itemId] || '' }),
       }).catch(() => {});
     }catch(e){ /* 무시 */ }
   }

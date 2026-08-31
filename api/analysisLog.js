@@ -96,8 +96,6 @@ export default async function handler(req, res) {
         counts,
         thumbUrl,
         fullUrl,
-        // 총평은 "왜 이렇게 판정했는가"의 요약이라 고도화에 가장 쓸모가 크다
-        summary: body.summary ? String(body.summary).slice(0, 600) : null,
         // 아래는 배너 자체의 속성이라 개인과 무관하고, 고도화에 직접 쓰인다.
         advertiserId: body.advertiserId ? String(body.advertiserId).slice(0, 80) : null,
         mediaGuideIds: Array.isArray(body.mediaGuideIds)
@@ -153,6 +151,9 @@ export default async function handler(req, res) {
         itemId,
         from: VALID_STATUS.includes(from) ? from : null,
         to,
+        // AI가 그 항목에 적은 사유 — 사람이 왜 다르게 봤는지 대조하려면 이게 있어야
+        // 한다. 통과 항목의 note는 평소 저장하지 않으므로 여기서만 남는다.
+        aiNote: body.aiNote ? String(body.aiNote).slice(0, 200) : null,
         // 같은 항목을 여러 번 고치면 마지막 값만 의미가 있으므로 덮어쓴다
         at: new Date().toISOString(),
       });
