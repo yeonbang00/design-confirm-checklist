@@ -175,6 +175,10 @@
   .meta-run-btn:hover:not(:disabled){background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.28);}
   .meta-run-btn:disabled{opacity:.5; cursor:default;}
   .meta-run-msg{font-size:12px; color:var(--text-3); line-height:1.7;}
+  .meta-diag-input{flex:1; max-width:280px; padding:9px 12px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); color:var(--text); font-family:inherit; font-size:12.5px;}
+  .meta-diag-input::placeholder{color:var(--text-3);}
+  .meta-diag-out{margin-top:10px; font:400 12px/1.8 var(--font-mono); color:var(--text-2); white-space:pre-wrap;}
+  .meta-diag-out b{color:var(--accent);}
   .log-del{
     position:absolute; top:10px; right:10px; width:26px; height:26px; flex:none;
     border-radius:7px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.03);
@@ -258,6 +262,11 @@
       <button type="button" class="meta-run-btn" id="metaRunBtn">지금 수집 실행</button>
       <span class="meta-run-msg" id="metaRunMsg"></span>
     </div>
+    <div class="meta-actions">
+      <input type="text" class="meta-diag-input" id="metaDiagBrand" placeholder="브랜드명으로 진단 (예: 올리브영)">
+      <button type="button" class="meta-run-btn" id="metaDiagBtn">진단</button>
+    </div>
+    <div class="meta-diag-out" id="metaDiagOut"></div>
   </div>
 
   <div class="section" id="logSection">
@@ -405,6 +414,33 @@
       msg.textContent = '실행 중 오류: ' + (err && err.message ? err.message : '알 수 없음');
     }finally{
       btn.disabled = false;
+    }
+  });
+
+  // 광고 라이브러리 웹에는 광고가 보이는데 API는 0건인 상황을 좁히는 도구.
+  // 조건을 바꿔가며 같은 브랜드를 조회해 어느 파라미터가 결과를 막는지 본다.
+  document.getElementById('metaDiagBtn').addEventListener('click', async () => {
+    const brand = document.getElementById('metaDiagBrand').value.trim();
+    const out = document.getElementById('metaDiagOut');
+    if(!brand){ out.textContent = '브랜드명을 입력해주세요.'; return; }
+    out.textContent = '조회 중…';
+    try{
+      const response = await fetch('/api/importQueue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
+        body: JSON.stringify({ action: 'diagnose', brand }),
+      });
+      const data = await response.json();
+      if(!response.ok){ out.textContent = data.error || '진단에 실패했습니다.'; return; }
+      const lines = ['브랜드 ' + data.brand + ' / pageId ' + (data.pageId || '없음'), ''];
+      (data.results || []).forEach(r => {
+        if(r.skipped){ lines.push(r.key.padEnd(18) + '건너뜀 (' + r.skipped + ')'); return; }
+        if(r.error){ lines.push(r.key.padEnd(18) + '오류 ' + r.error); return; }
+        lines.push(r.key.padEnd(18) + r.count + '건' + (r.pages && r.pages.length ? '   ' + r.pages.join(', ') : ''));
+      });
+      out.textContent = lines.join('\n');
+    }catch(err){
+      out.textContent = '진단 중 오류: ' + (err && err.message ? err.message : '알 수 없음');
     }
   });
 

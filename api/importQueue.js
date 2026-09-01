@@ -18,6 +18,8 @@
 // /api/cronImportAds를 Bearer 헤더를 붙여 호출한다. 비밀은 서버 안에만 머문다.
 
 import { getPendingItems, removePendingItem, getLastRun } from './_importQueueStore.js';
+import { diagnoseBrand } from './_metaAdLibrary.js';
+import { META_AD_BRAND_PAGE_IDS } from './_metaAdBrands.js';
 
 // 수집은 브랜드 350개+를 도느라 몇 분이 걸린다 — 기본 제한(60초)으로는 못 끝낸다.
 // vercel.json에서 이 함수의 maxDuration도 함께 늘려뒀다.
@@ -52,6 +54,25 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     if (rejectIfNotSameOrigin(req, res)) return;
     if (!checkAdminPassword(req, res)) return;
+
+    // 브랜드 하나를 조건별로 조회해 어느 파라미터가 결과를 0으로 만드는지 본다.
+    // 대기 큐는 건드리지 않고 건수만 세는 읽기 전용 진단이다.
+    if (req.body && req.body.action === 'diagnose') {
+      const metaToken = process.env.META_AD_LIBRARY_TOKEN;
+      if (!metaToken) {
+        res.status(500).json({ error: '서버에 META_AD_LIBRARY_TOKEN 환경변수가 설정되어 있지 않습니다.' });
+        return;
+      }
+      const brand = String((req.body.brand || '')).trim();
+      if (!brand) {
+        res.status(400).json({ error: '진단할 브랜드명을 입력해주세요.' });
+        return;
+      }
+      const pageId = META_AD_BRAND_PAGE_IDS[brand] || null;
+      const results = await diagnoseBrand(metaToken, brand, pageId);
+      res.status(200).json({ ok: true, brand, pageId, results });
+      return;
+    }
 
     if (req.body && req.body.action === 'runNow') {
       const cronSecret = process.env.CRON_SECRET;

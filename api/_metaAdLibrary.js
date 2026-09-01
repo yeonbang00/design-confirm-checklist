@@ -79,3 +79,55 @@ export async function searchAdsForBrand(token, brandName, limit = 15, pageId = n
     return result;
   }
 }
+
+// 브랜드 하나를 여러 조건으로 동시에 조회해서 어느 조건이 결과를 막는지 가린다.
+//
+// 광고 라이브러리 웹에서는 광고가 잔뜩 보이는데 API는 357개 브랜드 중 3개만
+// 돌려주는 상황을 좁히려고 만들었다. 실패(HTTP 오류)가 아니라 빈 배열이 오는
+// 상황이라, 어느 파라미터가 결과를 0으로 만드는지는 조건을 바꿔가며 재보는
+// 수밖에 없다. 대기 큐는 건드리지 않고 건수만 센다.
+export async function diagnoseBrand(token, brandName, pageId) {
+  const variants = [
+    { key: 'pageId + ACTIVE',     usePageId: true,  status: 'ACTIVE', media: 'all' },
+    { key: 'pageId + 전체기간',    usePageId: true,  status: 'ALL',    media: 'all' },
+    { key: '이름검색 + ACTIVE',    usePageId: false, status: 'ACTIVE', media: 'all' },
+    { key: '이름검색 + 전체기간',   usePageId: false, status: 'ALL',    media: 'all' },
+    { key: '이름검색 + 국가무관',   usePageId: false, status: 'ALL',    media: 'all', noCountry: true },
+  ];
+  const out = [];
+  for (const v of variants) {
+    if (v.usePageId && !pageId) { out.push({ ...v, skipped: 'pageId 없음' }); continue; }
+    const params = new URLSearchParams({
+      ad_type: 'ALL',
+      ad_active_status: v.status,
+      media_type: v.media,
+      fields: 'id,page_id,page_name,ad_snapshot_url',
+      limit: '25',
+      access_token: token,
+    });
+    if (!v.noCountry) params.set('ad_reached_countries', JSON.stringify(['KR']));
+    if (v.usePageId) params.set('search_page_ids', JSON.stringify([pageId]));
+    else params.set('search_terms', brandName);
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    try {
+      const resp = await fetch(`${GRAPH_API_BASE}/ads_archive?${params.toString()}`, { signal: controller.signal });
+      if (!resp.ok) {
+        const t = await resp.text().catch(() => '');
+        out.push({ key: v.key, error: `HTTP ${resp.status}: ${t.slice(0, 200)}` });
+      } else {
+        const data = await resp.json();
+        const ads = Array.isArray(data.data) ? data.data : [];
+        // 이름검색은 엉뚱한 페이지를 물어올 수 있으니 어느 페이지가 잡혔는지도 남긴다
+        const pages = [...new Set(ads.map((a) => `${a.page_name || '?'}(${a.page_id || '?'})`))].slice(0, 4);
+        out.push({ key: v.key, count: ads.length, pages });
+      }
+    } catch (e) {
+      out.push({ key: v.key, error: String((e && e.message) || e) });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  return out;
+}
