@@ -186,12 +186,19 @@ export default async function handler(req, res) {
       return;
     }
     try {
-      const removed = await removeAnalysisLog(String(id));
-      if (!removed) {
+      const result = await removeAnalysisLog(String(id));
+      if (!result) {
         res.status(400).json({ error: '존재하지 않는 기록입니다.' });
         return;
       }
-      res.status(200).json({ ok: true });
+      // 지운 뒤의 목록을 함께 돌려준다. 클라이언트가 다시 GET을 때리면 Blob
+      // CDN 캐시(최소 60초) 때문에 지워지기 전 목록이 돌아와 방금 지운 항목이
+      // 되살아나 보인다 — 응답으로 바로 그려주면 그 왕복 자체가 없어진다.
+      res.status(200).json({
+        ok: true,
+        summary: summarizeLog(result.items),
+        items: result.items.slice().reverse().slice(0, 300),
+      });
     } catch (e) {
       res.status(500).json({ error: '삭제에 실패했습니다.' });
     }

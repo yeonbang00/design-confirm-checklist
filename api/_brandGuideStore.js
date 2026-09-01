@@ -28,7 +28,7 @@ function defaultState() {
 export async function getBrandGuideState(brandId) {
   let state = defaultState();
   try {
-    const resp = await fetch(`${stateUrl(brandId)}?ts=${Date.now()}`, { cache: 'no-store' });
+    const resp = await fetch(stateUrl(brandId), { cache: 'no-store' });
     if (resp.ok) {
       const stored = await resp.json();
       state = { ...state, ...stored };

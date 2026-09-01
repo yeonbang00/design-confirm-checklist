@@ -356,15 +356,20 @@
     16:'로고 사용 규정', 17:'법적고지·심의 문구'
   };
 
-  async function loadAnalysisLog(){
+  async function loadAnalysisLog(preloaded){
     const box = document.getElementById('logSummary');
     box.innerHTML = '<div class="empty">불러오는 중…</div>';
     try{
-      const response = await fetch('/api/analysisLog', { headers: { 'X-Admin-Password': adminPassword } });
-      const data = await response.json();
-      if(!response.ok){
-        box.innerHTML = '<div class="empty">' + escapeHtml(data.error || '불러오지 못했습니다.') + '</div>';
-        return;
+      // preloaded가 있으면 그걸로 그린다. 삭제 직후 다시 GET을 때리면 Blob CDN
+      // 캐시 때문에 지워지기 전 목록이 돌아와 방금 지운 항목이 되살아나 보인다.
+      let data = preloaded;
+      if(!data){
+        const response = await fetch('/api/analysisLog', { headers: { 'X-Admin-Password': adminPassword } });
+        data = await response.json();
+        if(!response.ok){
+          box.innerHTML = '<div class="empty">' + escapeHtml(data.error || '불러오지 못했습니다.') + '</div>';
+          return;
+        }
       }
       const s = data.summary || { rows: [], totals: {}, count: 0 };
       if(!s.count){
@@ -550,7 +555,8 @@
         btn.disabled = false;
         return;
       }
-      await loadAnalysisLog();   // 집계도 같이 갱신돼야 하므로 전체 재로드
+      // 서버가 지운 뒤의 목록을 함께 돌려주므로 재조회 없이 바로 그린다
+      await loadAnalysisLog(data.items ? data : null);
     }catch(err){
       window.alert('삭제 중 오류가 발생했습니다.');
       if(entry) entry.classList.remove('deleting');

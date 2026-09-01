@@ -25,21 +25,16 @@ const LOG_URL = `${BLOB_PUBLIC_BASE}/analysis-log.json`;
 // 오래된 것부터 버린다(고도화에는 최근 경향이 더 유용).
 const MAX_ENTRIES = 2000;
 
-// URL에 매번 다른 쿼리(ts)를 붙이는 이유:
-// 공개 Blob URL은 CDN 엣지 캐시를 탄다. fetch에 { cache: 'no-store' }를 줘도
-// 그건 이 런타임의 HTTP 캐시를 안 쓰겠다는 뜻이지, 엣지가 들고 있는 사본까지
-// 무시하게 만들지는 못한다. put()으로 덮어쓴 직후에도 잠깐은 예전 내용이 온다.
+// 이 매니페스트들은 "읽고 → 고치고 → 통째로 덮어쓰기" 방식이라, 낡은 사본을
+// 읽으면 방금 지운 항목이 되살아나고 그 상태로 저장하면 실제로 복구된다.
 //
-// 이 저장소들은 전부 "읽고 → 고치고 → 통째로 덮어쓰기"라 낡은 사본을 읽으면
-// 두 가지가 한꺼번에 터진다.
-//   1) 방금 지운 항목이 화면에 되살아난 것처럼 보인다.
-//   2) 그 낡은 목록을 기준으로 다시 저장하면 앞서 지운 항목이 실제로 복구된다.
-// 실제로 관리자 화면에서 분석 기록이 바로 안 지워지는 현상으로 드러났다.
-// 같은 이유로 다른 매니페스트 저장소(_historyStore, _rejectCaseStore 등)도
-// 전부 같은 방식으로 읽는다.
+// Blob 기본 캐시가 30일이라 이 문제가 실제로 드러났다. 읽는 쪽에서 URL에
+// ?ts= 를 붙여 뚫어보려 했지만 이 CDN은 캐시 키에서 쿼리스트링을 무시해서
+// 통하지 않았다(한 번도 요청 안 한 값에도 x-vercel-cache: HIT). 그래서
+// _blobPut.js가 쓰는 쪽에서 캐시 수명을 최소값(60초)으로 내린다.
 export async function getAnalysisLog() {
   try {
-    const resp = await fetch(`${LOG_URL}?ts=${Date.now()}`, { cache: 'no-store' });
+    const resp = await fetch(LOG_URL, { cache: 'no-store' });
     if (!resp.ok) return [];
     const data = await resp.json();
     return Array.isArray(data.items) ? data.items : [];
@@ -65,6 +60,8 @@ export async function addAnalysisLog(entry) {
 // 집계에서도 빠지지만, URL을 아는 사람은 파일에 접근 가능). 반려사례
 // 삭제(_rejectCaseStore.js)도 지금 같은 방식이라 동작을 맞춘 것이다.
 // 파일까지 지우려면 Blob delete API를 별도로 붙여야 한다.
+// 지운 뒤의 목록(next)을 함께 돌려준다 — 호출부가 이걸 그대로 응답에 실어야
+// 한다. 저장 직후 다시 읽으면 CDN 캐시 때문에 지워지기 전 목록이 돌아온다.
 export async function removeAnalysisLog(id) {
   const items = await getAnalysisLog();
   const target = items.find((it) => it.id === id);
@@ -72,7 +69,7 @@ export async function removeAnalysisLog(id) {
   const next = items.filter((it) => it.id !== id);
   const bytes = Buffer.from(JSON.stringify({ items: next }), 'utf-8');
   await put('analysis-log.json', bytes, 'application/json', { allowOverwrite: true });
-  return target;
+  return { removed: target, items: next };
 }
 
 // 리뷰어가 AI 판정을 직접 고친 내역을 해당 기록에 붙인다.
