@@ -2434,14 +2434,36 @@
 
   // 히어로를 접고 결과로 데려간다. 첫 방문 인상은 그대로 두고, 분석이 끝난
   // 뒤에만 접는다 — 그때부터는 히어로보다 결과가 봐야 할 것이기 때문.
+  // 고정 GNB 아래로 총평이 가려지지 않게 띄울 여백
+  const RESULT_SCROLL_GAP = 88;
+
   function collapseHeroToResults(smooth){
     const hero = document.querySelector('.prompt-hero');
-    if(hero) hero.classList.add('compact');
+    const grid = document.querySelector('.hero-grid');
     const target = document.getElementById('aiSummaryBox');
-    if(!target) return;
-    if(smooth === false){ target.scrollIntoView({ block: 'start' }); return; }
-    // 접히는 애니메이션과 스크롤이 겹치면 목적지가 어긋나서, 접힘이 끝난 뒤 이동
-    setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 260);
+    if(!target){ if(hero) hero.classList.add('compact'); return; }
+
+    function go(){
+      const y = target.getBoundingClientRect().top + window.scrollY - RESULT_SCROLL_GAP;
+      window.scrollTo({ top: Math.max(0, y), behavior: smooth === false ? 'auto' : 'smooth' });
+    }
+    if(!hero){ go(); return; }
+
+    // 히어로가 접히는 동안(0.7초) 문서 높이가 924px 줄어든다. 접히는 도중에
+    // 스크롤하면 그만큼 목적지가 위로 밀려서, 총평을 지나쳐 판정 목록 근처에
+    // 도착한다. 접힘이 끝난 뒤 위치를 다시 계산해서 이동한다.
+    let moved = false;
+    const finish = () => { if(moved) return; moved = true; go(); };
+    if(grid){
+      // opacity(0.45초)는 max-height·padding(0.7초)보다 먼저 끝난다. 레이아웃을
+      // 실제로 줄이는 속성이 끝났을 때만 이동해야 목적지가 안 밀린다.
+      grid.addEventListener('transitionend', (e) => {
+        if(e.propertyName === 'max-height' || e.propertyName === 'padding-top') finish();
+      });
+    }
+    hero.classList.add('compact');
+    // 모션 최소화 설정 등으로 transitionend가 안 오는 경우 대비
+    setTimeout(finish, 820);
   }
 
   function applyResults(result){
