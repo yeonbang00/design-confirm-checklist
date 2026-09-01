@@ -174,7 +174,7 @@
   .meta-run-btn{padding:9px 16px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05); color:var(--text); font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; transition:background .2s ease, border-color .2s ease;}
   .meta-run-btn:hover:not(:disabled){background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.28);}
   .meta-run-btn:disabled{opacity:.5; cursor:default;}
-  .meta-run-msg{font-size:12px; color:var(--text-3); line-height:1.5;}
+  .meta-run-msg{font-size:12px; color:var(--text-3); line-height:1.7;}
   .log-del{
     position:absolute; top:10px; right:10px; width:26px; height:26px; flex:none;
     border-radius:7px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.03);
@@ -388,8 +388,17 @@
         msg.textContent = data.error || '실행에 실패했습니다.';
       }else{
         const r = data.run || {};
-        msg.textContent = '완료 — 새로 ' + (r.added||0) + '건 수집'
-          + (r.brands ? ' (브랜드 ' + (r.processed||0) + '개 처리)' : '') + '.';
+        // 어느 브랜드가 실제로 광고를 돌려줬는지 보여준다. "전 브랜드 0건"과
+        // "몇몇 브랜드만 잡힘"은 원인이 완전히 다른데, 합계만 봐서는 구분이
+        // 안 돼서 매번 Blob을 직접 열어봐야 했다.
+        const hits = (r.brands || []).filter(b => (b.found||0) > 0);
+        const parts = ['완료 — 새로 ' + (r.added||0) + '건 수집 (브랜드 ' + (r.processed||0) + '개 처리)'];
+        if(r.brands){
+          parts.push('메타 응답 ' + hits.reduce((n,b)=>n+(b.found||0),0) + '건 / 광고가 잡힌 브랜드 ' + hits.length + '개');
+          if(hits.length) parts.push('· ' + hits.slice(0,12).map(b => b.brand + '(' + b.found + ')').join(', ')
+            + (hits.length > 12 ? ' 외 ' + (hits.length-12) + '개' : ''));
+        }
+        msg.innerHTML = parts.map(escapeHtml).join('<br>');
         loadMetaStatus();
       }
     }catch(err){
