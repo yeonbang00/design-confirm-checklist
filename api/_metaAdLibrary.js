@@ -92,7 +92,6 @@ export async function diagnoseBrand(token, brandName, pageId) {
     { key: 'pageId + 전체기간',    usePageId: true,  status: 'ALL',    media: 'all' },
     { key: '이름검색 + ACTIVE',    usePageId: false, status: 'ACTIVE', media: 'all' },
     { key: '이름검색 + 전체기간',   usePageId: false, status: 'ALL',    media: 'all' },
-    { key: '이름검색 + 국가무관',   usePageId: false, status: 'ALL',    media: 'all', noCountry: true },
   ];
   const out = [];
   for (const v of variants) {
@@ -105,7 +104,7 @@ export async function diagnoseBrand(token, brandName, pageId) {
       limit: '25',
       access_token: token,
     });
-    if (!v.noCountry) params.set('ad_reached_countries', JSON.stringify(['KR']));
+    params.set('ad_reached_countries', JSON.stringify(['KR']));   // 이 API의 필수 파라미터라 뺄 수 없다
     if (v.usePageId) params.set('search_page_ids', JSON.stringify([pageId]));
     else params.set('search_terms', brandName);
 
