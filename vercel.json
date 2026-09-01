@@ -1,28 +1,30 @@
 {
-  "crons": [
-    { "path": "/api/cronImportAds", "schedule": "0 18 * * *" }
-  ],
-  "functions": {
-    "api/cronImportAds.js": { "maxDuration": 300 },
-    "api/importQueue.js": { "maxDuration": 300 }
-  },
   "headers": [
     {
       "source": "/(.*).html",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
       ]
     },
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
       ]
     },
     {
       "source": "/",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
       ]
     }
   ]

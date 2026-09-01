@@ -242,18 +242,6 @@ export default async function middleware(request) {
   // exists yet, so the first admin can approve their own signup.
   if (pathname === ADMIN_PAGE_PATH) return next();
 
-  // Vercel Cron calls this route directly (no browser session, no cookie) —
-  // it can never pass the login gate below, so it needs its own bypass here,
-  // gated on the same CRON_SECRET that cronImportAds.js itself checks. This
-  // must stay scoped to exactly this one path so no other route loses its
-  // login requirement.
-  if (pathname === '/api/cronImportAds') {
-    const cronSecret = process.env.CRON_SECRET;
-    const authHeader = request.headers.get('authorization') || '';
-    if (cronSecret && authHeader === `Bearer ${cronSecret}`) return next();
-    return jsonResponse({ error: 'Unauthorized' }, 401);
-  }
-
   if (pathname === ADMIN_PENDING_PATH && method === 'POST') {
     const body = await request.json().catch(() => ({}));
     const adminPassword = process.env.ADMIN_PASSWORD;

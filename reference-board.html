@@ -207,22 +207,6 @@
   .rc-item-tag{font:700 10.5px/1 var(--font-mono); letter-spacing:.03em; color:#F22F6B; background:rgba(242,47,107,.12); border:1px solid rgba(242,47,107,.4); border-radius:6px; padding:4px 7px;}
   .rc-reason{font-size:12px; color:var(--text-2); line-height:1.5; margin-top:4px;}
 
-  .import-queue-btn{display:inline-flex; align-items:center; gap:6px; background:var(--charcoal); border:1px solid var(--charcoal-border); color:var(--ink-3); font-size:13px; font-weight:700; padding:10px 16px; border-radius:10px; cursor:pointer; font-family:inherit; margin-left:auto; transition:border-color .2s ease, background .2s ease, color .2s ease;}
-  .import-queue-btn:hover{border-color:#a1a1a6;}
-  .import-queue-btn.active{background:var(--num-bg); border-color:transparent; color:var(--num-text);}
-  .iq-list{display:flex; flex-direction:column; gap:10px;}
-  .iq-row{display:flex; align-items:center; gap:14px; padding:14px 18px; border-radius:12px; background:var(--charcoal); border:1px solid var(--charcoal-border);}
-  .iq-row-main{flex:1; min-width:0;}
-  .iq-row-brand{font-size:14px; font-weight:700; color:var(--canvas-text);}
-  .iq-row-page{font-size:12px; color:var(--text-3); margin-top:2px;}
-  .iq-row-page-warn{color:var(--needsfix); font-weight:600;}
-  .iq-row-date{font-size:12px; color:var(--text-3); margin-top:2px;}
-  .iq-row-actions{display:flex; align-items:center; gap:8px; flex-shrink:0;}
-  .iq-link-btn{padding:8px 14px; border-radius:8px; border:1px solid rgba(204,255,0,.4); background:none; color:var(--num-text); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; white-space:nowrap; transition:background .15s ease;}
-  .iq-link-btn:hover{background:var(--num-bg);}
-  .iq-dismiss-btn{padding:8px 14px; border-radius:8px; border:1px solid var(--charcoal-border); background:none; color:var(--text-2); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:background .15s ease, border-color .15s ease;}
-  .iq-dismiss-btn:hover{border-color:#a1a1a6;}
-  .iq-dismiss-btn:disabled{opacity:.5; cursor:not-allowed;}
 
 
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
@@ -388,7 +372,6 @@
       </button>
       <div class="option-menu" id="rejectItemOptMenu"><div id="rejectItemOptList"></div></div>
     </div>
-    <button type="button" class="import-queue-btn" id="importQueueBtn">가져오기 대기 <span id="importQueueCount"></span></button>
   </div>
 
   <div class="upload-section">
@@ -445,8 +428,6 @@
   </div>
 
   <div id="rejectExclusiveContent" style="display:none;"></div>
-
-  <div id="importQueueContent" style="display:none;"></div>
 
 
   <div class="page-footer" data-reveal>
@@ -1195,144 +1176,6 @@
       if(window.adcheckReveal) window.adcheckReveal();
     }
   }
-
-  // ---------- 가져오기 대기 큐 (메타 광고 라이브러리 자동 수집) ----------
-  // 크론이 매일 자동으로 채워두는 큐를 여기서 훑어보고 승인/거절만 한다.
-  // 승인하면 실제 업종별 레퍼런스로 반영되고, 거절하면 버려진다(재수집 안 됨).
-  const importQueueBtn = document.getElementById('importQueueBtn');
-  const importQueueContent = document.getElementById('importQueueContent');
-  const mainFilterRow = document.getElementById('mainFilterRow');
-  let importQueueData = null; // null = 아직 로드 안 됨
-  let importQueueAdminPassword = null; // 이 탭에서 한 번 확인된 관리자 비밀번호(재요청 방지용, 저장은 안 함)
-
-  async function loadImportQueue(){
-    // 이 탭에서 이미 확인된 비밀번호가 있으면 다시 묻지 않는다 — 열 때마다
-    // 매번 물으면 번거로우니, 새로고침 전까지만 기억(저장은 안 함).
-    let password = importQueueAdminPassword;
-    if(password === null){
-      password = await adcheckPromptPassword('가져오기 대기 목록은 관리자만 볼 수 있습니다. 관리자 비밀번호를 입력하세요.');
-      if(password === null) return; // cancelled the prompt
-    }
-    importQueueContent.innerHTML = '<div class="loading-msg">가져오기 대기 목록을 불러오는 중…</div>';
-    fetch('/api/importQueue', { headers: { 'X-Admin-Password': password } })
-      .then(r => r.json().then(data => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
-        if(!ok){
-          importQueueAdminPassword = null;
-          importQueueContent.innerHTML = '<div class="gl-empty">' + (data.error || '불러오지 못했습니다.') + '</div>';
-          return;
-        }
-        importQueueAdminPassword = password;
-        importQueueData = data.items || [];
-        document.getElementById('importQueueCount').textContent = '(' + importQueueData.length + ')';
-        renderImportQueue();
-      })
-      .catch(() => {
-        importQueueContent.innerHTML = '<div class="gl-empty">가져오기 대기 목록을 불러오지 못했습니다. api/importQueue.js가 배포되었는지 확인해주세요.</div>';
-      });
-  }
-
-  function renderImportQueue(){
-    if(!importQueueData || !importQueueData.length){
-      importQueueContent.innerHTML = '<div class="gl-empty">대기 중인 링크가 없습니다. 크론이 다음에 돌 때 새로 수집된 광고 링크가 여기 쌓여요.</div>';
-      return;
-    }
-    importQueueContent.innerHTML = '<p class="sub" style="margin:0 0 20px; font-size:13.5px;">링크를 열어 광고를 확인하고, 마음에 들면 화면을 캡처하거나 이미지를 저장해서 위 업로드 기능으로 등록해주세요. 확인이 끝났으면 "확인함"을 눌러 목록에서 지워주세요.</p>';
-    const list = document.createElement('div');
-    list.className = 'iq-list';
-    list.setAttribute('data-stagger','');
-    importQueueData.forEach(item => list.appendChild(buildImportQueueRow(item)));
-    importQueueContent.appendChild(list);
-    if(window.adcheckReveal) window.adcheckReveal();
-  }
-
-  function buildImportQueueRow(item){
-    const row = document.createElement('div');
-    row.className = 'iq-row';
-    row.setAttribute('data-row','');
-
-    const main = document.createElement('div');
-    main.className = 'iq-row-main';
-    const dateStr = item.adDeliveryStartTime ? ('집행 시작 ' + escapeHtml(item.adDeliveryStartTime)) : '';
-    // 검색어(brandName)와 실제 광고주 계정명(pageName)이 동떨어져 보이면
-    // 눈에 띄게 표시 — 메타 검색이 느슨한 텍스트 매칭이라 무관한 계정이
-    // 섞여 들어오는 걸(예: "SSG" 검색에 스팸 계정) 링크를 열어보지 않고도
-    // 걸러낼 수 있게. 자동으로 큐에서 빼지는 않고 표시만 한다(브랜드의
-    // 실제 페이지명이 검색어와 다른 정상 케이스도 있을 수 있어서).
-    const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9가-힣]/g, '');
-    const brandNorm = norm(item.brandName);
-    const pageNorm = norm(item.pageName);
-    const looksMismatched = item.pageName && brandNorm && pageNorm &&
-      !brandNorm.includes(pageNorm) && !pageNorm.includes(brandNorm);
-    main.innerHTML =
-      '<div class="iq-row-brand">' + escapeHtml(item.brandName || '브랜드 미상') + '</div>' +
-      (item.pageName ? '<div class="iq-row-page' + (looksMismatched ? ' iq-row-page-warn' : '') + '">' + (looksMismatched ? '⚠ ' : '') + '실제 계정: ' + escapeHtml(item.pageName) + '</div>' : '') +
-      (dateStr ? '<div class="iq-row-date">' + dateStr + '</div>' : '');
-    row.appendChild(main);
-
-    const actions = document.createElement('div');
-    actions.className = 'iq-row-actions';
-
-    const linkBtn = document.createElement('a');
-    linkBtn.className = 'iq-link-btn';
-    linkBtn.href = item.snapshotUrl;
-    linkBtn.target = '_blank';
-    linkBtn.rel = 'noopener';
-    linkBtn.textContent = '스냅샷 보기 ↗';
-    actions.appendChild(linkBtn);
-
-    const dismissBtn = document.createElement('button');
-    dismissBtn.type = 'button';
-    dismissBtn.className = 'iq-dismiss-btn';
-    dismissBtn.textContent = '확인함';
-    dismissBtn.addEventListener('click', () => {
-      dismissBtn.disabled = true;
-      fetch('/api/importQueue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': importQueueAdminPassword },
-        body: JSON.stringify({ id: item.id }),
-      })
-        .then(r => r.json().then(data => ({ ok: r.ok, data })))
-        .then(({ ok, data }) => {
-          if(!ok){
-            window.alert(data.error || '처리에 실패했습니다.');
-            dismissBtn.disabled = false;
-            return;
-          }
-          importQueueData = importQueueData.filter(it => it.id !== item.id);
-          document.getElementById('importQueueCount').textContent = '(' + importQueueData.length + ')';
-          renderImportQueue();
-        })
-        .catch(() => {
-          window.alert('처리 중 오류가 발생했습니다. 다시 시도해주세요.');
-          dismissBtn.disabled = false;
-        });
-    });
-    actions.appendChild(dismissBtn);
-
-    row.appendChild(actions);
-    return row;
-  }
-
-  importQueueBtn.addEventListener('click', () => {
-    const willOpen = importQueueContent.style.display === 'none';
-    const uploadSection = document.querySelector('.upload-section');
-    mainFilterRow.style.display = willOpen ? 'none' : '';
-    if(uploadSection) uploadSection.style.display = willOpen ? 'none' : '';
-    refContent.style.display = willOpen ? 'none' : '';
-    document.getElementById('rejectExclusiveContent').style.display = 'none';
-    importQueueContent.style.display = willOpen ? '' : 'none';
-    importQueueBtn.classList.toggle('active', willOpen);
-    if(willOpen){
-      loadImportQueue();
-    } else {
-      syncRejectCases(); // 닫을 때 업종/유형/반려사례 필터 상태에 맞게 화면 복원
-    }
-  });
-
-  // 예전엔 페이지 로드 시 개수만 미리 가볍게 보여줬는데, 이제 큐 자체가
-  // 관리자 전용이라 인증 없이 개수만 먼저 보여주는 것도 정보 노출이라
-  // 없앴다 — 버튼을 열어 비밀번호를 확인해야만 실제 개수가 표시된다.
 
   // 헤더 하단 스크롤 진행 바
   (function(){

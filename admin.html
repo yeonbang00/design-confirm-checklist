@@ -129,17 +129,6 @@
   .log-bar span{display:block; height:100%; background:var(--danger); border-radius:3px;}
 
   /* ---------- 메타 수집 상태 ---------- */
-  .meta-card{background:var(--card); border:1px solid rgba(255,255,255,.11); border-radius:14px; padding:18px 20px;}
-  .meta-card.bad{border-color:rgba(242,47,107,.35); background:rgba(242,47,107,.06);}
-  .meta-head{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:10px;}
-  .meta-head b{font-size:14px; color:var(--text);}
-  .meta-dot{width:8px; height:8px; border-radius:50%; background:var(--ok); flex:none;}
-  .meta-card.bad .meta-dot{background:var(--danger);}
-  .meta-when{font-size:12px; color:var(--text-3); margin-left:auto; font-variant-numeric:tabular-nums;}
-  .meta-msg{font-size:13.5px; line-height:1.7; color:var(--text-2); margin-bottom:12px;}
-  .meta-stats{display:flex; flex-wrap:wrap; gap:14px; font-size:12.5px; color:var(--text-3); font-variant-numeric:tabular-nums;}
-  .meta-stats b{color:var(--text-2); font-weight:700;}
-  .meta-err{margin-top:12px; padding:10px 12px; border-radius:8px; background:rgba(0,0,0,.28); font-size:11.5px; line-height:1.6; color:var(--text-3); word-break:break-all;}
 
   /* ---------- 소재별 분석 기록 ---------- */
   .log-entry{display:flex; gap:16px; background:var(--card); border:1px solid rgba(255,255,255,.11); border-radius:14px; padding:14px; margin-bottom:10px;}
@@ -170,15 +159,6 @@
   .log-flag.clean{background:rgba(0,163,113,.13); color:#7FDCBB;}
   .log-entry{position:relative;}
   /* 수집이 멈춘 것 같을 때 Vercel 대시보드까지 가지 않고 여기서 바로 돌린다 */
-  .meta-actions{display:flex; align-items:center; gap:12px; margin-top:12px;}
-  .meta-run-btn{padding:9px 16px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05); color:var(--text); font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; transition:background .2s ease, border-color .2s ease;}
-  .meta-run-btn:hover:not(:disabled){background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.28);}
-  .meta-run-btn:disabled{opacity:.5; cursor:default;}
-  .meta-run-msg{font-size:12px; color:var(--text-3); line-height:1.7;}
-  .meta-diag-input{flex:1; max-width:280px; padding:9px 12px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); color:var(--text); font-family:inherit; font-size:12.5px;}
-  .meta-diag-input::placeholder{color:var(--text-3);}
-  .meta-diag-out{margin-top:10px; font:400 12px/1.8 var(--font-mono); color:var(--text-2); white-space:pre-wrap;}
-  .meta-diag-out b{color:var(--accent);}
   .log-del{
     position:absolute; top:10px; right:10px; width:26px; height:26px; flex:none;
     border-radius:7px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.03);
@@ -255,19 +235,6 @@
     <div id="rejectedList"></div>
   </div>
 
-  <div class="section" id="metaSection">
-    <div class="section-title">메타 광고 수집 <span class="log-note">— 토큰이 만료되면 수집이 조용히 멈추므로 상태를 남겨둡니다</span></div>
-    <div id="metaStatus"></div>
-    <div class="meta-actions">
-      <button type="button" class="meta-run-btn" id="metaRunBtn">지금 수집 실행</button>
-      <span class="meta-run-msg" id="metaRunMsg"></span>
-    </div>
-    <div class="meta-actions">
-      <input type="text" class="meta-diag-input" id="metaDiagBrand" placeholder="브랜드명으로 진단 (예: 올리브영)">
-      <button type="button" class="meta-run-btn" id="metaDiagBtn">진단</button>
-    </div>
-    <div class="meta-diag-out" id="metaDiagOut"></div>
-  </div>
 
   <div class="section" id="logSection">
     <div class="section-title">판정 분포 <span class="log-note">— 프롬프트 고도화용. 누가 분석했는지는 기록하지 않습니다.</span></div>
@@ -293,7 +260,6 @@
   const approvedSection = document.getElementById('approvedSection');
   const rejectedSection = document.getElementById('rejectedSection');
   const logSection = document.getElementById('logSection');
-  const metaSection = document.getElementById('metaSection');
   const pendingList = document.getElementById('pendingList');
   const approvedList = document.getElementById('approvedList');
   const rejectedList = document.getElementById('rejectedList');
@@ -357,9 +323,7 @@
       pendingSection.classList.add('show');
       approvedSection.classList.add('show');
       rejectedSection.classList.add('show');
-      metaSection.classList.add('show');
       logSection.classList.add('show');
-      loadMetaStatus();
       loadAnalysisLog();
       refreshBtn.style.display = '';
       currentUsers = data.users || [];
@@ -379,135 +343,6 @@
 
   refreshBtn.addEventListener('click', () => { loadUsers(); });
 
-  // 수집이 안 쌓였을 때 원인을 보려면 한 번 돌려봐야 하는데, 그러려면 Vercel
-  // 대시보드의 크론 화면까지 가야 했다. 여기서 바로 돌리고 결과를 갱신한다.
-  document.getElementById('metaRunBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('metaRunBtn');
-    const msg = document.getElementById('metaRunMsg');
-    btn.disabled = true;
-    msg.textContent = '수집 중… 브랜드가 350개가 넘어 최대 4분까지 걸립니다. 이 화면을 닫지 마세요.';
-    try{
-      const response = await fetch('/api/importQueue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
-        body: JSON.stringify({ action: 'runNow' }),
-      });
-      const data = await response.json();
-      if(!response.ok){
-        msg.textContent = data.error || '실행에 실패했습니다.';
-      }else{
-        const r = data.run || {};
-        // 어느 브랜드가 실제로 광고를 돌려줬는지 보여준다. "전 브랜드 0건"과
-        // "몇몇 브랜드만 잡힘"은 원인이 완전히 다른데, 합계만 봐서는 구분이
-        // 안 돼서 매번 Blob을 직접 열어봐야 했다.
-        const hits = (r.brands || []).filter(b => (b.found||0) > 0);
-        const parts = ['완료 — 새로 ' + (r.added||0) + '건 수집 (브랜드 ' + (r.processed||0) + '개 처리)'];
-        if(r.brands){
-          parts.push('메타 응답 ' + hits.reduce((n,b)=>n+(b.found||0),0) + '건 / 광고가 잡힌 브랜드 ' + hits.length + '개');
-          if(hits.length) parts.push('· ' + hits.slice(0,12).map(b => b.brand + '(' + b.found + ')').join(', ')
-            + (hits.length > 12 ? ' 외 ' + (hits.length-12) + '개' : ''));
-        }
-        msg.innerHTML = parts.map(escapeHtml).join('<br>');
-        loadMetaStatus();
-      }
-    }catch(err){
-      msg.textContent = '실행 중 오류: ' + (err && err.message ? err.message : '알 수 없음');
-    }finally{
-      btn.disabled = false;
-    }
-  });
-
-  // 광고 라이브러리 웹에는 광고가 보이는데 API는 0건인 상황을 좁히는 도구.
-  // 조건을 바꿔가며 같은 브랜드를 조회해 어느 파라미터가 결과를 막는지 본다.
-  document.getElementById('metaDiagBtn').addEventListener('click', async () => {
-    const brand = document.getElementById('metaDiagBrand').value.trim();
-    const out = document.getElementById('metaDiagOut');
-    if(!brand){ out.textContent = '브랜드명을 입력해주세요.'; return; }
-    out.textContent = '조회 중…';
-    try{
-      const response = await fetch('/api/importQueue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
-        body: JSON.stringify({ action: 'diagnose', brand }),
-      });
-      const data = await response.json();
-      if(!response.ok){ out.textContent = data.error || '진단에 실패했습니다.'; return; }
-      const lines = ['브랜드 ' + data.brand + ' / pageId ' + (data.pageId || '없음'), ''];
-      (data.results || []).forEach(r => {
-        if(r.skipped){ lines.push(r.key.padEnd(18) + '건너뜀 (' + r.skipped + ')'); return; }
-        if(r.error){ lines.push(r.key.padEnd(18) + '오류 ' + r.error); return; }
-        lines.push(r.key.padEnd(18) + r.count + '건' + (r.pages && r.pages.length ? '   ' + r.pages.join(', ') : ''));
-      });
-      out.textContent = lines.join('\n');
-    }catch(err){
-      out.textContent = '진단 중 오류: ' + (err && err.message ? err.message : '알 수 없음');
-    }
-  });
-
-  // ---------- 메타 광고 수집 상태 ----------
-  // 토큰이 만료되면 크론이 실패해도 화면 어디에도 표시가 안 나서, 며칠씩
-  // 모르고 지나가는 일이 실제로 있었다. 마지막 실행 날짜와 결과만 보여준다.
-  async function loadMetaStatus(){
-    const box = document.getElementById('metaStatus');
-    box.innerHTML = '<div class="empty">불러오는 중…</div>';
-    try{
-      const response = await fetch('/api/importQueue', { headers: { 'X-Admin-Password': adminPassword } });
-      const data = await response.json();
-      if(!response.ok){
-        box.innerHTML = '<div class="empty">' + escapeHtml(data.error || '불러오지 못했습니다.') + '</div>';
-        return;
-      }
-      const r = data.lastRun;
-      if(!r){
-        box.innerHTML = '<div class="empty">아직 크론이 실행된 기록이 없습니다. 다음 실행(매일 새벽 3시) 후 표시됩니다.</div>';
-        return;
-      }
-      const d = new Date(r.at);
-      const when = isNaN(d.getTime()) ? r.at
-        : d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0')
-          + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-      // 며칠째 안 돌았는지 — 크론 자체가 멈춘 경우도 잡아낸다
-      const daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000);
-      const stale = !isNaN(d.getTime()) && daysAgo >= 2;
-
-      // 에러 0인데 받아온 광고도 0이면 조용한 고장이다 — 정상으로 보이면 안 된다
-      const silentEmpty = r.ok && (r.processed||0) > 0 && r.found === 0;
-      const bad = !r.ok || stale || silentEmpty;
-      let msg;
-      if(!r.ok){
-        msg = '수집이 실패했습니다 — 메타 토큰이 만료됐을 가능성이 높습니다. '
-            + '브랜드 ' + (r.failedCount||0) + '개가 같은 이유로 실패했습니다.';
-      } else if(stale){
-        msg = daysAgo + '일째 실행 기록이 없습니다. 크론이 멈췄는지 확인해주세요.';
-      } else if(r.added === 0 && r.found === 0 && (r.processed||0) > 0){
-        // 에러 없이 조용히 0건인 경우 — 토큰 권한(ads_read) 누락이 대표적이다
-        msg = '실패는 없었지만 메타가 광고를 한 건도 돌려주지 않았습니다. '
-            + '토큰 권한(ads_read)이 빠졌거나 검색 조건이 맞지 않을 수 있습니다.';
-      } else if(r.added === 0 && r.found > 0){
-        msg = '정상 동작 중입니다. 메타에서 ' + r.found + '건을 받았지만 모두 이미 가져온 광고라 새로 쌓인 건 없습니다.';
-      } else {
-        msg = '정상 동작 중입니다.';
-      }
-
-      box.innerHTML = '<div class="meta-card ' + (bad ? 'bad' : 'ok') + '">'
-        + '<div class="meta-head"><span class="meta-dot"></span>'
-        + '<b>' + (bad ? '확인 필요' : '정상') + '</b>'
-        + '<span class="meta-when">마지막 실행 ' + escapeHtml(when) + '</span></div>'
-        + '<div class="meta-msg">' + escapeHtml(msg) + '</div>'
-        + '<div class="meta-stats">'
-          + '<span>수집 <b>' + (r.added||0) + '</b>건</span>'
-          + (r.found === undefined ? '' : '<span>메타 응답 <b>' + r.found + '</b>건'
-              + (r.brandsWithAds !== undefined ? ' (브랜드 ' + r.brandsWithAds + '개)' : '') + '</span>')
-          + '<span>처리 브랜드 <b>' + (r.processed||0) + '</b> / ' + (r.total||0) + '</span>'
-          + (r.failedCount ? '<span>실패 <b>' + r.failedCount + '</b></span>' : '')
-          + (r.hitTimeBudget ? '<span>시간 초과로 중단</span>' : '')
-        + '</div>'
-        + (r.sampleError ? '<div class="meta-err">' + escapeHtml(r.sampleError) + '</div>' : '')
-        + '</div>';
-    }catch(err){
-      box.innerHTML = '<div class="empty">서버에 연결하지 못했습니다.</div>';
-    }
-  }
 
   // ---------- 판정 분포 ----------
   // 17개 항목 각각이 얼마나 자주 걸렸는지(검토+반려 비율)를 높은 순으로 보여준다.
