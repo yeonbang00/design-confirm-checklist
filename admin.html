@@ -169,6 +169,12 @@
   .log-flag.needsfix{background:rgba(247,169,0,.13); color:#F0C069;}
   .log-flag.clean{background:rgba(0,163,113,.13); color:#7FDCBB;}
   .log-entry{position:relative;}
+  /* 수집이 멈춘 것 같을 때 Vercel 대시보드까지 가지 않고 여기서 바로 돌린다 */
+  .meta-actions{display:flex; align-items:center; gap:12px; margin-top:12px;}
+  .meta-run-btn{padding:9px 16px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05); color:var(--text); font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; transition:background .2s ease, border-color .2s ease;}
+  .meta-run-btn:hover:not(:disabled){background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.28);}
+  .meta-run-btn:disabled{opacity:.5; cursor:default;}
+  .meta-run-msg{font-size:12px; color:var(--text-3); line-height:1.5;}
   .log-del{
     position:absolute; top:10px; right:10px; width:26px; height:26px; flex:none;
     border-radius:7px; border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.03);
@@ -247,6 +253,10 @@
   <div class="section" id="metaSection">
     <div class="section-title">메타 광고 수집 <span class="log-note">— 토큰이 만료되면 수집이 조용히 멈추므로 상태를 남겨둡니다</span></div>
     <div id="metaStatus"></div>
+    <div class="meta-actions">
+      <button type="button" class="meta-run-btn" id="metaRunBtn">지금 수집 실행</button>
+      <span class="meta-run-msg" id="metaRunMsg"></span>
+    </div>
   </div>
 
   <div class="section" id="logSection">
@@ -358,6 +368,35 @@
   });
 
   refreshBtn.addEventListener('click', () => { loadUsers(); });
+
+  // 수집이 안 쌓였을 때 원인을 보려면 한 번 돌려봐야 하는데, 그러려면 Vercel
+  // 대시보드의 크론 화면까지 가야 했다. 여기서 바로 돌리고 결과를 갱신한다.
+  document.getElementById('metaRunBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('metaRunBtn');
+    const msg = document.getElementById('metaRunMsg');
+    btn.disabled = true;
+    msg.textContent = '수집 중… 브랜드가 350개가 넘어 최대 4분까지 걸립니다. 이 화면을 닫지 마세요.';
+    try{
+      const response = await fetch('/api/importQueue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
+        body: JSON.stringify({ action: 'runNow' }),
+      });
+      const data = await response.json();
+      if(!response.ok){
+        msg.textContent = data.error || '실행에 실패했습니다.';
+      }else{
+        const r = data.run || {};
+        msg.textContent = '완료 — 새로 ' + (r.added||0) + '건 수집'
+          + (r.brands ? ' (브랜드 ' + (r.processed||0) + '개 처리)' : '') + '.';
+        loadMetaStatus();
+      }
+    }catch(err){
+      msg.textContent = '실행 중 오류: ' + (err && err.message ? err.message : '알 수 없음');
+    }finally{
+      btn.disabled = false;
+    }
+  });
 
   // ---------- 메타 광고 수집 상태 ----------
   // 토큰이 만료되면 크론이 실패해도 화면 어디에도 표시가 안 나서, 며칠씩

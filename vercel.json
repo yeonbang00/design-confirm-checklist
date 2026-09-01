@@ -3,7 +3,8 @@
     { "path": "/api/cronImportAds", "schedule": "0 18 * * *" }
   ],
   "functions": {
-    "api/cronImportAds.js": { "maxDuration": 300 }
+    "api/cronImportAds.js": { "maxDuration": 300 },
+    "api/importQueue.js": { "maxDuration": 300 }
   },
   "headers": [
     {
