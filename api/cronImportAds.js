@@ -136,11 +136,19 @@ export default async function handler(req, res) {
   // 브랜드 대부분이 같은 이유로 실패하면 개별 브랜드 문제가 아니라 토큰·권한
   // 문제일 가능성이 높다(실제로 ads_read 권한 누락 때 전 브랜드가 400이었다).
   const looksLikeAuth = processed > 0 && failed.length >= processed * 0.8;
+  // API가 아예 0건을 돌려준 것과, 받아왔는데 전부 이미 본 광고라 안 쌓인 것은
+  // 원인이 완전히 다른데 added만 남기면 둘 다 "added: 0"으로 똑같이 보인다.
+  // 실제로 "오늘 하나도 안 쌓였다"는 확인 요청이 들어왔을 때 이 둘을 구분할
+  // 근거가 없어서 Blob을 직접 열어봐야 했다.
+  const foundTotal = brandLog.reduce((n, b) => n + (b.found || 0), 0);
+  const brandsWithAds = brandLog.filter((b) => (b.found || 0) > 0).length;
   try {
     await saveLastRun({
       at: new Date().toISOString(),
       ok: !looksLikeAuth,
       added: totalAdded,
+      found: foundTotal,
+      brandsWithAds,
       processed,
       total: N,
       failedCount: failed.length,

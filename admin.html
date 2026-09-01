@@ -385,13 +385,21 @@
       const daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000);
       const stale = !isNaN(d.getTime()) && daysAgo >= 2;
 
-      const bad = !r.ok || stale;
+      // 에러 0인데 받아온 광고도 0이면 조용한 고장이다 — 정상으로 보이면 안 된다
+      const silentEmpty = r.ok && (r.processed||0) > 0 && r.found === 0;
+      const bad = !r.ok || stale || silentEmpty;
       let msg;
       if(!r.ok){
         msg = '수집이 실패했습니다 — 메타 토큰이 만료됐을 가능성이 높습니다. '
             + '브랜드 ' + (r.failedCount||0) + '개가 같은 이유로 실패했습니다.';
       } else if(stale){
         msg = daysAgo + '일째 실행 기록이 없습니다. 크론이 멈췄는지 확인해주세요.';
+      } else if(r.added === 0 && r.found === 0 && (r.processed||0) > 0){
+        // 에러 없이 조용히 0건인 경우 — 토큰 권한(ads_read) 누락이 대표적이다
+        msg = '실패는 없었지만 메타가 광고를 한 건도 돌려주지 않았습니다. '
+            + '토큰 권한(ads_read)이 빠졌거나 검색 조건이 맞지 않을 수 있습니다.';
+      } else if(r.added === 0 && r.found > 0){
+        msg = '정상 동작 중입니다. 메타에서 ' + r.found + '건을 받았지만 모두 이미 가져온 광고라 새로 쌓인 건 없습니다.';
       } else {
         msg = '정상 동작 중입니다.';
       }
@@ -403,6 +411,8 @@
         + '<div class="meta-msg">' + escapeHtml(msg) + '</div>'
         + '<div class="meta-stats">'
           + '<span>수집 <b>' + (r.added||0) + '</b>건</span>'
+          + (r.found === undefined ? '' : '<span>메타 응답 <b>' + r.found + '</b>건'
+              + (r.brandsWithAds !== undefined ? ' (브랜드 ' + r.brandsWithAds + '개)' : '') + '</span>')
           + '<span>처리 브랜드 <b>' + (r.processed||0) + '</b> / ' + (r.total||0) + '</span>'
           + (r.failedCount ? '<span>실패 <b>' + r.failedCount + '</b></span>' : '')
           + (r.hitTimeBudget ? '<span>시간 초과로 중단</span>' : '')
