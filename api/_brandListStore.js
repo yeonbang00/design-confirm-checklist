@@ -30,7 +30,7 @@ const LIST_URL = `${BLOB_PUBLIC_BASE}/brand-list.json`;
 
 async function readStore() {
   try {
-    const resp = await fetch(LIST_URL, { cache: 'no-store' });
+    const resp = await fetch(`${LIST_URL}?ts=${Date.now()}`, { cache: 'no-store' });
     if (!resp.ok) return { brands: [], hiddenCuratedIds: [] };
     const data = await resp.json();
     return {

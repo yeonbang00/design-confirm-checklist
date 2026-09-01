@@ -183,6 +183,7 @@
   }
   .log-del:hover{background:rgba(242,47,107,.14); border-color:rgba(242,47,107,.4); color:var(--danger);}
   .log-del:disabled{opacity:.4; cursor:default;}
+  .log-entry.deleting{opacity:.4; pointer-events:none; transition:opacity .2s ease;}
   /* 집계표 행을 눌러 그 항목이 걸린 소재만 보는 동선 */
   .log-table tbody tr{cursor:pointer; transition:background .18s ease;}
   .log-table tbody tr:hover{background:rgba(255,255,255,.04);}
@@ -651,6 +652,10 @@
     const btn = e.target.closest('.log-del');
     if(!btn) return;
     if(!window.confirm('이 분석 기록을 삭제할까요? 판정 분포에서도 함께 빠집니다.')) return;
+    // 삭제 요청부터 목록 재로드까지 1~2초가 걸리는데 아무 표시가 없어서
+    // 눌리지 않은 걸로 오해하고 다시 누르는 일이 있었다. 진행 중임을 보여준다.
+    const entry = btn.closest('.log-entry');
+    if(entry) entry.classList.add('deleting');
     btn.disabled = true;
     try{
       const response = await fetch('/api/analysisLog', {
@@ -661,12 +666,14 @@
       const data = await response.json();
       if(!response.ok){
         window.alert(data.error || '삭제에 실패했습니다.');
+        if(entry) entry.classList.remove('deleting');
         btn.disabled = false;
         return;
       }
       await loadAnalysisLog();   // 집계도 같이 갱신돼야 하므로 전체 재로드
     }catch(err){
       window.alert('삭제 중 오류가 발생했습니다.');
+      if(entry) entry.classList.remove('deleting');
       btn.disabled = false;
     }
   });

@@ -25,9 +25,21 @@ const LOG_URL = `${BLOB_PUBLIC_BASE}/analysis-log.json`;
 // 오래된 것부터 버린다(고도화에는 최근 경향이 더 유용).
 const MAX_ENTRIES = 2000;
 
+// URL에 매번 다른 쿼리(ts)를 붙이는 이유:
+// 공개 Blob URL은 CDN 엣지 캐시를 탄다. fetch에 { cache: 'no-store' }를 줘도
+// 그건 이 런타임의 HTTP 캐시를 안 쓰겠다는 뜻이지, 엣지가 들고 있는 사본까지
+// 무시하게 만들지는 못한다. put()으로 덮어쓴 직후에도 잠깐은 예전 내용이 온다.
+//
+// 이 저장소들은 전부 "읽고 → 고치고 → 통째로 덮어쓰기"라 낡은 사본을 읽으면
+// 두 가지가 한꺼번에 터진다.
+//   1) 방금 지운 항목이 화면에 되살아난 것처럼 보인다.
+//   2) 그 낡은 목록을 기준으로 다시 저장하면 앞서 지운 항목이 실제로 복구된다.
+// 실제로 관리자 화면에서 분석 기록이 바로 안 지워지는 현상으로 드러났다.
+// 같은 이유로 다른 매니페스트 저장소(_historyStore, _rejectCaseStore 등)도
+// 전부 같은 방식으로 읽는다.
 export async function getAnalysisLog() {
   try {
-    const resp = await fetch(LOG_URL, { cache: 'no-store' });
+    const resp = await fetch(`${LOG_URL}?ts=${Date.now()}`, { cache: 'no-store' });
     if (!resp.ok) return [];
     const data = await resp.json();
     return Array.isArray(data.items) ? data.items : [];

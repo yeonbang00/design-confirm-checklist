@@ -15,7 +15,7 @@ const CASES_URL = `${BLOB_PUBLIC_BASE}/reject-cases.json`;
 
 export async function getRejectCases() {
   try {
-    const resp = await fetch(CASES_URL, { cache: 'no-store' });
+    const resp = await fetch(`${CASES_URL}?ts=${Date.now()}`, { cache: 'no-store' });
     if (!resp.ok) return [];
     const data = await resp.json();
     return Array.isArray(data.items) ? data.items : [];

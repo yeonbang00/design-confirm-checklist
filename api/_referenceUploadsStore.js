@@ -15,7 +15,7 @@ const UPLOADS_URL = `${BLOB_PUBLIC_BASE}/reference-uploads.json`;
 
 export async function getUploadedReferenceImages() {
   try {
-    const resp = await fetch(UPLOADS_URL, { cache: 'no-store' });
+    const resp = await fetch(`${UPLOADS_URL}?ts=${Date.now()}`, { cache: 'no-store' });
     if (!resp.ok) return [];
     const data = await resp.json();
     return Array.isArray(data.items) ? data.items : [];

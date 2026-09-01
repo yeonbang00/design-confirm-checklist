@@ -15,7 +15,7 @@ const QUEUE_URL = `${BLOB_PUBLIC_BASE}/import-queue.json`;
 
 async function getState() {
   try {
-    const resp = await fetch(QUEUE_URL, { cache: 'no-store' });
+    const resp = await fetch(`${QUEUE_URL}?ts=${Date.now()}`, { cache: 'no-store' });
     if (!resp.ok) return { pending: [], seenAdIds: [], cursor: 0 };
     const data = await resp.json();
     // lastRun까지 여기서 같이 복원해야 한다 — getState()가 아는 키만 추려서

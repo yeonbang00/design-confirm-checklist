@@ -16,7 +16,7 @@ const HISTORY_URL = `${BLOB_PUBLIC_BASE}/history.json`;
 
 export async function getHistoryEntries() {
   try {
-    const resp = await fetch(HISTORY_URL, { cache: 'no-store' });
+    const resp = await fetch(`${HISTORY_URL}?ts=${Date.now()}`, { cache: 'no-store' });
     if (!resp.ok) return [];
     const data = await resp.json();
     return Array.isArray(data.entries) ? data.entries : [];
