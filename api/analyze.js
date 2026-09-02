@@ -287,6 +287,50 @@ function comparisonInstruction(advertiserName) {
 // 놓쳐져서, 얼굴 부분만 잘라 확대한 크롭을 별도 이미지로 함께 보내고
 // 이렇게 그 존재와 순서를 알려준다. labels는 크롭이 첨부된 순서와
 // 정확히 같아야 한다.
+// ① 실제 노출 크기 축소본 — 확대 크롭의 정반대 장치.
+// 확대해서 보면 멀쩡한데 실제 노출 크기에서 무너지는 문제(헤드라인이 안 읽힘,
+// CTA가 묻힘)를 판정할 방법이 없어서 도입했다.
+function smallPreviewInstruction(w, h) {
+  return `\n\n실제 노출 크기 축소본 안내: 첨부 이미지 중 ${w}x${h}px짜리 작은 이미지 1장은 원본이 아니라, 이 배너가 실제 피드에서 보이는 크기에 가깝게 줄인 것입니다. 원본은 확대해서 뜯어보기 위한 것이고, 이 축소본은 "실제로 사람들이 보는 크기에서 어떻게 읽히는가"를 확인하기 위한 것입니다.
+
+아래 세 항목을 판정할 때 축소본을 반드시 함께 보세요. 원본에서 멀쩡해 보여도 축소본에서 무너지면 그건 실제 노출에서 무너지는 것이니 판정에 반영해야 합니다:
+- 2번(위계 및 구조): 축소본에서 가장 먼저 눈에 들어오는 것이 무엇인지, 3초 안에 무슨 광고인지 파악되는지 보세요. 원본에서는 위계가 보였는데 축소본에서 헤드라인·비주얼·CTA가 다 비슷한 덩어리로 뭉개진다면 위계가 실제로는 작동하지 않는 것입니다.
+- 3번(명도대비 부분): 축소본에서 읽히지 않는 텍스트가 있는지 보세요. 대비 수치가 기준을 넘더라도 작아지면서 실질적으로 안 읽히는 경우가 있습니다.
+- 14번(매체 최적화): 축소본에서 헤드라인이 읽히는지, CTA가 다른 요소에 묻히지 않는지 보세요.
+
+단, 축소본에서 작은 글씨(법적고지·부가조건·각주)가 안 읽히는 것은 정상입니다 — 그런 문구는 원래 작게 넣는 것이라 이걸로 감점하지 마세요. 핵심 카피와 CTA가 읽히는지만 보세요.`;
+}
+
+// ② 텍스트 점유율 — OCR 박스가 화면에서 차지하는 실제 면적 비율
+function textCoverageInstruction(cov) {
+  return `\n\n텍스트 점유율(실측): OCR로 잡힌 텍스트 영역이 배너 전체 면적의 약 ${cov.percent}%를 차지합니다(텍스트 덩어리 ${cov.boxCount}개, 겹치는 영역은 한 번만 계산).
+
+14번(매체 최적화)에서 텍스트 과다 여부를 판단할 때 이 수치를 근거로 쓰세요 — 눈대중으로 "텍스트가 많아 보인다"고 하지 마세요. 참고 기준: 20% 이하면 여유로운 편, 20~30%는 다소 빽빽하지만 정보형 배너에서는 흔한 수준, 30%를 넘으면 모바일에서 읽기 부담이 큽니다. 다만 이 수치는 절대 기준이 아니라 정보량이 원래 많은 소재(요금제 비교, 이벤트 조건 안내 등)에서는 자연스럽게 높아지니, 수치만 보고 기계적으로 감점하지 말고 실제로 빽빽해 보이는지와 함께 판단하세요. note에 지적할 때는 "텍스트 점유율 ${cov.percent}%로 과밀"처럼 수치를 함께 적으세요.`;
+}
+
+// ③ 반복 패턴 자기상관 — 11번은 전용 지시가 없던 유일한 항목이었다
+function repeatPatternInstruction(rp) {
+  const line = (ax, d) => `${ax}축: 주기 ${d.periodPx}px, 반복 강도 ${d.strength}/100`;
+  return `\n\n배경 반복 패턴(실측): 이미지를 가로·세로로 밀어가며 자기 자신과의 상관을 계산한 결과입니다. ${line('가로', rp.x)} / ${line('세로', rp.y)}.
+
+11번(배경 패턴 반복)을 판정할 때 이 수치를 출발점으로 쓰세요. 반복 강도가 높다는 것은 같은 무늬가 일정 간격으로 되풀이된다는 뜻입니다(대략 70 이상이면 뚜렷한 반복, 40 미만이면 반복이라 보기 어려움).
+
+단, 반복 자체는 문제가 아닙니다 — 패턴 벽지, 타일, 격자, 스트라이프처럼 디자이너가 의도적으로 쓴 반복은 정상입니다. 11번이 잡아야 하는 것은 AI 생성 특유의 "부자연스러운" 반복입니다: 같은 사물(꽃·구름·얼굴 등)이 복제된 듯 똑같이 되풀이되거나, 반복 이음매에서 형태가 잘리거나 뭉개지거나, 자연물인데 기계적으로 규칙적인 경우입니다. 수치가 높게 나왔다면 이미지에서 그 주기 간격을 실제로 살펴보고 위 중 어디에 해당하는지 확인한 뒤 판정하세요. 수치만 보고 판정하지 마세요.
+
+note에는 확인한 내용을 적으세요 (예: "가로 96px 주기로 같은 꽃 형태가 복제되어 반복됨", "반복 있으나 의도된 패턴 배경으로 정상").`;
+}
+
+// ④ 여백·간격 실측 — 3번의 "여백·간격" 하위 체크가 계속 눈대중이었다
+function spacingInstruction(rows) {
+  const lines = rows.map((r) => `- 세로 ${r.y}px 부근("${r.sample}"): 요소 사이 간격 ${r.gaps.join(' / ')}px (평균 ${r.avg}px, 편차 ${r.dev}px)`).join('\n');
+  return `\n\n요소 간격(실측): 같은 줄에 나란히 놓인 텍스트 덩어리들 사이의 가로 간격을 OCR 좌표로 잰 값입니다.
+${lines}
+
+3번의 "여백·간격" 하위 체크에서 이 수치를 근거로 쓰세요 — "여백·간격 이상없음"이라고만 쓰지 말고 무엇을 확인했는지 남기세요. 편차가 평균의 30%를 넘으면 간격이 눈에 띄게 들쭉날쭉한 것이니 최소 needsfix로 판정하세요.
+
+단, 의도적으로 다른 간격이 정상인 경우가 있습니다 — 서로 다른 그룹을 여백으로 구분한 경우(근접성 원리)나, 뱃지와 본문처럼 성격이 다른 요소가 한 줄에 섞인 경우입니다. 이미지를 보고 "같은 성격의 요소가 나란히 놓였는데 간격만 제각각"인지 확인한 뒤 판정하세요.`;
+}
+
 function faceCropInstruction(labels) {
   const list = labels.map((label, i) => `${i + 1}) ${label}`).join(', ');
   return `\n\n확대 크롭 안내: 마지막에 첨부된 이미지 ${labels.length}장은 원본 배너가 아니라, 원본에서 인물의 얼굴·손 부분만 잘라 확대한 크롭입니다. 순서대로: ${list}. 이 크롭은 주변 장면(배경, 분위기, 다른 요소) 없이 해당 부위의 디테일만 보기 위한 참고 자료입니다.
@@ -519,7 +563,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, briefPptx, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts, dominantColors, faceCrops } = req.body || {};
+  const { base64, mediaType, advertiserId, mediaGuideIds, imageWidth, imageHeight, briefImages, briefPptx, fileSizeBytes, analyzedWidth, analyzedHeight, ocrOnly, precomputedOcrFields, contrastFacts, dominantColors, faceCrops, smallPreview, textCoverage, repeatPattern, spacingFacts } = req.body || {};
   if (!base64 || !mediaType) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
@@ -648,6 +692,14 @@ export default async function handler(req, res) {
   const hasFaceCrops = validFaceCrops.length > 0;
   const faceCropIns = hasFaceCrops ? faceCropInstruction(validFaceCrops.map((f) => f.label || '부위')) : '';
 
+  // 살 필요 없이 캔버스·OCR 좌표만으로 뽑은 실측값들 — 측정 장치가 없어
+  // 눈대중으로 판정되던 항목(11·14·3번 여백)에 근거를 준다.
+  const hasSmallPreview = !!(smallPreview && smallPreview.base64);
+  const smallPreviewIns = hasSmallPreview ? smallPreviewInstruction(smallPreview.width, smallPreview.height) : '';
+  const textCoverageIns = (textCoverage && Number.isFinite(textCoverage.percent)) ? textCoverageInstruction(textCoverage) : '';
+  const repeatPatternIns = (repeatPattern && repeatPattern.x && repeatPattern.y) ? repeatPatternInstruction(repeatPattern) : '';
+  const spacingIns = (Array.isArray(spacingFacts) && spacingFacts.length) ? spacingInstruction(spacingFacts) : '';
+
   const promptText =
     BASE_PROMPT +
     (hasSize ? imageSizeInstruction(imageWidth, imageHeight, fileSizeBytes) : '') +
@@ -661,6 +713,10 @@ export default async function handler(req, res) {
     colorDistanceInstruction +
     spellCheckInstruction +
     faceCropIns +
+    smallPreviewIns +
+    textCoverageIns +
+    repeatPatternIns +
+    spacingIns +
     schemaInstruction(hasComparison, hasMediaGuides, hasBrief, hasGuideline);
 
   // 순서가 중요합니다 — comparisonInstruction()에서 이미 "참고 배너가 먼저,
@@ -675,6 +731,10 @@ export default async function handler(req, res) {
   images.push({ mediaType, base64 });
   if (hasFaceCrops) {
     validFaceCrops.forEach((f) => images.push({ mediaType: f.mediaType, base64: f.base64 }));
+  }
+  // 축소본은 맨 마지막에 붙인다 — 위 안내문이 "마지막 작은 이미지"로 지칭한다.
+  if (hasSmallPreview) {
+    images.push({ mediaType: smallPreview.mediaType || 'image/jpeg', base64: smallPreview.base64 });
   }
 
   try {
