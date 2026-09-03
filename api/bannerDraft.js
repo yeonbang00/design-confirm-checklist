@@ -36,9 +36,62 @@ const AXES = {
 };
 const MIN_COLOR_DISTANCE = 90;   // 실측 기준 — 이보다 가까우면 눈으로도 비슷해 보였다
 
+/* 숫자를 아예 금지했더니 "15% 할인받기" 같은 실제 관례를 못 쓰게 됐다.
+   그래서 금지 대신 자리표시자만 허용한다 — AI는 문장을 정하고 숫자는
+   코드가 상품 데이터에서 채운다. 데이터에 없는 값의 자리표시자는 애초에
+   쓸 수 없다고 알려주므로, 지어낸 숫자가 들어갈 자리가 없다. */
+const SLOTS = {
+  '{할인율}':  (p) => (p.discountRate != null ? String(p.discountRate) : null),
+  '{판매가}':  (p) => (p.salePrice != null ? Number(p.salePrice).toLocaleString('ko-KR') : null),
+  '{정상가}':  (p) => (p.originalPrice != null ? Number(p.originalPrice).toLocaleString('ko-KR') : null),
+  '{할인액}':  (p) => (p.discountAmount != null ? Number(p.discountAmount).toLocaleString('ko-KR')
+                     : (p.originalPrice && p.salePrice && p.originalPrice > p.salePrice
+                        ? Number(p.originalPrice - p.salePrice).toLocaleString('ko-KR') : null)),
+};
+function availableSlots(p) {
+  return Object.keys(SLOTS).filter((k) => SLOTS[k](p) != null);
+}
+function fillSlots(text, p) {
+  let out = String(text || '');
+  for (const k of Object.keys(SLOTS)) {
+    const v = SLOTS[k](p);
+    // 값이 없는 자리표시자는 문구째로 지운다 — "% 할인받기"가 남으면 더 나쁘다
+    out = v != null ? out.split(k).join(v) : out.replace(new RegExp('[^\\s]*' + k.replace(/[{}]/g, '\\$&') + '[^\\s]*\\s?', 'g'), '');
+  }
+  return out.replace(/\s{2,}/g, ' ').trim();
+}
+
+/* 몰마다 쓰는 말이 다르다. 신세계쇼핑은 서브카피에 혜택·할인을 넣고
+   CTA를 "…혜택 받기"로 맺는 패턴이 굳어 있다. 실제 배너에서 관찰한 것을
+   그대로 적었다. */
+const COPY_STYLES = {
+  default: { label: '기본', hint: '' },
+  'shinsegae-shopping': {
+    label: '신세계쇼핑',
+    hint: `이 몰의 카피 관례를 따른다.
+  - 서브카피에는 혜택이나 할인을 넣는다. 예: "첫 구매 {할인율}% 할인",
+    "더블멤버십 추가 할인", "{할인액}원 웰컴 혜택".
+  - CTA는 '받기'로 맺는 혜택형을 쓴다. 예: "혜택 받기", "멤버십 할인 받기",
+    "가입 혜택 받고 구매하기", "단독 혜택 확인하기".
+  - 메인 카피는 상품이나 시즌을 말하고, 혜택은 서브카피와 CTA가 맡는다.`,
+  },
+  benefit: {
+    label: '혜택 강조',
+    hint: `혜택을 앞세운다. 서브카피와 CTA 모두 지금 사면 무엇이 좋은지를 말한다.
+  숫자는 반드시 자리표시자로만 쓴다.`,
+  },
+  brand: {
+    label: '브랜드 톤',
+    hint: `할인·혜택을 말하지 않는다. 상품과 브랜드의 인상만 남긴다.
+  자리표시자를 쓰지 마라.`,
+  },
+};
+
 function buildPrompt(p, retryNote) {
   const kind = p.imageType === 'model' ? 'model' : 'packshot';
   const axes = AXES[kind];
+  const slots = availableSlots(p);
+  const style = COPY_STYLES[p.copyStyle] || COPY_STYLES.default;
   const facts = [
     `상품명: ${p.productName || '(미상)'}`,
     `브랜드: ${p.brand || '(미상)'}`,
@@ -55,6 +108,10 @@ ${axes.map(([k, l, d]) => `  ${k} ${l} — ${d}`).join('\n')}
 [반드시 지킬 것]
 
 1. 세 장이 한눈에 달라 보여야 한다. 지배색·밝기·배경 재질이 서로 겹치면 실패다.
+   카피도 마찬가지다. 세 장의 메인·서브·CTA가 각각 서로 달라야 한다. 특히
+   서브카피와 CTA를 세 장에 똑같이 복사해 넣지 마라 — 같은 혜택을 말하더라도
+   축마다 다른 말로 쓴다. (예: "멤버십 할인 받기" / "가입하고 할인받기" /
+   "단독 혜택 확인하기")
    특히 제품 자체 색이 강한 상품(보라색 세제, 빨간 포장 등)은 A와 C가 그 색으로
    수렴하기 쉽다. C의 지배색은 제품 색과 명확히 다른 색조로 잡아라.
 
@@ -69,9 +126,17 @@ ${kind === 'model' ? `
 3. 상품 정보에 없는 효능·성분·수상·인증·순위를 지어내지 마라.
 
 4. 각 축마다 카피도 함께 쓴다. 카피와 장면이 서로를 설명해야 한다.
-   - 숫자(가격·할인율·수량·기간·순위)를 절대 쓰지 마라. 코드가 따로 조판한다.
-   - 배송·교환·적립 같은 거래 조건도 쓰지 마라. [특징]에 섞여 있어도 무시하라.
-   - 메인 22자 이내 최대 2줄(\\n으로 구분), 서브 30자 이내 1줄, CTA 10자 이내.
+   - 메인 22자 이내 최대 2줄(\n으로 구분), 서브 30자 이내 1줄, CTA 12자 이내.
+   - 배송·교환·적립 같은 거래 조건은 쓰지 마라. [특징]에 섞여 있어도 무시하라.
+
+4-1. 숫자는 직접 쓰지 말고 아래 자리표시자만 쓴다. 실제 값은 코드가 상품
+   데이터에서 채운다. 목록에 없는 자리표시자를 쓰면 그 문구가 통째로 지워진다.
+   ${slots.length ? '이 상품에 쓸 수 있는 것: ' + slots.join(', ')
+                  : '이 상품은 쓸 수 있는 자리표시자가 없다. 숫자를 아예 쓰지 마라.'}
+   예: "첫 구매 {할인율}% 할인", "{판매가}원부터", "{할인액}원 혜택"
+   자리표시자 밖의 숫자(순위·재구매율·판매량·기간)는 여전히 금지다.
+
+4-2. ${style.hint || '몰 특유의 관례 없이 일반적인 커머스 카피로 쓴다.'}
 
 5. imagePrompt는 영어로 쓴다. 반드시 포함한다.
    - 피사체(제품)를 그대로 유지하라는 지시
@@ -119,7 +184,7 @@ function tooClose(sets) {
   }
   return bad;
 }
-function normalize(sets, kind) {
+function normalize(sets, kind, product) {
   const axes = AXES[kind === 'model' ? 'model' : 'packshot'];
   return sets.slice(0, 3).map((s, i) => {
     const ax = axes[i] || axes[0];
@@ -139,6 +204,13 @@ function normalize(sets, kind) {
       ctaInk: hex(s.ctaInk, '#111111'),
       imagePrompt: s.imagePrompt || '',
     };
+  }).map(function (t) {
+    // 자리표시자를 실제 값으로 바꾼다. 여기서만 숫자가 들어간다.
+    t.copyRaw = { headline: t.copy.headline, subcopy: t.copy.subcopy, cta: t.copy.cta };
+    t.copy.headline = fillSlots(t.copy.headline, product);
+    t.copy.subcopy  = fillSlots(t.copy.subcopy, product);
+    t.copy.cta      = fillSlots(t.copy.cta, product) || '자세히 보기';
+    return t;
   });
 }
 
@@ -161,7 +233,7 @@ export default async function handler(req, res) {
       maxOutputTokens: 6000, reasoningEffort: 'medium',
     });
     const kind = product.imageType === 'model' ? 'model' : 'packshot';
-    let sets = normalize(Array.isArray(out && out.sets) ? out.sets : [], kind);
+    let sets = normalize(Array.isArray(out && out.sets) ? out.sets : [], kind, product);
     if (sets.length < 3) { res.status(502).json({ error: 'AI가 시안 3종을 만들지 못했습니다.' }); return; }
 
     // 색이 겹치면 한 번만 다시 시킨다
@@ -172,14 +244,16 @@ export default async function handler(req, res) {
         maxOutputTokens: 6000, reasoningEffort: 'medium',
       }).catch(() => null);
       if (retry && Array.isArray(retry.sets)) {
-        const s2 = normalize(retry.sets, kind);
+        const s2 = normalize(retry.sets, kind, product);
         if (s2.length === 3 && tooClose(s2).length < clash.length) {
           sets = s2; clash = tooClose(s2);
         }
       }
     }
 
-    res.status(200).json({ sets, colorClash: clash, imageType: kind, model: OPENAI_MODEL });
+    res.status(200).json({ sets, colorClash: clash, imageType: kind,
+      copyStyle: COPY_STYLES[product.copyStyle] ? product.copyStyle : 'default',
+      slots: availableSlots(product), model: OPENAI_MODEL });
   } catch (err) {
     const status = err && err.status >= 400 && err.status < 600 ? err.status : 500;
     res.status(status).json({ error: err.message || '시안 생성에 실패했습니다.' });

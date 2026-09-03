@@ -73,6 +73,8 @@
   .go[disabled]{opacity:.5; cursor:not-allowed;}
 
   .ways{display:flex; gap:6px; margin-bottom:12px;}
+  .ways-label{align-self:center; font-size:11px; color:var(--ink-4); margin-right:4px;}
+  .way.sm{padding:6px 12px; font-size:11.5px;}
   .way{padding:8px 15px; border-radius:9px; border:1px solid var(--line); background:var(--surface-2);
        color:var(--ink-3); font-size:12.5px; font-weight:600; cursor:pointer; transition:all .18s ease;}
   .way:hover{color:var(--ink);}
@@ -239,6 +241,13 @@
       <button type="button" id="urlClear" title="지우기">×</button>
     </div>
     <button class="go" id="run">시안 만들기</button>
+  </div>
+  <div class="ways" id="styleRow">
+    <span class="ways-label">카피 스타일</span>
+    <button class="way sm on" data-style="default">기본</button>
+    <button class="way sm" data-style="shinsegae-shopping">신세계쇼핑</button>
+    <button class="way sm" data-style="benefit">혜택 강조</button>
+    <button class="way sm" data-style="brand">브랜드 톤</button>
   </div>
   <div class="ways">
     <button class="way on" data-way="link">링크로 가져오기</button>
@@ -633,7 +642,7 @@ async function makeSets(btn){
     btn.textContent = '카피와 장면 만드는 중…';
     const dr = await fetch('/api/bannerDraft', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ product })
+      body: JSON.stringify({ product: { ...product, copyStyle } })
     });
     const dd = await dr.json();
     if(!dr.ok) throw new Error(dd.error || '시안 생성 실패');
@@ -656,6 +665,7 @@ async function makeSets(btn){
    이미지를 받아둔 경우가 많으니, 실제 업무에는 이쪽이 더 가깝다.
    업로드한 이미지는 서버로 보내 배경을 바꾸는 데만 쓴다. */
 let uploaded = null;   // {base64, mediaType, dataUrl}
+let copyStyle = 'default';   // 몰마다 쓰는 말이 달라서 골라 쓴다
 
 function readFile(f){
   if(!f || !/^image\//.test(f.type)) return;
@@ -684,8 +694,12 @@ function readFile(f){
   });
 })();
 
-$$('.way').forEach(b=>b.onclick=()=>{
-  $$('.way').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+$$('#styleRow .way').forEach(b=>b.onclick=()=>{
+  $$('#styleRow .way').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  copyStyle = b.dataset.style;
+});
+$$('.ways:not(#styleRow) .way').forEach(b=>b.onclick=()=>{
+  $$('.ways:not(#styleRow) .way').forEach(x=>x.classList.remove('on')); b.classList.add('on');
   const manual = b.dataset.way==='manual';
   $('#manual').hidden = !manual;
   $('.bar').hidden = manual;
