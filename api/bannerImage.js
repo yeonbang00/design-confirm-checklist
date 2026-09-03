@@ -25,10 +25,29 @@ const ALLOWED_SIZES = new Set(['1024x1024', '1024x1536', '1536x1024']);
 
 export const config = { api: { bodyParser: { sizeLimit: '20mb' } } };
 
-const KEEP = 'Keep the product and any people EXACTLY as they are — same shape, same colour, '
-  + 'same packaging, same garment, same faces, same poses. Do not redraw, restyle or replace them. '
-  + 'Change ONLY the environment behind and around them.';
+// 무엇을 지키고 무엇을 바꿀지 나눠서 지시한다. 예전에는 "포즈까지 그대로"를
+// 요구했는데, 그러면 항공샷 원본이 식탁 컨셉에서도 항공샷 그대로 남아 장면이
+// 어색해진다. 상품의 정체성(형태·비율·색·포장·개수)은 지키되, 카메라 앵글과
+// 놓인 자리는 컨셉에 맞게 다시 잡게 한다.
+const KEEP = [
+  'The product in the reference image must remain the SAME product:',
+  'same shape and proportions, same colour, same packaging and label design,',
+  'same material and texture, same number of items.',
+  'If people are present, keep their faces, hair and garments unchanged.',
+  '',
+  'You MAY change the camera angle, viewpoint, framing and how the product is placed',
+  'so that it sits naturally in the new scene. If the scene is a table, show it resting',
+  'on the table from a natural eye-level or three-quarter view rather than copying the',
+  'original overhead packshot angle. Re-light the product to match the new scene,',
+  'and give it contact shadows and reflections consistent with that lighting.',
+  'The result must look like one photograph, not a cut-out pasted onto a background.',
+].join(' ');
 const NO_TEXT = 'Do not render any text, letters, numbers, logos or watermarks anywhere in the image.';
+// 카피가 얹힐 자리를 비워두게 한다. 안 그러면 제품이 화면을 꽉 채워
+// 글자를 놓을 곳이 없고, 어두운 영역을 아무리 걸어도 읽기 어려워진다.
+const ROOM = 'Compose the frame so that roughly one third of the image is calm, uncluttered '
+  + 'background with no important detail — this empty area is reserved for text that will be '
+  + 'added later. Keep the product clearly inside the remaining area.';
 
 async function fetchSource(imageUrl) {
   const r = await fetch(imageUrl, {
@@ -52,7 +71,7 @@ export default async function handler(req, res) {
   const { imageUrl, base64, mediaType, imagePrompt, size } = req.body || {};
   if (!imagePrompt) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
   const outSize = ALLOWED_SIZES.has(size) ? size : '1024x1024';
-  const prompt = `${KEEP} ${imagePrompt} ${NO_TEXT}`;
+  const prompt = `${KEEP} ${imagePrompt} ${ROOM} ${NO_TEXT}`;
 
   try {
     let apiRes;

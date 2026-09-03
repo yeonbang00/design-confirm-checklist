@@ -1,7 +1,7 @@
 // POST /api/bannerCopy
 // Body: { product: {...}, tone: 'product'|'emotion'|'benefit'|'price'|'season',
 //         concept?: {...}, limits?: {...} }
-// Returns: { copy: {eyebrow, headline, subcopy, badge, cta} } | { error }
+// Returns: { copy: {headline, subcopy, badge, cta} } | { error }
 //
 // 광고 카피를 만든다. AI가 만드는 것은 문장뿐이고, 숫자는 절대 만들지 않는다.
 // 가격·정상가·할인율·할인금액·재구매율·판매량·배송혜택은 전부 상품 데이터에서
@@ -19,7 +19,6 @@ import { callOpenAI, OPENAI_MODEL } from './_openaiClient.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 const DEFAULT_LIMITS = {
-  eyebrow:  { maxChars: 15, maxLines: 1 },
   headline: { maxChars: 22, maxLines: 2 },
   subcopy:  { maxChars: 30, maxLines: 2 },
   badge:    { maxChars: 14, maxLines: 1 },
@@ -63,7 +62,7 @@ function inventedNumbers(copy, product) {
     known.add(m[0].replace(/,/g, ''));
   }
   const hits = [];
-  for (const key of ['eyebrow', 'headline', 'subcopy', 'badge', 'cta']) {
+  for (const key of ['headline', 'subcopy', 'badge', 'cta']) {
     for (const m of String(copy[key] || '').matchAll(/\d[\d,]*/g)) {
       const raw = m[0];
       if (!known.has(raw) && !known.has(raw.replace(/,/g, ''))) hits.push(`${key}: "${raw}"`);
@@ -127,7 +126,6 @@ ${retryNote ? '\n[직전 시도가 길이를 넘었다. 반드시 줄여라]\n' 
 [출력] 아래 JSON만 출력한다.
 
 {
-  "eyebrow": "브랜드명이나 짧은 머리말",
   "headline": "메인 카피\\n둘째 줄",
   "subcopy": "보조 설명 한 줄",
   "badge": "짧은 강조 문구 (없으면 빈 문자열)",
@@ -171,7 +169,7 @@ export default async function handler(req, res) {
     const invented = inventedNumbers(copy, product);
     res.status(200).json({
       copy: {
-        eyebrow: copy.eyebrow || '', headline: copy.headline || '',
+        headline: copy.headline || '',
         subcopy: copy.subcopy || '', badge: copy.badge || '', cta: copy.cta || '',
       },
       overLimit: over,          // 조판 쪽에서 경고로 띄운다
