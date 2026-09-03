@@ -107,6 +107,19 @@
   .logo-drop.dark{background-color:#16181C;}
   .logo-drop span{font-size:9.5px; color:var(--ink-4); text-align:center; line-height:1.4;}
   .logo-drop.light span{color:#9AA0A8;}
+  .picker{margin-top:10px; max-height:210px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;
+          border:1px solid var(--line); border-radius:10px; padding:6px; background:var(--surface-2);}
+  .picker::-webkit-scrollbar{width:6px;}
+  .picker::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12); border-radius:99px;}
+  .pk{display:flex; gap:8px; align-items:center; padding:5px; border-radius:8px; border:1px solid transparent;
+      background:none; cursor:pointer; text-align:left; transition:background .16s ease;}
+  .pk:hover{background:rgba(255,255,255,.05);}
+  .pk.on{border-color:rgba(195,255,77,.45); background:rgba(195,255,77,.07);}
+  .pk img{width:34px; height:34px; border-radius:6px; object-fit:cover; flex-shrink:0; background:#222;}
+  .pk-t{min-width:0; flex:1;}
+  .pk-n{font-size:11px; color:var(--ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .pk-p{font-size:10.5px; color:var(--ink-4); font-family:var(--font-mono);}
+  .pk.on .pk-n{color:var(--ink);}
   .colors{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
   .cw{display:flex; align-items:center; gap:7px; padding:7px 8px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); cursor:pointer;}
   .cw input[type=color]{width:22px; height:22px; padding:0; border:none; border-radius:5px; background:none; cursor:pointer;}
@@ -248,7 +261,7 @@
 <div class="page">
   <div class="head">
     <div>
-      <span class="mode-chip"><i></i><span id="modeLabel">DEMO 모드 · 실제 AI 미호출</span></span>
+      <span class="mode-chip"><i></i><span id="modeLabel">데모 데이터 · 링크를 넣으면 실제 상품으로 바뀝니다</span></span>
       <h1>배너 생성</h1>
       <p>AI는 <b>배경과 카피</b>만 만듭니다. 가격·할인·좌표·폰트 크기는 전부 코드가 정합니다.<br>
          텍스트는 이미지에 굽지 않고 실제 텍스트 레이어로 올라가므로 한 글자도 안 깨집니다.</p>
@@ -264,9 +277,10 @@
         <div class="fg">
           <label class="f">상품 링크</label>
           <input class="in" id="pUrl" placeholder="https://..." value="https://www.shinsegaetvshopping.com/deal/detail/202410100502">
-          <div class="hint">데모 모드에서는 미리 저장한 데이터를 씁니다.</div>
+          <div class="hint" id="fetchHint">쇼핑몰 상품·딜 링크를 넣으면 서버가 상품명·가격·이미지를 읽어옵니다.</div>
         </div>
         <button class="btn sm" id="btnFetch">상품 정보 가져오기</button>
+        <div id="picker" class="picker" hidden></div>
         <div style="height:11px"></div>
         <div class="fg"><label class="f">브랜드</label><input class="in" id="pBrand"></div>
         <div class="fg"><label class="f">상품명</label><input class="in" id="pName"></div>
@@ -1104,8 +1118,64 @@ async function askConcepts(baseConcept){
 function setMode(t){ $('#modeLabel').textContent = t; }
 $('#btnConcepts').onclick=()=>askConcepts(null);
 $('#btnVariants').onclick=()=>askConcepts(CONCEPT());
-$('#btnFetch').onclick=()=>{
-  state.product={...DEMO_PRODUCT}; syncProductUI(); render();
+/* ── 링크에서 상품 가져오기 ──────────────────────────────────
+   브라우저에서 상품 페이지를 직접 부르면 CORS에 막히므로 서버를 거친다.
+   딜 페이지는 상품이 100개 넘게 들어있어서, 하나로 좁히지 않고 목록을
+   보여주고 사람이 고르게 한다. */
+let _picked = [];
+function applyItem(it){
+  state.product = {
+    brand: it.brand || state.product.brand || '',
+    productName: it.productName || '',
+    salePrice: it.salePrice, originalPrice: it.originalPrice,
+    benefit: it.discountRate ? it.discountRate + '% 할인' : '',
+    features: it.description || '',
+    image: it.mainImage || null,
+  };
+  // 컨셉 이미지가 아직 없으면 상품 이미지를 그대로 배경으로 쓴다
+  if(it.mainImage){
+    const c = BASE_CONCEPT(); c.image = it.mainImage;
+    loadImg(it.mainImage).then(()=>render()).catch(()=>{});
+  }
+  syncProductUI(); render();
+}
+function buildPicker(items){
+  const box=$('#picker');
+  if(items.length<2){ box.hidden=true; return; }
+  box.hidden=false;
+  box.innerHTML = items.map((it,i)=>`<button type="button" class="pk ${i===0?'on':''}" data-i="${i}">
+      <img src="${it.mainImage||''}" alt="" loading="lazy">
+      <span class="pk-t"><span class="pk-n">${esc(it.productName||'')}</span>
+      <span class="pk-p">${it.salePrice?Number(it.salePrice).toLocaleString('ko-KR')+'원':'가격없음'}${
+        it.discountRate?' · '+it.discountRate+'%↓':''}</span></span></button>`).join('');
+  $$('.pk',box).forEach(b=>b.onclick=()=>{
+    $$('.pk',box).forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    applyItem(items[Number(b.dataset.i)]);
+  });
+}
+$('#btnFetch').onclick=async()=>{
+  const url=$('#pUrl').value.trim();
+  const btn=$('#btnFetch'), hint=$('#fetchHint'), label=btn.textContent;
+  if(!url){ state.product={...DEMO_PRODUCT}; syncProductUI(); render(); return; }
+  btn.disabled=true; btn.textContent='가져오는 중…';
+  try{
+    const r=await fetch('/api/productScrape?url='+encodeURIComponent(url));
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'가져오기 실패');
+    _picked = d.items||[];
+    if(!_picked.length) throw new Error('상품을 찾지 못했습니다.');
+    hint.className='hint';
+    hint.innerHTML = `<b>${d.itemCount}개</b> 상품을 찾았습니다 · ${d.strategy}` +
+      (d.category?`<br>${esc(d.category)}`:'') +
+      (_picked.length>1?'<br>목록에서 배너로 만들 상품을 고르세요.':'');
+    buildPicker(_picked);
+    applyItem(_picked[0]);
+    setMode('실제 상품 · ' + new URL(d.sourceUrl).hostname);
+  }catch(e){
+    hint.className='hint over';
+    hint.innerHTML = esc(e.message) + '<br>상품명·가격·이미지를 아래에서 직접 입력해도 됩니다.';
+    $('#picker').hidden=true;
+  }finally{ btn.disabled=false; btn.textContent=label; }
 };
 $('#chkGuide').onchange=e=>{ state.guides=e.target.checked; render(); };
 $('#btnPngOne').onclick=()=>download(state.size);
