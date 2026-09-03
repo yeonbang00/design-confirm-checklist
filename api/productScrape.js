@@ -18,8 +18,22 @@
 
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
-const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 '
-         + '(KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+// 요청 프로필 사다리. 앞에서부터 시도하고 4xx가 나오면 다음 걸로 넘어간다.
+// 로컬에서는 Safari 하나로 3사가 다 됐는데, Vercel(데이터센터 IP)에서는
+// 신세계가 417을 돌려줬다. 헤더 조합에 따라 통과하는 경우가 있어 몇 벌을
+// 준비해뒀다. 그래도 막히면 수동 입력으로 넘어간다 — 클라우드 IP 자체를
+// 막는 WAF는 헤더로 뚫을 수 없고, 뚫으려 드는 것도 옳지 않다.
+const PROFILES = [
+  { name: 'safari', headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'ko-KR,ko;q=0.9' } },
+  { name: 'iphone', headers: {
+      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'ko-KR,ko;q=0.9' } },
+  { name: 'minimal', headers: { 'Accept': '*/*' } },
+];
 const TIMEOUT_MS = 15000;
 const MAX_ITEMS = 200;
 
@@ -86,24 +100,37 @@ function fromProduct(p) {
   };
 }
 
-async function fetchHtml(url) {
+async function fetchOnce(url, profile) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
-    const r = await fetch(url, {
-      redirect: 'follow',
-      signal: ctl.signal,
-      headers: { 'User-Agent': UA, 'Accept-Language': 'ko-KR,ko;q=0.9', Accept: 'text/html,*/*;q=0.8' },
-    });
-    if (!r.ok) {
-      const err = new Error('상품 페이지가 응답하지 않았습니다 (status ' + r.status + ').');
-      err.status = r.status === 404 ? 404 : 502;
-      throw err;
-    }
-    return await r.text();
+    const r = await fetch(url, { redirect: 'follow', signal: ctl.signal, headers: profile.headers });
+    return { status: r.status, ok: r.ok, text: r.ok ? await r.text() : null };
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function fetchHtml(url) {
+  const tried = [];
+  for (const profile of PROFILES) {
+    let r;
+    try {
+      r = await fetchOnce(url, profile);
+    } catch (e) {
+      tried.push(profile.name + ':' + (e.name === 'AbortError' ? 'timeout' : 'error'));
+      continue;
+    }
+    if (r.ok && r.text) return r.text;
+    tried.push(profile.name + ':' + r.status);
+    if (r.status === 404) break;   // 없는 페이지면 다른 프로필로도 없다
+  }
+  const err = new Error(
+    '이 쇼핑몰이 서버에서 보낸 요청을 막았습니다 (' + tried.join(', ') + ').'
+  );
+  err.status = 502;
+  err.blocked = true;
+  throw err;
 }
 
 export default async function handler(req, res) {

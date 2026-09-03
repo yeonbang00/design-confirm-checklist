@@ -296,6 +296,8 @@
         <h3 class="card-title"><b>2</b>AI 컨셉 <s id="conceptCount"></s></h3>
         <div class="concepts" id="conceptList"></div>
         <div style="height:9px"></div>
+        <button class="btn primary" id="btnMakeImg">선택 컨셉으로 이미지 생성</button>
+        <div class="hint" style="margin:6px 0 10px">원본 상품 사진을 넣고 <b>배경만</b> 바꿉니다. 제품·모델은 그대로 둡니다. 비용 때문에 5개를 한꺼번에 만들지 않고 고른 것 하나만 만듭니다.</div>
         <button class="btn sm" id="btnConcepts">컨셉 다시 생성</button>
         <div style="height:6px"></div>
         <button class="btn sm" id="btnVariants">비슷한 컨셉 만들기</button>
@@ -681,6 +683,15 @@ function computeLayout(){
 
   const total = parts.reduce((s,p,i)=>s+p.height+(i<parts.length-1?p.gap:0),0);
 
+  // 배경 해상도 점검 — 배너보다 작으면 늘려 쓰는 것이라 한계가 있다
+  if(c.image && _imgCache[c.image]){
+    const im=_imgCache[c.image], b=bgBox(l,t,im);
+    const need = b.dw / (im.naturalWidth||im.width);
+    if(need > 1.25) warn.push(['배경 이미지', {lowRes:true,
+      src:(im.naturalWidth||im.width)+'×'+(im.naturalHeight||im.height),
+      need:Math.round(b.dw)+'×'+Math.round(b.dh), x:need.toFixed(1)}]);
+  }
+
   // 프리셋으로 묶음의 좌상단을 정하고, 미세조정(dx/dy)을 더한다
   const m=l.block.margin;
   let x = bp.ax==='left'  ? m
@@ -852,6 +863,7 @@ function paintWarns(warn, parts){
   }
   box.innerHTML = warn.map(([name,f])=>{
     if(f.overflowPx) return `<div class="warn"><b>!</b><span><b>${name}</b>이 배너 ${f.where||'아래'}로 ${f.overflowPx}px 넘칩니다. 카피를 줄이거나 위치를 조정하세요.</span></div>`;
+    if(f.lowRes)     return `<div class="warn"><b>!</b><span><b>배경 이미지</b>가 ${f.src}인데 ${f.need}로 써야 해서 <b>${f.x}배</b> 늘렸습니다. 내보낼 때 단계적으로 키우고 샤픈을 걸지만, 없는 디테일이 생기지는 않습니다. 더 큰 원본이나 AI 이미지 생성을 쓰세요.</span></div>`;
     if(f.tooSmall)   return `<div class="warn"><b>!</b><span><b>로고</b> 높이가 ${f.tooSmall}px입니다. 이 사이즈의 최소 권장 ${f.minH}px보다 작아 알아보기 어렵습니다.</span></div>`;
     if(f.collide)    return `<div class="warn"><b>!</b><span><b>로고</b>가 카피 영역과 겹칩니다. 위치를 바꾸거나 크기를 줄이세요.</span></div>`;
     if(f.clipped)    return `<div class="warn"><b>!</b><span><b>${name}</b>가 최소 크기(${f.size}px)에서도 ${'≤'} ${f.lines.length}줄에 안 들어가 잘렸습니다. 카피를 줄여주세요.</span></div>`;
@@ -874,7 +886,8 @@ async function renderCanvas(sizeKey){
   if(c.image){
     const img=await loadImg(c.image);
     const b=bgBox(l,t,img);          // 미리보기와 완전히 같은 계산
-    x.drawImage(img,b.dx,b.dy,b.dw,b.dh);
+    // 원본이 작으면 단계적으로 키워서 그린다
+    x.drawImage(upscale(img, b.dw, b.dh), b.dx, b.dy, b.dw, b.dh);
   } else {
     const g=x.createLinearGradient(0,0,l.w,l.h);
     const ps=c.colorPalette||['#222','#444'];
@@ -959,6 +972,52 @@ function roundRect(x,l,t,w,h,r){
   x.lineTo(l+w,t+h-r); x.quadraticCurveTo(l+w,t+h,l+w-r,t+h);
   x.lineTo(l+r,t+h); x.quadraticCurveTo(l,t+h,l,t+h-r);
   x.lineTo(l,t+r); x.quadraticCurveTo(l,t,l+r,t); x.closePath();
+}
+/* 원본이 배너보다 작으면 그대로 늘렸을 때 뭉개진다. 한 번에 크게 늘리는
+   대신 1.6배씩 여러 번 나눠 키우고 가볍게 샤픈을 건다. 브라우저 기본
+   보간보다 눈에 띄게 낫다. (진짜 초해상도 모델은 아니다 — 없는 디테일을
+   만들어내지는 못하고, 계단과 뭉개짐을 줄여줄 뿐이다.) */
+const _upCache={};
+function upscale(img, targetW, targetH){
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const need=Math.max(targetW/iw, targetH/ih);
+  if(need <= 1.05) return img;
+  const key=(img.src||'')+'@'+Math.round(targetW)+'x'+Math.round(targetH);
+  if(_upCache[key]) return _upCache[key];
+
+  let cur=document.createElement('canvas'), cx=cur.getContext('2d');
+  cur.width=iw; cur.height=ih; cx.drawImage(img,0,0);
+  let w=iw, h=ih;
+  const fw=Math.round(iw*need), fh=Math.round(ih*need);
+  while(w < fw){
+    const nw=Math.min(fw, Math.round(w*1.6)), nh=Math.min(fh, Math.round(h*1.6));
+    const nx=document.createElement('canvas'); nx.width=nw; nx.height=nh;
+    const c2=nx.getContext('2d');
+    c2.imageSmoothingEnabled=true; c2.imageSmoothingQuality='high';
+    c2.drawImage(cur,0,0,nw,nh);
+    cur=nx; w=nw; h=nh;
+  }
+  _upCache[key]=sharpen(cur, 0.35);
+  return _upCache[key];
+}
+/* 3x3 언샤프 마스크. 업스케일로 흐려진 경계를 되살린다. */
+function sharpen(cv, amount){
+  const x=cv.getContext('2d'), w=cv.width, h=cv.height;
+  if(w*h > 6e6) return cv;                       // 너무 크면 비용 대비 이득이 없다
+  const src=x.getImageData(0,0,w,h), out=x.createImageData(w,h);
+  const s=src.data, d=out.data, k=amount;
+  for(let y=0;y<h;y++) for(let xx=0;xx<w;xx++){
+    const i=(y*w+xx)*4;
+    if(y===0||x===0||y===h-1||xx===w-1){ d[i]=s[i];d[i+1]=s[i+1];d[i+2]=s[i+2];d[i+3]=s[i+3]; continue; }
+    for(let c=0;c<3;c++){
+      const cen=s[i+c];
+      const avg=(s[i-4+c]+s[i+4+c]+s[i-w*4+c]+s[i+w*4+c])/4;
+      d[i+c]=Math.max(0,Math.min(255, cen + (cen-avg)*k*4));
+    }
+    d[i+3]=s[i+3];
+  }
+  x.putImageData(out,0,0);
+  return cv;
 }
 const _imgCache={};
 function loadImg(src){
@@ -1116,6 +1175,38 @@ async function askConcepts(baseConcept){
   }finally{ btn.disabled=false; btn.textContent=label; }
 }
 function setMode(t){ $('#modeLabel').textContent = t; }
+
+/* ── 컨셉 이미지 생성 ────────────────────────────────────────
+   컨셉만 만들면 배경이 그라데이션으로 남는다. 여기서 실제 이미지를 만든다.
+   원본 상품 사진을 함께 보내 배경만 바꾸게 한다. */
+async function makeConceptImage(){
+  const c = BASE_CONCEPT();
+  const btn = $('#btnMakeImg'), label = btn.textContent;
+  const prompt = c.imagePrompt
+    || `Place the subject in this setting: ${c.background || c.description || c.name}. Lighting: ${c.lighting || 'soft natural light'}.`;
+  btn.disabled = true; btn.textContent = '이미지 생성 중… (30초쯤)';
+  markConcept(c.id, 'generating');
+  try{
+    const r = await fetch('/api/bannerImage', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ imageUrl: state.product.image || null, imagePrompt: prompt, size:'1024x1024' })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || '이미지 생성 실패');
+    c.image = d.imageUrl;
+    await loadImg(d.imageUrl);
+    markConcept(c.id, 'done');
+    buildConcepts(); render();
+  }catch(e){
+    markConcept(c.id, 'failed');
+    setMode('이미지 생성 실패 · ' + e.message);
+  }finally{ btn.disabled=false; btn.textContent=label; }
+}
+function markConcept(id, st){
+  const el = document.querySelector(`.concept[data-id="${id}"] .concept-thumb`);
+  if(el) el.classList.toggle('pending', st==='generating');
+}
+$('#btnMakeImg').onclick = makeConceptImage;
 $('#btnConcepts').onclick=()=>askConcepts(null);
 $('#btnVariants').onclick=()=>askConcepts(CONCEPT());
 /* ── 링크에서 상품 가져오기 ──────────────────────────────────
@@ -1266,7 +1357,7 @@ function boot(){
 }
 boot();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
-window.__banner={state,LAYOUTS,computeLayout,render,renderCanvas,wrapLines,fitText};
+window.__banner={state,LAYOUTS,BLOCK_PRESETS,LOGO_POS,computeLayout,render,renderCanvas,wrapLines,fitText,upscale,sharpen,bgBox};
 </script>
 </body>
 </html>
