@@ -231,6 +231,10 @@
   details.json[open] summary::before{content:'▾ ';}
   details.json pre{margin:0; padding:0 15px 15px; font-family:var(--font-mono); font-size:10.5px; line-height:1.6; color:var(--ink-3); overflow-x:auto;}
 
+  /* display를 지정한 클래스는 [hidden]과 짝을 맞춘다 (특이도 문제) */
+  .picker[hidden]{display:none;}
+  .stale[hidden]{display:none;}
+  .empty-note[hidden]{display:none;}
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',sans-serif; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
 
   @media (max-width:1180px){
@@ -254,7 +258,13 @@
     <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
     <nav class="gnb gnb-primary">
       <a href="index.html" class="gnb-link">배너 분석</a>
-      <a href="banner-maker.html" class="gnb-link active">배너 생성</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">배너 생성</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="banner-draft.html" class="gnb-dropdown-item">시안 3종</a>
+          <a href="banner-maker.html" class="gnb-dropdown-item active">완성 배너</a>
+        </div></div>
+      </div>
       <div class="gnb-dropdown">
         <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
         <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
@@ -456,7 +466,8 @@
       </div>
       <div class="footer-col"><span class="footer-col-title">배너</span>
         <a href="index.html">배너 분석</a>
-        <a href="banner-maker.html" class="is-current">배너 생성</a>
+        <a href="banner-draft.html">시안 3종</a>
+        <a href="banner-maker.html" class="is-current">완성 배너</a>
         <a href="brief-helper.html">기획안 헬퍼</a></div>
       <div class="footer-col"><span class="footer-col-title">가이드</span>
         <a href="criteria-guide.html">항목 가이드</a><a href="guide.html">브랜드 가이드</a>

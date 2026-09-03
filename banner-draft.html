@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 시안 3종</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/adcheck-footer.css?v=4">
+<style>
+  :root{
+    --bg:#0B0C0E; --surface:#14171C; --surface-2:#0F1216; --surface-3:#15181D;
+    --line:rgba(255,255,255,.11); --line-soft:rgba(255,255,255,.07);
+    --ink:#EDEEF0; --ink-2:#A2A7B0; --ink-3:#7E838C; --ink-4:#6B707A;
+    --accent:#C3FF4D; --accent-strong:#B8E600; --accent-ink:#0B0C0E;
+    --warn:#FFB454;
+    --font-display:'Sora','Pretendard',-apple-system,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg);}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+       color:var(--ink); -webkit-font-smoothing:antialiased; letter-spacing:-.015em;}
+  button,input,select,textarea{font-family:inherit; color:inherit;}
+  a{color:inherit;}
+
+  .gnb-bar{position:fixed; top:0; left:0; right:0; z-index:200; padding:14px 40px 0; background:linear-gradient(180deg,#0B0C0E 74%,rgba(11,12,14,.86)); backdrop-filter:blur(10px);}
+  .gnb-bar-inner{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; max-width:1520px; margin:0 auto; gap:20px;}
+  .gnb-logo{display:flex; align-items:center; justify-self:start; text-decoration:none;}
+  .gnb-logo-icon{height:40px; width:auto; display:block;}
+  .gnb-primary{display:flex; align-items:center; gap:2px; justify-self:center; padding:6px; border-radius:999px; background:rgba(18,21,25,.9); backdrop-filter:blur(18px) saturate(1.2); border:1px solid rgba(255,255,255,.1); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px -26px rgba(0,0,0,.95);}
+  .gnb-secondary{display:flex; align-items:center; gap:2px; justify-self:end;}
+  .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; white-space:nowrap; border:none; background:none; cursor:pointer; transition:background .25s ease,color .25s ease;}
+  .gnb-primary .gnb-link:hover{color:var(--ink);}
+  .gnb-primary .gnb-link.active{background:#EDEEF0; color:#0B0C0E; font-weight:700;}
+  .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{display:flex; align-items:center; gap:5px; font-family:inherit;}
+  .gnb-dropdown-toggle::after{content:'▼'; font-size:8px; opacity:.55;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding-top:12px; display:none; z-index:40;}
+  .gnb-dropdown-menu-inner{padding:8px; border-radius:16px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95); min-width:158px; display:flex; flex-direction:column; gap:2px;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu, .gnb-dropdown-menu.open{display:block;}
+  .gnb-dropdown-item{display:block; width:100%; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; text-decoration:none; transition:background .2s ease,color .2s ease;}
+  .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
+  .gnb-dropdown-item.active{color:var(--accent); background:rgba(195,255,77,.1);}
+
+  .page{max-width:1520px; margin:0 auto; padding:104px 40px 0;}
+  .build{display:inline-block; font-family:var(--font-mono); font-size:10px; color:var(--ink-4);
+         border:1px solid var(--line); padding:5px 9px; border-radius:999px; margin:0 7px 12px 0;}
+  .head{padding-bottom:22px; border-bottom:1px solid var(--line-soft); margin-bottom:26px;}
+  .head h1{font-family:var(--font-display); font-size:34px; font-weight:800; letter-spacing:-.045em; margin:0 0 8px; line-height:1;}
+  .head p{margin:0; font-size:13.5px; color:var(--ink-3); line-height:1.7; max-width:70ch;}
+  .head b{color:var(--ink-2);}
+
+  /* ── 입력 줄 ─────────────────────────────────────────────── */
+  .bar{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; margin-bottom:14px;}
+  .in-clear{position:relative;}
+  .in{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:11px;
+      padding:13px 38px 13px 14px; font-size:13.5px; color:var(--ink); outline:none; transition:border-color .2s ease;}
+  .in:focus{border-color:rgba(195,255,77,.5);}
+  .in-clear button{position:absolute; right:9px; top:50%; transform:translateY(-50%); width:22px; height:22px;
+                   border:none; border-radius:50%; background:rgba(255,255,255,.1); color:var(--ink-3);
+                   font-size:15px; line-height:1; cursor:pointer; display:none;}
+  .in-clear.has button{display:block;}
+  .go{padding:0 24px; border-radius:11px; border:none; background:var(--accent); color:var(--accent-ink);
+      font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:background .2s ease;}
+  .go:hover{background:var(--accent-strong);}
+  .go[disabled]{opacity:.5; cursor:not-allowed;}
+
+  .note{font-size:12px; color:var(--ink-4); line-height:1.6; margin-bottom:20px;}
+  .note.warn{color:#FFD5A0;}
+  .note b{color:var(--ink-2);}
+
+  /* 상품 확인 줄 */
+  .prod{display:flex; align-items:center; gap:13px; padding:11px 13px; border:1px solid var(--line);
+        border-radius:12px; background:var(--surface); margin-bottom:20px;}
+  .prod img{width:46px; height:46px; border-radius:9px; object-fit:cover; background:#222; flex-shrink:0;}
+  .prod-t{min-width:0; flex:1;}
+  .prod-n{font-size:13px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .prod-m{font-size:11.5px; color:var(--ink-4); font-family:var(--font-mono); margin-top:3px;}
+  .prod select{background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:7px 9px;
+               font-size:12px; color:var(--ink-2); max-width:280px;}
+</style>
+<style>
+  /* ── 시안 3장 ─────────────────────────────────────────────── */
+  .sets{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px;}
+  .set{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;
+       display:flex; flex-direction:column;}
+  .set-top{display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--line-soft);}
+  .set-axis{display:grid; place-items:center; width:20px; height:20px; border-radius:6px;
+            background:rgba(195,255,77,.14); color:var(--accent); font-family:var(--font-mono); font-size:11px; font-weight:700;}
+  .set-name{font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--ink); letter-spacing:-.02em;}
+  .set-label{margin-left:auto; font-size:10.5px; color:var(--ink-4);}
+  .set-swatch{width:13px; height:13px; border-radius:4px; border:1px solid rgba(255,255,255,.2);}
+
+  .canvas{position:relative; aspect-ratio:1/1; background:
+      linear-gradient(45deg,rgba(255,255,255,.02) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.02) 75%) 0 0/22px 22px,
+      linear-gradient(45deg,rgba(255,255,255,.02) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.02) 75%) 11px 11px/22px 22px;
+      overflow:hidden;}
+  .bn{position:absolute; left:0; top:0; width:1200px; height:1200px; transform-origin:top left; overflow:hidden;}
+  .bn-bg{position:absolute; inset:0; background-size:cover; background-position:center;}
+  .bn-ov{position:absolute; inset:0;}
+  .bn-el{position:absolute;}
+  .bn-line{display:block; white-space:pre;}
+  .bn-cta{position:absolute; display:flex; align-items:center; justify-content:center;}
+
+  .state{position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:20px;
+         background:rgba(11,12,14,.72); backdrop-filter:blur(2px);}
+  /* 클래스 선택자가 브라우저 기본 [hidden]{display:none}을 특이도로 눌러버린다.
+     display를 지정하는 클래스에는 반드시 짝을 맞춰줘야 한다. */
+  .state[hidden]{display:none;}
+  .state span{font-size:11.5px; color:var(--ink-3); line-height:1.7;}
+  .state b{display:block; font-family:var(--font-mono); font-size:22px; font-weight:700; color:var(--accent); margin-bottom:8px;}
+  .spin{width:26px; height:26px; margin:0 auto 10px; border-radius:50%;
+        border:2px solid rgba(255,255,255,.14); border-top-color:var(--accent); animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+
+  .set-body{padding:13px 14px; display:flex; flex-direction:column; gap:9px; flex:1;}
+  .scene{font-size:11.5px; color:var(--ink-4); line-height:1.6;}
+  .copy{background:var(--surface-2); border:1px solid var(--line-soft); border-radius:10px; padding:11px 12px;}
+  .copy h4{margin:0 0 5px; font-size:15px; font-weight:800; letter-spacing:-.03em; line-height:1.3; color:var(--ink); white-space:pre-line;}
+  .copy p{margin:0 0 7px; font-size:11.5px; color:var(--ink-3); line-height:1.5;}
+  .copy s{display:inline-block; text-decoration:none; font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:6px;}
+  .set-act{display:grid; grid-template-columns:1fr auto; gap:7px; margin-top:auto;}
+  .dl{padding:10px; border-radius:9px; border:1px solid var(--line); background:var(--surface-3);
+      color:var(--ink); font-size:12px; font-weight:600; cursor:pointer; transition:background .2s ease;}
+  .dl:hover{background:rgba(255,255,255,.07);}
+  .dl.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700;}
+  .dl.primary:hover{background:var(--accent-strong);}
+  .dl[disabled]{opacity:.45; cursor:not-allowed;}
+  .flag{font-size:10.5px; line-height:1.5; padding:7px 9px; border-radius:8px;
+        background:rgba(255,180,84,.1); border:1px solid rgba(255,180,84,.28); color:#FFD5A0;}
+  .flag.ok{background:rgba(195,255,77,.07); border-color:rgba(195,255,77,.24); color:#D9F5A8;}
+
+  /* display를 지정한 클래스는 [hidden]과 짝을 맞춘다 (특이도 문제) */
+  .prod[hidden]{display:none;}
+  .flag[hidden]{display:none;}
+  .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',sans-serif; color:var(--ink-4);
+               padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  @media (max-width:1100px){ .sets{grid-template-columns:1fr;} }
+  @media (max-width:760px){
+    .page{padding:92px 18px 0;} .gnb-bar{padding:12px 18px 0;}
+    .gnb-bar-inner{grid-template-columns:auto 1fr; gap:12px;} .gnb-primary{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"></a>
+    <nav class="gnb gnb-primary">
+      <a href="index.html" class="gnb-link">배너 분석</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">배너 생성</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="banner-draft.html" class="gnb-dropdown-item active">시안 3종</a>
+          <a href="banner-maker.html" class="gnb-dropdown-item">완성 배너</a>
+        </div></div>
+      </div>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div></div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">폰트</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="font-pairing.html" class="gnb-dropdown-item">폰트 페어링</a>
+          <a href="font-game.html" class="gnb-dropdown-item">폰트 오락실</a>
+        </div></div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+    </nav>
+    <nav class="gnb gnb-secondary"><a href="roadmap.html" class="gnb-link">로드맵</a></nav>
+  </div>
+</div>
+
+<div class="page">
+  <div class="head">
+    <span class="build" id="buildStamp"></span>
+    <h1>시안 3종</h1>
+    <p>상품 링크 하나로 <b>카피 3세트와 그 카피에 맞는 이미지 3장</b>을 만듭니다.
+       카피를 먼저 쓰고 그 문장이 성립하는 장면을 그리므로 둘의 핏이 맞습니다.<br>
+       <b>이미지만 내려받아 포토샵에서 조판</b>하시면 됩니다. 화면의 카피는 어울리는지 보시라고 얹어둔 것입니다.</p>
+  </div>
+
+  <div class="bar">
+    <div class="in-clear">
+      <input class="in" id="url" placeholder="상품 페이지 주소를 붙여넣으세요">
+      <button type="button" id="urlClear" title="지우기">×</button>
+    </div>
+    <button class="go" id="run">시안 만들기</button>
+  </div>
+  <div class="note" id="note">신세계쇼핑 · 홈플러스 · 더현대Hi에서 확인했습니다. 링크가 막히면 상품명만 넣어도 됩니다.</div>
+
+  <div class="prod" id="prod" hidden>
+    <img id="prodImg" alt="">
+    <div class="prod-t">
+      <div class="prod-n" id="prodName"></div>
+      <div class="prod-m" id="prodMeta"></div>
+    </div>
+    <select id="prodPick" hidden></select>
+  </div>
+
+  <div class="sets" id="sets"></div>
+
+  <div class="page-footer show">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
+        <p class="footer-note">최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
+        이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.</p>
+      </div>
+      <div class="footer-col"><span class="footer-col-title">배너</span>
+        <a href="index.html">배너 분석</a>
+        <a href="banner-draft.html" class="is-current">시안 3종</a>
+        <a href="banner-maker.html">완성 배너</a>
+        <a href="brief-helper.html">기획안 헬퍼</a></div>
+      <div class="footer-col"><span class="footer-col-title">가이드</span>
+        <a href="criteria-guide.html">항목 가이드</a><a href="guide.html">브랜드 가이드</a>
+        <a href="media-guide.html">매체 가이드</a><a href="color-guide.html">컬러 가이드</a></div>
+      <div class="footer-col"><span class="footer-col-title">폰트</span>
+        <a href="font-pairing.html">폰트 페어링</a><a href="font-game.html">폰트 오락실</a></div>
+      <div class="footer-col"><span class="footer-col-title">자료</span>
+        <a href="reference-board.html">이미지 레퍼런스</a></div>
+      <div class="footer-col"><span class="footer-col-title">운영</span>
+        <a href="history.html">히스토리</a><a href="roadmap.html">로드맵</a></div>
+    </div>
+    <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
+  </div>
+</div>
+<script src="assets/adcheck-footer.js?v=4"></script>
+<script src="assets/banner-text.js?v=1"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   시안 3종 — 링크 → 카피 3세트 + 이미지 3장
+   화면의 조판은 확인용이다. 내려받는 것은 이미지뿐이고, 조판은 포토샵에서 한다.
+   ══════════════════════════════════════════════════════════════════ */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const T  = window.BannerText;
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+/* 확인용 조판 규격. 완성 배너 쪽과 달리 조절 컨트롤이 없다 —
+   여기서는 '이 카피가 이 그림 위에서 읽히는가'만 보면 된다. */
+const L = {
+  w:1200, h:1200, margin:88, blockW:640,
+  headline:{size:80, ls:-3.4, weight:800, lh:1.14, gap:22, maxLines:2, min:48},
+  subcopy :{size:26, ls:-.4, weight:500, lh:1.5,  gap:36, maxLines:2, min:18},
+  cta     :{size:26, weight:700, padX:34, padY:18, radius:8},
+  ov      :{h:62, o:66, fade:26}      // 아래에서 위로 덮는다
+};
+
+let product = null;      // 선택된 상품
+let picked  = [];        // 링크에서 나온 상품 목록
+let sets    = [];        // 시안 3종
+
+/* ── 조판 계산 ──────────────────────────────────────────────────
+   완성 배너와 같은 텍스트 엔진(assets/banner-text.js)을 쓴다. 줄바꿈이
+   두 화면에서 다르면 여기서 확인한 게 저기서 안 맞는다. */
+function layout(copy){
+  const parts=[], bw=L.blockW;
+  if(copy.headline){
+    const f=T.fitText(copy.headline, L.headline, bw);
+    parts.push({kind:'headline', ...f, cfg:L.headline, gap:L.headline.gap});
+  }
+  if(copy.subcopy){
+    const f=T.fitText(copy.subcopy, L.subcopy, bw);
+    parts.push({kind:'subcopy', ...f, cfg:L.subcopy, gap:L.subcopy.gap});
+  }
+  if(copy.cta){
+    const b=L.cta, w=T.textW(copy.cta+'  ›', b, b.size)+b.padX*2, h=b.size*1.2+b.padY*2;
+    parts.push({kind:'cta', text:copy.cta, cfg:b, width:w, height:h, gap:0});
+  }
+  const total = parts.reduce((s,p,i)=>s+p.height+(i<parts.length-1?p.gap:0),0);
+  let y = L.h - L.margin - total;
+  parts.forEach(p=>{ p.x=L.margin; p.y=y; y += p.height + p.gap; });
+  return { parts, total, top: parts.length?parts[0].y:0 };
+}
+
+function bannerHTML(set, imageUrl){
+  const { parts } = layout(set.copy);
+  const light = T.lumOfHex(set.ink) > .5;             // 밝은 글자면 배경을 어둡게
+  const base = light ? '0,0,0' : '255,255,255';
+  const a = (L.ov.o/100).toFixed(2), stop = (100-L.ov.fade)+'%';
+  const ovH = L.h*L.ov.h/100;
+
+  let h = '';
+  h += imageUrl
+     ? `<div class="bn-bg" style="background-image:url('${imageUrl}')"></div>`
+     : `<div class="bn-bg" style="background:linear-gradient(150deg,${set.dominantColor},#0F1216)"></div>`;
+  h += `<div class="bn-ov" style="top:${L.h-ovH}px;height:${ovH}px;background:linear-gradient(to top,`
+     + `rgba(${base},${a}) 0%, rgba(${base},${a}) ${stop}, rgba(${base},0) 100%)"></div>`;
+
+  for(const p of parts){
+    if(p.kind==='cta'){
+      h += `<div class="bn-cta" style="left:${p.x}px;top:${p.y}px;width:${p.width}px;height:${p.height}px;`
+         + `background:${set.ctaBg};border-radius:${p.cfg.radius}px;font:${p.cfg.weight} ${p.cfg.size}px ${T.FONT};`
+         + `color:${set.ctaInk};letter-spacing:-.3px;">${esc(p.text)}  ›</div>`;
+    } else {
+      const op = p.kind==='subcopy' ? '.9' : '1';
+      h += `<div class="bn-el" style="left:${p.x}px;top:${p.y}px;width:${L.blockW}px;">`
+         + p.lines.map(ln=>`<span class="bn-line" style="font:${p.cfg.weight} ${p.size}px/${p.cfg.lh} ${T.FONT};`
+             + `letter-spacing:${p.cfg.ls}px;color:${set.ink};opacity:${op};">${esc(ln)||'&nbsp;'}</span>`).join('')
+         + `</div>`;
+    }
+  }
+  return h;
+}
+
+/* 이미지의 아래쪽(카피가 얹힐 자리)이 실제로 비어 있는지 잰다.
+   프롬프트로 "1/3을 비워라"라고 해도 지켜준다는 보장이 없다. */
+async function measureRoom(url){
+  try{
+    const im = await new Promise((res,rej)=>{
+      const i=new Image(); i.crossOrigin='anonymous';
+      i.onload=()=>res(i); i.onerror=rej; i.src=url;
+    });
+    const N=32, cv=document.createElement('canvas'); cv.width=N; cv.height=N;
+    const x=cv.getContext('2d',{willReadFrequently:true});
+    x.drawImage(im,0,0,N,N);
+    const d=x.getImageData(0,0,N,N).data;
+    const g=(px,py)=>{const i=(py*N+px)*4; return (d[i]+d[i+1]+d[i+2])/3;};
+    // 아래 60% 영역의 인접 픽셀 차이 = 디테일 양
+    let sum=0,n=0;
+    for(let py=Math.floor(N*0.42); py<N-1; py++)
+      for(let px=1; px<N-1; px++){ sum+=Math.abs(4*g(px,py)-g(px-1,py)-g(px+1,py)-g(px,py-1)-g(px,py+1)); n++; }
+    return sum/n;     // 낮을수록 비어 있다
+  }catch(e){ return null; }
+}
+
+/* ── 카드 그리기 ────────────────────────────────────────────── */
+function paintSets(){
+  $('#sets').innerHTML = sets.map((s,i)=>`
+    <div class="set" data-i="${i}">
+      <div class="set-top">
+        <span class="set-axis">${esc(s.axis)}</span>
+        <span class="set-name">${esc(s.sceneName)}</span>
+        <span class="set-label">${esc(s.axisLabel)} · ${esc(s.brightness||'')}</span>
+        <span class="set-swatch" style="background:${s.dominantColor}"></span>
+      </div>
+      <div class="canvas"><div class="bn" id="bn${i}"></div>
+        <div class="state" id="st${i}"><div><div class="spin"></div>
+          <span id="stt${i}">이미지 만드는 중…</span></div></div>
+      </div>
+      <div class="set-body">
+        <div class="scene">${esc(s.scene)}</div>
+        <div class="copy">
+          <h4>${esc(s.copy.headline)}</h4>
+          <p>${esc(s.copy.subcopy)}</p>
+          <s style="background:${s.ctaBg};color:${s.ctaInk}">${esc(s.copy.cta)}</s>
+        </div>
+        <div class="flag" id="fl${i}" hidden></div>
+        <div class="set-act">
+          <button class="dl primary" data-dl="${i}" disabled>이미지 내려받기</button>
+          <button class="dl" data-re="${i}" disabled title="이 장면으로 다시 그리기">다시</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  sets.forEach((s,i)=>{ drawBanner(i); });
+  $$('[data-dl]').forEach(b=>b.onclick=()=>download(Number(b.dataset.dl)));
+  $$('[data-re]').forEach(b=>b.onclick=()=>makeImage(Number(b.dataset.re)));
+  fitAll();
+}
+
+function drawBanner(i){
+  const el=$('#bn'+i); if(!el) return;
+  el.innerHTML = bannerHTML(sets[i], sets[i].imageUrl);
+}
+function fitAll(){
+  $$('.canvas').forEach((c,i)=>{
+    const bn=$('#bn'+i); if(!bn) return;
+    const k = c.clientWidth / L.w;
+    bn.style.transform = `scale(${k})`;
+  });
+}
+window.addEventListener('resize', fitAll);
+
+function setState(i, text, done){
+  const st=$('#st'+i); if(!st) return;
+  if(done){ st.hidden = true; return; }
+  st.hidden = false;
+  $('#stt'+i).textContent = text;
+}
+
+/* ── 이미지 생성 ────────────────────────────────────────────── */
+async function makeImage(i){
+  const s = sets[i];
+  const dl=$(`[data-dl="${i}"]`), re=$(`[data-re="${i}"]`);
+  dl.disabled = true; re.disabled = true;
+  const t0=Date.now();
+  const tick=setInterval(()=>setState(i, `이미지 만드는 중… ${Math.round((Date.now()-t0)/1000)}초`), 1000);
+  setState(i, '이미지 만드는 중… 0초');
+  try{
+    const r = await fetch('/api/bannerImage', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ imageUrl: product && product.mainImage, imagePrompt: s.imagePrompt, size:'1024x1024' })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || '이미지 생성 실패');
+    s.imageUrl = d.imageUrl;
+    // 경과 타이머를 여기서 끊는다. 아래 여백 측정이 이어지는 동안 타이머가
+    // 계속 돌면 방금 숨긴 오버레이를 다시 켠다.
+    clearInterval(tick);
+    drawBanner(i); fitAll(); setState(i, '', true);
+    dl.disabled = false;
+
+    // 카피 자리가 실제로 비어 있는지
+    const room = await measureRoom(d.imageUrl);
+    const fl=$('#fl'+i);
+    if(room == null){ fl.hidden = true; }
+    else if(room > 9){
+      fl.hidden=false; fl.className='flag';
+      fl.textContent = `아래쪽이 복잡합니다(디테일 ${room.toFixed(1)}). 포토샵에서 카피 자리를 따로 만드셔야 할 수 있습니다.`;
+    } else {
+      fl.hidden=false; fl.className='flag ok';
+      fl.textContent = `아래쪽이 비어 있어 카피를 얹기 좋습니다(디테일 ${room.toFixed(1)}).`;
+    }
+  }catch(e){
+    setState(i, '실패 · ' + e.message, false);
+  }finally{
+    clearInterval(tick); re.disabled = false;
+  }
+}
+
+function download(i){
+  const s=sets[i];
+  if(!s.imageUrl) return;
+  const name = ((product && product.productName) || 'banner')
+    .replace(/[^\w가-힣]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+  const a=document.createElement('a');
+  a.href = s.imageUrl; a.download = `${name}_${s.axis}_${s.sceneName}.png`;
+  a.target = '_blank'; a.rel='noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ── 전체 흐름 ──────────────────────────────────────────────── */
+function showProduct(){
+  $('#prod').hidden = false;
+  $('#prodImg').src = product.mainImage || '';
+  $('#prodName').textContent = product.productName || '';
+  const bits=[];
+  if(product.salePrice) bits.push(Number(product.salePrice).toLocaleString('ko-KR')+'원');
+  if(product.discountRate) bits.push(product.discountRate+'%↓');
+  if(product.category) bits.push(product.category);
+  $('#prodMeta').textContent = bits.join('  ·  ');
+}
+function buildPicker(){
+  const sel=$('#prodPick');
+  if(picked.length < 2){ sel.hidden = true; return; }
+  sel.hidden = false;
+  sel.innerHTML = picked.map((it,i)=>
+    `<option value="${i}">${esc((it.productName||'').slice(0,40))}${it.salePrice?' · '+Number(it.salePrice).toLocaleString('ko-KR')+'원':''}</option>`).join('');
+  sel.onchange = ()=>{ product = picked[Number(sel.value)]; showProduct(); };
+}
+
+function note(text, warn){
+  const n=$('#note'); n.className = 'note' + (warn?' warn':''); n.innerHTML = text;
+}
+
+async function run(){
+  const url = $('#url').value.trim();
+  const btn = $('#run');
+  if(!url){ note('상품 페이지 주소를 넣어주세요.', true); return; }
+  btn.disabled = true; btn.textContent = '상품 읽는 중…';
+  sets = []; $('#sets').innerHTML = ''; $('#prod').hidden = true;
+  try{
+    // ① 상품
+    const pr = await fetch('/api/productScrape?url='+encodeURIComponent(url));
+    const pd = await pr.json();
+    if(!pr.ok) throw new Error(pd.error || '상품 정보를 가져오지 못했습니다.');
+    picked = pd.items || [];
+    if(!picked.length) throw new Error('상품을 찾지 못했습니다.');
+    product = { ...picked[0], category: pd.category };
+    showProduct(); buildPicker();
+    note(`<b>${pd.itemCount}개</b> 상품을 찾았습니다 · ${pd.strategy}`
+       + (picked.length>1 ? ' — 위에서 다른 상품을 고를 수 있습니다.' : ''));
+
+    // ② 카피 3세트 + 장면 3종 (한 번에)
+    btn.textContent = '카피와 장면 만드는 중…';
+    const dr = await fetch('/api/bannerDraft', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ product })
+    });
+    const dd = await dr.json();
+    if(!dr.ok) throw new Error(dd.error || '시안 생성 실패');
+    sets = dd.sets;
+    paintSets();
+    if(dd.colorClash && dd.colorClash.length){
+      note(`세 장의 색이 가까워 비슷해 보일 수 있습니다 — ${esc(dd.colorClash.join(', '))}. 다시 만들면 달라집니다.`, true);
+    }
+
+    // ③ 이미지 3장 — 병렬로 만든다
+    btn.textContent = '이미지 3장 만드는 중…';
+    await Promise.all(sets.map((_,i)=>makeImage(i)));
+  }catch(e){
+    note(esc(e.message) + '<br>이 쇼핑몰이 막혀 있으면 다른 링크로 시도해 보세요.', true);
+  }finally{
+    btn.disabled = false; btn.textContent = '시안 만들기';
+  }
+}
+
+$('#run').onclick = run;
+$('#url').addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
+(function(){
+  const wrap=$('#url').parentElement, input=$('#url');
+  const sync=()=>wrap.classList.toggle('has', !!input.value);
+  input.addEventListener('input', sync);
+  $('#urlClear').onclick=()=>{ input.value=''; sync(); input.focus(); };
+  sync();
+})();
+$$('.gnb-dropdown-toggle').forEach(btn=>btn.addEventListener('click',e=>{
+  e.stopPropagation(); const m=btn.nextElementSibling;
+  $$('.gnb-dropdown-menu.open').forEach(o=>{ if(o!==m) o.classList.remove('open'); });
+  m.classList.toggle('open');
+}));
+document.addEventListener('click',()=>$$('.gnb-dropdown-menu.open').forEach(m=>m.classList.remove('open')));
+
+(function stamp(){
+  const d=new Date(document.lastModified);
+  if(isNaN(d)) return;
+  const p=n=>String(n).padStart(2,'0');
+  $('#buildStamp').textContent = `빌드 ${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+})();
+window.__draft = { get sets(){return sets;}, set sets(v){sets=v;}, get product(){return product;},
+                   set product(v){product=v;}, layout, bannerHTML, paintSets, measureRoom, L };
+</script>
+</body>
+</html>
