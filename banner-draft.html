@@ -58,6 +58,7 @@
 
   /* ── 입력 줄 ─────────────────────────────────────────────── */
   .bar{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; margin-bottom:14px;}
+  .bar[hidden]{display:none;}
   .in-clear{position:relative;}
   .in{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:11px;
       padding:13px 38px 13px 14px; font-size:13.5px; color:var(--ink); outline:none; transition:border-color .2s ease;}
@@ -71,6 +72,11 @@
   .go:hover{background:var(--accent-strong);}
   .go[disabled]{opacity:.5; cursor:not-allowed;}
 
+  .ways{display:flex; gap:6px; margin-bottom:12px;}
+  .way{padding:8px 15px; border-radius:9px; border:1px solid var(--line); background:var(--surface-2);
+       color:var(--ink-3); font-size:12.5px; font-weight:600; cursor:pointer; transition:all .18s ease;}
+  .way:hover{color:var(--ink);}
+  .way.on{background:rgba(195,255,77,.12); border-color:rgba(195,255,77,.42); color:var(--accent);}
   .note{font-size:12px; color:var(--ink-4); line-height:1.6; margin-bottom:20px;}
   .note.warn{color:#FFD5A0;}
   .note b{color:var(--ink-2);}
@@ -87,6 +93,26 @@
 </style>
 <style>
   /* ── 시안 3장 ─────────────────────────────────────────────── */
+  .manual{display:grid; grid-template-columns:210px minmax(0,1fr); gap:16px; padding:16px;
+          border:1px solid var(--line); border-radius:14px; background:var(--surface); margin-bottom:22px;}
+  .manual[hidden]{display:none;}
+  .man-drop{display:grid; place-items:center; min-height:170px; padding:14px; cursor:pointer;
+            border:1px dashed var(--line); border-radius:11px; background:var(--surface-2);
+            transition:border-color .2s ease, background .2s ease;}
+  .man-drop:hover,.man-drop.over{border-color:rgba(195,255,77,.5); background:rgba(195,255,77,.05);}
+  .man-drop img{max-width:100%; max-height:150px; object-fit:contain; display:none; border-radius:8px;}
+  .man-drop.has img{display:block;}
+  .man-drop.has span{display:none;}
+  .man-drop span{font-size:11.5px; color:var(--ink-4); text-align:center; line-height:1.6;}
+  .man-fields{display:flex; flex-direction:column; gap:11px;}
+  .man-row{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .f{display:block; font-size:11px; font-weight:600; color:var(--ink-3); margin:0 0 5px;}
+  .f em{font-style:normal; font-weight:400; color:var(--ink-4);}
+  .in2{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:9px;
+       padding:10px 12px; font-size:12.5px; color:var(--ink); outline:none;}
+  .in2:focus{border-color:rgba(195,255,77,.5);}
+  .man-go{margin-top:auto; padding:12px;}
+  @media (max-width:760px){ .manual{grid-template-columns:1fr;} }
   .blocked{border:1px solid rgba(255,180,84,.32); background:rgba(255,180,84,.06); border-radius:14px;
            padding:18px 20px; margin-bottom:22px;}
   .blocked[hidden]{display:none;}
@@ -214,7 +240,29 @@
     </div>
     <button class="go" id="run">시안 만들기</button>
   </div>
+  <div class="ways">
+    <button class="way on" data-way="link">링크로 가져오기</button>
+    <button class="way" data-way="manual">이미지 올려서 직접 입력</button>
+  </div>
   <div class="note" id="note">홈플러스·더현대Hi는 링크로 바로 읽힙니다. 서버 요청을 막는 몰(신세계 등)은 아래 안내대로 <b>북마클릿</b>을 쓰시면 됩니다.</div>
+
+  <div class="manual" id="manual" hidden>
+    <div class="man-drop" id="drop">
+      <img id="dropPrev" alt="">
+      <span id="dropText">상품 이미지를 여기에 끌어다 놓거나 클릭</span>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <div class="man-fields">
+      <div><label class="f">상품명</label><input class="in2" id="mName" placeholder="예: 26SS 냉감 라이트쿨 바람막이"></div>
+      <div class="man-row">
+        <div><label class="f">판매가</label><input class="in2" id="mSale" inputmode="numeric" placeholder="23200"></div>
+        <div><label class="f">정상가</label><input class="in2" id="mOrig" inputmode="numeric" placeholder="비워도 됨"></div>
+      </div>
+      <div><label class="f">카테고리 · 특징 <em>있으면 카피가 정확해집니다</em></label>
+        <input class="in2" id="mFeat" placeholder="예: 골프 상의 / 냉감 소재, 초경량, 자외선 차단"></div>
+      <button class="go man-go" id="mRun">이 상품으로 시안 만들기</button>
+    </div>
+  </div>
 
   <div class="blocked" id="blocked" hidden>
     <h3>이 쇼핑몰은 서버에서 읽을 수 없습니다</h3>
@@ -432,7 +480,9 @@ async function makeImage(i){
   try{
     const r = await fetch('/api/bannerImage', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ imageUrl: product && product.mainImage, imagePrompt: s.imagePrompt, size:'1024x1024' })
+      body: JSON.stringify(product && product.upload
+        ? { base64: product.upload.base64, mediaType: product.upload.mediaType, imagePrompt: s.imagePrompt, size:'1024x1024' }
+        : { imageUrl: product && product.mainImage, imagePrompt: s.imagePrompt, size:'1024x1024' })
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d.error || '이미지 생성 실패');
@@ -533,7 +583,18 @@ async function run(){
     showProduct(); buildPicker();
     if(picked.length>1) note($('#note').innerHTML + ' — 위에서 다른 상품을 고를 수 있습니다.');
 
-    // ② 카피 3세트 + 장면 3종 (한 번에)
+    await makeSets(btn);
+  }catch(e){
+    note(esc(e.message), true);
+    btn.disabled = false; btn.textContent = '시안 만들기';
+  }
+}
+
+/* 카피 3세트 → 이미지 3장. 링크 경로와 직접 입력 경로가 같이 쓴다. */
+async function makeSets(btn){
+  const label = btn.textContent;
+  btn.disabled = true;
+  try{
     btn.textContent = '카피와 장면 만드는 중…';
     const dr = await fetch('/api/bannerDraft', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -546,15 +607,75 @@ async function run(){
     if(dd.colorClash && dd.colorClash.length){
       note(`세 장의 색이 가까워 비슷해 보일 수 있습니다 — ${esc(dd.colorClash.join(', '))}. 다시 만들면 달라집니다.`, true);
     }
-
-    // ③ 이미지 3장 — 병렬로 만든다
     btn.textContent = '이미지 3장 만드는 중…';
     await Promise.all(sets.map((_,i)=>makeImage(i)));
   }catch(e){
     note(esc(e.message), true);
   }finally{
-    btn.disabled = false; btn.textContent = '시안 만들기';
+    btn.disabled = false; btn.textContent = label;
   }
+}
+
+/* ── 이미지 올려서 직접 입력 ────────────────────────────────
+   링크가 막히든 말든 항상 되는 길이다. 디자이너는 배너를 만들 때 이미 상품
+   이미지를 받아둔 경우가 많으니, 실제 업무에는 이쪽이 더 가깝다.
+   업로드한 이미지는 서버로 보내 배경을 바꾸는 데만 쓴다. */
+let uploaded = null;   // {base64, mediaType, dataUrl}
+
+function readFile(f){
+  if(!f || !/^image\//.test(f.type)) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    const url = r.result;
+    uploaded = { dataUrl:url, mediaType:f.type, base64:String(url).split(',')[1] };
+    const d = $('#drop');
+    d.classList.add('has');
+    $('#dropPrev').src = url;
+  };
+  r.readAsDataURL(f);
+}
+(function(){
+  const d=$('#drop');
+  d.onclick=()=>$('#file').click();
+  d.ondragover=e=>{ e.preventDefault(); d.classList.add('over'); };
+  d.ondragleave=()=>d.classList.remove('over');
+  d.ondrop=e=>{ e.preventDefault(); d.classList.remove('over'); readFile(e.dataTransfer.files[0]); };
+  $('#file').onchange=e=>{ readFile(e.target.files[0]); e.target.value=''; };
+  // 붙여넣기로도 받는다 — 캡처해서 바로 ⌘V 하는 게 제일 빠르다
+  window.addEventListener('paste', e=>{
+    if($('#manual').hidden) return;
+    const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));
+    if(it) readFile(it.getAsFile());
+  });
+})();
+
+$$('.way').forEach(b=>b.onclick=()=>{
+  $$('.way').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  const manual = b.dataset.way==='manual';
+  $('#manual').hidden = !manual;
+  $('.bar').hidden = manual;
+  $('#blocked').hidden = true;
+  note(manual
+    ? '상품 이미지와 이름만 있으면 됩니다. 링크가 막히는 몰에서도 항상 됩니다. <b>화면을 캡처해서 붙여넣어도(⌘V)</b> 됩니다.'
+    : '홈플러스·더현대Hi는 링크로 바로 읽힙니다. 서버 요청을 막는 몰(신세계 등)은 아래 안내를 보세요.');
+});
+
+async function runManual(){
+  const name = $('#mName').value.trim();
+  if(!name){ note('상품명을 넣어주세요.', true); $('#mName').focus(); return; }
+  if(!uploaded){ note('상품 이미지를 올려주세요.', true); return; }
+  const num = v => { const d=String(v||'').replace(/[^\d]/g,''); return d?Number(d):null; };
+  const sale = num($('#mSale').value), orig = num($('#mOrig').value);
+  product = {
+    productName: name, brand: '',
+    salePrice: sale, originalPrice: (orig && sale && orig>sale) ? orig : null,
+    discountRate: (orig && sale && orig>sale) ? Math.round((orig-sale)/orig*100) : null,
+    features: $('#mFeat').value.trim(), category: '',
+    mainImage: uploaded.dataUrl, upload: uploaded,
+  };
+  picked = [product];
+  showProduct(); $('#prodPick').hidden = true;
+  await makeSets($('#mRun'));
 }
 
 function showBlocked(pd){
@@ -579,6 +700,7 @@ function showBlocked(pd){
 })();
 
 $('#run').onclick = run;
+$('#mRun').onclick = runManual;
 $('#url').addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
 (function(){
   const wrap=$('#url').parentElement, input=$('#url');
