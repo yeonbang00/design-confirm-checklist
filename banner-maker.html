@@ -91,6 +91,32 @@
 
   .seg{display:grid; grid-template-columns:1fr 1fr; gap:6px;}
   .seg.seg3{grid-template-columns:1fr 1fr 1fr;}
+  .logo-drop{position:relative; display:grid; place-items:center; min-height:74px; padding:12px;
+             border:1px dashed var(--line); border-radius:11px; background:var(--surface-2);
+             cursor:pointer; transition:border-color .2s ease, background .2s ease;
+             background-image:linear-gradient(45deg,rgba(255,255,255,.03) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.03) 75%),
+                              linear-gradient(45deg,rgba(255,255,255,.03) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.03) 75%);
+             background-size:14px 14px; background-position:0 0,7px 7px;}
+  .logo-drop:hover, .logo-drop.over{border-color:rgba(195,255,77,.5); background-color:rgba(195,255,77,.05);}
+  .logo-drop img{max-height:46px; max-width:100%; object-fit:contain; display:none;}
+  .logo-drop.has img{display:block;}
+  .logo-drop.has #logoEmpty{display:none;}
+  .logo-drop.on-dark{background-color:#1B1E24;}
+  .logo-pair{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  .logo-drop.light{background-color:#F2F3F5;}
+  .logo-drop.dark{background-color:#16181C;}
+  .logo-drop span{font-size:9.5px; color:var(--ink-4); text-align:center; line-height:1.4;}
+  .logo-drop.light span{color:#9AA0A8;}
+  .colors{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .cw{display:flex; align-items:center; gap:7px; padding:7px 8px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); cursor:pointer;}
+  .cw input[type=color]{width:22px; height:22px; padding:0; border:none; border-radius:5px; background:none; cursor:pointer;}
+  .cw input[type=color]::-webkit-color-swatch-wrapper{padding:0;}
+  .cw input[type=color]::-webkit-color-swatch{border:1px solid rgba(255,255,255,.22); border-radius:5px;}
+  .cw span{font-size:10.5px; color:var(--ink-3); flex:1; min-width:0;}
+  .cw b{font-family:var(--font-mono); font-size:9px; color:var(--ink-4); font-weight:500;}
+  .contrast{margin:9px 0; font-size:10.5px; line-height:1.5; padding:8px 10px; border-radius:8px;}
+  .contrast.pass{background:rgba(195,255,77,.08); border:1px solid rgba(195,255,77,.25); color:#D9F5A8;}
+  .contrast.fail{background:rgba(255,107,107,.09); border:1px solid rgba(255,107,107,.3); color:#FFC2C2;}
   .seg button{padding:8px 6px; border-radius:8px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-2); font-size:11.5px; font-weight:600; cursor:pointer; transition:all .18s ease;}
   .seg button:hover{color:var(--ink); border-color:rgba(255,255,255,.2);}
   .seg button.on{background:rgba(195,255,77,.13); border-color:rgba(195,255,77,.45); color:var(--accent);}
@@ -279,7 +305,42 @@
       </div>
 
       <div class="card">
-        <h3 class="card-title"><b>4</b>텍스트 위치 <s id="szLabel2"></s></h3>
+        <h3 class="card-title"><b>4</b>버튼·강조 색 <s id="colorFrom"></s></h3>
+        <div class="colors">
+          <label class="cw"><input type="color" id="cCtaBg"><span>버튼 배경</span><b id="hxCtaBg"></b></label>
+          <label class="cw"><input type="color" id="cCtaInk"><span>버튼 글자</span><b id="hxCtaInk"></b></label>
+          <label class="cw"><input type="color" id="cAccent"><span>뱃지·아이브로우</span><b id="hxAccent"></b></label>
+          <label class="cw"><input type="color" id="cInk"><span>본문 글자</span><b id="hxInk"></b></label>
+        </div>
+        <div class="contrast" id="ctaContrast"></div>
+        <button class="btn sm" id="btnColorReset">컨셉 기본색으로</button>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>5</b>로고 <s id="logoDim"></s></h3>
+        <div class="logo-pair">
+          <div>
+            <label class="f">밝은 배경용</label>
+            <div class="logo-drop light" data-slot="light"><img alt=""><span>클릭 · 끌어다 놓기</span></div>
+          </div>
+          <div>
+            <label class="f">어두운 배경용</label>
+            <div class="logo-drop dark" data-slot="dark"><img alt=""><span>클릭 · 끌어다 놓기</span></div>
+          </div>
+        </div>
+        <input type="file" id="logoFile" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden>
+        <div class="hint" style="margin:7px 0 10px">색을 코드로 뒤집지 않고 두 벌을 바꿔 씁니다. 금색이 섞인 로고는 반전하면 망가지고, 브랜드 가이드에도 <b>로고 색상 변경 금지</b>가 있습니다.</div>
+        <div class="seg"><button id="lgLight" class="on">밝은 배경용 쓰기</button><button id="lgDark">어두운 배경용 쓰기</button></div>
+        <div style="height:11px"></div>
+        <label class="f">위치</label>
+        <div class="seg seg3" id="logoPosSeg"></div>
+        <div style="height:11px"></div>
+        <div class="slider"><div class="slider-top"><span>크기</span><b id="vLgS"></b></div><input type="range" id="lgS" min="50" max="200"></div>
+        <button class="btn sm" id="btnLogoClear">로고 빼기</button>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>6</b>텍스트 위치 <s id="szLabel2"></s></h3>
         <div class="seg seg3" id="posSeg"></div>
         <div style="height:11px"></div>
         <div class="slider"><div class="slider-top"><span>좌우 미세조정</span><b id="vBdx"></b></div><input type="range" id="bdx" min="-300" max="300"></div>
@@ -288,14 +349,14 @@
       </div>
 
       <div class="card">
-        <h3 class="card-title"><b>5</b>배경 위치 <s id="szLabel"></s></h3>
+        <h3 class="card-title"><b>7</b>배경 위치 <s id="szLabel"></s></h3>
         <div class="slider"><div class="slider-top"><span>가로 초점 X</span><b id="vBgX"></b></div><input type="range" id="bgX" min="0" max="100"></div>
         <div class="slider"><div class="slider-top"><span>세로 초점 Y</span><b id="vBgY"></b></div><input type="range" id="bgY" min="0" max="100"></div>
         <div class="slider"><div class="slider-top"><span>확대</span><b id="vBgS"></b></div><input type="range" id="bgS" min="100" max="180"></div>
       </div>
 
       <div class="card">
-        <h3 class="card-title"><b>6</b>어두운 영역</h3>
+        <h3 class="card-title"><b>8</b>어두운 영역</h3>
         <div class="slider"><div class="slider-top"><span>너비</span><b id="vOvW"></b></div><input type="range" id="ovW" min="10" max="100"></div>
         <div class="slider"><div class="slider-top"><span>높이</span><b id="vOvH"></b></div><input type="range" id="ovH" min="10" max="100"></div>
         <div class="slider"><div class="slider-top"><span>어두움</span><b id="vOvO"></b></div><input type="range" id="ovO" min="0" max="95"></div>
@@ -303,7 +364,7 @@
       </div>
 
       <div class="card">
-        <h3 class="card-title"><b>7</b>내보내기</h3>
+        <h3 class="card-title"><b>9</b>내보내기</h3>
         <button class="btn primary" id="btnPngOne">현재 사이즈 PNG</button>
         <div style="height:6px"></div>
         <button class="btn sm" id="btnPngAll">3개 사이즈 전부</button>
@@ -377,6 +438,7 @@ const LAYOUTS = {
     bg:{x:52,y:46,scale:104},
     ov:{x:0,y:0,w:60,h:100,o:70,fade:26,dir:'right'},
     block:{margin:80,  sideW:580, fullW:1040},
+    logo    :{height:44, gap:26, minH:24},
     eyebrow :{size:25, ls:3.4, weight:700, lh:1.3, gap:20, maxLines:1, min:18},
     headline:{size:82, ls:-3.6, weight:800, lh:1.12, gap:24, maxLines:2, min:50},
     subcopy :{size:27, ls:-.4, weight:500, lh:1.5,  gap:40, maxLines:2, min:19},
@@ -388,6 +450,7 @@ const LAYOUTS = {
     bg:{x:50,y:38,scale:108},
     ov:{x:0,y:38,w:100,h:62,o:74,fade:22,dir:'up'},
     block:{margin:110, sideW:840, fullW:936},
+    logo    :{height:50, gap:28, minH:26},
     eyebrow :{size:27, ls:3.6, weight:700, lh:1.3, gap:22, maxLines:1, min:19},
     headline:{size:88, ls:-3.8, weight:800, lh:1.14, gap:26, maxLines:2, min:54},
     subcopy :{size:30, ls:-.4, weight:500, lh:1.5,  gap:44, maxLines:2, min:21},
@@ -399,6 +462,7 @@ const LAYOUTS = {
     bg:{x:64,y:44,scale:104},
     ov:{x:0,y:0,w:52,h:100,o:70,fade:30,dir:'right'},
     block:{margin:80,  sideW:720, fullW:1760},
+    logo    :{height:34, gap:16, minH:20},
     eyebrow :{size:20, ls:3, weight:700, lh:1.3, gap:13, maxLines:1, min:15},
     headline:{size:58, ls:-2.4, weight:800, lh:1.14, gap:15, maxLines:2, min:38},
     subcopy :{size:21, ls:-.3, weight:500, lh:1.45, gap:24, maxLines:1, min:16},
@@ -411,6 +475,13 @@ const SIZE_ORDER = ['square','story','wide'];
 
 /* 텍스트 묶음을 놓을 자리. 실제 커머스 배너에서 반복적으로 쓰이는 5가지다.
    (좌하단=ELLACONIC형, 좌상단=크록스/세제대전형, 우중앙=EDITED형) */
+const LOGO_POS = {
+  'top-left'    :{label:'좌상단', ax:'left',  ay:'top'},
+  'top-right'   :{label:'우상단', ax:'right', ay:'top'},
+  'bottom-left' :{label:'좌하단', ax:'left',  ay:'bottom'},
+  'bottom-right':{label:'우하단', ax:'right', ay:'bottom'},
+  'with-text'   :{label:'카피 위', ax:'block', ay:'block'}
+};
 const BLOCK_PRESETS = {
   'left-top'    :{label:'좌상단',   ax:'left',   ay:'top',    align:'left',   ovDir:'right'},
   'left-middle' :{label:'좌중앙',   ax:'left',   ay:'middle', align:'left',   ovDir:'right'},
@@ -429,21 +500,21 @@ const DEMO_PRODUCT = {
 /* 실제 서비스에서는 이 배열을 AI가 상품에 맞춰 만든다.
    여름/겨울/프리미엄 3개 고정이 아니라 상품마다 달라져야 한다. */
 const DEMO_CONCEPTS = [
-  { id:'autumn-course', name:'가을 코스', desc:'선선한 잔디와 낙엽빛 페어웨이. 시즌감이 가장 직관적으로 읽히는 안.',
-    palette:['#C7D9A8','#F2EDE3','#5A6B45'], ink:'#FFFFFF', accent:'#C3FF4D', ctaBg:'#C3FF4D', ctaInk:'#12210A',
+  { id:'autumn-course', name:'가을 코스', description:'선선한 잔디와 낙엽빛 페어웨이. 시즌감이 가장 직관적으로 읽힌다.',
+    colorPalette:['#CFC1B5','#9A8960','#735E28'], ink:'#FFFFFF', accent:'#C3FF4D', ctaBg:'#C3FF4D', ctaInk:'#12210A',
     image:'assets/banner-demo/product-golf.jpg' },
-  { id:'clean-studio', name:'클린 스튜디오', desc:'무배경 화이트. 제품 형태가 가장 정확히 보이는 안.',
-    palette:['#FFFFFF','#E8E9EC','#111417'], ink:'#111417', accent:'#1E6BFF', ctaBg:'#111417', ctaInk:'#FFFFFF',
-    grad:'linear-gradient(135deg,#F7F8FA 0%,#E4E7EC 100%)' },
-  { id:'night-city', name:'나이트 시티', desc:'딥 네이비 야간 조명. 프리미엄·고관여 톤.',
-    palette:['#0E1730','#1E3A6B','#FFC65C'], ink:'#FFFFFF', accent:'#FFC65C', ctaBg:'#FFC65C', ctaInk:'#16203A',
-    grad:'linear-gradient(140deg,#0B1226 0%,#1B2E55 55%,#243A66 100%)' },
-  { id:'warm-cafe', name:'웜 카페', desc:'우드톤 실내광. 라이프스타일 소구에 맞는 편안한 무드.',
-    palette:['#4A3524','#C89B6A','#F5E9D9'], ink:'#FFF7EC', accent:'#F0B072', ctaBg:'#F0B072', ctaInk:'#3A2716',
-    grad:'linear-gradient(145deg,#2A1C11 0%,#5C3F27 60%,#8A6440 100%)' },
-  { id:'mono-editorial', name:'모노 에디토리얼', desc:'무채색 고대비. 브랜드 이미지 캠페인에 어울리는 안.',
-    palette:['#161719','#8A8D93','#F2F3F5'], ink:'#F2F3F5', accent:'#FFFFFF', ctaBg:'#F2F3F5', ctaInk:'#161719',
-    grad:'linear-gradient(120deg,#0D0E10 0%,#26282C 60%,#3A3D42 100%)' }
+  { id:'coastal-morning', name:'코스탈 모닝', description:'바다와 흰 난간. 밝고 산뜻한 시즌 라이프스타일.',
+    colorPalette:['#D5DCE3','#BCB1A8','#887E70'], ink:'#1B2430', accent:'#0F6FB8', ctaBg:'#12324D', ctaInk:'#FFFFFF',
+    image:'assets/banner-demo/concept-summer.jpg' },
+  { id:'clubhouse-lounge', name:'클럽하우스 라운지', description:'우드톤 실내광. 편안하고 고급스러운 무드.',
+    colorPalette:['#CBB9AB','#998166','#452916'], ink:'#FFF6EA', accent:'#F0B072', ctaBg:'#F0B072', ctaInk:'#3A2716',
+    image:'assets/banner-demo/concept-cafe.jpg' },
+  { id:'night-range', name:'나이트 레인지', description:'야간 조명과 도시 실루엣. 프리미엄·고관여 톤.',
+    colorPalette:['#CBBDB3','#948669','#3C3D2F'], ink:'#FFFFFF', accent:'#FFC65C', ctaBg:'#FFC65C', ctaInk:'#16203A',
+    image:'assets/banner-demo/concept-night.jpg' },
+  { id:'clean-studio', name:'클린 스튜디오', description:'무배경 스튜디오. 제품 형태가 가장 정확히 보인다.',
+    colorPalette:['#C9C1BC','#AC9D89','#87775F'], ink:'#1A1D22', accent:'#1E6BFF', ctaBg:'#111417', ctaInk:'#FFFFFF',
+    image:'assets/banner-demo/concept-studio.jpg' }
 ];
 /* 카피는 방향(tone)에 따라 달라진다. 숫자는 절대 포함하지 않는다 —
    가격/할인은 상품 데이터에서만 온다. */
@@ -476,6 +547,13 @@ const state = {
   copyIdx:0,
   copy:{...DEMO_COPY.product[0]},
   guides:false,
+  /* 로고는 폰트로 흉내낼 수 없다. SHINSEGAE·ELLACONIC 같은 워드마크는
+     전부 이미지다. 그리고 색을 코드로 뒤집으면 안 된다 — 브랜드 가이드의
+     '로고 색상 변경 금지'에 걸리고, 신세계처럼 금색이 섞인 로고는 망가진다.
+     그래서 밝은 배경용·어두운 배경용 두 벌을 등록해 골라 쓴다. */
+  colorOverride:{},
+  logo:{ light:'assets/banner-demo/logo-shinsegae.png', dark:null,
+         useDark:false, scale:100, pos:'top-right' },
   /* 사이즈별로 배경·오버레이 값을 따로 들고 있는다 */
   tweak:Object.fromEntries(SIZE_ORDER.map(k=>[k,{
     bg:{...LAYOUTS[k].bg}, ov:{...LAYOUTS[k].ov},
@@ -484,7 +562,10 @@ const state = {
 };
 const L  = ()=>LAYOUTS[state.size];
 const TW = ()=>state.tweak[state.size];
-const CONCEPT = ()=>state.concepts.find(c=>c.id===state.conceptId) || state.concepts[0];
+const BASE_CONCEPT = ()=>state.concepts.find(c=>c.id===state.conceptId) || state.concepts[0];
+/* 컨셉이 제안한 색 위에 사용자가 고른 색을 덮는다. 컨셉을 바꾸면
+   덮어쓴 색은 지워지고 다시 컨셉 기본색으로 돌아간다. */
+const CONCEPT = ()=>Object.assign({}, BASE_CONCEPT(), state.colorOverride);
 
 /* ══ 텍스트 엔진 ═══════════════════════════════════════════════════
    ChatGPT 데모 두 개가 똑같이 깨진 지점이 여기다.
@@ -607,8 +688,32 @@ function computeLayout(){
   if(top < 0)            warn.push(['블록 전체', {overflowPx: Math.round(-top), where:'위'}]);
   else if(bottom > l.h)  warn.push(['블록 전체', {overflowPx: Math.round(bottom-l.h), where:'아래'}]);
 
-  return {l,t,c,parts,total,warn,bottom,bp,bw};
+  // ── 로고는 텍스트 흐름 밖이다. 신세계처럼 우측 상단에 고정하는 브랜드가 많다.
+  const src = logoSrc();
+  let logo = null;
+  if(src && _imgCache[src]){
+    const im=_imgCache[src], lg=l.logo, lp=LOGO_POS[state.logo.pos] || LOGO_POS['top-right'];
+    const h = Math.round(lg.height * state.logo.scale/100);
+    const w = Math.round(h * (im.naturalWidth||im.width) / (im.naturalHeight||im.height));
+    let lx, ly;
+    if(lp.ax==='block'){ lx = x; ly = (parts.length?parts[0].y:m) - h - lg.gap; }
+    else {
+      lx = lp.ax==='left' ? m : l.w - m - w;
+      ly = lp.ay==='top'  ? m : l.h - m - h;
+    }
+    logo = { src, x:lx, y:ly, w, h, minH:lg.minH };
+    if(h < lg.minH) warn.push(['로고', {tooSmall:h, minH:lg.minH}]);
+    // 로고가 텍스트 묶음과 겹치는지 (브랜드 가이드의 '최소 여백' 항목)
+    if(parts.length){
+      const bx1=x, bx2=x+bw, by1=parts[0].y, by2=bottomOf(parts);
+      if(lx < bx2 && lx+w > bx1 && ly < by2 && ly+h > by1)
+        warn.push(['로고', {collide:true}]);
+    }
+  }
+  return {l,t,c,parts,total,warn,bottom,bp,bw,logo};
 }
+function bottomOf(parts){ const p=parts[parts.length-1]; return p.y+p.height; }
+function logoSrc(){ return state.logo.useDark ? (state.logo.dark||state.logo.light) : (state.logo.light||state.logo.dark); }
 
 /* ══ 오버레이 CSS ══ */
 function overlayStyle(l,t,c,bp){
@@ -638,7 +743,7 @@ function bgBox(l, t, img){
    computeLayout이 정한 줄과 좌표를 그대로 그린다. 여기서 다시
    줄바꿈이 일어나면 안 되므로 각 줄을 별도 블록으로 찍고 white-space:pre. */
 function render(){
-  const {l,t,c,parts,warn,bp,bw} = computeLayout();
+  const {l,t,c,parts,warn,bp,bw,logo} = computeLayout();
   const b=$('#banner');
   b.style.width=l.w+'px'; b.style.height=l.h+'px';
 
@@ -657,7 +762,7 @@ function render(){
       bgCss = `background-image:${bgImg}; background-size:cover; background-position:center;`;
       loadImg(c.image).then(render).catch(()=>{});   // 원본 크기를 알아야 정확히 계산된다
     }
-  } else bgCss = `background:${c.grad};`;
+  } else bgCss = `background:linear-gradient(135deg,${(c.colorPalette||['#222','#444']).join(',')});`;
   html += `<div class="bn-bg" style="${bgCss}"></div>`;
   html += `<div class="bn-ov" style="left:${ov.x}px;top:${ov.y}px;width:${ov.w}px;height:${ov.h}px;background:${ov.css};"></div>`;
 
@@ -685,6 +790,11 @@ function render(){
     }
   }
 
+  if(logo){
+    // 높이만 지정하고 폭은 비율대로 — 로고를 늘이거나 찌그러뜨리지 않는다
+    html += `<img src="${logo.src}" alt="" style="position:absolute;left:${logo.x}px;top:${logo.y}px;`
+         +  `width:${logo.w}px;height:${logo.h}px;object-fit:contain;">`;
+  }
   if(state.guides){
     html += `<div class="guides on">`;
     const gx = parts.length ? parts[0].x : 0;
@@ -728,6 +838,8 @@ function paintWarns(warn, parts){
   }
   box.innerHTML = warn.map(([name,f])=>{
     if(f.overflowPx) return `<div class="warn"><b>!</b><span><b>${name}</b>이 배너 ${f.where||'아래'}로 ${f.overflowPx}px 넘칩니다. 카피를 줄이거나 위치를 조정하세요.</span></div>`;
+    if(f.tooSmall)   return `<div class="warn"><b>!</b><span><b>로고</b> 높이가 ${f.tooSmall}px입니다. 이 사이즈의 최소 권장 ${f.minH}px보다 작아 알아보기 어렵습니다.</span></div>`;
+    if(f.collide)    return `<div class="warn"><b>!</b><span><b>로고</b>가 카피 영역과 겹칩니다. 위치를 바꾸거나 크기를 줄이세요.</span></div>`;
     if(f.clipped)    return `<div class="warn"><b>!</b><span><b>${name}</b>가 최소 크기(${f.size}px)에서도 ${'≤'} ${f.lines.length}줄에 안 들어가 잘렸습니다. 카피를 줄여주세요.</span></div>`;
     return `<div class="warn"><b>·</b><span><b>${name}</b>가 길어 ${f.from}px → <b>${f.size}px</b>로 줄었습니다. 겹치지는 않습니다.</span></div>`;
   }).join('');
@@ -738,7 +850,7 @@ function paintWarns(warn, parts){
    줄바꿈을 이미 우리가 계산해뒀으므로 두 결과가 어긋날 수 없다. */
 async function renderCanvas(sizeKey){
   const keep=state.size; state.size=sizeKey;
-  const {l,t,c,parts,bp,bw}=computeLayout();
+  const {l,t,c,parts,bp,bw,logo}=computeLayout();
   state.size=keep;
 
   const cv=document.createElement('canvas'); cv.width=l.w; cv.height=l.h;
@@ -751,7 +863,8 @@ async function renderCanvas(sizeKey){
     x.drawImage(img,b.dx,b.dy,b.dw,b.dh);
   } else {
     const g=x.createLinearGradient(0,0,l.w,l.h);
-    (c.palette||['#222','#444']).forEach((col,i,a)=>g.addColorStop(i/(a.length-1),col));
+    const ps=c.colorPalette||['#222','#444'];
+    ps.forEach((col,i)=>g.addColorStop(ps.length>1?i/(ps.length-1):0,col));
     x.fillStyle=g; x.fillRect(0,0,l.w,l.h);
   }
 
@@ -806,7 +919,25 @@ async function renderCanvas(sizeKey){
       x.globalAlpha=1;
     }
   }
+  if(logo){
+    const im=await loadImg(logo.src);
+    x.drawImage(im, logo.x, logo.y, logo.w, logo.h);
+  }
   return cv;
+}
+/* CSS filter:brightness(0) invert(1)과 같은 결과를 캔버스에서 만든다.
+   알파는 유지하고 색만 흰색으로 덮는다. */
+const _whiteCache={};
+function whiteVersion(img){
+  const k=img.src;
+  if(_whiteCache[k]) return _whiteCache[k];
+  const w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+  const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  const x=cv.getContext('2d');
+  x.drawImage(img,0,0);
+  x.globalCompositeOperation='source-in';
+  x.fillStyle='#fff'; x.fillRect(0,0,w,h);
+  _whiteCache[k]=cv; return cv;
 }
 function roundRect(x,l,t,w,h,r){
   x.beginPath();
@@ -847,17 +978,18 @@ function buildSizeTabs(){
 function buildConcepts(){
   $('#conceptCount').textContent = state.concepts.length+'개';
   $('#conceptList').innerHTML = state.concepts.map(c=>{
-    const thumb = c.image ? `background-image:url('${c.image}')` : `background:${c.grad}`;
+    const thumb = c.image ? `background-image:url('${c.image}')`
+                          : `background:linear-gradient(135deg,${(c.colorPalette||['#333','#666']).join(',')})`;
     return `<button type="button" class="concept ${c.id===state.conceptId?'on':''}" data-id="${c.id}">
       <span class="concept-thumb" style="${thumb}"></span>
       <span class="concept-meta">
         <span class="concept-name">${esc(c.name)}</span>
         <span class="concept-desc">${esc(c.desc)}</span>
-        <span class="swatches">${(c.palette||[]).map(p=>`<i style="background:${p}"></i>`).join('')}</span>
+        <span class="swatches">${(c.colorPalette||[]).map(p=>`<i style="background:${p}"></i>`).join('')}</span>
       </span></button>`;
   }).join('');
   $$('#conceptList .concept').forEach(b=>b.onclick=()=>{
-    state.conceptId=b.dataset.id; buildConcepts(); render();
+    state.conceptId=b.dataset.id; state.colorOverride={}; buildConcepts(); syncColors(); render();
   });
 }
 function syncProductUI(){
@@ -938,15 +1070,40 @@ $('#btnCopy').onclick=()=>{
   state.copyIdx=(state.copyIdx+1)%pool.length;
   state.copy={...pool[state.copyIdx]}; syncCopyUI(); render();
 };
-$('#btnConcepts').onclick=()=>{
-  // 데모에서는 순서만 섞는다. 실제로는 상품 정보로 AI가 새로 만든다.
-  state.concepts=[...state.concepts].sort(()=>Math.random()-.5);
-  state.conceptId=state.concepts[0].id; buildConcepts(); render();
-};
-$('#btnVariants').onclick=()=>{
-  const base=CONCEPT();
-  alert(`실제 서비스에서는 "${base.name}"을 기준으로 비슷한 컨셉 3개를 새로 만듭니다.\n데모에는 파생 컨셉 데이터가 없습니다.`);
-};
+/* ── 컨셉 생성 ────────────────────────────────────────────────
+   여름/겨울/프리미엄 고정 버튼을 쓰지 않는다. 상품 정보를 서버로 보내
+   AI가 그 상품에 맞는 컨셉을 새로 만든다. 데님 스커트면 코스탈 모닝·
+   프렌치 카페가, 삼계탕이면 블랙 다이닝·원목 식탁이 나와야 한다. */
+async function askConcepts(baseConcept){
+  const btn = baseConcept ? $('#btnVariants') : $('#btnConcepts');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'AI가 컨셉을 만드는 중…';
+  try{
+    const r = await fetch('/api/bannerConcepts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ product: state.product, count: baseConcept ? 3 : 5, baseConcept })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || '컨셉 생성 실패');
+    // 새 컨셉에는 아직 이미지가 없다. 배경은 팔레트 그라데이션으로 두고,
+    // 이미지 생성은 컨셉을 고른 다음 단계에서 따로 만든다.
+    state.concepts = baseConcept ? state.concepts.concat(d.concepts) : d.concepts;
+    state.conceptId = d.concepts[0].id;
+    state.colorOverride = {};
+    setMode('AI 컨셉 · ' + (d.model||''));
+    buildConcepts(); syncColors(); render();
+  }catch(e){
+    setMode('DEMO 모드 · ' + e.message);
+    if(!baseConcept){          // 서버가 없으면 데모 컨셉으로 되돌린다
+      state.concepts = DEMO_CONCEPTS.map(c=>({...c}));
+      state.conceptId = state.concepts[0].id;
+      buildConcepts(); syncColors(); render();
+    }
+  }finally{ btn.disabled=false; btn.textContent=label; }
+}
+function setMode(t){ $('#modeLabel').textContent = t; }
+$('#btnConcepts').onclick=()=>askConcepts(null);
+$('#btnVariants').onclick=()=>askConcepts(CONCEPT());
 $('#btnFetch').onclick=()=>{
   state.product={...DEMO_PRODUCT}; syncProductUI(); render();
 };
@@ -962,9 +1119,80 @@ $$('.gnb-dropdown-toggle').forEach(btn=>btn.addEventListener('click',e=>{
 document.addEventListener('click',()=>$$('.gnb-dropdown-menu.open').forEach(m=>m.classList.remove('open')));
 window.addEventListener('resize',()=>fitStage(L()));
 
+/* ── 로고 두 벌 등록 ─────────────────────────────────────────── */
+let _logoSlot='light';
+function paintLogoSlots(){
+  $$('.logo-drop').forEach(d=>{
+    const src=state.logo[d.dataset.slot];
+    d.classList.toggle('has', !!src);
+    const img=d.querySelector('img'); if(src) img.src=src;
+  });
+  $('#lgLight').classList.toggle('on', !state.logo.useDark);
+  $('#lgDark').classList.toggle('on', state.logo.useDark);
+  const src=logoSrc(), im=src&&_imgCache[src];
+  $('#logoDim').textContent = im ? `${im.naturalWidth}×${im.naturalHeight}` : '';
+}
+function readLogo(file, slot){
+  if(!file || !/^image\//.test(file.type)) return;
+  const r=new FileReader();
+  r.onload=()=>{ state.logo[slot]=r.result;
+    if(slot==='dark' && !state.logo.light) state.logo.useDark=true;
+    loadImg(r.result).then(()=>{ paintLogoSlots(); render(); }); };
+  r.readAsDataURL(file);
+}
+$$('.logo-drop').forEach(d=>{
+  d.onclick=()=>{ _logoSlot=d.dataset.slot; $('#logoFile').click(); };
+  d.ondragover=e=>{ e.preventDefault(); d.classList.add('over'); };
+  d.ondragleave=()=>d.classList.remove('over');
+  d.ondrop=e=>{ e.preventDefault(); d.classList.remove('over'); readLogo(e.dataTransfer.files[0], d.dataset.slot); };
+});
+$('#logoFile').onchange=e=>{ readLogo(e.target.files[0], _logoSlot); e.target.value=''; };
+$('#lgLight').onclick=()=>{ state.logo.useDark=false; paintLogoSlots(); render(); };
+$('#lgDark').onclick =()=>{ state.logo.useDark=true;  paintLogoSlots(); render(); };
+$('#btnLogoClear').onclick=()=>{ state.logo.light=null; state.logo.dark=null;
+  $$('.logo-drop').forEach(d=>d.classList.remove('has')); paintLogoSlots(); render(); };
+bindRange('lgS', v=>state.logo.scale=v);
+function buildLogoPos(){
+  $('#logoPosSeg').innerHTML=Object.entries(LOGO_POS).map(([k,v])=>
+    `<button data-lp="${k}" class="${k===state.logo.pos?'on':''}">${v.label}</button>`).join('');
+  $$('#logoPosSeg button').forEach(b=>b.onclick=()=>{
+    state.logo.pos=b.dataset.lp; buildLogoPos(); render(); });
+}
+
+/* ── 버튼·강조 색 ────────────────────────────────────────────── */
+const COLOR_FIELDS=[['cCtaBg','ctaBg'],['cCtaInk','ctaInk'],['cAccent','accent'],['cInk','ink']];
+function lum(hex){
+  const n=parseInt(hex.slice(1),16), r=(n>>16&255)/255, g=(n>>8&255)/255, b=(n&255)/255;
+  const f=v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);
+  return .2126*f(r)+.7152*f(g)+.0722*f(b);
+}
+const ratio=(a,b)=>{ const x=lum(a),y=lum(b); return ((Math.max(x,y)+.05)/(Math.min(x,y)+.05)); };
+function syncColors(){
+  const c=CONCEPT();
+  COLOR_FIELDS.forEach(([id,key])=>{
+    const v=(c[key]||'#000000').slice(0,7);
+    $('#'+id).value=v;
+    $('#hx'+id.slice(1)).textContent=v.toUpperCase();
+  });
+  $('#colorFrom').textContent = Object.keys(state.colorOverride).length ? '직접 지정' : BASE_CONCEPT().name;
+  // 버튼 글자와 배경의 대비 — 우리 체크리스트가 보는 것과 같은 기준(WCAG)
+  const r=ratio($('#cCtaBg').value, $('#cCtaInk').value);
+  const el=$('#ctaContrast'), pass=r>=4.5;
+  el.className='contrast '+(pass?'pass':'fail');
+  el.innerHTML = `버튼 명도대비 <b>${r.toFixed(2)}:1</b> — ` +
+    (pass ? '통과 (4.5:1 이상)' : `<b>미달</b>. 4.5:1 이상이어야 배너 분석 3번을 통과합니다.`);
+}
+COLOR_FIELDS.forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{
+  state.colorOverride[key]=e.target.value; syncColors(); render(); }));
+$('#btnColorReset').onclick=()=>{ state.colorOverride={}; syncColors(); render(); };
+
 /* 폰트가 로드된 뒤에 재계산해야 줄바꿈이 정확하다 */
 function boot(){
-  buildSizeTabs(); buildPosSeg(); buildConcepts(); syncProductUI(); syncCopyUI(); syncTweakUI(); render();
+  buildSizeTabs(); buildPosSeg(); buildLogoPos(); buildConcepts();
+  syncProductUI(); syncCopyUI(); syncTweakUI(); syncColors();
+  $('#lgS').value=state.logo.scale; $('#vLgS').textContent=state.logo.scale+'%';
+  render();
+  if(state.logo.light) loadImg(state.logo.light).then(()=>{ paintLogoSlots(); render(); });
 }
 boot();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
