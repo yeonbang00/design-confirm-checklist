@@ -133,6 +133,63 @@ async function fetchHtml(url) {
   throw err;
 }
 
+// 페이지에 박힌 이미지 중 '상품 사진일 법한 것'만 남긴다.
+// 걸러내야 할 것이 생각보다 많았다 — 페이스북 추적 픽셀, QR코드, 로딩 GIF,
+// 앱 다운로드 배너. 반대로 홈플러스처럼 확장자 없는 CDN URL도 있어서
+// 확장자만으로 판정하면 정작 상품 사진이 빠진다.
+const JUNK = /(sprite|icon|logo|banner|badge|btn[_-]|bg[_-]|blank|dummy|noimg|no[_-]image|placeholder|profile|avatar|qrcode|loading|spinner|onair|app[_-]?down|facebook\.com|google|doubleclick|criteo|analytics|pixel|\/tr\b|1x1|blank\.gif)/i;
+const IMG_EXT = /\.(jpe?g|png|webp)(?:$|\?)/i;
+const IMG_HOST = /(^|\.)(image|img|images|cdn|static|photo|pic)[a-z0-9-]*\./i;
+const PRODUCT_PATH = /\/(goods|product|item|prd|goodsimg|dealgoods|td|rtd|detail|upload|userfiles)\//i;
+
+function harvestImages(html, pageUrl, items) {
+  const found = new Map();   // url → 점수
+  const add = (u, bonus = 0) => {
+    if (!u) return;
+    let abs;
+    try { abs = new URL(u, pageUrl).href; } catch (e) { return; }
+    if (!/^https?:/.test(abs) || JUNK.test(abs)) return;
+    const bare = abs.split('?')[0];
+    // 확장자가 있거나, 이미지 전용 호스트이거나, 상품 경로여야 통과
+    const looksImage = IMG_EXT.test(bare) || IMG_HOST.test(new URL(bare).hostname) || PRODUCT_PATH.test(bare);
+    if (!looksImage) return;
+    let score = bonus;
+    if (PRODUCT_PATH.test(bare)) score += 2;
+    if (/_l_|_大|large|origin|\/l\//i.test(bare)) score += 1;   // 큰 이미지 우대
+    if (/_s_|thumb|small|\/s\/|s0320/i.test(bare)) score -= 2;  // 썸네일 후순위
+    found.set(bare, Math.max(found.get(bare) || -99, score));
+  };
+
+  for (const m of html.matchAll(/<img[^>]+>/gi)) {
+    const tag = m[0];
+    add((tag.match(/\s(?:data-)?src=["']([^"']+)/i) || [])[1], 1);
+    const set = (tag.match(/srcset=["']([^"']+)/i) || [])[1];
+    if (set) set.split(',').forEach((part) => add(part.trim().split(/\s+/)[0], 1));
+  }
+  const scan = (text) => {
+    for (const m of text.matchAll(/https?:\/\/[^\s"'\\<>)]+/gi)) add(m[0]);
+  };
+  scan(html);
+  scan(rscPayload(html));
+
+  // 이미 상품 이미지로 확인된 것은 맨 앞에
+  for (const it of items || []) {
+    for (const u of (it.images || [])) {
+      const bare = String(u).split('?')[0];
+      found.set(bare, (found.get(bare) || 0) + 10);
+    }
+    if (it.mainImage) {
+      const bare = String(it.mainImage).split('?')[0];
+      found.set(bare, (found.get(bare) || 0) + 12);
+    }
+  }
+
+  return [...found.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([u]) => u)
+    .slice(0, 24);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -232,6 +289,11 @@ export default async function handler(req, res) {
       rating: null, reviewCount: null, inStock: true,
     }];
   }
+
+  // 페이지에 실제로 박혀 있는 이미지를 전부 긁어온다. JSON-LD의 image[]만
+  // 보면 1~2장인데, 상세 영역·썸네일에 더 있는 몰이 많다. AI로 새로 그리는
+  // 것보다 원본 사진을 고르는 쪽이 빠르고(대기 없음) 제품이 왜곡되지 않는다.
+  out.harvested = harvestImages(html, target.href, out.items);
 
   out.itemCount = out.items.length;
   res.status(200).json(out);

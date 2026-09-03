@@ -71,12 +71,23 @@
   .card{background:var(--surface); border:1px solid var(--card-border,var(--line)); border-radius:15px; padding:16px;}
   .card-title{display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-size:12.5px; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:0 0 13px;}
   .card-title b{display:grid; place-items:center; width:19px; height:19px; border-radius:6px; background:rgba(195,255,77,.13); color:var(--accent); font-family:var(--font-mono); font-size:10.5px; font-weight:700;}
+  .card-title em{font-style:normal; font-size:10px; font-weight:600; letter-spacing:-.01em;
+                 padding:3px 7px; border-radius:6px; background:rgba(195,255,77,.14); color:var(--accent);}
+  .card-title em.done{background:rgba(255,255,255,.06); color:var(--ink-4);}
+  .card-title em.wait{background:rgba(255,255,255,.04); color:var(--ink-4); opacity:.7;}
   .card-title s{margin-left:auto; text-decoration:none; font-size:10.5px; font-weight:500; color:var(--ink-4); letter-spacing:0;}
 
   label.f{display:block; font-size:11px; font-weight:600; color:var(--ink-3); margin:0 0 5px; letter-spacing:-.005em;}
   .in{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:9px 11px; font-size:12.5px; color:var(--ink); outline:none; transition:border-color .2s ease;}
   .in:focus{border-color:rgba(195,255,77,.5);}
   textarea.in{resize:vertical; min-height:56px; line-height:1.5;}
+  .in-clear{position:relative;}
+  .in-clear .in{padding-right:32px;}
+  .in-clear button{position:absolute; right:6px; top:50%; transform:translateY(-50%); width:20px; height:20px;
+                   border:none; border-radius:50%; background:rgba(255,255,255,.1); color:var(--ink-3);
+                   font-size:14px; line-height:1; cursor:pointer; display:none;}
+  .in-clear button:hover{background:rgba(255,255,255,.2); color:var(--ink);}
+  .in-clear.has button{display:block;}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
   .fg{margin-bottom:11px;}
   .fg:last-child{margin-bottom:0;}
@@ -109,6 +120,8 @@
   .logo-drop.dark{background-color:#16181C;}
   .logo-drop span{font-size:9.5px; color:var(--ink-4); text-align:center; line-height:1.4;}
   .logo-drop.light span{color:#9AA0A8;}
+  .empty-note{font-size:11px; line-height:1.6; color:var(--ink-4); padding:14px 12px; text-align:center;
+              border:1px dashed var(--line); border-radius:10px;}
   .stale{margin-bottom:9px; padding:9px 11px; border-radius:9px; font-size:11px; line-height:1.55;
          background:rgba(255,180,84,.1); border:1px solid rgba(255,180,84,.3); color:#FFD5A0;}
   .stale b{color:var(--warn);}
@@ -180,7 +193,7 @@
   .banner-fit{position:relative;}
   /* 배너는 항상 원본 px로 그리고, 화면에서만 transform으로 축소한다.
      이래야 미리보기와 내보내기가 같은 좌표를 쓴다. */
-  .banner{position:relative; overflow:hidden; transform-origin:top left; background:#111; box-shadow:0 28px 70px -30px rgba(0,0,0,.9);}
+  .banner{position:relative; overflow:hidden; cursor:grab; touch-action:none; transform-origin:top left; background:#111; box-shadow:0 28px 70px -30px rgba(0,0,0,.9);}
   .banner *{margin:0;}
   .bn-bg{position:absolute; inset:0; background-size:cover; background-repeat:no-repeat;}
   .bn-ov{position:absolute;}
@@ -190,6 +203,7 @@
   .guides{position:absolute; inset:0; pointer-events:none; display:none;}
   .guides.on{display:block;}
   .guides i{position:absolute; background:rgba(195,255,77,.55); font-style:normal;}
+  .guides u.block-area{border:2px dashed rgba(195,255,77,.75); background:rgba(195,255,77,.09);}
   .guides u{position:absolute; border:1px dashed rgba(195,255,77,.5); text-decoration:none;}
 
   /* 경고 */
@@ -282,10 +296,10 @@
     <div class="panel">
 
       <div class="card">
-        <h3 class="card-title"><b>1</b>상품 정보</h3>
+        <h3 class="card-title"><b>1</b>상품 정보<em class="step" id="step1">먼저</em></h3>
         <div class="fg">
           <label class="f">상품 링크</label>
-          <input class="in" id="pUrl" placeholder="https://..." value="https://www.shinsegaetvshopping.com/deal/detail/202410100502">
+          <div class="in-clear"><input class="in" id="pUrl" placeholder="상품 페이지 주소를 붙여넣으세요"><button type="button" id="pUrlClear" title="지우기">×</button></div>
           <div class="hint" id="fetchHint">쇼핑몰 상품·딜 링크를 넣으면 서버가 상품명·가격·이미지를 읽어옵니다.</div>
         </div>
         <button class="btn sm" id="btnFetch">상품 정보 가져오기</button>
@@ -297,24 +311,23 @@
           <div><label class="f">판매가</label><input class="in" id="pSale" inputmode="numeric"></div>
           <div><label class="f">정상가</label><input class="in" id="pOrig" inputmode="numeric"></div>
         </div>
-        <div class="fg"><label class="f">혜택</label><input class="in" id="pBenefit" placeholder="비우면 표시 안 함"></div>
         <div class="fg"><label class="f">상품 특징</label><textarea class="in" id="pFeatures"></textarea></div>
       </div>
 
       <div class="card">
-        <h3 class="card-title"><b>2</b>AI 컨셉 <s id="conceptCount"></s></h3>
+        <h3 class="card-title"><b>2</b>AI 컨셉<em class="step" id="step2">다음</em><s id="conceptCount"></s></h3>
         <div class="stale" id="staleWarn" hidden>상품이 바뀌었습니다. <b>컨셉 다시 생성</b> → <b>이미지 생성</b> → <b>카피 생성</b> 순서로 다시 만드세요.</div>
         <div class="concepts" id="conceptList"></div>
+        <div class="empty-note" id="conceptEmpty">상품 정보를 가져오면 이 상품에 맞는 컨셉이 자동으로 만들어집니다.</div>
         <div style="height:9px"></div>
         <button class="btn primary" id="btnMakeImg">선택 컨셉으로 이미지 생성</button>
         <div class="hint" style="margin:6px 0 10px">원본 상품을 넣고 장면을 다시 찍습니다. 제품의 형태·색·포장은 그대로 두되, <b>카메라 앵글은 컨셉에 맞게</b> 바뀝니다. 카피 자리도 비워둡니다. <b>1~2분</b> 걸리고, 비용 때문에 고른 컨셉 하나만 만듭니다.</div>
         <button class="btn sm" id="btnConcepts">컨셉 다시 생성</button>
-        <div style="height:6px"></div>
-        <button class="btn sm" id="btnVariants">비슷한 컨셉 만들기</button>
+
       </div>
 
       <div class="card">
-        <h3 class="card-title"><b>3</b>AI 카피</h3>
+        <h3 class="card-title"><b>3</b>AI 카피<em class="step" id="step3">그다음</em></h3>
         <label class="f">생성 방향</label>
         <div class="seg" id="toneSeg">
           <button data-tone="product" class="on">상품 중심</button>
@@ -368,9 +381,16 @@
       <div class="card">
         <h3 class="card-title"><b>6</b>텍스트 위치 <s id="szLabel2"></s></h3>
         <div class="seg seg3" id="posSeg"></div>
-        <div style="height:11px"></div>
-        <div class="slider"><div class="slider-top"><span>좌우 미세조정</span><b id="vBdx"></b></div><input type="range" id="bdx" min="-300" max="300"></div>
-        <div class="slider"><div class="slider-top"><span>상하 미세조정</span><b id="vBdy"></b></div><input type="range" id="bdy" min="-400" max="400"></div>
+        <div style="height:13px"></div>
+        <label class="f">글자 크기</label>
+        <div class="slider"><div class="slider-top"><span>메인 카피</span><b id="vTsHeadline"></b></div><input type="range" id="tsHeadline" min="50" max="180"></div>
+        <div class="slider"><div class="slider-top"><span>서브 카피</span><b id="vTsSubcopy"></b></div><input type="range" id="tsSubcopy" min="50" max="180"></div>
+        <div class="slider"><div class="slider-top"><span>가격</span><b id="vTsPrice"></b></div><input type="range" id="tsPrice" min="50" max="180"></div>
+        <div class="slider"><div class="slider-top"><span>버튼</span><b id="vTsCta"></b></div><input type="range" id="tsCta" min="50" max="180"></div>
+        <div style="height:8px"></div>
+        <label class="f">미세조정</label>
+        <div class="slider"><div class="slider-top"><span>좌우</span><b id="vBdx"></b></div><input type="range" id="bdx" min="-300" max="300"></div>
+        <div class="slider"><div class="slider-top"><span>상하</span><b id="vBdy"></b></div><input type="range" id="bdy" min="-400" max="400"></div>
         <div class="hint">사이즈마다 따로 저장됩니다. 어두운 영역도 위치에 맞춰 방향이 자동으로 바뀝니다.</div>
       </div>
 
@@ -378,7 +398,9 @@
         <h3 class="card-title"><b>7</b>배경 위치 <s id="szLabel"></s></h3>
         <div class="slider"><div class="slider-top"><span>가로 초점 X</span><b id="vBgX"></b></div><input type="range" id="bgX" min="0" max="100"></div>
         <div class="slider"><div class="slider-top"><span>세로 초점 Y</span><b id="vBgY"></b></div><input type="range" id="bgY" min="0" max="100"></div>
-        <div class="slider"><div class="slider-top"><span>확대</span><b id="vBgS"></b></div><input type="range" id="bgS" min="100" max="180"></div>
+        <div class="slider"><div class="slider-top"><span>확대</span><b id="vBgS"></b></div><input type="range" id="bgS" min="100" max="320"></div>
+        <button class="btn sm" id="btnBgReset">배경 위치 초기화</button>
+        <div class="hint" style="margin-top:7px">미리보기를 <b>직접 끌어서</b> 옮기고, <b>휠</b>로 확대·축소할 수 있습니다. 끄는 동안 카피 영역이 표시됩니다.</div>
       </div>
 
       <div class="card">
@@ -471,7 +493,6 @@ const LAYOUTS = {
     headline:{size:82, ls:-3.6, weight:800, lh:1.12, gap:24, maxLines:2, min:50},
     subcopy :{size:27, ls:-.4, weight:500, lh:1.5,  gap:40, maxLines:2, min:19},
     price   :{size:76, ls:-3, weight:800, origSize:29, gap:16},
-    benefit :{size:25, weight:700, padX:19, padY:11, gap:38, radius:7},
     cta     :{size:27, weight:700, padX:38, padY:20, radius:8}
   },
   story:{ key:'story', label:'1080×1920', w:1080, h:1920,
@@ -482,7 +503,6 @@ const LAYOUTS = {
     headline:{size:88, ls:-3.8, weight:800, lh:1.14, gap:26, maxLines:2, min:54},
     subcopy :{size:30, ls:-.4, weight:500, lh:1.5,  gap:44, maxLines:2, min:21},
     price   :{size:84, ls:-3.2, weight:800, origSize:32, gap:18},
-    benefit :{size:27, weight:700, padX:21, padY:12, gap:42, radius:8},
     cta     :{size:30, weight:700, padX:42, padY:22, radius:9}
   },
   wide:{ key:'wide', label:'1920×600', w:1920, h:600,
@@ -493,7 +513,6 @@ const LAYOUTS = {
     headline:{size:58, ls:-2.4, weight:800, lh:1.14, gap:15, maxLines:2, min:38},
     subcopy :{size:21, ls:-.3, weight:500, lh:1.45, gap:24, maxLines:1, min:16},
     price   :{size:52, ls:-2, weight:800, origSize:21, gap:11},
-    benefit :{size:19, weight:700, padX:15, padY:8, gap:24, radius:6},
     cta     :{size:21, weight:700, padX:30, padY:15, radius:7}
   }
 };
@@ -517,12 +536,6 @@ const BLOCK_PRESETS = {
 };
 
 /* ── 데모 데이터 ────────────────────────────────────────────────── */
-const DEMO_PRODUCT = {
-  brand:'데니스골프', productName:'26SS 냉감 라이트쿨 바람막이',
-  salePrice:23200, originalPrice:29000, benefit:'20% 할인',
-  features:'냉감 소재, 초경량, 자외선 차단, 데일리 필드룩',
-  image:'assets/banner-demo/product-golf.jpg'
-};
 /* 실제 서비스에서는 이 배열을 AI가 상품에 맞춰 만든다.
    여름/겨울/프리미엄 3개 고정이 아니라 상품마다 달라져야 한다. */
 const DEMO_CONCEPTS = [
@@ -567,14 +580,18 @@ const DEMO_COPY = {
 };
 
 /* ── 상태 ──────────────────────────────────────────────────────── */
+const EMPTY_PRODUCT = { brand:'', productName:'', salePrice:null, originalPrice:null, features:'', image:null };
+const EMPTY_COPY = { headline:'', subcopy:'', badge:'', cta:'' };
+/* 처음에는 아무것도 채우지 않는다. 데모 상품이 들어가 있으면 그걸 지우는
+   것부터 해야 하고, 남의 상품 카피 위에 내 상품을 얹는 사고가 난다. */
 const state = {
   size:'square',
-  product:{...DEMO_PRODUCT},
-  concepts:DEMO_CONCEPTS.map(c=>({...c})),
-  conceptId:DEMO_CONCEPTS[0].id,
+  product:{...EMPTY_PRODUCT},
+  concepts:[],
+  conceptId:null,
   tone:'product',
   copyIdx:0,
-  copy:{...DEMO_COPY.product[0]},
+  copy:{...EMPTY_COPY},
   guides:false,
   /* 로고는 폰트로 흉내낼 수 없다. SHINSEGAE·ELLACONIC 같은 워드마크는
      전부 이미지다. 그리고 색을 코드로 뒤집으면 안 된다 — 브랜드 가이드의
@@ -586,12 +603,15 @@ const state = {
   /* 사이즈별로 배경·오버레이 값을 따로 들고 있는다 */
   tweak:Object.fromEntries(SIZE_ORDER.map(k=>[k,{
     bg:{...LAYOUTS[k].bg}, ov:{...LAYOUTS[k].ov},
-    block:{preset: k==='story' ? 'left-bottom' : 'left-middle', dx:0, dy:0}
+    block:{preset: k==='story' ? 'left-bottom' : 'left-middle', dx:0, dy:0},
+    textScale:{headline:100, subcopy:100, price:100, cta:100}
   }]))
 };
 const L  = ()=>LAYOUTS[state.size];
 const TW = ()=>state.tweak[state.size];
-const BASE_CONCEPT = ()=>state.concepts.find(c=>c.id===state.conceptId) || state.concepts[0];
+const PLACEHOLDER_CONCEPT = { id:'__empty', name:'', description:'', colorPalette:['#1A1D22','#2A2F36','#3A404A'],
+  ink:'#FFFFFF', accent:'#C3FF4D', ctaBg:'#C3FF4D', ctaInk:'#12210A', image:null };
+const BASE_CONCEPT = ()=>state.concepts.find(c=>c.id===state.conceptId) || state.concepts[0] || PLACEHOLDER_CONCEPT;
 /* 컨셉이 제안한 색 위에 사용자가 고른 색을 덮는다. 컨셉을 바꾸면
    덮어쓴 색은 지워지고 다시 컨셉 기본색으로 돌아간다. */
 const CONCEPT = ()=>Object.assign({}, BASE_CONCEPT(), state.colorOverride);
@@ -660,32 +680,39 @@ function computeLayout(){
   const bp=BLOCK_PRESETS[t.block.preset] || BLOCK_PRESETS['left-middle'];
   const bw = bp.ax==='center' ? l.block.fullW : l.block.sideW;
   const parts=[], warn=[];
+  // 글자 크기를 요소별로 키우거나 줄인다. 배율만 바꾸고 줄바꿈·겹침 검사는
+  // 그대로 돌아가므로, 키워서 넘치면 폰트가 다시 줄고 경고가 뜬다.
+  const ts = t.textScale || {};
+  const sz = (cfg, key) => {
+    const k = (ts[key] == null ? 100 : ts[key]) / 100;
+    return { ...cfg, size: Math.max(8, Math.round(cfg.size * k)),
+             min: Math.max(8, Math.round((cfg.min || cfg.size) * k)),
+             origSize: cfg.origSize ? Math.round(cfg.origSize * k) : undefined };
+  };
 
   const push=(kind,o)=>parts.push(Object.assign({kind},o));
 
   if(cp.headline){
-    const f=fitText(cp.headline,l.headline,bw);
-    push('headline',{...f,cfg:l.headline,gap:l.headline.gap});
+    const cfg=sz(l.headline,'headline');
+    const f=fitText(cp.headline,cfg,bw);
+    push('headline',{...f,cfg,gap:l.headline.gap});
     if(f.shrunk||f.clipped) warn.push(['메인 카피',f]);
   }
   if(cp.subcopy){
-    const f=fitText(cp.subcopy,l.subcopy,bw);
-    push('subcopy',{...f,cfg:l.subcopy,gap:l.subcopy.gap});
+    const cfg=sz(l.subcopy,'subcopy');
+    const f=fitText(cp.subcopy,cfg,bw);
+    push('subcopy',{...f,cfg,gap:l.subcopy.gap});
     if(f.shrunk||f.clipped) warn.push(['서브 카피',f]);
   }
   const sale=won(pr.salePrice), orig=won(pr.originalPrice);
   if(sale){
-    const p=l.price, sw=textW(sale,p,p.size);
+    const p=sz(l.price,'price'), sw=textW(sale,p,p.size);
     const op={weight:600,ls:-.5}, ow=orig?textW(orig,op,p.origSize):0;
     push('price',{sale,orig,saleW:sw,origW:ow,cfg:p,height:p.size*1.1,gap:p.gap,
                   width: sw + (orig ? 14+ow : 0)});
   }
-  if(pr.benefit){
-    const b=l.benefit, w=textW(pr.benefit,b,b.size)+b.padX*2, h=b.size*1.15+b.padY*2;
-    push('benefit',{text:pr.benefit,cfg:b,width:w,height:h,gap:b.gap});
-  }
   if(cp.cta){
-    const b=l.cta, w=textW(cp.cta+'  ›',b,b.size)+b.padX*2, h=b.size*1.2+b.padY*2;
+    const b=sz(l.cta,'cta'), w=textW(cp.cta+'  ›',b,b.size)+b.padX*2, h=b.size*1.2+b.padY*2;
     push('cta',{text:cp.cta,cfg:b,width:w,height:h,gap:0});
   }
 
@@ -867,10 +894,6 @@ function render(){
            +  `<span style="font:${cf.weight} ${cf.size}px ${FONT};letter-spacing:${cf.ls}px;color:${c.ink};line-height:1.1;">${esc(p.sale)}</span>`
            +  (p.orig?`<span style="font:600 ${cf.origSize}px ${FONT};letter-spacing:-.5px;color:${c.ink};opacity:.62;text-decoration:line-through;line-height:1.1;">${esc(p.orig)}</span>`:'')
            +  `</div>`;
-    } else if(p.kind==='benefit'){
-      const cf=p.cfg;
-      html += `<div class="bn-cta" style="left:${p.boxX}px;top:${p.y}px;width:${p.width}px;height:${p.height}px;`
-           +  `background:${c.accent};border-radius:${cf.radius}px;font:${cf.weight} ${cf.size}px ${FONT};color:${c.ctaInk};letter-spacing:-.3px;">${esc(p.text)}</div>`;
     } else if(p.kind==='cta'){
       const cf=p.cfg;
       html += `<div class="bn-cta" style="left:${p.boxX}px;top:${p.y}px;width:${p.width}px;height:${p.height}px;`
@@ -897,11 +920,16 @@ function render(){
     for(const p of parts){
       html += `<u style="left:${p.boxX}px;top:${p.y}px;width:${(p.width||bw)}px;height:${p.height}px"></u>`;
     }
+    if(parts.length){   // 카피 묶음 전체 — 배경을 옮길 때 피해야 할 영역
+      const by=parts[0].y, bh=bottomOf(parts)-by;
+      html += `<u class="block-area" style="left:${gx-14}px;top:${by-14}px;width:${bw+28}px;height:${bh+28}px"></u>`;
+    }
     html += `</div>`;
   }
   b.innerHTML = html;
 
   fitStage(l);
+  paintSteps();
   paintWarns(warn, parts);
   $('#jsonOut').textContent = JSON.stringify({
     size:l.label, width:l.w, height:l.h,
@@ -1003,9 +1031,9 @@ async function renderCanvas(sizeKey){
         x.fillRect(ox,ly,p.origW,Math.max(1,Math.round(cf.origSize/16)));
         x.globalAlpha=1;
       }
-    } else if(p.kind==='benefit' || p.kind==='cta'){
-      const cf=p.cfg, isC=p.kind==='cta';
-      x.fillStyle = isC ? c.ctaBg : c.accent;
+    } else if(p.kind==='cta'){
+      const cf=p.cfg, isC=true;
+      x.fillStyle = c.ctaBg;
       roundRect(x,p.boxX,p.y,p.width,p.height,cf.radius); x.fill();
       x.fillStyle = isC ? c.ctaInk : c.ctaInk;
       x.font=`${cf.weight} ${cf.size}px ${FONT}`;
@@ -1129,7 +1157,8 @@ function buildSizeTabs(){
   $('#szLabel').textContent = LAYOUTS[state.size].label;
 }
 function buildConcepts(){
-  $('#conceptCount').textContent = state.concepts.length+'개';
+  $('#conceptEmpty').hidden = state.concepts.length > 0;
+  $('#conceptCount').textContent = state.concepts.length ? state.concepts.length+'개' : '';
   $('#conceptList').innerHTML = state.concepts.map(c=>{
     const thumb = c.image ? `background-image:url('${c.image}')`
                           : `background:linear-gradient(135deg,${(c.colorPalette||['#333','#666']).join(',')})`;
@@ -1149,7 +1178,7 @@ function syncProductUI(){
   const p=state.product;
   $('#pBrand').value=p.brand; $('#pName').value=p.productName;
   $('#pSale').value=p.salePrice??''; $('#pOrig').value=p.originalPrice??'';
-  $('#pBenefit').value=p.benefit||''; $('#pFeatures').value=p.features||'';
+  $('#pFeatures').value=p.features||'';
 }
 function syncCopyUI(){
   const c=state.copy;
@@ -1182,6 +1211,11 @@ function buildPosSeg(){
 }
 function syncTweakUI(){
   const t=TW();
+  for(const k of ['headline','subcopy','price','cta']){
+    const id='ts'+k[0].toUpperCase()+k.slice(1);
+    const v=(t.textScale&&t.textScale[k])!=null ? t.textScale[k] : 100;
+    $('#'+id).value=v; $('#v'+id[0].toUpperCase()+id.slice(1)).textContent=v+'%';
+  }
   $('#bdx').value=t.block.dx; $('#vBdx').textContent=(t.block.dx>0?'+':'')+t.block.dx+'px';
   $('#bdy').value=t.block.dy; $('#vBdy').textContent=(t.block.dy>0?'+':'')+t.block.dy+'px';
   $('#bgX').value=t.bg.x; $('#vBgX').textContent=t.bg.x+'%';
@@ -1194,7 +1228,7 @@ function syncTweakUI(){
 }
 
 // 상품 입력
-[['pBrand','brand'],['pName','productName'],['pBenefit','benefit'],['pFeatures','features']]
+[['pBrand','brand'],['pName','productName'],['pFeatures','features']]
   .forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{ state.product[key]=e.target.value; render(); }));
 [['pSale','salePrice'],['pOrig','originalPrice']]
   .forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{
@@ -1207,6 +1241,8 @@ function syncTweakUI(){
 
 // 슬라이더
 const bindRange=(id,apply)=>$('#'+id).addEventListener('input',e=>{ apply(Number(e.target.value)); syncTweakUI(); render(); });
+for(const k of ['headline','subcopy','price','cta'])
+  bindRange('ts'+k[0].toUpperCase()+k.slice(1), v=>{ (TW().textScale ||= {})[k]=v; });
 bindRange('bdx',v=>TW().block.dx=v); bindRange('bdy',v=>TW().block.dy=v);
 bindRange('bgX',v=>TW().bg.x=v);   bindRange('bgY',v=>TW().bg.y=v);   bindRange('bgS',v=>TW().bg.scale=v);
 bindRange('ovW',v=>TW().ov.w=v);   bindRange('ovH',v=>TW().ov.h=v);
@@ -1251,7 +1287,7 @@ $('#btnCopy').onclick=async()=>{
    AI가 그 상품에 맞는 컨셉을 새로 만든다. 데님 스커트면 코스탈 모닝·
    프렌치 카페가, 삼계탕이면 블랙 다이닝·원목 식탁이 나와야 한다. */
 async function askConcepts(baseConcept){
-  const btn = baseConcept ? $('#btnVariants') : $('#btnConcepts');
+  const btn = $('#btnConcepts');
   const label = btn.textContent;
   btn.disabled = true; btn.textContent = 'AI가 컨셉을 만드는 중…';
   try{
@@ -1278,6 +1314,22 @@ async function askConcepts(baseConcept){
   }finally{ btn.disabled=false; btn.textContent=label; }
 }
 function setMode(t){ $('#modeLabel').textContent = t; }
+
+/* 어디까지 했고 다음에 뭘 눌러야 하는지 좌측에 표시한다.
+   상품 정보 → 컨셉 → 카피 순서다. */
+function paintSteps(){
+  const hasProduct = !!state.product.productName;
+  const hasConcept = state.concepts.length > 0;
+  const hasCopy    = !!state.copy.headline;
+  const set=(id, state_)=>{
+    const el=$('#'+id); if(!el) return;
+    el.className = 'step' + (state_==='done'?' done':state_==='wait'?' wait':'');
+    el.textContent = state_==='done' ? '완료' : state_==='now' ? '지금 여기' : '대기';
+  };
+  set('step1', hasProduct ? 'done' : 'now');
+  set('step2', !hasProduct ? 'wait' : hasConcept ? 'done' : 'now');
+  set('step3', !hasConcept ? 'wait' : hasCopy ? 'done' : 'now');
+}
 
 /* 상품이 바뀌었는데 컨셉·카피가 이전 것이면 화면에서 눈에 띄게 알린다.
    골프 컨셉 위에 핫도그 카피가 얹히는 사고가 여기서 났다. */
@@ -1328,7 +1380,6 @@ function markConcept(id, st){
 }
 $('#btnMakeImg').onclick = makeConceptImage;
 $('#btnConcepts').onclick=()=>askConcepts(null);
-$('#btnVariants').onclick=()=>askConcepts(CONCEPT());
 /* ── 링크에서 상품 가져오기 ──────────────────────────────────
    브라우저에서 상품 페이지를 직접 부르면 CORS에 막히므로 서버를 거친다.
    딜 페이지는 상품이 100개 넘게 들어있어서, 하나로 좁히지 않고 목록을
@@ -1367,7 +1418,6 @@ function applyItem(it){
     brand: it.brand || '',
     productName: it.productName || '',
     salePrice: it.salePrice, originalPrice: it.originalPrice,
-    benefit: it.discountRate ? it.discountRate + '% 할인' : '',
     features: cleanFeatures(it.description, it.productName),
     image: it.mainImage || null,
   };
@@ -1399,7 +1449,11 @@ function buildPicker(items){
 $('#btnFetch').onclick=async()=>{
   const url=$('#pUrl').value.trim();
   const btn=$('#btnFetch'), hint=$('#fetchHint'), label=btn.textContent;
-  if(!url){ state.product={...DEMO_PRODUCT}; syncProductUI(); render(); return; }
+  if(!url){
+    hint.className='hint over';
+    hint.textContent='상품 페이지 주소를 넣어주세요. 없으면 아래에 직접 입력해도 됩니다.';
+    return;
+  }
   btn.disabled=true; btn.textContent='가져오는 중…';
   try{
     const r=await fetch('/api/productScrape?url='+encodeURIComponent(url));
@@ -1414,6 +1468,8 @@ $('#btnFetch').onclick=async()=>{
     buildPicker(_picked);
     applyItem(_picked[0]);
     setMode('실제 상품 · ' + new URL(d.sourceUrl).hostname);
+    // 상품을 가져왔으면 컨셉까지 바로 만든다. 버튼을 한 번 더 누르게 할 이유가 없다.
+    askConcepts(null);
   }catch(e){
     hint.className='hint over';
     hint.innerHTML = esc(e.message) + '<br>상품명·가격·이미지를 아래에서 직접 입력해도 됩니다.';
@@ -1506,6 +1562,68 @@ COLOR_FIELDS.forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{
   state.colorOverride[key]=e.target.value; syncColors(); render(); }));
 $('#btnColorReset').onclick=()=>{ state.colorOverride={}; syncColors(); render(); };
 
+/* ── 배경 직접 조작 ──────────────────────────────────────────
+   AI가 카피 자리를 항상 비워주지는 않는다. 슬라이더로 맞추는 건 번거로우니
+   미리보기를 직접 끌어서 옮기고 휠로 확대한다. 끄는 동안에는 카피가 놓일
+   영역을 표시해 무엇을 피해야 하는지 보이게 한다. */
+(function(){
+  const stage=$('#banner');
+  let drag=null, guideWasOn=false;
+
+  function slack(){
+    const l=L(), t=TW(), c=CONCEPT(), im=c.image && _imgCache[c.image];
+    if(!im) return null;
+    const b=bgBox(l,t,im);
+    return { l, t, b, sx:(l.w-b.dw), sy:(l.h-b.dh) };   // 음수면 그만큼 움직일 수 있다
+  }
+  function previewScale(){
+    const m=(stage.style.transform||'').match(/scale\(([\d.]+)\)/);
+    return m ? Number(m[1]) : 1;
+  }
+
+  stage.addEventListener('pointerdown', e=>{
+    const s=slack(); if(!s) return;
+    e.preventDefault();
+    stage.setPointerCapture(e.pointerId);
+    guideWasOn = state.guides;
+    state.guides = true;                 // 피해야 할 영역을 보여준다
+    drag = { px:e.clientX, py:e.clientY, x0:TW().bg.x, y0:TW().bg.y, s };
+    stage.style.cursor='grabbing';
+    render();
+  });
+  stage.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    const k=previewScale() || 1;
+    const dx=(e.clientX-drag.px)/k, dy=(e.clientY-drag.py)/k;
+    const {sx,sy,b}=drag.s;
+    // dx_px = (l.w - dw) * (x/100) 이므로 역산한다. 여유가 없으면 그 축은 고정.
+    if(sx < -0.5) TW().bg.x = Math.max(0, Math.min(100, drag.x0 + dx/sx*100));
+    if(sy < -0.5) TW().bg.y = Math.max(0, Math.min(100, drag.y0 + dy/sy*100));
+    syncTweakUI(); render();
+  });
+  const endDrag = e=>{
+    if(!drag) return;
+    drag=null; stage.style.cursor='grab';
+    state.guides = guideWasOn; $('#chkGuide').checked = guideWasOn;
+    render();
+  };
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  stage.addEventListener('wheel', e=>{
+    if(!CONCEPT().image) return;
+    e.preventDefault();
+    const t=TW();
+    t.bg.scale = Math.max(100, Math.min(320, t.bg.scale + (e.deltaY < 0 ? 4 : -4)));
+    syncTweakUI(); render();
+  }, {passive:false});
+
+  $('#btnBgReset').onclick=()=>{
+    TW().bg = {...LAYOUTS[state.size].bg};
+    syncTweakUI(); render();
+  };
+})();
+
 /* 폰트가 로드된 뒤에 재계산해야 줄바꿈이 정확하다 */
 /* 이 파일이 서버에 언제 올라간 것인지 그대로 보여준다. 손으로 버전을 적으면
    바꾸는 걸 잊는다. document.lastModified는 응답의 Last-Modified라 배포하면
@@ -1517,6 +1635,15 @@ function stampBuild(){
   $('#buildStamp').textContent = `빌드 ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/* 링크가 길어 지우기 번거롭다 — 한 번에 비우는 버튼 */
+(function(){
+  const wrap=$('#pUrl').parentElement, input=$('#pUrl');
+  const sync=()=>wrap.classList.toggle('has', !!input.value);
+  input.addEventListener('input', sync);
+  $('#pUrlClear').onclick=()=>{ input.value=''; sync(); input.focus(); };
+  sync();
+})();
+
 function boot(){
   stampBuild();
   buildSizeTabs(); buildPosSeg(); buildOvDir(); buildLogoPos(); buildConcepts();
@@ -1524,6 +1651,7 @@ function boot(){
   $('#lgS').value=state.logo.scale; $('#vLgS').textContent=state.logo.scale+'%';
   render();
   if(state.logo.light) loadImg(state.logo.light).then(()=>{ paintLogoSlots(); render(); });
+  paintSteps();
 }
 boot();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
