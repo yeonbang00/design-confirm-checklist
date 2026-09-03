@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 배너 생성</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/adcheck-footer.css?v=4">
+<style>
+  :root{
+    --bg:#0B0C0E; --surface:#14171C; --surface-2:#0F1216; --surface-3:#15181D;
+    --line:rgba(255,255,255,.11); --line-soft:rgba(255,255,255,.07);
+    --ink:#EDEEF0; --ink-2:#A2A7B0; --ink-3:#7E838C; --ink-4:#6B707A;
+    --accent:#C3FF4D; --accent-strong:#B8E600; --accent-ink:#0B0C0E;
+    --warn:#FFB454; --danger:#FF6B6B;
+    --font-display:'Sora','Pretendard',-apple-system,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg);}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+       color:var(--ink); -webkit-font-smoothing:antialiased; letter-spacing:-.015em;}
+  button,input,select,textarea{font-family:inherit; color:inherit;}
+  a{color:inherit;}
+
+  /* ── GNB (다른 페이지와 동일) ─────────────────────────────── */
+  .gnb-bar{position:fixed; top:0; left:0; right:0; z-index:200; padding:14px 40px 0; background:linear-gradient(180deg,#0B0C0E 74%,rgba(11,12,14,.86)); backdrop-filter:blur(10px);}
+  .gnb-bar-inner{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; max-width:1520px; margin:0 auto; gap:20px;}
+  .gnb-logo{display:flex; align-items:center; justify-self:start; text-decoration:none;}
+  .gnb-logo-icon{height:40px; width:auto; display:block;}
+  .gnb-logo-text{display:none;}
+  .gnb-primary{display:flex; align-items:center; gap:2px; justify-self:center; padding:6px; border-radius:999px; background:rgba(18,21,25,.9); backdrop-filter:blur(18px) saturate(1.2); border:1px solid rgba(255,255,255,.1); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px -26px rgba(0,0,0,.95);}
+  .gnb-secondary{display:flex; align-items:center; gap:2px; justify-self:end;}
+  .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; letter-spacing:-.015em; white-space:nowrap; border:none; background:none; cursor:pointer; transition:background .25s ease,color .25s ease;}
+  .gnb-primary .gnb-link:hover{color:var(--ink);}
+  .gnb-primary .gnb-link.active{background:#EDEEF0; color:#0B0C0E; font-weight:700;}
+  .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none; white-space:nowrap; transition:color .25s ease;}
+  .gnb-secondary .gnb-link:hover{color:var(--ink);}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{display:flex; align-items:center; gap:5px; font-family:inherit;}
+  .gnb-dropdown-toggle::after{content:'▼'; font-size:8px; opacity:.55;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding-top:12px; display:none; z-index:40;}
+  .gnb-dropdown-menu-inner{padding:8px; border-radius:16px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95); min-width:158px; display:flex; flex-direction:column; gap:2px;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu, .gnb-dropdown-menu.open{display:block;}
+  .gnb-dropdown-item{display:block; width:100%; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; text-decoration:none; transition:background .2s ease,color .2s ease;}
+  .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
+
+  .page{max-width:1520px; margin:0 auto; padding:104px 40px 0;}
+
+  /* ── 헤더 ─────────────────────────────────────────────── */
+  .head{display:flex; align-items:flex-end; justify-content:space-between; gap:28px; padding-bottom:22px; border-bottom:1px solid var(--line-soft); margin-bottom:24px;}
+  .head h1{font-family:var(--font-display); font-size:34px; font-weight:800; letter-spacing:-.045em; margin:0 0 8px; line-height:1;}
+  .head p{margin:0; font-size:13.5px; color:var(--ink-3); line-height:1.65;}
+  .mode-chip{display:inline-flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); background:rgba(195,255,77,.1); border:1px solid rgba(195,255,77,.28); padding:6px 11px; border-radius:999px; margin-bottom:12px;}
+  .mode-chip i{width:6px; height:6px; border-radius:50%; background:var(--accent); font-style:normal;}
+
+  /* ── 2단 레이아웃 ──────────────────────────────────────── */
+  .work{display:grid; grid-template-columns:340px minmax(0,1fr); gap:26px; align-items:start;}
+  .panel{position:sticky; top:96px; max-height:calc(100vh - 124px); overflow-y:auto; overscroll-behavior:contain;
+         padding-right:6px; display:flex; flex-direction:column; gap:16px;}
+  .panel::-webkit-scrollbar{width:7px;}
+  .panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.11); border-radius:99px;}
+
+  .card{background:var(--surface); border:1px solid var(--card-border,var(--line)); border-radius:15px; padding:16px;}
+  .card-title{display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-size:12.5px; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:0 0 13px;}
+  .card-title b{display:grid; place-items:center; width:19px; height:19px; border-radius:6px; background:rgba(195,255,77,.13); color:var(--accent); font-family:var(--font-mono); font-size:10.5px; font-weight:700;}
+  .card-title s{margin-left:auto; text-decoration:none; font-size:10.5px; font-weight:500; color:var(--ink-4); letter-spacing:0;}
+
+  label.f{display:block; font-size:11px; font-weight:600; color:var(--ink-3); margin:0 0 5px; letter-spacing:-.005em;}
+  .in{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:9px 11px; font-size:12.5px; color:var(--ink); outline:none; transition:border-color .2s ease;}
+  .in:focus{border-color:rgba(195,255,77,.5);}
+  textarea.in{resize:vertical; min-height:56px; line-height:1.5;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  .fg{margin-bottom:11px;}
+  .fg:last-child{margin-bottom:0;}
+  .hint{font-size:10.5px; color:var(--ink-4); margin-top:4px; line-height:1.5;}
+  .hint.over{color:var(--warn); font-weight:600;}
+
+  .btn{display:flex; align-items:center; justify-content:center; gap:7px; width:100%; padding:11px 14px; border-radius:10px; border:1px solid var(--line); background:var(--surface-3); color:var(--ink); font-size:12.5px; font-weight:600; cursor:pointer; transition:background .2s ease,border-color .2s ease,transform .1s ease;}
+  .btn:hover{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2);}
+  .btn:active{transform:translateY(1px);}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700;}
+  .btn.primary:hover{background:var(--accent-strong); border-color:var(--accent-strong);}
+  .btn[disabled]{opacity:.45; cursor:not-allowed;}
+  .btn.sm{padding:8px 11px; font-size:11.5px;}
+
+  .seg{display:grid; grid-template-columns:1fr 1fr; gap:6px;}
+  .seg.seg3{grid-template-columns:1fr 1fr 1fr;}
+  .seg button{padding:8px 6px; border-radius:8px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-2); font-size:11.5px; font-weight:600; cursor:pointer; transition:all .18s ease;}
+  .seg button:hover{color:var(--ink); border-color:rgba(255,255,255,.2);}
+  .seg button.on{background:rgba(195,255,77,.13); border-color:rgba(195,255,77,.45); color:var(--accent);}
+
+  /* 컨셉 카드 */
+  .concepts{display:flex; flex-direction:column; gap:7px;}
+  .concept{display:flex; gap:10px; align-items:center; padding:8px; border-radius:11px; border:1px solid var(--line); background:var(--surface-2); cursor:pointer; text-align:left; transition:all .18s ease;}
+  .concept:hover{border-color:rgba(255,255,255,.22);}
+  .concept.on{border-color:rgba(195,255,77,.5); background:rgba(195,255,77,.07);}
+  .concept-thumb{width:44px; height:44px; border-radius:8px; flex-shrink:0; background-size:cover; background-position:center; border:1px solid var(--line-soft); position:relative; overflow:hidden;}
+  .concept-thumb.pending::after{content:''; position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.16) 50%,transparent 70%); animation:sweep 1.3s linear infinite;}
+  @keyframes sweep{from{transform:translateX(-100%);} to{transform:translateX(100%);}}
+  .concept-meta{min-width:0; flex:1;}
+  .concept-name{font-size:12px; font-weight:700; color:var(--ink); margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .concept-desc{font-size:10.5px; color:var(--ink-4); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .swatches{display:flex; gap:3px; margin-top:4px;}
+  .swatches i{width:10px; height:10px; border-radius:3px; border:1px solid rgba(255,255,255,.16);}
+
+  /* 슬라이더 */
+  .slider{margin-bottom:9px;}
+  .slider-top{display:flex; justify-content:space-between; font-size:10.5px; color:var(--ink-3); margin-bottom:3px;}
+  .slider-top b{font-family:var(--font-mono); font-size:10px; font-weight:500; color:var(--ink-2);}
+  input[type=range]{width:100%; height:3px; -webkit-appearance:none; appearance:none; background:rgba(255,255,255,.14); border-radius:99px; outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; border:none;}
+</style>
+<style>
+  /* ── 미리보기 영역 ────────────────────────────────────── */
+  .stage-wrap{background:var(--surface-2); border:1px solid var(--line); border-radius:18px; overflow:hidden;}
+  .stage-bar{display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:1px solid var(--line-soft); background:var(--surface);}
+  .sizes{display:flex; gap:5px;}
+  .sizes button{padding:7px 13px; border-radius:8px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-3); font-family:var(--font-mono); font-size:11px; font-weight:500; cursor:pointer; transition:all .18s ease;}
+  .sizes button:hover{color:var(--ink);}
+  .sizes button.on{background:var(--ink); border-color:var(--ink); color:#0B0C0E; font-weight:700;}
+  .stage-tools{margin-left:auto; display:flex; align-items:center; gap:12px;}
+  .chk{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ink-3); cursor:pointer; user-select:none;}
+  .chk input{accent-color:var(--accent); width:13px; height:13px; cursor:pointer;}
+  .zoom{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-4);}
+
+  .stage{display:grid; place-items:center; padding:34px; min-height:520px;
+         background:
+           linear-gradient(45deg,rgba(255,255,255,.018) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.018) 75%) 0 0/24px 24px,
+           linear-gradient(45deg,rgba(255,255,255,.018) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.018) 75%) 12px 12px/24px 24px;}
+  .banner-fit{position:relative;}
+  /* 배너는 항상 원본 px로 그리고, 화면에서만 transform으로 축소한다.
+     이래야 미리보기와 내보내기가 같은 좌표를 쓴다. */
+  .banner{position:relative; overflow:hidden; transform-origin:top left; background:#111; box-shadow:0 28px 70px -30px rgba(0,0,0,.9);}
+  .banner *{margin:0;}
+  .bn-bg{position:absolute; inset:0; background-size:cover; background-repeat:no-repeat;}
+  .bn-ov{position:absolute;}
+  .bn-el{position:absolute; white-space:pre; }
+  .bn-line{display:block; white-space:pre;}
+  .bn-cta{position:absolute; display:flex; align-items:center; justify-content:center;}
+  .guides{position:absolute; inset:0; pointer-events:none; display:none;}
+  .guides.on{display:block;}
+  .guides i{position:absolute; background:rgba(195,255,77,.55); font-style:normal;}
+  .guides u{position:absolute; border:1px dashed rgba(195,255,77,.5); text-decoration:none;}
+
+  /* 경고 */
+  .warns{display:flex; flex-direction:column; gap:6px; padding:0 14px 12px;}
+  .warn{display:flex; align-items:flex-start; gap:8px; font-size:11.5px; line-height:1.55; padding:9px 11px; border-radius:9px;
+        background:rgba(255,180,84,.09); border:1px solid rgba(255,180,84,.28); color:#FFD5A0;}
+  .warn b{color:var(--warn); flex-shrink:0; font-weight:700;}
+  .warn.ok{background:rgba(195,255,77,.07); border-color:rgba(195,255,77,.25); color:#D9F5A8;}
+  .warn.ok b{color:var(--accent);}
+
+  /* 역할 3분할 */
+  .roles{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px;}
+  .role{background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:14px 15px;}
+  .role h4{font-family:var(--font-display); font-size:12px; font-weight:700; margin:0 0 5px; color:var(--ink);}
+  .role h4 em{font-style:normal; color:var(--accent);}
+  .role p{margin:0; font-size:11px; color:var(--ink-4); line-height:1.6;}
+
+  details.json{margin-top:12px; background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  details.json summary{padding:11px 15px; font-size:11.5px; font-weight:600; color:var(--ink-2); cursor:pointer; list-style:none;}
+  details.json summary::-webkit-details-marker{display:none;}
+  details.json summary::before{content:'▸ '; color:var(--ink-4);}
+  details.json[open] summary::before{content:'▾ ';}
+  details.json pre{margin:0; padding:0 15px 15px; font-family:var(--font-mono); font-size:10.5px; line-height:1.6; color:var(--ink-3); overflow-x:auto;}
+
+  .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',sans-serif; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+
+  @media (max-width:1180px){
+    .work{grid-template-columns:1fr;}
+    .panel{position:static; max-height:none; overflow:visible;}
+    .roles{grid-template-columns:1fr;}
+  }
+  @media (max-width:760px){
+    .page{padding:92px 18px 0;}
+    .gnb-bar{padding:12px 18px 0;}
+    .gnb-bar-inner{grid-template-columns:auto 1fr; gap:12px;}
+    .gnb-primary{display:none;}
+    .stage{padding:16px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb gnb-primary">
+      <a href="index.html" class="gnb-link">배너 분석</a>
+      <a href="banner-maker.html" class="gnb-link active">배너 생성</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div></div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">폰트</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="font-pairing.html" class="gnb-dropdown-item">폰트 페어링</a>
+          <a href="font-game.html" class="gnb-dropdown-item">폰트 오락실</a>
+        </div></div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+    </nav>
+    <nav class="gnb gnb-secondary">
+      <a href="roadmap.html" class="gnb-link">로드맵</a>
+    </nav>
+  </div>
+</div>
+
+<div class="page">
+  <div class="head">
+    <div>
+      <span class="mode-chip"><i></i><span id="modeLabel">DEMO 모드 · 실제 AI 미호출</span></span>
+      <h1>배너 생성</h1>
+      <p>AI는 <b>배경과 카피</b>만 만듭니다. 가격·할인·좌표·폰트 크기는 전부 코드가 정합니다.<br>
+         텍스트는 이미지에 굽지 않고 실제 텍스트 레이어로 올라가므로 한 글자도 안 깨집니다.</p>
+    </div>
+  </div>
+
+  <div class="work">
+    <!-- ══ 좌측 컨트롤 ══ -->
+    <div class="panel">
+
+      <div class="card">
+        <h3 class="card-title"><b>1</b>상품 정보</h3>
+        <div class="fg">
+          <label class="f">상품 링크</label>
+          <input class="in" id="pUrl" placeholder="https://..." value="https://www.shinsegaetvshopping.com/deal/detail/202410100502">
+          <div class="hint">데모 모드에서는 미리 저장한 데이터를 씁니다.</div>
+        </div>
+        <button class="btn sm" id="btnFetch">상품 정보 가져오기</button>
+        <div style="height:11px"></div>
+        <div class="fg"><label class="f">브랜드</label><input class="in" id="pBrand"></div>
+        <div class="fg"><label class="f">상품명</label><input class="in" id="pName"></div>
+        <div class="row2 fg">
+          <div><label class="f">판매가</label><input class="in" id="pSale" inputmode="numeric"></div>
+          <div><label class="f">정상가</label><input class="in" id="pOrig" inputmode="numeric"></div>
+        </div>
+        <div class="fg"><label class="f">혜택</label><input class="in" id="pBenefit" placeholder="비우면 표시 안 함"></div>
+        <div class="fg"><label class="f">상품 특징</label><textarea class="in" id="pFeatures"></textarea></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>2</b>AI 컨셉 <s id="conceptCount"></s></h3>
+        <div class="concepts" id="conceptList"></div>
+        <div style="height:9px"></div>
+        <button class="btn sm" id="btnConcepts">컨셉 다시 생성</button>
+        <div style="height:6px"></div>
+        <button class="btn sm" id="btnVariants">비슷한 컨셉 만들기</button>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>3</b>AI 카피</h3>
+        <label class="f">생성 방향</label>
+        <div class="seg" id="toneSeg">
+          <button data-tone="product" class="on">상품 중심</button>
+          <button data-tone="emotion">감성 중심</button>
+          <button data-tone="benefit">혜택 중심</button>
+          <button data-tone="price">가격 중심</button>
+        </div>
+        <div style="height:11px"></div>
+        <div class="fg"><label class="f">아이브로우</label><input class="in" id="cEyebrow"><div class="hint" id="hEyebrow"></div></div>
+        <div class="fg"><label class="f">메인 카피</label><textarea class="in" id="cHeadline" rows="2"></textarea><div class="hint" id="hHeadline"></div></div>
+        <div class="fg"><label class="f">서브 카피</label><textarea class="in" id="cSubcopy" rows="2"></textarea><div class="hint" id="hSubcopy"></div></div>
+        <div class="fg"><label class="f">CTA</label><input class="in" id="cCta"><div class="hint" id="hCta"></div></div>
+        <button class="btn primary" id="btnCopy">AI 카피 생성</button>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>4</b>텍스트 위치 <s id="szLabel2"></s></h3>
+        <div class="seg seg3" id="posSeg"></div>
+        <div style="height:11px"></div>
+        <div class="slider"><div class="slider-top"><span>좌우 미세조정</span><b id="vBdx"></b></div><input type="range" id="bdx" min="-300" max="300"></div>
+        <div class="slider"><div class="slider-top"><span>상하 미세조정</span><b id="vBdy"></b></div><input type="range" id="bdy" min="-400" max="400"></div>
+        <div class="hint">사이즈마다 따로 저장됩니다. 어두운 영역도 위치에 맞춰 방향이 자동으로 바뀝니다.</div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>5</b>배경 위치 <s id="szLabel"></s></h3>
+        <div class="slider"><div class="slider-top"><span>가로 초점 X</span><b id="vBgX"></b></div><input type="range" id="bgX" min="0" max="100"></div>
+        <div class="slider"><div class="slider-top"><span>세로 초점 Y</span><b id="vBgY"></b></div><input type="range" id="bgY" min="0" max="100"></div>
+        <div class="slider"><div class="slider-top"><span>확대</span><b id="vBgS"></b></div><input type="range" id="bgS" min="100" max="180"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>6</b>어두운 영역</h3>
+        <div class="slider"><div class="slider-top"><span>너비</span><b id="vOvW"></b></div><input type="range" id="ovW" min="10" max="100"></div>
+        <div class="slider"><div class="slider-top"><span>높이</span><b id="vOvH"></b></div><input type="range" id="ovH" min="10" max="100"></div>
+        <div class="slider"><div class="slider-top"><span>어두움</span><b id="vOvO"></b></div><input type="range" id="ovO" min="0" max="95"></div>
+        <div class="slider"><div class="slider-top"><span>페이드 폭</span><b id="vOvF"></b></div><input type="range" id="ovF" min="0" max="60"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><b>7</b>내보내기</h3>
+        <button class="btn primary" id="btnPngOne">현재 사이즈 PNG</button>
+        <div style="height:6px"></div>
+        <button class="btn sm" id="btnPngAll">3개 사이즈 전부</button>
+        <div class="hint" style="margin-top:8px">미리보기와 같은 좌표로 원본 해상도에 다시 그립니다. 두 번 뽑아도 결과가 같습니다.</div>
+      </div>
+    </div>
+
+    <!-- ══ 우측 미리보기 ══ -->
+    <div>
+      <div class="stage-wrap">
+        <div class="stage-bar">
+          <div class="sizes" id="sizeTabs"></div>
+          <div class="stage-tools">
+            <label class="chk"><input type="checkbox" id="chkGuide">1px 가이드</label>
+            <span class="zoom" id="zoomLabel"></span>
+          </div>
+        </div>
+        <div class="stage"><div class="banner-fit" id="fit"><div class="banner" id="banner"></div></div></div>
+        <div class="warns" id="warns"></div>
+      </div>
+
+      <div class="roles">
+        <div class="role"><h4><em>AI</em>가 맡는 것</h4><p>컨셉·배경 이미지·카피 문장. 상품 형태는 유지하고 배경·조명·소품만 바꿉니다.</p></div>
+        <div class="role"><h4><em>코드</em>가 맡는 것</h4><p>가격·할인율·좌표·폰트 크기·줄바꿈·정렬. AI가 숫자를 지어내지 못하게 막습니다.</p></div>
+        <div class="role"><h4><em>규칙</em>이 맡는 것</h4><p>사이즈별 레이아웃. 단순 확대가 아니라 1200·1080·1920 각각 별도 좌표표를 씁니다.</p></div>
+      </div>
+
+      <details class="json"><summary>현재 레이아웃 JSON</summary><pre id="jsonOut"></pre></details>
+    </div>
+  </div>
+
+  <div class="page-footer show">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
+        <p class="footer-note">최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
+        이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.</p>
+      </div>
+      <div class="footer-col"><span class="footer-col-title">분석</span>
+        <a href="index.html">배너 분석</a><a href="brief-helper.html">기획안 헬퍼</a></div>
+      <div class="footer-col"><span class="footer-col-title">제작</span>
+        <a href="banner-maker.html" class="is-current">배너 생성</a></div>
+      <div class="footer-col"><span class="footer-col-title">가이드</span>
+        <a href="criteria-guide.html">항목 가이드</a><a href="guide.html">브랜드 가이드</a>
+        <a href="media-guide.html">매체 가이드</a><a href="color-guide.html">컬러 가이드</a></div>
+      <div class="footer-col"><span class="footer-col-title">폰트</span>
+        <a href="font-pairing.html">폰트 페어링</a><a href="font-game.html">폰트 오락실</a></div>
+      <div class="footer-col"><span class="footer-col-title">자료</span>
+        <a href="reference-board.html">이미지 레퍼런스</a></div>
+      <div class="footer-col"><span class="footer-col-title">운영</span>
+        <a href="history.html">히스토리</a><a href="roadmap.html">로드맵</a></div>
+    </div>
+    <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
+  </div>
+</div>
+<script src="assets/adcheck-footer.js?v=4"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   배너 생성 — 데모 모드
+   설계 원칙: AI는 배경·카피만, 좌표/숫자/줄바꿈은 전부 코드.
+   미리보기와 PNG 내보내기가 같은 줄바꿈 계산을 공유한다.
+   ══════════════════════════════════════════════════════════════════ */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const FONT = "Pretendard, -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif";
+
+/* ── 사이즈별 레이아웃 규칙 ────────────────────────────────────────
+   단순 배율이 아니다. 비율마다 글자 크기·여백·정렬을 따로 잡는다. */
+const LAYOUTS = {
+  square:{ key:'square', label:'1200×1200', w:1200, h:1200,
+    bg:{x:52,y:46,scale:104},
+    ov:{x:0,y:0,w:60,h:100,o:70,fade:26,dir:'right'},
+    block:{margin:80,  sideW:580, fullW:1040},
+    eyebrow :{size:25, ls:3.4, weight:700, lh:1.3, gap:20, maxLines:1, min:18},
+    headline:{size:82, ls:-3.6, weight:800, lh:1.12, gap:24, maxLines:2, min:50},
+    subcopy :{size:27, ls:-.4, weight:500, lh:1.5,  gap:40, maxLines:2, min:19},
+    price   :{size:76, ls:-3, weight:800, origSize:29, gap:16},
+    benefit :{size:25, weight:700, padX:19, padY:11, gap:38, radius:7},
+    cta     :{size:27, weight:700, padX:38, padY:20, radius:8}
+  },
+  story:{ key:'story', label:'1080×1920', w:1080, h:1920,
+    bg:{x:50,y:38,scale:108},
+    ov:{x:0,y:38,w:100,h:62,o:74,fade:22,dir:'up'},
+    block:{margin:110, sideW:840, fullW:936},
+    eyebrow :{size:27, ls:3.6, weight:700, lh:1.3, gap:22, maxLines:1, min:19},
+    headline:{size:88, ls:-3.8, weight:800, lh:1.14, gap:26, maxLines:2, min:54},
+    subcopy :{size:30, ls:-.4, weight:500, lh:1.5,  gap:44, maxLines:2, min:21},
+    price   :{size:84, ls:-3.2, weight:800, origSize:32, gap:18},
+    benefit :{size:27, weight:700, padX:21, padY:12, gap:42, radius:8},
+    cta     :{size:30, weight:700, padX:42, padY:22, radius:9}
+  },
+  wide:{ key:'wide', label:'1920×600', w:1920, h:600,
+    bg:{x:64,y:44,scale:104},
+    ov:{x:0,y:0,w:52,h:100,o:70,fade:30,dir:'right'},
+    block:{margin:80,  sideW:720, fullW:1760},
+    eyebrow :{size:20, ls:3, weight:700, lh:1.3, gap:13, maxLines:1, min:15},
+    headline:{size:58, ls:-2.4, weight:800, lh:1.14, gap:15, maxLines:2, min:38},
+    subcopy :{size:21, ls:-.3, weight:500, lh:1.45, gap:24, maxLines:1, min:16},
+    price   :{size:52, ls:-2, weight:800, origSize:21, gap:11},
+    benefit :{size:19, weight:700, padX:15, padY:8, gap:24, radius:6},
+    cta     :{size:21, weight:700, padX:30, padY:15, radius:7}
+  }
+};
+const SIZE_ORDER = ['square','story','wide'];
+
+/* 텍스트 묶음을 놓을 자리. 실제 커머스 배너에서 반복적으로 쓰이는 5가지다.
+   (좌하단=ELLACONIC형, 좌상단=크록스/세제대전형, 우중앙=EDITED형) */
+const BLOCK_PRESETS = {
+  'left-top'    :{label:'좌상단',   ax:'left',   ay:'top',    align:'left',   ovDir:'right'},
+  'left-middle' :{label:'좌중앙',   ax:'left',   ay:'middle', align:'left',   ovDir:'right'},
+  'left-bottom' :{label:'좌하단',   ax:'left',   ay:'bottom', align:'left',   ovDir:'right'},
+  'right-middle':{label:'우중앙',   ax:'right',  ay:'middle', align:'left',   ovDir:'left'},
+  'bottom-full' :{label:'하단중앙', ax:'center', ay:'bottom', align:'center', ovDir:'up'}
+};
+
+/* ── 데모 데이터 ────────────────────────────────────────────────── */
+const DEMO_PRODUCT = {
+  brand:'데니스골프', productName:'26SS 냉감 라이트쿨 바람막이',
+  salePrice:23200, originalPrice:29000, benefit:'20% 할인',
+  features:'냉감 소재, 초경량, 자외선 차단, 데일리 필드룩',
+  image:'assets/banner-demo/product-golf.jpg'
+};
+/* 실제 서비스에서는 이 배열을 AI가 상품에 맞춰 만든다.
+   여름/겨울/프리미엄 3개 고정이 아니라 상품마다 달라져야 한다. */
+const DEMO_CONCEPTS = [
+  { id:'autumn-course', name:'가을 코스', desc:'선선한 잔디와 낙엽빛 페어웨이. 시즌감이 가장 직관적으로 읽히는 안.',
+    palette:['#C7D9A8','#F2EDE3','#5A6B45'], ink:'#FFFFFF', accent:'#C3FF4D', ctaBg:'#C3FF4D', ctaInk:'#12210A',
+    image:'assets/banner-demo/product-golf.jpg' },
+  { id:'clean-studio', name:'클린 스튜디오', desc:'무배경 화이트. 제품 형태가 가장 정확히 보이는 안.',
+    palette:['#FFFFFF','#E8E9EC','#111417'], ink:'#111417', accent:'#1E6BFF', ctaBg:'#111417', ctaInk:'#FFFFFF',
+    grad:'linear-gradient(135deg,#F7F8FA 0%,#E4E7EC 100%)' },
+  { id:'night-city', name:'나이트 시티', desc:'딥 네이비 야간 조명. 프리미엄·고관여 톤.',
+    palette:['#0E1730','#1E3A6B','#FFC65C'], ink:'#FFFFFF', accent:'#FFC65C', ctaBg:'#FFC65C', ctaInk:'#16203A',
+    grad:'linear-gradient(140deg,#0B1226 0%,#1B2E55 55%,#243A66 100%)' },
+  { id:'warm-cafe', name:'웜 카페', desc:'우드톤 실내광. 라이프스타일 소구에 맞는 편안한 무드.',
+    palette:['#4A3524','#C89B6A','#F5E9D9'], ink:'#FFF7EC', accent:'#F0B072', ctaBg:'#F0B072', ctaInk:'#3A2716',
+    grad:'linear-gradient(145deg,#2A1C11 0%,#5C3F27 60%,#8A6440 100%)' },
+  { id:'mono-editorial', name:'모노 에디토리얼', desc:'무채색 고대비. 브랜드 이미지 캠페인에 어울리는 안.',
+    palette:['#161719','#8A8D93','#F2F3F5'], ink:'#F2F3F5', accent:'#FFFFFF', ctaBg:'#F2F3F5', ctaInk:'#161719',
+    grad:'linear-gradient(120deg,#0D0E10 0%,#26282C 60%,#3A3D42 100%)' }
+];
+/* 카피는 방향(tone)에 따라 달라진다. 숫자는 절대 포함하지 않는다 —
+   가격/할인은 상품 데이터에서만 온다. */
+const DEMO_COPY = {
+  product:[
+    {eyebrow:'DENNIS GOLF', headline:'한여름 라운딩도\n가볍게', subcopy:'냉감 소재로 완성한 초경량 바람막이', cta:'지금 구매하기'},
+    {eyebrow:'NEW ARRIVAL', headline:'입은 듯 안 입은 듯\n가벼운 한 겹', subcopy:'자외선은 막고 열기는 흘려보내는 설계', cta:'상품 보러가기'}
+  ],
+  emotion:[
+    {eyebrow:'26SS COLLECTION', headline:'바람이 지나가는\n자리', subcopy:'라운딩의 온도를 바꾸는 한 겹', cta:'컬렉션 보기'},
+    {eyebrow:'FIELD MOMENT', headline:'좋은 계절엔\n좋은 옷으로', subcopy:'매일 손이 가는 데일리 필드룩', cta:'자세히 보기'}
+  ],
+  benefit:[
+    {eyebrow:'시즌 클리어런스', headline:'신상인데\n지금이 제일 쌉니다', subcopy:'사은품까지 함께 드리는 기간 한정', cta:'혜택 받기'},
+    {eyebrow:'기간 한정', headline:'놓치면 다음 시즌에\n제값 주고 삽니다', subcopy:'신상 필드룩 시즌 클리어런스', cta:'지금 확인하기'}
+  ],
+  price:[
+    {eyebrow:'최저가 도전', headline:'이 가격에\n이 퀄리티', subcopy:'정상가 대비 부담을 확 낮췄습니다', cta:'가격 확인하기'},
+    {eyebrow:'단독 특가', headline:'같은 옷\n다른 가격', subcopy:'신상 필드룩을 지금 가격으로', cta:'특가 보러가기'}
+  ]
+};
+
+/* ── 상태 ──────────────────────────────────────────────────────── */
+const state = {
+  size:'square',
+  product:{...DEMO_PRODUCT},
+  concepts:DEMO_CONCEPTS.map(c=>({...c})),
+  conceptId:DEMO_CONCEPTS[0].id,
+  tone:'product',
+  copyIdx:0,
+  copy:{...DEMO_COPY.product[0]},
+  guides:false,
+  /* 사이즈별로 배경·오버레이 값을 따로 들고 있는다 */
+  tweak:Object.fromEntries(SIZE_ORDER.map(k=>[k,{
+    bg:{...LAYOUTS[k].bg}, ov:{...LAYOUTS[k].ov},
+    block:{preset: k==='story' ? 'left-bottom' : 'left-middle', dx:0, dy:0}
+  }]))
+};
+const L  = ()=>LAYOUTS[state.size];
+const TW = ()=>state.tweak[state.size];
+const CONCEPT = ()=>state.concepts.find(c=>c.id===state.conceptId) || state.concepts[0];
+
+/* ══ 텍스트 엔진 ═══════════════════════════════════════════════════
+   ChatGPT 데모 두 개가 똑같이 깨진 지점이 여기다.
+     ① 한글을 어절이 아니라 글자 단위로 끊어서 "스커/트"가 됐고
+     ② 카피가 한 줄 늘어나도 아래 요소 y가 고정이라 서로 겹쳤다.
+   그래서 (1) 줄바꿈을 직접 계산하고 (2) 요소를 흐름으로 쌓는다. */
+const _mc = document.createElement('canvas').getContext('2d');
+function fontOf(p, size){ return `${p.weight} ${size}px ${FONT}`; }
+function textW(s, p, size){
+  _mc.font = fontOf(p,size);
+  if('letterSpacing' in _mc) _mc.letterSpacing = (p.ls||0)+'px';
+  return _mc.measureText(s).width;
+}
+/* 어절 단위 줄바꿈. CSS의 word-break:keep-all과 같은 규칙이다. */
+function wrapLines(text, p, size, width){
+  const out=[];
+  for(const para of String(text==null?'':text).split('\n')){
+    const words = para.split(/\s+/).filter(Boolean);
+    if(!words.length){ out.push(''); continue; }
+    let line='';
+    for(const w of words){
+      const cand = line ? line+' '+w : w;
+      if(textW(cand,p,size) <= width){ line=cand; continue; }
+      if(line){ out.push(line); line=''; }
+      // 어절 하나만 남았는데도 폭을 넘으면 그때만 글자 단위로 쪼갠다.
+      // (띄어쓰기 없는 긴 문장이 밖으로 삐져나가는 걸 막는다)
+      if(textW(w,p,size) <= width){ line=w; continue; }
+      let chunk='';
+      for(const ch of w){
+        if(chunk && textW(chunk+ch,p,size) > width){ out.push(chunk); chunk=ch; }
+        else chunk+=ch;
+      }
+      line=chunk;
+    }
+    out.push(line);
+  }
+  return out;
+}
+/* 줄 수가 한도를 넘으면 글자 크기를 1px씩 줄인다. 바닥까지 줄여도
+   안 들어가면 잘라내고 경고를 띄운다. 넘치게 두지는 않는다. */
+function fitText(text, p, width){
+  let size = p.size, lines = wrapLines(text,p,size,width), shrunk=false;
+  const min = p.min || p.size;
+  while(lines.length > p.maxLines && size > min){
+    size -= 1; shrunk = true;
+    lines = wrapLines(text,p,size,width);
+  }
+  let clipped=false;
+  if(lines.length > p.maxLines){
+    lines = lines.slice(0,p.maxLines);
+    lines[lines.length-1] = lines[lines.length-1].replace(/\s*\S*$/,'') + '…';
+    clipped = true;
+  }
+  return { lines, size, height: lines.length*size*p.lh, shrunk, clipped, from:p.size };
+}
+const won = n => (n==null||n==='') ? '' : Number(String(n).replace(/[^\d]/g,'')).toLocaleString('ko-KR')+'원';
+
+/* ══ 레이아웃 계산 ═════════════════════════════════════════════════
+   요소를 위에서 아래로 쌓아 실제 높이를 구한 뒤, 앵커(가운데/아래/위)에
+   맞춰 시작 y를 정한다. 카피가 길어지면 아래가 밀릴 뿐 겹치지 않는다. */
+function computeLayout(){
+  const l=L(), t=TW(), c=CONCEPT(), pr=state.product, cp=state.copy;
+  const bp=BLOCK_PRESETS[t.block.preset] || BLOCK_PRESETS['left-middle'];
+  const bw = bp.ax==='center' ? l.block.fullW : l.block.sideW;
+  const parts=[], warn=[];
+
+  const push=(kind,o)=>parts.push(Object.assign({kind},o));
+
+  if(cp.eyebrow){
+    const f=fitText(cp.eyebrow,l.eyebrow,bw);
+    push('eyebrow',{...f,cfg:l.eyebrow,gap:l.eyebrow.gap});
+    if(f.clipped) warn.push(['아이브로우',f]);
+  }
+  if(cp.headline){
+    const f=fitText(cp.headline,l.headline,bw);
+    push('headline',{...f,cfg:l.headline,gap:l.headline.gap});
+    if(f.shrunk||f.clipped) warn.push(['메인 카피',f]);
+  }
+  if(cp.subcopy){
+    const f=fitText(cp.subcopy,l.subcopy,bw);
+    push('subcopy',{...f,cfg:l.subcopy,gap:l.subcopy.gap});
+    if(f.shrunk||f.clipped) warn.push(['서브 카피',f]);
+  }
+  const sale=won(pr.salePrice), orig=won(pr.originalPrice);
+  if(sale){
+    const p=l.price, sw=textW(sale,p,p.size);
+    const op={weight:600,ls:-.5}, ow=orig?textW(orig,op,p.origSize):0;
+    push('price',{sale,orig,saleW:sw,origW:ow,cfg:p,height:p.size*1.1,gap:p.gap,
+                  width: sw + (orig ? 14+ow : 0)});
+  }
+  if(pr.benefit){
+    const b=l.benefit, w=textW(pr.benefit,b,b.size)+b.padX*2, h=b.size*1.15+b.padY*2;
+    push('benefit',{text:pr.benefit,cfg:b,width:w,height:h,gap:b.gap});
+  }
+  if(cp.cta){
+    const b=l.cta, w=textW(cp.cta+'  ›',b,b.size)+b.padX*2, h=b.size*1.2+b.padY*2;
+    push('cta',{text:cp.cta,cfg:b,width:w,height:h,gap:0});
+  }
+
+  const total = parts.reduce((s,p,i)=>s+p.height+(i<parts.length-1?p.gap:0),0);
+
+  // 프리셋으로 묶음의 좌상단을 정하고, 미세조정(dx/dy)을 더한다
+  const m=l.block.margin;
+  let x = bp.ax==='left'  ? m
+        : bp.ax==='right' ? l.w - m - bw
+        :                   (l.w - bw)/2;
+  let y = bp.ay==='top'    ? m
+        : bp.ay==='bottom' ? l.h - m - total
+        :                    (l.h - total)/2;
+  x += t.block.dx; y += t.block.dy;
+
+  parts.forEach(p=>{
+    p.x=x; p.y=y; p.blockW=bw; p.align=bp.align;
+    // 버튼·뱃지·가격처럼 폭이 있는 요소는 정렬에 맞춰 좌표를 따로 잡는다
+    p.boxX = bp.align==='center' && p.width ? x + (bw - p.width)/2 : x;
+    y += p.height + p.gap;
+  });
+  const bottom = parts.length ? parts[parts.length-1].y+parts[parts.length-1].height : 0;
+  const top = parts.length ? parts[0].y : 0;
+  if(top < 0)            warn.push(['블록 전체', {overflowPx: Math.round(-top), where:'위'}]);
+  else if(bottom > l.h)  warn.push(['블록 전체', {overflowPx: Math.round(bottom-l.h), where:'아래'}]);
+
+  return {l,t,c,parts,total,warn,bottom,bp,bw};
+}
+
+/* ══ 오버레이 CSS ══ */
+function overlayStyle(l,t,c,bp){
+  const o=t.ov, W=l.w*o.w/100, H=l.h*o.h/100;
+  const dir = (bp||BLOCK_PRESETS['left-middle']).ovDir;     // 텍스트가 있는 쪽이 어두워야 한다
+  const X = dir==='left' ? l.w-W : 0;
+  const Y = dir==='up'   ? l.h-H : 0;
+  const a=(o.o/100).toFixed(3), fade=Math.max(0,Math.min(100,o.fade));
+  const dark = c.ink === '#111417' ? '255,255,255' : '0,0,0';
+  const stop = (100-fade).toFixed(1)+'%';
+  const css  = { right:'to right', left:'to left', up:'to top' }[dir];
+  return { x:X, y:Y, w:W, h:H, dir,
+    css:`linear-gradient(${css}, rgba(${dark},${a}) 0%, rgba(${dark},${a}) ${stop}, rgba(${dark},0) 100%)` };
+}
+
+/* 배경은 항상 배너를 덮은 상태(cover)를 100%로 보고, 확대율을 거기에 곱한다.
+   폭 기준으로만 키우면 1080×1920 같은 세로 배너에서 위아래가 빈다. */
+function bgBox(l, t, img){
+  if(!img) return null;
+  const cover = Math.max(l.w/img.naturalWidth || l.w/img.width, l.h/img.naturalHeight || l.h/img.height);
+  const k = cover * (t.bg.scale/100);
+  const dw = (img.naturalWidth||img.width)*k, dh = (img.naturalHeight||img.height)*k;
+  return { dw, dh, dx:(l.w-dw)*(t.bg.x/100), dy:(l.h-dh)*(t.bg.y/100) };
+}
+
+/* ══ DOM 렌더 ═══════════════════════════════════════════════════
+   computeLayout이 정한 줄과 좌표를 그대로 그린다. 여기서 다시
+   줄바꿈이 일어나면 안 되므로 각 줄을 별도 블록으로 찍고 white-space:pre. */
+function render(){
+  const {l,t,c,parts,warn,bp,bw} = computeLayout();
+  const b=$('#banner');
+  b.style.width=l.w+'px'; b.style.height=l.h+'px';
+
+  // style="..." 안에 들어가므로 url()은 반드시 작은따옴표로 감싼다
+  const bgImg = c.image ? `url('${c.image}')` : null;
+  const ov = overlayStyle(l,t,c,bp);
+  let html='';
+
+  let bgCss;
+  if(bgImg){
+    const im=_imgCache[c.image];
+    if(im){
+      const b=bgBox(l,t,im);
+      bgCss = `background-image:${bgImg}; background-repeat:no-repeat; background-size:${b.dw}px ${b.dh}px; background-position:${b.dx}px ${b.dy}px;`;
+    } else {
+      bgCss = `background-image:${bgImg}; background-size:cover; background-position:center;`;
+      loadImg(c.image).then(render).catch(()=>{});   // 원본 크기를 알아야 정확히 계산된다
+    }
+  } else bgCss = `background:${c.grad};`;
+  html += `<div class="bn-bg" style="${bgCss}"></div>`;
+  html += `<div class="bn-ov" style="left:${ov.x}px;top:${ov.y}px;width:${ov.w}px;height:${ov.h}px;background:${ov.css};"></div>`;
+
+  for(const p of parts){
+    if(p.kind==='price'){
+      const cf=p.cfg;
+      html += `<div class="bn-el" style="left:${p.boxX}px;top:${p.y}px;display:flex;align-items:baseline;gap:14px;">`
+           +  `<span style="font:${cf.weight} ${cf.size}px ${FONT};letter-spacing:${cf.ls}px;color:${c.ink};line-height:1.1;">${esc(p.sale)}</span>`
+           +  (p.orig?`<span style="font:600 ${cf.origSize}px ${FONT};letter-spacing:-.5px;color:${c.ink};opacity:.62;text-decoration:line-through;line-height:1.1;">${esc(p.orig)}</span>`:'')
+           +  `</div>`;
+    } else if(p.kind==='benefit'){
+      const cf=p.cfg;
+      html += `<div class="bn-cta" style="left:${p.boxX}px;top:${p.y}px;width:${p.width}px;height:${p.height}px;`
+           +  `background:${c.accent};border-radius:${cf.radius}px;font:${cf.weight} ${cf.size}px ${FONT};color:${c.ctaInk};letter-spacing:-.3px;">${esc(p.text)}</div>`;
+    } else if(p.kind==='cta'){
+      const cf=p.cfg;
+      html += `<div class="bn-cta" style="left:${p.boxX}px;top:${p.y}px;width:${p.width}px;height:${p.height}px;`
+           +  `background:${c.ctaBg};border-radius:${cf.radius}px;font:${cf.weight} ${cf.size}px ${FONT};color:${c.ctaInk};letter-spacing:-.3px;">${esc(p.text)}  ›</div>`;
+    } else {
+      const cf=p.cfg, col = p.kind==='eyebrow' ? c.accent : c.ink;
+      const op  = p.kind==='subcopy' ? '.88' : '1';
+      html += `<div class="bn-el" style="left:${p.x}px;top:${p.y}px;width:${p.blockW}px;text-align:${p.align};">`
+           +  p.lines.map(ln=>`<span class="bn-line" style="font:${cf.weight} ${p.size}px/${cf.lh} ${FONT};letter-spacing:${cf.ls}px;color:${col};opacity:${op};">${esc(ln)||'&nbsp;'}</span>`).join('')
+           +  `</div>`;
+    }
+  }
+
+  if(state.guides){
+    html += `<div class="guides on">`;
+    const gx = parts.length ? parts[0].x : 0;
+    html += `<i style="left:${gx}px;top:0;width:1px;height:100%"></i>`;
+    html += `<i style="left:${gx+bw}px;top:0;width:1px;height:100%"></i>`;
+    for(const p of parts){
+      html += `<u style="left:${p.boxX}px;top:${p.y}px;width:${(p.width||bw)}px;height:${p.height}px"></u>`;
+    }
+    html += `</div>`;
+  }
+  b.innerHTML = html;
+
+  fitStage(l);
+  paintWarns(warn, parts);
+  $('#jsonOut').textContent = JSON.stringify({
+    size:l.label, width:l.w, height:l.h,
+    background:t.bg, overlay:t.ov,
+    block:{preset:t.block.preset, dx:t.block.dx, dy:t.block.dy, width:bw, align:bp.align},
+    elements:parts.map(p=>({kind:p.kind,x:Math.round(p.boxX),y:Math.round(p.y),
+      w:Math.round(p.width||bw), h:Math.round(p.height),
+      fontSize:p.size||p.cfg.size, lines:p.lines?p.lines.length:undefined}))
+  },null,1);
+}
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+/* 배너는 원본 px 그대로 두고 화면에서만 축소한다 */
+function fitStage(l){
+  const stage=$('.stage'), avail=stage.clientWidth-68, availH=Math.max(360,window.innerHeight*0.66);
+  const s=Math.min(1, avail/l.w, availH/l.h);
+  $('#banner').style.transform=`scale(${s})`;
+  $('#fit').style.width=(l.w*s)+'px';
+  $('#fit').style.height=(l.h*s)+'px';
+  $('#zoomLabel').textContent = Math.round(s*100)+'% · 원본 '+l.w+'×'+l.h;
+}
+
+function paintWarns(warn, parts){
+  const box=$('#warns');
+  if(!warn.length){
+    box.innerHTML = `<div class="warn ok"><b>✓</b><span>카피가 지정 영역 안에 전부 들어갑니다. 겹침 없음 · 잘림 없음.</span></div>`;
+    return;
+  }
+  box.innerHTML = warn.map(([name,f])=>{
+    if(f.overflowPx) return `<div class="warn"><b>!</b><span><b>${name}</b>이 배너 ${f.where||'아래'}로 ${f.overflowPx}px 넘칩니다. 카피를 줄이거나 위치를 조정하세요.</span></div>`;
+    if(f.clipped)    return `<div class="warn"><b>!</b><span><b>${name}</b>가 최소 크기(${f.size}px)에서도 ${'≤'} ${f.lines.length}줄에 안 들어가 잘렸습니다. 카피를 줄여주세요.</span></div>`;
+    return `<div class="warn"><b>·</b><span><b>${name}</b>가 길어 ${f.from}px → <b>${f.size}px</b>로 줄었습니다. 겹치지는 않습니다.</span></div>`;
+  }).join('');
+}
+
+/* ══ PNG 내보내기 ══════════════════════════════════════════════════
+   미리보기와 같은 computeLayout 결과를 캔버스에 다시 그린다.
+   줄바꿈을 이미 우리가 계산해뒀으므로 두 결과가 어긋날 수 없다. */
+async function renderCanvas(sizeKey){
+  const keep=state.size; state.size=sizeKey;
+  const {l,t,c,parts,bp,bw}=computeLayout();
+  state.size=keep;
+
+  const cv=document.createElement('canvas'); cv.width=l.w; cv.height=l.h;
+  const x=cv.getContext('2d');
+  x.fillStyle='#111'; x.fillRect(0,0,l.w,l.h);
+
+  if(c.image){
+    const img=await loadImg(c.image);
+    const b=bgBox(l,t,img);          // 미리보기와 완전히 같은 계산
+    x.drawImage(img,b.dx,b.dy,b.dw,b.dh);
+  } else {
+    const g=x.createLinearGradient(0,0,l.w,l.h);
+    (c.palette||['#222','#444']).forEach((col,i,a)=>g.addColorStop(i/(a.length-1),col));
+    x.fillStyle=g; x.fillRect(0,0,l.w,l.h);
+  }
+
+  const ov=overlayStyle(l,t,c,bp), o=t.ov;
+  const dark = c.ink==='#111417' ? '255,255,255' : '0,0,0';
+  const g2 = ov.dir==='up'   ? x.createLinearGradient(ov.x, ov.y+ov.h, ov.x, ov.y)
+           : ov.dir==='left' ? x.createLinearGradient(ov.x+ov.w, ov.y, ov.x, ov.y)
+           :                   x.createLinearGradient(ov.x, ov.y, ov.x+ov.w, ov.y);
+  const a=(o.o/100), stop=Math.max(0,Math.min(1,(100-o.fade)/100));
+  g2.addColorStop(0,`rgba(${dark},${a})`);
+  g2.addColorStop(stop,`rgba(${dark},${a})`);
+  g2.addColorStop(1,`rgba(${dark},0)`);
+  x.fillStyle=g2; x.fillRect(ov.x,ov.y,ov.w,ov.h);
+
+  for(const p of parts){
+    if(p.kind==='price'){
+      const cf=p.cfg;
+      x.textBaseline='alphabetic'; x.textAlign='left';
+      x.font=`${cf.weight} ${cf.size}px ${FONT}`;
+      if('letterSpacing' in x) x.letterSpacing=cf.ls+'px';
+      const base=p.y+cf.size*0.86;
+      x.fillStyle=c.ink; x.fillText(p.sale,p.boxX,base);
+      if(p.orig){
+        const ox=p.boxX+p.saleW+14;
+        x.font=`600 ${cf.origSize}px ${FONT}`;
+        if('letterSpacing' in x) x.letterSpacing='-0.5px';
+        x.globalAlpha=.62; x.fillText(p.orig,ox,base);
+        const ly=base-cf.origSize*0.30;
+        x.fillRect(ox,ly,p.origW,Math.max(1,Math.round(cf.origSize/16)));
+        x.globalAlpha=1;
+      }
+    } else if(p.kind==='benefit' || p.kind==='cta'){
+      const cf=p.cfg, isC=p.kind==='cta';
+      x.fillStyle = isC ? c.ctaBg : c.accent;
+      roundRect(x,p.boxX,p.y,p.width,p.height,cf.radius); x.fill();
+      x.fillStyle = isC ? c.ctaInk : c.ctaInk;
+      x.font=`${cf.weight} ${cf.size}px ${FONT}`;
+      if('letterSpacing' in x) x.letterSpacing='-0.3px';
+      x.textAlign='center'; x.textBaseline='middle';
+      x.fillText(isC ? p.text+'  ›' : p.text, p.boxX+p.width/2, p.y+p.height/2+1);
+      x.textAlign='left';
+    } else {
+      const cf=p.cfg;
+      x.fillStyle = p.kind==='eyebrow' ? c.accent : c.ink;
+      x.globalAlpha = p.kind==='subcopy' ? .88 : 1;
+      x.font=`${cf.weight} ${p.size}px ${FONT}`;
+      if('letterSpacing' in x) x.letterSpacing=cf.ls+'px';
+      x.textAlign = p.align==='center' ? 'center' : 'left';
+      x.textBaseline='middle';
+      const lh=p.size*cf.lh, tx = p.align==='center' ? p.x+bw/2 : p.x;
+      p.lines.forEach((ln,i)=>x.fillText(ln, tx, p.y+lh*(i+0.5)));
+      x.globalAlpha=1;
+    }
+  }
+  return cv;
+}
+function roundRect(x,l,t,w,h,r){
+  x.beginPath();
+  x.moveTo(l+r,t); x.lineTo(l+w-r,t); x.quadraticCurveTo(l+w,t,l+w,t+r);
+  x.lineTo(l+w,t+h-r); x.quadraticCurveTo(l+w,t+h,l+w-r,t+h);
+  x.lineTo(l+r,t+h); x.quadraticCurveTo(l,t+h,l,t+h-r);
+  x.lineTo(l,t+r); x.quadraticCurveTo(l,t,l+r,t); x.closePath();
+}
+const _imgCache={};
+function loadImg(src){
+  if(_imgCache[src]) return Promise.resolve(_imgCache[src]);
+  return new Promise((res,rej)=>{
+    const i=new Image(); i.crossOrigin='anonymous';
+    i.onload=()=>{_imgCache[src]=i; res(i);}; i.onerror=rej; i.src=src;
+  });
+}
+function slug(){
+  const p=state.product;
+  return (p.brand+'_'+p.productName).replace(/[^\w가-힣]+/g,'-').replace(/^-|-$/g,'').slice(0,50);
+}
+async function download(sizeKey){
+  const cv=await renderCanvas(sizeKey), l=LAYOUTS[sizeKey];
+  const a=document.createElement('a');
+  a.download=`${slug()}_${l.w}x${l.h}.png`;
+  a.href=cv.toDataURL('image/png');
+  a.click();
+}
+
+/* ══ 컨트롤 연결 ═══════════════════════════════════════════════════ */
+function buildSizeTabs(){
+  $('#sizeTabs').innerHTML = SIZE_ORDER.map(k=>
+    `<button data-size="${k}" class="${k===state.size?'on':''}">${LAYOUTS[k].label}</button>`).join('');
+  $$('#sizeTabs button').forEach(b=>b.onclick=()=>{
+    state.size=b.dataset.size; buildSizeTabs(); buildPosSeg(); syncTweakUI(); render();
+  });
+  $('#szLabel').textContent = LAYOUTS[state.size].label;
+}
+function buildConcepts(){
+  $('#conceptCount').textContent = state.concepts.length+'개';
+  $('#conceptList').innerHTML = state.concepts.map(c=>{
+    const thumb = c.image ? `background-image:url('${c.image}')` : `background:${c.grad}`;
+    return `<button type="button" class="concept ${c.id===state.conceptId?'on':''}" data-id="${c.id}">
+      <span class="concept-thumb" style="${thumb}"></span>
+      <span class="concept-meta">
+        <span class="concept-name">${esc(c.name)}</span>
+        <span class="concept-desc">${esc(c.desc)}</span>
+        <span class="swatches">${(c.palette||[]).map(p=>`<i style="background:${p}"></i>`).join('')}</span>
+      </span></button>`;
+  }).join('');
+  $$('#conceptList .concept').forEach(b=>b.onclick=()=>{
+    state.conceptId=b.dataset.id; buildConcepts(); render();
+  });
+}
+function syncProductUI(){
+  const p=state.product;
+  $('#pBrand').value=p.brand; $('#pName').value=p.productName;
+  $('#pSale').value=p.salePrice??''; $('#pOrig').value=p.originalPrice??'';
+  $('#pBenefit').value=p.benefit||''; $('#pFeatures').value=p.features||'';
+}
+function syncCopyUI(){
+  const c=state.copy;
+  $('#cEyebrow').value=c.eyebrow||''; $('#cHeadline').value=c.headline||'';
+  $('#cSubcopy').value=c.subcopy||''; $('#cCta').value=c.cta||'';
+  countHints();
+}
+/* 글자수 힌트는 "권장"이지 강제가 아니다. 넘겨도 레이아웃은 안 깨지고
+   대신 폰트가 줄거나 경고가 뜬다. */
+const LIMITS={eyebrow:15, headline:22, subcopy:30, cta:10};
+function countHints(){
+  for(const k of Object.keys(LIMITS)){
+    const el=$('#c'+k[0].toUpperCase()+k.slice(1));
+    const v=(el.value||'').replace(/\n/g,'');
+    const h=$('#h'+k[0].toUpperCase()+k.slice(1));
+    const over=v.length>LIMITS[k];
+    h.className='hint'+(over?' over':'');
+    h.textContent=`${v.length}자 · 권장 ${LIMITS[k]}자${over?' 초과':''}`;
+  }
+}
+function buildPosSeg(){
+  const cur=TW().block.preset;
+  $('#posSeg').innerHTML = Object.entries(BLOCK_PRESETS).map(([k,v])=>
+    `<button data-pos="${k}" class="${k===cur?'on':''}">${v.label}</button>`).join('');
+  $$('#posSeg button').forEach(b=>b.onclick=()=>{
+    TW().block.preset=b.dataset.pos; TW().block.dx=0; TW().block.dy=0;
+    buildPosSeg(); syncTweakUI(); render();
+  });
+  $('#szLabel2').textContent = LAYOUTS[state.size].label;
+}
+function syncTweakUI(){
+  const t=TW();
+  $('#bdx').value=t.block.dx; $('#vBdx').textContent=(t.block.dx>0?'+':'')+t.block.dx+'px';
+  $('#bdy').value=t.block.dy; $('#vBdy').textContent=(t.block.dy>0?'+':'')+t.block.dy+'px';
+  $('#bgX').value=t.bg.x; $('#vBgX').textContent=t.bg.x+'%';
+  $('#bgY').value=t.bg.y; $('#vBgY').textContent=t.bg.y+'%';
+  $('#bgS').value=t.bg.scale; $('#vBgS').textContent=t.bg.scale+'%';
+  $('#ovW').value=t.ov.w; $('#vOvW').textContent=t.ov.w+'%';
+  $('#ovH').value=t.ov.h; $('#vOvH').textContent=t.ov.h+'%';
+  $('#ovO').value=t.ov.o; $('#vOvO').textContent=t.ov.o+'%';
+  $('#ovF').value=t.ov.fade; $('#vOvF').textContent=t.ov.fade+'%';
+}
+
+// 상품 입력
+[['pBrand','brand'],['pName','productName'],['pBenefit','benefit'],['pFeatures','features']]
+  .forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{ state.product[key]=e.target.value; render(); }));
+[['pSale','salePrice'],['pOrig','originalPrice']]
+  .forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{
+    const d=e.target.value.replace(/[^\d]/g,''); state.product[key]=d?Number(d):null; render(); }));
+
+// 카피 입력
+[['cEyebrow','eyebrow'],['cHeadline','headline'],['cSubcopy','subcopy'],['cCta','cta']]
+  .forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{
+    state.copy[key]=e.target.value; countHints(); render(); }));
+
+// 슬라이더
+const bindRange=(id,apply)=>$('#'+id).addEventListener('input',e=>{ apply(Number(e.target.value)); syncTweakUI(); render(); });
+bindRange('bdx',v=>TW().block.dx=v); bindRange('bdy',v=>TW().block.dy=v);
+bindRange('bgX',v=>TW().bg.x=v);   bindRange('bgY',v=>TW().bg.y=v);   bindRange('bgS',v=>TW().bg.scale=v);
+bindRange('ovW',v=>TW().ov.w=v);   bindRange('ovH',v=>TW().ov.h=v);
+bindRange('ovO',v=>TW().ov.o=v);   bindRange('ovF',v=>TW().ov.fade=v);
+
+// 카피 방향
+$$('#toneSeg button').forEach(b=>b.onclick=()=>{
+  $$('#toneSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); state.tone=b.dataset.tone; state.copyIdx=0;
+  state.copy={...DEMO_COPY[state.tone][0]}; syncCopyUI(); render();
+});
+$('#btnCopy').onclick=()=>{
+  const pool=DEMO_COPY[state.tone];
+  state.copyIdx=(state.copyIdx+1)%pool.length;
+  state.copy={...pool[state.copyIdx]}; syncCopyUI(); render();
+};
+$('#btnConcepts').onclick=()=>{
+  // 데모에서는 순서만 섞는다. 실제로는 상품 정보로 AI가 새로 만든다.
+  state.concepts=[...state.concepts].sort(()=>Math.random()-.5);
+  state.conceptId=state.concepts[0].id; buildConcepts(); render();
+};
+$('#btnVariants').onclick=()=>{
+  const base=CONCEPT();
+  alert(`실제 서비스에서는 "${base.name}"을 기준으로 비슷한 컨셉 3개를 새로 만듭니다.\n데모에는 파생 컨셉 데이터가 없습니다.`);
+};
+$('#btnFetch').onclick=()=>{
+  state.product={...DEMO_PRODUCT}; syncProductUI(); render();
+};
+$('#chkGuide').onchange=e=>{ state.guides=e.target.checked; render(); };
+$('#btnPngOne').onclick=()=>download(state.size);
+$('#btnPngAll').onclick=async()=>{ for(const k of SIZE_ORDER){ await download(k); await new Promise(r=>setTimeout(r,320)); } };
+
+$$('.gnb-dropdown-toggle').forEach(btn=>btn.addEventListener('click',e=>{
+  e.stopPropagation(); const m=btn.nextElementSibling;
+  $$('.gnb-dropdown-menu.open').forEach(o=>{ if(o!==m) o.classList.remove('open'); });
+  m.classList.toggle('open');
+}));
+document.addEventListener('click',()=>$$('.gnb-dropdown-menu.open').forEach(m=>m.classList.remove('open')));
+window.addEventListener('resize',()=>fitStage(L()));
+
+/* 폰트가 로드된 뒤에 재계산해야 줄바꿈이 정확하다 */
+function boot(){
+  buildSizeTabs(); buildPosSeg(); buildConcepts(); syncProductUI(); syncCopyUI(); syncTweakUI(); render();
+}
+boot();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+window.__banner={state,LAYOUTS,computeLayout,render,renderCanvas,wrapLines,fitText};
+</script>
+</body>
+</html>
