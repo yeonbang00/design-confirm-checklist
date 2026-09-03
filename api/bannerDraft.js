@@ -20,14 +20,25 @@
 import { callOpenAI, OPENAI_MODEL } from './_openaiClient.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
-const AXES = [
-  ['A', '제품 중심', '배경을 거의 두지 않고 제품 형태·질감·색이 가장 정확히 보이게.'],
-  ['B', '사용 장면', '이 상품이 실제로 쓰이는 상황. 사람은 넣지 않아도 된다.'],
-  ['C', '분위기',   '색과 빛으로 인상을 만든다. 제품은 있되 장면이 감각을 먼저 전한다.'],
-];
+// 축 설명은 원본이 무엇이냐에 따라 달라진다. 모델컷을 받아놓고 "배경 없이
+// 제품만"이라고 시키면 모델을 지우고 옷만 남긴다. 실제로 그런 일이 났다.
+const AXES = {
+  packshot: [
+    ['A', '제품 중심', '배경을 거의 두지 않고 제품 형태·질감·색이 가장 정확히 보이게.'],
+    ['B', '사용 장면', '이 상품이 실제로 쓰이는 상황. 사람은 넣지 않아도 된다.'],
+    ['C', '분위기',   '색과 빛으로 인상을 만든다. 제품은 있되 장면이 감각을 먼저 전한다.'],
+  ],
+  model: [
+    ['A', '제품 중심', '인물은 그대로 두고 배경만 정리해, 착용한 제품이 가장 잘 보이게. 인물을 지우지 마라.'],
+    ['B', '사용 장면', '인물이 이 옷을 입고 실제로 있을 법한 장소로 배경을 바꾼다.'],
+    ['C', '분위기',   '색과 빛으로 인상을 만든다. 인물과 착장은 그대로 두고 시간대·조명·색조만 바꾼다.'],
+  ],
+};
 const MIN_COLOR_DISTANCE = 90;   // 실측 기준 — 이보다 가까우면 눈으로도 비슷해 보였다
 
 function buildPrompt(p, retryNote) {
+  const kind = p.imageType === 'model' ? 'model' : 'packshot';
+  const axes = AXES[kind];
   const facts = [
     `상품명: ${p.productName || '(미상)'}`,
     `브랜드: ${p.brand || '(미상)'}`,
@@ -39,7 +50,7 @@ function buildPrompt(p, retryNote) {
 3종은 아래 세 축을 하나씩 맡는다. 축은 고정이고, 각 축 안에서 이 상품에 맞는
 구체적인 장면을 정한다.
 
-${AXES.map(([k, l, d]) => `  ${k} ${l} — ${d}`).join('\n')}
+${axes.map(([k, l, d]) => `  ${k} ${l} — ${d}`).join('\n')}
 
 [반드시 지킬 것]
 
@@ -50,6 +61,10 @@ ${AXES.map(([k, l, d]) => `  ${k} ${l} — ${d}`).join('\n')}
 2. 제품 자체는 바꾸지 않는다. 형태·색·포장·개수는 그대로다. 바꾸는 것은
    배경·소품·조명·카메라 앵글뿐이다. 원본이 위에서 내려다본 상품컷이어도
    장면에 맞는 앵글로 다시 잡아라.
+${kind === 'model' ? `
+2-1. 원본은 사람이 착용한 사진이다. 세 장 모두 그 인물을 그대로 둔다.
+   얼굴·머리·포즈·착장을 바꾸지 말고, 인물을 지우고 옷만 남기지도 마라.
+   바꾸는 것은 인물 뒤와 주변뿐이다.` : ''}
 
 3. 상품 정보에 없는 효능·성분·수상·인증·순위를 지어내지 마라.
 
@@ -104,9 +119,10 @@ function tooClose(sets) {
   }
   return bad;
 }
-function normalize(sets) {
+function normalize(sets, kind) {
+  const axes = AXES[kind === 'model' ? 'model' : 'packshot'];
   return sets.slice(0, 3).map((s, i) => {
-    const ax = AXES[i] || AXES[0];
+    const ax = axes[i] || axes[0];
     const c = s.copy || {};
     return {
       axis: s.axis || ax[0],
@@ -144,7 +160,8 @@ export default async function handler(req, res) {
       apiKey, promptText: buildPrompt(product, null),
       maxOutputTokens: 6000, reasoningEffort: 'medium',
     });
-    let sets = normalize(Array.isArray(out && out.sets) ? out.sets : []);
+    const kind = product.imageType === 'model' ? 'model' : 'packshot';
+    let sets = normalize(Array.isArray(out && out.sets) ? out.sets : [], kind);
     if (sets.length < 3) { res.status(502).json({ error: 'AI가 시안 3종을 만들지 못했습니다.' }); return; }
 
     // 색이 겹치면 한 번만 다시 시킨다
@@ -155,14 +172,14 @@ export default async function handler(req, res) {
         maxOutputTokens: 6000, reasoningEffort: 'medium',
       }).catch(() => null);
       if (retry && Array.isArray(retry.sets)) {
-        const s2 = normalize(retry.sets);
+        const s2 = normalize(retry.sets, kind);
         if (s2.length === 3 && tooClose(s2).length < clash.length) {
           sets = s2; clash = tooClose(s2);
         }
       }
     }
 
-    res.status(200).json({ sets, colorClash: clash, model: OPENAI_MODEL });
+    res.status(200).json({ sets, colorClash: clash, imageType: kind, model: OPENAI_MODEL });
   } catch (err) {
     const status = err && err.status >= 400 && err.status < 600 ? err.status : 500;
     res.status(status).json({ error: err.message || '시안 생성에 실패했습니다.' });

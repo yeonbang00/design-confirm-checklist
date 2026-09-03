@@ -45,6 +45,33 @@
     };
   }
 
+  /* og:image나 JSON-LD image[]가 작은 판형인 몰이 있다. 신세계는 og:image가
+     275px(_i_)이고 원본은 1254px(_l_)이다. 썸네일을 AI에 넣으면 얼굴이
+     40px짜리가 되어 인물이 뭉개진다.
+     주소 규칙을 추측하지 않고, 페이지에 실제로 떠 있는 이미지를 재서
+     같은 상품의 더 큰 판형이 있으면 그걸 쓴다. */
+  function loadedImages() {
+    return Array.prototype.slice.call(document.images)
+      .filter(function (i) { return i.naturalWidth >= 300 && i.currentSrc; })
+      .map(function (i) { return { url: i.currentSrc.split('?')[0], w: i.naturalWidth, h: i.naturalHeight }; });
+  }
+  function biggestOf(url, pool) {
+    if (!url) return url;
+    var bare = String(url).split('?')[0];
+    // 파일명에서 숫자·판형 표시를 뺀 '뿌리'가 같으면 같은 사진으로 본다
+    var root = bare.replace(/\/[^/]*$/, '') + '/' + (bare.split('/').pop() || '')
+                 .replace(/_[a-z]_/i, '_').replace(/\.[a-z]+$/i, '');
+    var same = pool.filter(function (p) {
+      var r = p.url.replace(/\/[^/]*$/, '') + '/' + (p.url.split('/').pop() || '')
+                .replace(/_[a-z]_/i, '_').replace(/\.[a-z]+$/i, '');
+      return r === root;
+    });
+    if (!same.length) return bare;
+    same.sort(function (a, b) { return b.w - a.w; });
+    return same[0].w > 400 ? same[0].url : bare;
+  }
+
+  var pool = loadedImages();
   var blocks = ld();
   var crumb = blocks.filter(function (b) { return b && b['@type'] === 'BreadcrumbList'; })[0];
   var category = null;
@@ -68,6 +95,13 @@
     var og = meta('og:image');
     // image[0]이 제품 뒷면인 몰이 있다. 사람이 고른 대표컷을 우선한다.
     if (og) { it.mainImage = og; if (it.images.indexOf(og) < 0) it.images.unshift(og); }
+    it.mainImage = biggestOf(it.mainImage, pool);
+    // 화면에 떠 있는 큰 이미지들도 후보로 담는다. 모델컷·디테일컷 중에서
+    // 무엇으로 만들지는 사람이 고르는 게 맞다.
+    var extra = pool.slice().sort(function (a, b) { return b.w - a.w; })
+                    .map(function (p) { return p.url; });
+    it.images = [it.mainImage].concat(it.images, extra)
+      .filter(function (u, i, arr) { return u && arr.indexOf(u) === i; }).slice(0, 8);
     items = [it];
   } else {
     // 마지막 수단 — 화면에 보이는 것에서 긁는다
@@ -92,6 +126,7 @@
       productName: it.productName, brand: it.brand,
       salePrice: it.salePrice, originalPrice: it.originalPrice,
       discountRate: it.discountRate, mainImage: it.mainImage,
+      images: total === 1 ? (it.images || []).slice(0, 8) : undefined,
       description: (it.description || '').slice(0, 120) || null,
     };
   });
