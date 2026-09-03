@@ -57,6 +57,8 @@
   .head h1{font-family:var(--font-display); font-size:34px; font-weight:800; letter-spacing:-.045em; margin:0 0 8px; line-height:1;}
   .head p{margin:0; font-size:13.5px; color:var(--ink-3); line-height:1.65;}
   .mode-chip{display:inline-flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); background:rgba(195,255,77,.1); border:1px solid rgba(195,255,77,.28); padding:6px 11px; border-radius:999px; margin-bottom:12px;}
+  .build{display:inline-block; font-family:var(--font-mono); font-size:10px; color:var(--ink-4);
+         border:1px solid var(--line); padding:5px 9px; border-radius:999px; margin:0 7px 12px 0;}
   .mode-chip i{width:6px; height:6px; border-radius:50%; background:var(--accent); font-style:normal;}
 
   /* ── 2단 레이아웃 ──────────────────────────────────────── */
@@ -264,6 +266,7 @@
 <div class="page">
   <div class="head">
     <div>
+      <span class="build" id="buildStamp"></span>
       <span class="mode-chip"><i></i><span id="modeLabel">데모 데이터 · 링크를 넣으면 실제 상품으로 바뀝니다</span></span>
       <h1>배너 생성</h1>
       <p>AI는 <b>배경과 카피</b>만 만듭니다. 가격·할인·좌표·폰트 크기는 전부 코드가 정합니다.<br>
@@ -1272,10 +1275,11 @@ function cleanFeatures(text, productName){
                 .filter(t=>t.length>3 && !BOILERPLATE.test(t));
   return kept.join(' ').replace(/^[도은는이가,\s]+/,'').trim();
 }
-/* 브랜드가 없을 때 이전 상품 값을 물려받으면 안 된다. 상품명 첫 토큰이
-   대개 제조사라 그걸 쓰고, 아니면 비워둔다. */
+/* 브랜드가 없으면 비워둔다. 이전 상품 값을 물려받아도 안 되고, 상품명에서
+   추측해 넣어도 안 된다 — "냉수 마찰 산지직송 기절꽃게"의 첫 토큰은 "냉수"이고
+   그게 배너 맨 위에 브랜드로 찍힌다. 틀린 브랜드가 인쇄되는 것보다 빈 칸이 낫다.
+   추측은 placeholder로만 보여주고, 쓸지는 사람이 정한다. */
 function guessBrand(it){
-  if(it.brand) return it.brand;
   const first = String(it.productName || '').trim().split(/\s+/)[0] || '';
   const bare = first.replace(/^\[|\]$/g,'');
   return (bare.length >= 2 && bare.length <= 8 && !/^\d/.test(bare)) ? bare : '';
@@ -1284,7 +1288,7 @@ function guessBrand(it){
 function applyItem(it){
   const changed = it.productName !== state.product.productName;
   state.product = {
-    brand: guessBrand(it),
+    brand: it.brand || '',
     productName: it.productName || '',
     salePrice: it.salePrice, originalPrice: it.originalPrice,
     benefit: it.discountRate ? it.discountRate + '% 할인' : '',
@@ -1293,6 +1297,8 @@ function applyItem(it){
   };
   // 상품이 바뀌면 이전 상품의 컨셉·카피가 남아 섞인다. 지우고 다시 만들게 한다.
   if(changed) markStale();
+  // 브랜드를 못 찾았으면 추측을 placeholder로만 띄운다 (배너에는 안 들어간다)
+  $('#pBrand').placeholder = it.brand ? '' : (guessBrand(it) ? guessBrand(it) + ' ?  — 직접 확인해 주세요' : '브랜드를 입력하세요');
   // 컨셉 이미지가 아직 없으면 상품 이미지를 그대로 배경으로 쓴다
   if(it.mainImage){
     const c = BASE_CONCEPT(); c.image = it.mainImage;
@@ -1418,7 +1424,18 @@ COLOR_FIELDS.forEach(([id,key])=>$('#'+id).addEventListener('input',e=>{
 $('#btnColorReset').onclick=()=>{ state.colorOverride={}; syncColors(); render(); };
 
 /* 폰트가 로드된 뒤에 재계산해야 줄바꿈이 정확하다 */
+/* 이 파일이 서버에 언제 올라간 것인지 그대로 보여준다. 손으로 버전을 적으면
+   바꾸는 걸 잊는다. document.lastModified는 응답의 Last-Modified라 배포하면
+   저절로 바뀐다 — "고쳤다는데 왜 그대로냐"를 화면에서 바로 가릴 수 있다. */
+function stampBuild(){
+  const d = new Date(document.lastModified);
+  if(isNaN(d)) return;
+  const pad = n => String(n).padStart(2,'0');
+  $('#buildStamp').textContent = `빌드 ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function boot(){
+  stampBuild();
   buildSizeTabs(); buildPosSeg(); buildLogoPos(); buildConcepts();
   syncProductUI(); syncCopyUI(); syncTweakUI(); syncColors();
   $('#lgS').value=state.logo.scale; $('#vLgS').textContent=state.logo.scale+'%';
