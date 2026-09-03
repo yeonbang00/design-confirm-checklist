@@ -87,6 +87,19 @@
 </style>
 <style>
   /* ── 시안 3장 ─────────────────────────────────────────────── */
+  .blocked{border:1px solid rgba(255,180,84,.32); background:rgba(255,180,84,.06); border-radius:14px;
+           padding:18px 20px; margin-bottom:22px;}
+  .blocked[hidden]{display:none;}
+  .blocked h3{margin:0 0 8px; font-family:var(--font-display); font-size:15px; font-weight:700; color:#FFD5A0;}
+  .blocked p{margin:0 0 9px; font-size:12.5px; line-height:1.7; color:var(--ink-2);}
+  .blocked p.tiny{font-size:11px; color:var(--ink-4); margin:10px 0 0;}
+  .blocked b{color:var(--ink);}
+  .blocked ol{margin:12px 0 0; padding-left:19px; font-size:12.5px; line-height:2.1; color:var(--ink-2);}
+  .blocked .once{font-size:10px; color:var(--ink-4); border:1px solid var(--line); padding:2px 6px; border-radius:5px; margin-left:4px;}
+  .bm{display:inline-block; margin-left:9px; padding:6px 14px; border-radius:8px; cursor:grab;
+      background:var(--accent); color:var(--accent-ink); font-size:12px; font-weight:700; text-decoration:none;}
+  .bm:active{cursor:grabbing;}
+  .diag{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-4); margin-top:6px; word-break:break-all;}
   .sets{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px;}
   .set{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;
        display:flex; flex-direction:column;}
@@ -201,7 +214,21 @@
     </div>
     <button class="go" id="run">시안 만들기</button>
   </div>
-  <div class="note" id="note">신세계쇼핑 · 홈플러스 · 더현대Hi에서 확인했습니다. 링크가 막히면 상품명만 넣어도 됩니다.</div>
+  <div class="note" id="note">홈플러스·더현대Hi는 링크로 바로 읽힙니다. 서버 요청을 막는 몰(신세계 등)은 아래 안내대로 <b>북마클릿</b>을 쓰시면 됩니다.</div>
+
+  <div class="blocked" id="blocked" hidden>
+    <h3>이 쇼핑몰은 서버에서 읽을 수 없습니다</h3>
+    <p id="blockedWhy"></p>
+    <p>IP나 접속 방식을 보고 막는 것이라 우리 쪽에서 뚫을 방법이 없고, 뚫으려 드는 것도 옳지 않습니다.
+       대신 <b>이미 열어 둔 그 페이지에서 직접 담아오면</b> 됩니다.</p>
+    <ol>
+      <li>아래 <b>상품 담기</b>를 북마크바로 끌어다 놓으세요 <span class="once">한 번만</span>
+        <a class="bm" id="bm" href="#" onclick="return false">상품 담기</a></li>
+      <li>쇼핑몰 상품 페이지를 열고 그 북마크를 누르세요</li>
+      <li>여기 입력칸에 <b>붙여넣기</b>하고 다시 실행하세요</li>
+    </ol>
+    <p class="tiny">브라우저가 이미 보고 있는 화면을 읽는 것이라 차단과 무관합니다. 데이터는 어디로도 전송되지 않고 클립보드에만 담깁니다.</p>
+  </div>
 
   <div class="prod" id="prod" hidden>
     <img id="prodImg" alt="">
@@ -469,23 +496,42 @@ function note(text, warn){
   const n=$('#note'); n.className = 'note' + (warn?' warn':''); n.innerHTML = text;
 }
 
-async function run(){
-  const url = $('#url').value.trim();
-  const btn = $('#run');
-  if(!url){ note('상품 페이지 주소를 넣어주세요.', true); return; }
-  btn.disabled = true; btn.textContent = '상품 읽는 중…';
-  sets = []; $('#sets').innerHTML = ''; $('#prod').hidden = true;
+/* 북마클릿이 담아준 JSON을 붙여넣었을 수도 있다. 서버가 막힌 몰에서
+   쓰는 경로라, 주소 대신 JSON이 들어오면 그대로 상품 데이터로 받는다. */
+function parsePasted(text){
+  if(!text || text[0] !== '{') return null;
   try{
-    // ① 상품
-    const pr = await fetch('/api/productScrape?url='+encodeURIComponent(url));
-    const pd = await pr.json();
-    if(!pr.ok) throw new Error(pd.error || '상품 정보를 가져오지 못했습니다.');
+    const d = JSON.parse(text);
+    if(d && d._adcheck === 'product' && Array.isArray(d.items) && d.items.length) return d;
+  }catch(e){}
+  return null;
+}
+
+async function run(){
+  const raw = $('#url').value.trim();
+  const btn = $('#run');
+  if(!raw){ note('상품 페이지 주소를 넣거나, 북마클릿으로 담은 내용을 붙여넣으세요.', true); return; }
+  btn.disabled = true; btn.textContent = '상품 읽는 중…';
+  sets = []; $('#sets').innerHTML = ''; $('#prod').hidden = true; $('#blocked').hidden = true;
+  try{
+    // ① 상품 — 붙여넣은 JSON이 있으면 서버를 거치지 않는다
+    let pd = parsePasted(raw);
+    if(pd){
+      note(`붙여넣은 데이터에서 <b>${pd.itemCount}개</b> 상품을 읽었습니다 · ${pd.strategy}`);
+    } else {
+      const pr = await fetch('/api/productScrape?url='+encodeURIComponent(raw));
+      pd = await pr.json();
+      if(!pr.ok){
+        if(pd.blocked) showBlocked(pd);
+        throw new Error(pd.error || '상품 정보를 가져오지 못했습니다.');
+      }
+      note(`<b>${pd.itemCount}개</b> 상품을 찾았습니다 · ${pd.strategy}`);
+    }
     picked = pd.items || [];
     if(!picked.length) throw new Error('상품을 찾지 못했습니다.');
     product = { ...picked[0], category: pd.category };
     showProduct(); buildPicker();
-    note(`<b>${pd.itemCount}개</b> 상품을 찾았습니다 · ${pd.strategy}`
-       + (picked.length>1 ? ' — 위에서 다른 상품을 고를 수 있습니다.' : ''));
+    if(picked.length>1) note($('#note').innerHTML + ' — 위에서 다른 상품을 고를 수 있습니다.');
 
     // ② 카피 3세트 + 장면 3종 (한 번에)
     btn.textContent = '카피와 장면 만드는 중…';
@@ -505,11 +551,32 @@ async function run(){
     btn.textContent = '이미지 3장 만드는 중…';
     await Promise.all(sets.map((_,i)=>makeImage(i)));
   }catch(e){
-    note(esc(e.message) + '<br>이 쇼핑몰이 막혀 있으면 다른 링크로 시도해 보세요.', true);
+    note(esc(e.message), true);
   }finally{
     btn.disabled = false; btn.textContent = '시안 만들기';
   }
 }
+
+function showBlocked(pd){
+  const b=$('#blocked'); b.hidden=false;
+  const d=pd.diag||{};
+  const who = (d.headers && (d.headers.server || d.headers['x-iinfo'] || d.headers.via)) || '알 수 없음';
+  $('#blockedWhy').innerHTML =
+    `<b>${esc(pd.host||'')}</b>가 상태코드 <b>${d.status||'?'}</b>로 거절했습니다.`
+    + `<span class="diag">응답 서버: ${esc(who)}</span>`;
+  b.scrollIntoView({block:'nearest'});
+}
+
+/* 북마클릿은 assets/adcheck-grab.js를 그대로 눌러 만든다. 소스를 한 벌만
+   두면 고칠 때 두 군데를 맞출 필요가 없다. */
+(async function buildBookmarklet(){
+  try{
+    const src = await fetch('assets/adcheck-grab.js').then(r=>r.text());
+    const min = src.replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'')
+                   .replace(/\s+/g,' ').trim();
+    $('#bm').href = 'javascript:' + encodeURI(min);
+  }catch(e){ /* 못 만들면 버튼만 남는다 */ }
+})();
 
 $('#run').onclick = run;
 $('#url').addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });

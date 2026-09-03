@@ -105,7 +105,18 @@ async function fetchOnce(url, profile) {
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
     const r = await fetch(url, { redirect: 'follow', signal: ctl.signal, headers: profile.headers });
-    return { status: r.status, ok: r.ok, text: r.ok ? await r.text() : null };
+    // 막혔을 때 누가 막았는지 알아야 다음 수를 정할 수 있다. 응답 헤더의
+    // server / via / x-* 에 WAF 이름이 드러나는 경우가 많다.
+    const seen = {};
+    for (const k of ['server', 'via', 'x-cache', 'cf-ray', 'x-powered-by', 'x-akamai-transformed',
+                     'x-iinfo', 'x-cdn', 'x-served-by', 'set-cookie', 'location', 'content-type']) {
+      const v = r.headers.get(k);
+      if (v) seen[k] = String(v).slice(0, 90);
+    }
+    let body = null;
+    if (r.ok) body = await r.text();
+    else { try { body = (await r.text()).slice(0, 300); } catch (e) { /* 본문이 없을 수 있다 */ } }
+    return { status: r.status, ok: r.ok, text: r.ok ? body : null, headers: seen, snippet: r.ok ? null : body };
   } finally {
     clearTimeout(timer);
   }
@@ -113,6 +124,7 @@ async function fetchOnce(url, profile) {
 
 async function fetchHtml(url) {
   const tried = [];
+  let diag = null;
   for (const profile of PROFILES) {
     let r;
     try {
@@ -123,13 +135,13 @@ async function fetchHtml(url) {
     }
     if (r.ok && r.text) return r.text;
     tried.push(profile.name + ':' + r.status);
+    if (!diag) diag = { status: r.status, headers: r.headers, snippet: r.snippet };
     if (r.status === 404) break;   // 없는 페이지면 다른 프로필로도 없다
   }
-  const err = new Error(
-    '이 쇼핑몰이 서버에서 보낸 요청을 막았습니다 (' + tried.join(', ') + ').'
-  );
+  const err = new Error('이 쇼핑몰이 서버에서 보낸 요청을 막았습니다 (' + tried.join(', ') + ').');
   err.status = 502;
   err.blocked = true;
+  err.diag = diag;
   throw err;
 }
 
@@ -215,6 +227,9 @@ export default async function handler(req, res) {
       error: err.name === 'AbortError'
         ? '상품 페이지 응답이 너무 느립니다.'
         : (err.message || '상품 정보를 가져오지 못했습니다.'),
+      blocked: !!err.blocked,
+      host: target.hostname,
+      diag: err.diag || null,
     });
     return;
   }
