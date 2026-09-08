@@ -49,12 +49,11 @@
   .gnb-dropdown-item.active{color:var(--accent); background:rgba(195,255,77,.1);}
 
   .page{max-width:1520px; margin:0 auto; padding:104px 40px 0;}
-  .build{display:inline-block; font-family:var(--font-mono); font-size:10px; color:var(--ink-4);
-         border:1px solid var(--line); padding:5px 9px; border-radius:999px; margin:0 7px 12px 0;}
   .head{padding-bottom:22px; border-bottom:1px solid var(--line-soft); margin-bottom:26px;}
-  .head h1{font-family:var(--font-display); font-size:34px; font-weight:800; letter-spacing:-.045em; margin:0 0 8px; line-height:1;}
-  .head p{margin:0; font-size:13.5px; color:var(--ink-3); line-height:1.7; max-width:70ch;}
-  .head b{color:var(--ink-2);}
+  .head h1{font-family:var(--font-display); font-size:clamp(36px,4.6vw,68px); font-weight:800;
+           letter-spacing:-.055em; line-height:1; margin:0; color:var(--ink);}
+  .head .sub{margin:24px 0 0; letter-spacing:normal; max-width:78ch; font-size:16.5px; font-weight:300;
+             line-height:1.85; color:var(--ink-2);}
 
   /* ── 입력 줄 ─────────────────────────────────────────────── */
   .bar.over .in{border-color:rgba(195,255,77,.6); background:rgba(195,255,77,.06);}
@@ -227,11 +226,9 @@
 
 <div class="page">
   <div class="head">
-    <span class="build" id="buildStamp"></span>
     <h1>시안 5종</h1>
-    <p>상품 링크 하나로 <b>카피 3세트와 그 카피에 맞는 이미지 3장</b>을 만듭니다.
-       카피를 먼저 쓰고 그 문장이 성립하는 장면을 그리므로 둘의 핏이 맞습니다.<br>
-       <b>이미지만 내려받아 포토샵에서 조판</b>하시면 됩니다. 화면의 카피는 어울리는지 보시라고 얹어둔 것입니다.</p>
+    <p class="sub">상품 링크 하나로 카피 5세트와 그 카피에 맞는 이미지 5장을 만듭니다.<br>
+       이미지만 내려받아 포토샵에서 조판하시면 됩니다. 화면의 카피는 어울리는지 보시라고 얹어둔 것입니다.</p>
   </div>
 
   <div class="bar" id="bar">
@@ -888,12 +885,6 @@ $$('.gnb-dropdown-toggle').forEach(btn=>btn.addEventListener('click',e=>{
 }));
 document.addEventListener('click',()=>$$('.gnb-dropdown-menu.open').forEach(m=>m.classList.remove('open')));
 
-(function stamp(){
-  const d=new Date(document.lastModified);
-  if(isNaN(d)) return;
-  const p=n=>String(n).padStart(2,'0');
-  $('#buildStamp').textContent = `빌드 ${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-})();
 window.__draft = { get sets(){return sets;}, set sets(v){sets=v;}, get product(){return product;},
                    set product(v){product=v;}, layout, bannerHTML, paintSets, measureRoom, L };
 </script>

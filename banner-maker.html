@@ -54,11 +54,11 @@
 
   /* ── 헤더 ─────────────────────────────────────────────── */
   .head{display:flex; align-items:flex-end; justify-content:space-between; gap:28px; padding-bottom:22px; border-bottom:1px solid var(--line-soft); margin-bottom:24px;}
-  .head h1{font-family:var(--font-display); font-size:34px; font-weight:800; letter-spacing:-.045em; margin:0 0 8px; line-height:1;}
-  .head p{margin:0; font-size:13.5px; color:var(--ink-3); line-height:1.65;}
+  .head h1{font-family:var(--font-display); font-size:clamp(36px,4.6vw,68px); font-weight:800;
+           letter-spacing:-.055em; line-height:1; margin:0; color:var(--ink);}
+  .head p{margin:24px 0 0; letter-spacing:normal; max-width:78ch; font-size:16.5px; font-weight:300;
+          line-height:1.85; color:var(--ink-2);}
   .mode-chip{display:inline-flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); background:rgba(195,255,77,.1); border:1px solid rgba(195,255,77,.28); padding:6px 11px; border-radius:999px; margin-bottom:12px;}
-  .build{display:inline-block; font-family:var(--font-mono); font-size:10px; color:var(--ink-4);
-         border:1px solid var(--line); padding:5px 9px; border-radius:999px; margin:0 7px 12px 0;}
   .mode-chip i{width:6px; height:6px; border-radius:50%; background:var(--accent); font-style:normal;}
 
   /* ── 2단 레이아웃 ──────────────────────────────────────── */
@@ -293,10 +293,9 @@
 <div class="page">
   <div class="head">
     <div>
-      <span class="build" id="buildStamp"></span>
       <span class="mode-chip"><i></i><span id="modeLabel">데모 데이터 · 링크를 넣으면 실제 상품으로 바뀝니다</span></span>
       <h1>배너 생성</h1>
-      <p>AI는 <b>배경과 카피</b>만 만듭니다. 가격·할인·좌표·폰트 크기는 전부 코드가 정합니다.<br>
+      <p>AI는 배경과 카피만 만듭니다. 가격·할인·좌표·폰트 크기는 전부 코드가 정합니다.<br>
          텍스트는 이미지에 굽지 않고 실제 텍스트 레이어로 올라가므로 한 글자도 안 깨집니다.</p>
     </div>
   </div>
@@ -1636,16 +1635,6 @@ $('#btnColorReset').onclick=()=>{ state.colorOverride={}; syncColors(); render()
 })();
 
 /* 폰트가 로드된 뒤에 재계산해야 줄바꿈이 정확하다 */
-/* 이 파일이 서버에 언제 올라간 것인지 그대로 보여준다. 손으로 버전을 적으면
-   바꾸는 걸 잊는다. document.lastModified는 응답의 Last-Modified라 배포하면
-   저절로 바뀐다 — "고쳤다는데 왜 그대로냐"를 화면에서 바로 가릴 수 있다. */
-function stampBuild(){
-  const d = new Date(document.lastModified);
-  if(isNaN(d)) return;
-  const pad = n => String(n).padStart(2,'0');
-  $('#buildStamp').textContent = `빌드 ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 /* 링크가 길어 지우기 번거롭다 — 한 번에 비우는 버튼 */
 (function(){
   const wrap=$('#pUrl').parentElement, input=$('#pUrl');
@@ -1656,7 +1645,6 @@ function stampBuild(){
 })();
 
 function boot(){
-  stampBuild();
   buildSizeTabs(); buildPosSeg(); buildOvDir(); buildLogoPos(); buildConcepts();
   syncProductUI(); syncCopyUI(); syncTweakUI(); syncColors();
   $('#lgS').value=state.logo.scale; $('#vLgS').textContent=state.logo.scale+'%';
