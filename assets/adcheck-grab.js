@@ -96,12 +96,24 @@
     // image[0]이 제품 뒷면인 몰이 있다. 사람이 고른 대표컷을 우선한다.
     if (og) { it.mainImage = og; if (it.images.indexOf(og) < 0) it.images.unshift(og); }
     it.mainImage = biggestOf(it.mainImage, pool);
-    // 화면에 떠 있는 큰 이미지들도 후보로 담는다. 모델컷·디테일컷 중에서
-    // 무엇으로 만들지는 사람이 고르는 게 맞다.
-    var extra = pool.slice().sort(function (a, b) { return b.w - a.w; })
-                    .map(function (p) { return p.url; });
-    it.images = [it.mainImage].concat(it.images, extra)
+    // 같은 상품의 다른 컷을 모은다. 상품 페이지에는 추천 상품·배너·후기까지
+    // 섞여 있어서 큰 이미지를 아무거나 담으면 남의 상품이 들어온다.
+    // 대표컷 파일명의 상품 코드가 들어간 것만 고른다.
+    // (신세계 예: goods/881/1002447881_l_....png → 1002447881 이 코드)
+    var code = (String(it.mainImage || '').split('/').pop().match(/\d{6,}/) || [])[0];
+    var sameProduct = code
+      ? pool.filter(function (q) { return q.url.indexOf(code) >= 0; })
+      : [];
+    // 배너로 쓸 만한 비율만 남긴다. 세로로 아주 긴 것은 상세페이지 스크롤
+    // 이미지라 그대로는 못 쓴다.
+    var usable = sameProduct.filter(function (q) {
+      var r = q.w / q.h;
+      return r > 0.6 && r < 1.8 && q.w >= 500;
+    }).sort(function (a, b) { return b.w * b.h - a.w * a.h; });
+
+    it.images = [it.mainImage].concat(usable.map(function (q) { return q.url; }), it.images)
       .filter(function (u, i, arr) { return u && arr.indexOf(u) === i; }).slice(0, 8);
+    it.imageCount = it.images.length;
     items = [it];
   } else {
     // 마지막 수단 — 화면에 보이는 것에서 긁는다
@@ -138,8 +150,10 @@
 
   function done(ok) {
     var d = document.createElement('div');
+    var imgN = (slim[0] && slim[0].images && slim[0].images.length) || 0;
     d.textContent = ok
       ? '상품 ' + slim.length + (total > slim.length ? '개(전체 ' + total + '개 중)' : '개')
+        + (imgN > 1 ? ' · 이미지 ' + imgN + '장' : '')
         + '를 복사했습니다 — AdCheck 입력칸에 붙여넣으세요'
       : '복사에 실패했습니다. 아래 상자의 내용을 직접 복사하세요.';
     d.style.cssText = 'position:fixed;left:50%;top:22px;transform:translateX(-50%);z-index:2147483647;'

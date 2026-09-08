@@ -22,6 +22,12 @@ import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 // 축 설명은 원본이 무엇이냐에 따라 달라진다. 모델컷을 받아놓고 "배경 없이
 // 제품만"이라고 시키면 모델을 지우고 옷만 남긴다. 실제로 그런 일이 났다.
+// 시안은 5개다. 상세페이지에 이미 있는 사진을 그대로 쓰는 것 2개와, 새로
+// 그리는 것 3개를 섞는다. 원본은 공짜고 즉시 나오며 제품이 변형될 일이
+// 없다. 새로 그리는 것만 비용과 시간이 든다.
+const ORIGINAL_COUNT = 2;
+const AI_COUNT = 3;
+
 const AXES = {
   packshot: [
     ['A', '제품 중심', '배경을 거의 두지 않고 제품 형태·질감·색이 가장 정확히 보이게.'],
@@ -87,11 +93,12 @@ const COPY_STYLES = {
   },
 };
 
-function buildPrompt(p, retryNote) {
+function buildPrompt(p, retryNote, originalCount) {
   const kind = p.imageType === 'model' ? 'model' : 'packshot';
   const axes = AXES[kind];
   const slots = availableSlots(p);
   const style = COPY_STYLES[p.copyStyle] || COPY_STYLES.default;
+  const nOrig = originalCount || 0;
   const facts = [
     `상품명: ${p.productName || '(미상)'}`,
     `브랜드: ${p.brand || '(미상)'}`,
@@ -99,8 +106,16 @@ function buildPrompt(p, retryNote) {
     `특징: ${p.features || '(없음)'}`,
   ].join('\n');
 
-  return `당신은 커머스 광고 아트디렉터다. 아래 상품으로 배너 소재 3종을 만든다.
-3종은 아래 세 축을 하나씩 맡는다. 축은 고정이고, 각 축 안에서 이 상품에 맞는
+  return `당신은 커머스 광고 아트디렉터다. 아래 상품으로 배너 시안 ${nOrig + AI_COUNT}종을 만든다.
+
+[A그룹 — 이미 있는 사진을 그대로 쓰는 ${nOrig}종]
+${nOrig ? `이 요청에 상품 사진 ${nOrig}장이 함께 왔다. 순서대로 1번, 2번이다.
+각 사진을 실제로 보고, **그 사진에 실제로 보이는 것**에 맞는 카피를 써라.
+사진에 없는 장면이나 상황을 카피로 지어내지 마라. 배경을 바꾸지 않으므로
+imagePrompt는 비워 둔다.` : '이번에는 쓸 수 있는 원본 사진이 없다. A그룹은 만들지 마라.'}
+
+[B그룹 — 새로 그리는 ${AI_COUNT}종]
+아래 세 축을 하나씩 맡는다. 축은 고정이고, 각 축 안에서 이 상품에 맞는
 구체적인 장면을 정한다.
 
 ${axes.map(([k, l, d]) => `  ${k} ${l} — ${d}`).join('\n')}
@@ -149,17 +164,19 @@ ${kind === 'model' ? `
    4.5:1 이상이어야 한다.
 ${retryNote ? '\n[직전 시도에서 아래가 겹쳤다. 색조를 확실히 벌려서 다시 만들어라]\n' + retryNote : ''}
 
-[출력] JSON만 출력한다.
+[출력] JSON만 출력한다. sets는 A그룹 ${nOrig}개 다음에 B그룹 ${AI_COUNT}개, 총 ${nOrig + AI_COUNT}개다.
 
 {"sets":[{
-  "axis":"A", "axisLabel":"제품 중심",
-  "sceneName":"한글 8자 이내 장면 이름",
-  "scene":"장면 한 줄 설명(한글)",
+  "source":"original",          // A그룹이면 "original", B그룹이면 "ai"
+  "imageIndex":1,               // A그룹만. 함께 온 사진의 순번(1부터)
+  "axis":"1", "axisLabel":"원본 사진",
+  "sceneName":"한글 8자 이내 이름",
+  "scene":"이 사진에 무엇이 보이는지 한 줄(한글)",
   "dominantColor":"#RRGGBB",
   "brightness":"밝음|중간|어두움",
   "copy":{"headline":"메인 카피\\n둘째 줄","subcopy":"서브 카피","cta":"버튼 문구"},
   "ink":"#RRGGBB","ctaBg":"#RRGGBB","ctaInk":"#RRGGBB",
-  "imagePrompt":"영어 이미지 생성 프롬프트"
+  "imagePrompt":""              // A그룹은 빈 문자열
 }]}
 
 [상품]

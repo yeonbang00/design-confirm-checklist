@@ -599,6 +599,64 @@ async function run(){
   }
 }
 
+/* 링크에서 딸려온 이미지 후보를 걸러낸다. 상품 페이지에는 정보 고시표,
+   상세 스크롤 이미지, 추천 상품 썸네일이 섞여 있어서 그대로 쓰면 엉뚱한 게
+   배너가 된다.
+   URL 규칙은 어느 몰에서나 되고, 픽셀 판정은 CDN이 CORS를 열어둔 곳에서만
+   된다(신세계는 열려 있고 홈플러스·더현대는 막혀 있다). 못 재면 버리지 않고
+   통과시킨다 — 쓸 만한 걸 잘못 버리는 게 더 나쁘다. */
+const BAD_PATH = /(goods_images_QS|\/notice\/|\/info\/|guide|_notice|_info)/i;
+async function classifyImage(url){
+  const out = { url, ok:true, why:'' };
+  if(BAD_PATH.test(url)){ out.ok=false; out.why='정보 고시 이미지'; return out; }
+  try{
+    // CORS를 안 여는 CDN(홈플러스·더현대)은 crossOrigin으로 부르면 실패한다.
+    // 먼저 그렇게 시도하고, 실패하면 crossOrigin 없이 다시 불러 크기만 잰다.
+    // 픽셀은 못 읽지만 이미지는 살린다.
+    const load = (cors) => new Promise((res,rej)=>{
+      const i=new Image();
+      if(cors) i.crossOrigin='anonymous';
+      i.onload=()=>res(i); i.onerror=rej; i.src=url;
+    });
+    let im, canRead = true;
+    try { im = await load(true); }
+    catch(e){ im = await load(false); canRead = false; }
+    out.w = im.naturalWidth; out.h = im.naturalHeight;
+    const r = out.w/out.h;
+    if(r < 0.55){ out.ok=false; out.why='상세 스크롤 이미지'; return out; }
+    if(out.w < 500){ out.ok=false; out.why='너무 작음'; return out; }
+
+    if(!canRead){ out.why='픽셀 못 읽음(통과)'; return out; }
+    const N=64, cv=document.createElement('canvas'); cv.width=N; cv.height=N;
+    const x=cv.getContext('2d',{willReadFrequently:true});
+    x.drawImage(im,0,0,N,N);
+    let d;
+    try{ d = x.getImageData(0,0,N,N).data; }
+    catch(e){ out.why='픽셀 못 읽음(통과)'; return out; }
+
+    // 색 수로 '사진인가'를 가른다. 같은 상품 페이지에서 실측한 값이다.
+    //   상품 정보 고시표 10 · 후기 실사용컷 82 · 모델컷 215
+    // 정보표와 사진 사이가 넓으니 그 사이에서 잡는다.
+    const set=new Set();
+    for(let i=0;i<d.length;i+=4) set.add(((d[i]>>4)<<8)|((d[i+1]>>4)<<4)|(d[i+2]>>4));
+    out.colors = set.size;
+    if(out.colors < 24){ out.ok=false; out.why=`사진이 아님(색 ${out.colors}종)`; return out; }
+
+    // 가장자리 편차로 무배경컷/장면컷 구분
+    const at=(px,py)=>{const i=(py*N+px)*4; return [d[i],d[i+1],d[i+2]];};
+    const edge=[]; for(let k=0;k<N;k+=2) edge.push(at(k,0),at(k,N-1),at(0,k),at(N-1,k));
+    const med=[0,1,2].map(c=>{const v=edge.map(e=>e[c]).sort((a,b)=>a-b); return v[v.length>>1];});
+    out.edge = Math.round(edge.reduce((s,e)=>s+Math.abs(e[0]-med[0])+Math.abs(e[1]-med[1])+Math.abs(e[2]-med[2]),0)/edge.length);
+    out.kind = out.edge < 12 ? 'packshot' : 'scene';
+  }catch(e){ out.why='불러오지 못함'; out.ok=false; }
+  return out;
+}
+async function pickCandidates(list, limit){
+  const res = await Promise.all((list||[]).slice(0,8).map(classifyImage));
+  const good = res.filter(r=>r.ok);
+  return { good: good.slice(0, limit), dropped: res.filter(r=>!r.ok) };
+}
+
 /* 원본이 모델컷인지 무배경 패키지컷인지 본다. 이걸 모르고 "배경 없이 제품만"을
    시키면 모델을 지우고 옷만 남긴다 — 실제로 블루핏 티셔츠에서 그 일이 났다.
    가장자리 색이 균일하면 무배경 패키지컷, 들쭉날쭉하면 사람이나 장면이 든
