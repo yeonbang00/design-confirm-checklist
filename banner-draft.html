@@ -57,6 +57,7 @@
   .head b{color:var(--ink-2);}
 
   /* ── 입력 줄 ─────────────────────────────────────────────── */
+  .bar.over .in{border-color:rgba(195,255,77,.6); background:rgba(195,255,77,.06);}
   .bar{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; margin-bottom:14px;}
   .bar[hidden]{display:none;}
   .in-clear{position:relative;}
@@ -95,25 +96,17 @@
 </style>
 <style>
   /* ── 시안 3장 ─────────────────────────────────────────────── */
-  .manual{display:grid; grid-template-columns:210px minmax(0,1fr); gap:16px; padding:16px;
-          border:1px solid var(--line); border-radius:14px; background:var(--surface); margin-bottom:22px;}
+  .manual{display:grid; grid-template-columns:96px minmax(0,1fr); gap:14px; padding:14px;
+          border:1px solid var(--line); border-radius:13px; background:var(--surface); margin-bottom:18px;}
+  .manual img{width:96px; height:96px; object-fit:cover; border-radius:9px; background:#1A1D22;}
   .manual[hidden]{display:none;}
-  .man-drop{display:grid; place-items:center; min-height:170px; padding:14px; cursor:pointer;
-            border:1px dashed var(--line); border-radius:11px; background:var(--surface-2);
-            transition:border-color .2s ease, background .2s ease;}
-  .man-drop:hover,.man-drop.over{border-color:rgba(195,255,77,.5); background:rgba(195,255,77,.05);}
-  .man-drop img{max-width:100%; max-height:150px; object-fit:contain; display:none; border-radius:8px;}
-  .man-drop.has img{display:block;}
-  .man-drop.has span{display:none;}
-  .man-drop span{font-size:11.5px; color:var(--ink-4); text-align:center; line-height:1.6;}
-  .man-fields{display:flex; flex-direction:column; gap:11px;}
+  .man-fields{display:flex; flex-direction:column; gap:9px; justify-content:center;}
   .man-row{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
   .f{display:block; font-size:11px; font-weight:600; color:var(--ink-3); margin:0 0 5px;}
   .f em{font-style:normal; font-weight:400; color:var(--ink-4);}
   .in2{width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:9px;
        padding:10px 12px; font-size:12.5px; color:var(--ink); outline:none;}
   .in2:focus{border-color:rgba(195,255,77,.5);}
-  .man-go{margin-top:auto; padding:12px;}
   @media (max-width:760px){ .manual{grid-template-columns:1fr;} }
   .blocked{border:1px solid rgba(255,180,84,.32); background:rgba(255,180,84,.06); border-radius:14px;
            padding:18px 20px; margin-bottom:22px;}
@@ -241,41 +234,25 @@
        <b>이미지만 내려받아 포토샵에서 조판</b>하시면 됩니다. 화면의 카피는 어울리는지 보시라고 얹어둔 것입니다.</p>
   </div>
 
-  <div class="bar">
+  <div class="bar" id="bar">
     <div class="in-clear">
-      <input class="in" id="url" placeholder="상품 페이지 주소를 붙여넣으세요">
+      <input class="in" id="url" placeholder="상품 링크를 붙여넣거나, 상품 이미지를 이 창에 끌어다 놓으세요">
       <button type="button" id="urlClear" title="지우기">×</button>
     </div>
     <button class="go" id="run">시안 만들기</button>
   </div>
-  <div class="ways" id="styleRow">
-    <span class="ways-label">카피 스타일</span>
-    <button class="way sm on" data-style="default">기본</button>
-    <button class="way sm" data-style="shinsegae-shopping">신세계쇼핑</button>
-    <button class="way sm" data-style="benefit">혜택 강조</button>
-    <button class="way sm" data-style="brand">브랜드 톤</button>
-  </div>
-  <div class="ways">
-    <button class="way on" data-way="link">링크로 가져오기</button>
-    <button class="way" data-way="manual">이미지 올려서 직접 입력</button>
-  </div>
+  <input type="file" id="file" accept="image/*" hidden>
   <div class="note" id="note">홈플러스·더현대Hi는 링크로 바로 읽힙니다. 서버 요청을 막는 몰(신세계 등)은 아래 안내대로 <b>북마클릿</b>을 쓰시면 됩니다.</div>
 
   <div class="manual" id="manual" hidden>
-    <div class="man-drop" id="drop">
-      <img id="dropPrev" alt="">
-      <span id="dropText">상품 이미지를 여기에 끌어다 놓거나 클릭</span>
-    </div>
-    <input type="file" id="file" accept="image/*" hidden>
+    <img id="dropPrev" alt="">
     <div class="man-fields">
-      <div><label class="f">상품명</label><input class="in2" id="mName" placeholder="예: 26SS 냉감 라이트쿨 바람막이"></div>
+      <input class="in2" id="mName" placeholder="상품명 (필수)">
       <div class="man-row">
-        <div><label class="f">판매가</label><input class="in2" id="mSale" inputmode="numeric" placeholder="23200"></div>
-        <div><label class="f">정상가</label><input class="in2" id="mOrig" inputmode="numeric" placeholder="비워도 됨"></div>
+        <input class="in2" id="mSale" inputmode="numeric" placeholder="판매가">
+        <input class="in2" id="mOrig" inputmode="numeric" placeholder="정상가 (선택)">
       </div>
-      <div><label class="f">카테고리 · 특징 <em>있으면 카피가 정확해집니다</em></label>
-        <input class="in2" id="mFeat" placeholder="예: 골프 상의 / 냉감 소재, 초경량, 자외선 차단"></div>
-      <button class="go man-go" id="mRun">이 상품으로 시안 만들기</button>
+      <input class="in2" id="mFeat" placeholder="카테고리·특징 (선택) — 있으면 카피가 정확해집니다">
     </div>
   </div>
 
@@ -304,6 +281,7 @@
 
   <div class="sets" id="sets"></div>
   <div class="allrow" id="allRow" hidden>
+    <button class="dl" id="more">5개 더 만들기</button>
     <button class="dl primary" id="dlAll">전부 내려받기</button>
     <span>조판 없는 원본 크기 이미지만 받습니다. 카피는 화면에서 확인용으로만 얹혀 있습니다.</span>
   </div>
@@ -624,10 +602,25 @@ function parsePasted(text){
   return null;
 }
 
+/* 카피 스타일은 고르게 하지 않는다. 링크 도메인을 보고 그 몰의 관례를
+   자동으로 쓰고, 다시 만들 때마다 다른 방향으로 돌린다. 고를 게 많은 것보다
+   여러 번 만들어 고르는 쪽이 실제로 쓰는 방식이다. */
+const STYLE_BY_HOST = { 'shinsegaetvshopping.com':'shinsegae-shopping' };
+const STYLE_ROTATION = ['default','benefit','brand'];
+let round = 0;
+function styleFor(sourceUrl){
+  try{
+    const host = new URL(sourceUrl).hostname.replace(/^www\.|^m(front)?\./,'');
+    if(STYLE_BY_HOST[host] && round === 0) return STYLE_BY_HOST[host];
+  }catch(e){}
+  return STYLE_ROTATION[round % STYLE_ROTATION.length];
+}
+
 async function run(){
   const raw = $('#url').value.trim();
   const btn = $('#run');
-  if(!raw){ note('상품 페이지 주소를 넣거나, 북마클릿으로 담은 내용을 붙여넣으세요.', true); return; }
+  if(!raw && uploaded){ return runUploaded(btn); }
+  if(!raw){ note('상품 링크를 붙여넣거나, 상품 이미지를 끌어다 놓으세요.', true); return; }
   btn.disabled = true; btn.textContent = '상품 읽는 중…';
   sets = []; $('#sets').innerHTML = ''; $('#prod').hidden = true; $('#blocked').hidden = true;
   try{
@@ -772,11 +765,11 @@ async function makeSets(btn){
     btn.textContent = '카피와 장면 만드는 중…';
     const dr = await fetch('/api/bannerDraft', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ product: { ...product, copyStyle }, originalImages })
+      body: JSON.stringify({ product: { ...product, copyStyle: styleFor(product.sourceUrl || $('#url').value) }, originalImages })
     });
     const dd = await dr.json();
     if(!dr.ok) throw new Error(dd.error || '시안 생성 실패');
-    sets = dd.sets;
+    sets = round === 0 ? dd.sets : sets.concat(dd.sets);
     paintSets();
     if(dd.colorClash && dd.colorClash.length){
       note(`세 장의 색이 가까워 비슷해 보일 수 있습니다 — ${esc(dd.colorClash.join(', '))}. 다시 만들면 달라집니다.`, true);
@@ -800,7 +793,6 @@ async function makeSets(btn){
    이미지를 받아둔 경우가 많으니, 실제 업무에는 이쪽이 더 가깝다.
    업로드한 이미지는 서버로 보내 배경을 바꾸는 데만 쓴다. */
 let uploaded = null;   // {base64, mediaType, dataUrl}
-let copyStyle = 'default';   // 몰마다 쓰는 말이 달라서 골라 쓴다
 
 function readFile(f){
   if(!f || !/^image\//.test(f.type)) return;
@@ -808,58 +800,45 @@ function readFile(f){
   r.onload = ()=>{
     const url = r.result;
     uploaded = { dataUrl:url, mediaType:f.type, base64:String(url).split(',')[1] };
-    const d = $('#drop');
-    d.classList.add('has');
     $('#dropPrev').src = url;
+    $('#manual').hidden = false;
+    $('#url').value = '';
+    note('이미지를 받았습니다. <b>상품명</b>만 넣고 [시안 만들기]를 누르세요.');
+    $('#mName').focus();
   };
   r.readAsDataURL(f);
 }
 (function(){
-  const d=$('#drop');
-  d.onclick=()=>$('#file').click();
-  d.ondragover=e=>{ e.preventDefault(); d.classList.add('over'); };
-  d.ondragleave=()=>d.classList.remove('over');
-  d.ondrop=e=>{ e.preventDefault(); d.classList.remove('over'); readFile(e.dataTransfer.files[0]); };
+  const bar=$('#bar');
+  const open=()=>$('#file').click();
+  bar.addEventListener('dragover', e=>{ e.preventDefault(); bar.classList.add('over'); });
+  bar.addEventListener('dragleave', ()=>bar.classList.remove('over'));
+  bar.addEventListener('drop', e=>{ e.preventDefault(); bar.classList.remove('over'); readFile(e.dataTransfer.files[0]); });
   $('#file').onchange=e=>{ readFile(e.target.files[0]); e.target.value=''; };
-  // 붙여넣기로도 받는다 — 캡처해서 바로 ⌘V 하는 게 제일 빠르다
+  // 캡처해서 바로 붙여넣는 게 제일 빠르다
   window.addEventListener('paste', e=>{
-    if($('#manual').hidden) return;
     const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));
-    if(it) readFile(it.getAsFile());
+    if(it){ e.preventDefault(); readFile(it.getAsFile()); }
   });
+  $('#dropPrev').onclick = open;
 })();
 
-$$('#styleRow .way').forEach(b=>b.onclick=()=>{
-  $$('#styleRow .way').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  copyStyle = b.dataset.style;
-});
-$$('.ways:not(#styleRow) .way').forEach(b=>b.onclick=()=>{
-  $$('.ways:not(#styleRow) .way').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  const manual = b.dataset.way==='manual';
-  $('#manual').hidden = !manual;
-  $('.bar').hidden = manual;
-  $('#blocked').hidden = true;
-  note(manual
-    ? '상품 이미지와 이름만 있으면 됩니다. 링크가 막히는 몰에서도 항상 됩니다. <b>화면을 캡처해서 붙여넣어도(⌘V)</b> 됩니다.'
-    : '홈플러스·더현대Hi는 링크로 바로 읽힙니다. 서버 요청을 막는 몰(신세계 등)은 아래 안내를 보세요.');
-});
 
-async function runManual(){
+
+async function runUploaded(btn){
   const name = $('#mName').value.trim();
   if(!name){ note('상품명을 넣어주세요.', true); $('#mName').focus(); return; }
-  if(!uploaded){ note('상품 이미지를 올려주세요.', true); return; }
   const num = v => { const d=String(v||'').replace(/[^\d]/g,''); return d?Number(d):null; };
   const sale = num($('#mSale').value), orig = num($('#mOrig').value);
   product = {
-    productName: name, brand: '',
-    salePrice: sale, originalPrice: (orig && sale && orig>sale) ? orig : null,
-    discountRate: (orig && sale && orig>sale) ? Math.round((orig-sale)/orig*100) : null,
-    features: $('#mFeat').value.trim(), category: '',
-    mainImage: uploaded.dataUrl, upload: uploaded,
+    productName:name, brand:'', salePrice:sale,
+    originalPrice:(orig && sale && orig>sale) ? orig : null,
+    discountRate:(orig && sale && orig>sale) ? Math.round((orig-sale)/orig*100) : null,
+    features:$('#mFeat').value.trim(), category:'',
+    mainImage:uploaded.dataUrl, upload:uploaded, images:[],
   };
-  picked = [product];
-  showProduct(); $('#prodPick').hidden = true;
-  await makeSets($('#mRun'));
+  picked=[product]; showProduct(); $('#prodPick').hidden=true;
+  await makeSets(btn);
 }
 
 function showBlocked(pd){
@@ -888,8 +867,12 @@ function showBlocked(pd){
 })();
 
 $('#dlAll').onclick = downloadAll;
+$('#more').onclick = async ()=>{
+  if(!product) return;
+  round += 1;                       // 다음 회차는 다른 카피 방향으로
+  await makeSets($('#more'));
+};
 $('#run').onclick = run;
-$('#mRun').onclick = runManual;
 $('#url').addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
 (function(){
   const wrap=$('#url').parentElement, input=$('#url');
