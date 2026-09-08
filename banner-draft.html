@@ -181,6 +181,11 @@
   /* display를 지정한 클래스는 [hidden]과 짝을 맞춘다 (특이도 문제) */
   .prod[hidden]{display:none;}
   .flag[hidden]{display:none;}
+  .allrow{display:flex; align-items:center; gap:14px; margin-top:18px; padding:14px 16px;
+          border:1px solid var(--line); border-radius:13px; background:var(--surface);}
+  .allrow[hidden]{display:none;}
+  .allrow .dl{width:auto; padding:11px 22px;}
+  .allrow span{font-size:11.5px; color:var(--ink-4); line-height:1.6;}
   .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',sans-serif; color:var(--ink-4);
                padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
   @media (max-width:1100px){ .sets{grid-template-columns:1fr;} }
@@ -298,6 +303,10 @@
   </div>
 
   <div class="sets" id="sets"></div>
+  <div class="allrow" id="allRow" hidden>
+    <button class="dl primary" id="dlAll">전부 내려받기</button>
+    <span>조판 없는 원본 크기 이미지만 받습니다. 카피는 화면에서 확인용으로만 얹혀 있습니다.</span>
+  </div>
 
   <div class="page-footer show">
     <div class="footer-top">
@@ -454,6 +463,7 @@ function paintSets(){
     </div>`).join('');
 
   sets.forEach((s,i)=>{ drawBanner(i); });
+  $('#allRow').hidden = !sets.length;
   $$('[data-dl]').forEach(b=>b.onclick=()=>download(Number(b.dataset.dl)));
   $$('[data-re]').forEach(b=>b.onclick=()=>makeImage(Number(b.dataset.re)));
   fitAll();
@@ -542,15 +552,41 @@ async function makeImage(i){
   }
 }
 
-function download(i){
+/* 내려받는 것은 조판 없는 순수 이미지다. 화면의 카피는 어울리는지 보라고
+   얹어둔 것이고 파일에는 들어가지 않는다.
+   a[download]는 다른 도메인 파일에는 무시돼서 새 탭으로 열리기만 한다.
+   그래서 바이트를 받아 blob으로 저장한다. CORS가 막힌 몰(홈플러스·더현대)은
+   그것도 안 되므로 새 탭으로 열어 직접 저장하시게 안내한다. */
+function fileName(s){
+  const base = ((product && product.productName) || 'banner')
+    .replace(/[^\w가-힣]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+  const ext = (String(s.imageUrl).split('?')[0].match(/\.(png|jpe?g|webp)$/i) || [,'png'])[1];
+  const tag = s.source==='original' ? '원본' : 'AI';
+  return `${base}_${tag}${s.axis}_${s.sceneName}.${ext}`.replace(/\s+/g,'');
+}
+async function download(i){
   const s=sets[i];
   if(!s.imageUrl) return;
-  const name = ((product && product.productName) || 'banner')
-    .replace(/[^\w가-힣]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
-  const a=document.createElement('a');
-  a.href = s.imageUrl; a.download = `${name}_${s.axis}_${s.sceneName}.png`;
-  a.target = '_blank'; a.rel='noopener';
-  document.body.appendChild(a); a.click(); a.remove();
+  const btn=$(`[data-dl="${i}"]`), label=btn && btn.textContent;
+  if(btn){ btn.disabled=true; btn.textContent='내려받는 중…'; }
+  try{
+    const r = await fetch(s.imageUrl, { mode:'cors' });
+    if(!r.ok) throw new Error('status '+r.status);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=fileName(s);
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }catch(e){
+    // CORS로 못 받으면 새 탭으로 연다 — 거기서 우클릭 저장
+    window.open(s.imageUrl, '_blank', 'noopener');
+    note('이 쇼핑몰 이미지는 바로 저장이 안 됩니다. 새 탭에서 <b>우클릭 → 이미지 저장</b>으로 받아주세요.', true);
+  }finally{ if(btn){ btn.disabled=false; btn.textContent=label; } }
+}
+async function downloadAll(){
+  const ready = sets.map((s,i)=>s.imageUrl?i:-1).filter(i=>i>=0);
+  for(const i of ready){ await download(i); await new Promise(r=>setTimeout(r,400)); }
 }
 
 /* ── 전체 흐름 ──────────────────────────────────────────────── */
@@ -851,6 +887,7 @@ function showBlocked(pd){
   $('#bm').href = 'javascript:' + encodeURIComponent(code);
 })();
 
+$('#dlAll').onclick = downloadAll;
 $('#run').onclick = run;
 $('#mRun').onclick = runManual;
 $('#url').addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
