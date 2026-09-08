@@ -40,6 +40,8 @@ const AXES = {
     ['C', '분위기',   '색과 빛으로 인상을 만든다. 인물과 착장은 그대로 두고 시간대·조명·색조만 바꾼다.'],
   ],
 };
+const IMG_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 '
+             + '(KHTML, like Gecko) Version/17.0 Safari/605.1.15';
 const MIN_COLOR_DISTANCE = 90;   // 실측 기준 — 이보다 가까우면 눈으로도 비슷해 보였다
 
 /* 숫자를 아예 금지했더니 "15% 할인받기" 같은 실제 관례를 못 쓰게 됐다.
@@ -201,14 +203,18 @@ function tooClose(sets) {
   }
   return bad;
 }
-function normalize(sets, kind, product) {
+function normalize(sets, kind, product, originalUrls) {
   const axes = AXES[kind === 'model' ? 'model' : 'packshot'];
-  return sets.slice(0, 3).map((s, i) => {
-    const ax = axes[i] || axes[0];
+  const nOrig = (originalUrls || []).length;
+  return sets.slice(0, nOrig + AI_COUNT).map((s, i) => {
+    const isOriginal = i < nOrig;
+    const ax = axes[Math.max(0, i - nOrig)] || axes[0];
     const c = s.copy || {};
     return {
-      axis: s.axis || ax[0],
-      axisLabel: s.axisLabel || ax[1],
+      source: isOriginal ? 'original' : 'ai',
+      imageUrl: isOriginal ? originalUrls[i] : null,
+      axis: isOriginal ? String(i + 1) : (s.axis || ax[0]),
+      axisLabel: isOriginal ? '원본 사진' : (s.axisLabel || ax[1]),
       sceneName: s.sceneName || ax[1],
       scene: s.scene || '',
       dominantColor: hex(s.dominantColor, '#888888'),
@@ -219,7 +225,7 @@ function normalize(sets, kind, product) {
       ink: hex(s.ink, '#FFFFFF'),
       ctaBg: hex(s.ctaBg, '#FFFFFF'),
       ctaInk: hex(s.ctaInk, '#111111'),
-      imagePrompt: s.imagePrompt || '',
+      imagePrompt: isOriginal ? '' : (s.imagePrompt || ''),
     };
   }).map(function (t) {
     // 자리표시자를 실제 값으로 바꾼다. 여기서만 숫자가 들어간다.
@@ -238,30 +244,46 @@ export default async function handler(req, res) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'AI 시안 생성이 설정되지 않았습니다.' }); return; }
 
-  const { product } = req.body || {};
+  const { product, originalImages } = req.body || {};
   if (!product || !product.productName) {
     res.status(400).json({ error: '상품 정보가 필요합니다.' });
     return;
   }
 
+  // 원본 사진에 맞는 카피를 쓰려면 모델이 그 사진을 봐야 한다. 클라이언트가
+  // URL만 넘기고 서버가 받아온다 — CORS를 안 여는 CDN이 많아 브라우저에서
+  // 바이트를 뽑을 수 없기 때문이다.
+  const urls = Array.isArray(originalImages) ? originalImages.slice(0, ORIGINAL_COUNT) : [];
+  const images = [];
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, { headers: { 'User-Agent': IMG_UA } });
+      if (!r.ok) continue;
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (buf.length > 5 * 1024 * 1024) continue;      // 너무 큰 건 건너뛴다
+      images.push({ base64: buf.toString('base64'),
+                    mediaType: r.headers.get('content-type') || 'image/jpeg' });
+    } catch (e) { /* 한 장 못 받아도 나머지로 진행한다 */ }
+  }
+
   try {
     let out = await callOpenAI({
-      apiKey, promptText: buildPrompt(product, null),
-      maxOutputTokens: 6000, reasoningEffort: 'medium',
+      apiKey, promptText: buildPrompt(product, null, images.length), images,
+      maxOutputTokens: 8000, reasoningEffort: 'medium',
     });
     const kind = product.imageType === 'model' ? 'model' : 'packshot';
-    let sets = normalize(Array.isArray(out && out.sets) ? out.sets : [], kind, product);
-    if (sets.length < 3) { res.status(502).json({ error: 'AI가 시안 3종을 만들지 못했습니다.' }); return; }
+    let sets = normalize(Array.isArray(out && out.sets) ? out.sets : [], kind, product, urls.slice(0, images.length));
+    if (sets.length < AI_COUNT) { res.status(502).json({ error: 'AI가 시안을 만들지 못했습니다.' }); return; }
 
     // 색이 겹치면 한 번만 다시 시킨다
     let clash = tooClose(sets);
     if (clash.length) {
       const retry = await callOpenAI({
-        apiKey, promptText: buildPrompt(product, clash.join('\n')),
-        maxOutputTokens: 6000, reasoningEffort: 'medium',
+        apiKey, promptText: buildPrompt(product, clash.join('\n'), images.length), images,
+        maxOutputTokens: 8000, reasoningEffort: 'medium',
       }).catch(() => null);
       if (retry && Array.isArray(retry.sets)) {
-        const s2 = normalize(retry.sets, kind, product);
+        const s2 = normalize(retry.sets, kind, product, urls.slice(0, images.length));
         if (s2.length === 3 && tooClose(s2).length < clash.length) {
           sets = s2; clash = tooClose(s2);
         }
@@ -269,6 +291,7 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({ sets, colorClash: clash, imageType: kind,
+      originalCount: images.length, aiCount: AI_COUNT,
       copyStyle: COPY_STYLES[product.copyStyle] ? product.copyStyle : 'default',
       slots: availableSlots(product), model: OPENAI_MODEL });
   } catch (err) {
