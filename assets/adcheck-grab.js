@@ -138,7 +138,10 @@
       productName: it.productName, brand: it.brand,
       salePrice: it.salePrice, originalPrice: it.originalPrice,
       discountRate: it.discountRate, mainImage: it.mainImage,
-      images: total === 1 ? (it.images || []).slice(0, 8) : undefined,
+      // 상품이 여러 개인 딜 페이지에서도 각 상품의 컷을 담는다. 예전에는
+      // 클립보드가 커진다고 단일 상품일 때만 담았는데, 그러면 딜에서 상품을
+      // 고른 뒤 원본을 쓸 방법이 없어진다. 개수를 줄여 담는다.
+      images: (it.images || []).slice(0, total === 1 ? 8 : 3),
       description: (it.description || '').slice(0, 120) || null,
     };
   });

@@ -473,11 +473,6 @@ function markReady(i){
       : `아래쪽이 복잡합니다(디테일 ${room.toFixed(1)}). 포토샵에서 카피 자리를 따로 만드셔야 할 수 있습니다.`;
   }).catch(()=>{});
 }
-function paintCandidateNote(used, total){
-  if(!total) return;
-  const cur = $('#note').innerHTML;
-  $('#note').innerHTML = cur + `<br>링크에 있던 사진 ${total}장 중 <b>${used}장</b>을 그대로 씁니다.`;
-}
 function setState(i, text, done){
   const st=$('#st'+i); if(!st) return;
   if(done){ st.hidden = true; return; }
@@ -604,6 +599,7 @@ function parsePasted(text){
    여러 번 만들어 고르는 쪽이 실제로 쓰는 방식이다. */
 const STYLE_BY_HOST = { 'shinsegaetvshopping.com':'shinsegae-shopping' };
 const STYLE_ROTATION = ['default','benefit','brand'];
+const ORIGINAL_TARGET = 2;   // 원본 2 + AI 3 = 5
 let round = 0;
 function styleFor(sourceUrl){
   try{
@@ -636,7 +632,7 @@ async function run(){
     }
     picked = pd.items || [];
     if(!picked.length) throw new Error('상품을 찾지 못했습니다.');
-    product = { ...picked[0], category: pd.category };
+    product = { ...picked[0], category: pd.category, harvested: pd.harvested || [], sourceUrl: pd.sourceUrl };
     showProduct(); buildPicker();
     if(picked.length>1) note($('#note').innerHTML + ' — 위에서 다른 상품을 고를 수 있습니다.');
 
@@ -748,16 +744,29 @@ async function makeSets(btn){
     // 링크에 딸려온 사진 중 쓸 만한 것을 골라 함께 보낸다. 그 사진을 보고
     // 카피를 써야 "사진에 없는 장면"을 지어내지 않는다.
     btn.textContent = '쓸 만한 사진 고르는 중…';
-    let originalImages = [];
-    if(!product.upload && Array.isArray(product.images) && product.images.length > 1){
-      const { good, dropped } = await pickCandidates(product.images, 2);
-      originalImages = good.map(g=>g.url);
-      if(dropped.length){
-        const why = dropped.map(d=>d.why).filter(Boolean);
-        console.log('제외한 사진', dropped.length, '장:', why.join(', '));
+    let originalImages = [], candNote = '';
+    if(!product.upload){
+      // 후보를 모은다. 상품에 딸린 images 뿐 아니라 서버가 페이지에서 긁어온
+      // harvested도 함께 본다 — 예전에는 harvested를 만들어놓고 안 쓰고 있었다.
+      const pool = [...new Set([
+        product.mainImage,
+        ...(product.images || []),
+        ...(product.harvested || []),
+      ].filter(Boolean))];
+      if(pool.length){
+        const { good, dropped } = await pickCandidates(pool, ORIGINAL_TARGET);
+        originalImages = good.map(g=>g.url);
+        // 왜 몇 장이 됐는지 화면에서 보이게 한다. 콘솔에만 찍으면 아무도 안 본다.
+        const reasons = {};
+        dropped.forEach(d=>{ const k=d.why||'알 수 없음'; reasons[k]=(reasons[k]||0)+1; });
+        const dropTxt = Object.entries(reasons).map(([k,n])=>`${k} ${n}`).join(' · ');
+        candNote = `사진 후보 ${pool.length}장 중 <b>${originalImages.length}장</b>을 그대로 씁니다`
+                 + (dropTxt ? ` (제외: ${dropTxt})` : '');
+      } else {
+        candNote = '링크에서 쓸 사진을 찾지 못해 5장 모두 새로 그립니다';
       }
     }
-    paintCandidateNote(originalImages.length, (product.images||[]).length);
+    if(candNote) note($('#note').innerHTML + '<br>' + candNote);
 
     btn.textContent = '카피와 장면 만드는 중…';
     const dr = await fetch('/api/bannerDraft', {
