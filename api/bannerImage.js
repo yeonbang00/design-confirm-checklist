@@ -30,17 +30,22 @@ export const config = { api: { bodyParser: { sizeLimit: '20mb' } } };
 // 어색해진다. 상품의 정체성(형태·비율·색·포장·개수)은 지키되, 카메라 앵글과
 // 놓인 자리는 컨셉에 맞게 다시 잡게 한다.
 const KEEP = [
-  'The product in the reference image must remain the SAME product:',
-  'same shape and proportions, same colour, same packaging and label design,',
-  'same material and texture, same number of items.',
-  'If people are present, keep their faces, hair and garments unchanged.',
+  'KEEP THE SAME: the product itself — its shape and proportions, colour, material and',
+  'texture, packaging and label design, and the number of items. If a person wears or',
+  'holds it, keep that same person: same face, hair and body type, wearing the same garment.',
   '',
-  'You MAY change the camera angle, viewpoint, framing and how the product is placed',
-  'so that it sits naturally in the new scene. If the scene is a table, show it resting',
-  'on the table from a natural eye-level or three-quarter view rather than copying the',
-  'original overhead packshot angle. Re-light the product to match the new scene,',
-  'and give it contact shadows and reflections consistent with that lighting.',
-  'The result must look like one photograph, not a cut-out pasted onto a background.',
+  'CHANGE FREELY: the pose and body position, where the limbs are, where the eyes look,',
+  'the camera angle, distance and framing, the lighting, and the whole environment.',
+  '',
+  'Do NOT copy the pose from the reference photo. Re-stage the shot: give the subject a',
+  'posture that person would naturally take in the new scene — walking, reaching, leaning,',
+  'looking at something — and frame it the way a photographer would shoot that scene.',
+  'For a product with no person, do not copy the original overhead packshot angle either;',
+  'place it in the scene at a natural eye-level or three-quarter view.',
+  'Re-light everything to match the new scene and add contact shadows and reflections',
+  'consistent with that light.',
+  'It must read as one photograph taken on location, not a subject cut out and pasted',
+  'onto a different background.',
 ].join(' ');
 const NO_TEXT = 'Do not render any text, letters, numbers, logos or watermarks anywhere in the image.';
 // 카피가 얹힐 자리를 비워두게 한다. 안 그러면 제품이 화면을 꽉 채워

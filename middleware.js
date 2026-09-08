@@ -25,6 +25,7 @@ const SIGNUP_PATH = '/_gate/signup';
 const ADMIN_PENDING_PATH = '/_gate/admin/pending';
 const ADMIN_DECIDE_PATH = '/_gate/admin/decide';
 const ADMIN_PAGE_PATH = '/admin.html';
+const GRAB_SCRIPT_PATH = '/assets/adcheck-grab.js';
 const USERS_BLOB_PATH = 'users.json';
 const USERS_URL = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/users.json';
 const PBKDF2_ITERATIONS = 210000;
@@ -241,6 +242,12 @@ export default async function middleware(request) {
   // own ADMIN_PASSWORD instead) — this has to work even before any account
   // exists yet, so the first admin can approve their own signup.
   if (pathname === ADMIN_PAGE_PATH) return next();
+
+  // 상품 담기 북마클릿은 쇼핑몰 페이지에서 이 스크립트를 불러다 실행한다.
+  // 로그인 세션이 없는 상태로 오므로 이 파일만 열어둔다. 비밀값이 없고
+  // 하는 일은 사용자가 보고 있는 페이지의 공개 정보를 읽는 것뿐이다.
+  // (열어두지 않으면 북마클릿을 고칠 때마다 팀원 전원이 다시 설치해야 한다)
+  if (pathname === GRAB_SCRIPT_PATH) return next();
 
   if (pathname === ADMIN_PENDING_PATH && method === 'POST') {
     const body = await request.json().catch(() => ({}));

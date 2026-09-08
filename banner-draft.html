@@ -280,7 +280,7 @@
     <p>IP나 접속 방식을 보고 막는 것이라 우리 쪽에서 뚫을 방법이 없고, 뚫으려 드는 것도 옳지 않습니다.
        대신 <b>이미 열어 둔 그 페이지에서 직접 담아오면</b> 됩니다.</p>
     <ol>
-      <li>아래 <b>상품 담기</b>를 북마크바로 끌어다 놓으세요 <span class="once">한 번만</span>
+      <li>아래 <b>상품 담기</b>를 북마크바로 끌어다 놓으세요 <span class="once">한 번만 — 이후 자동으로 최신 버전이 쓰입니다</span>
         <a class="bm" id="bm" href="#" onclick="return false">상품 담기</a></li>
       <li>쇼핑몰 상품 페이지를 열고 그 북마크를 누르세요</li>
       <li>여기 입력칸에 <b>붙여넣기</b>하고 다시 실행하세요</li>
@@ -836,15 +836,19 @@ function showBlocked(pd){
   b.scrollIntoView({block:'nearest'});
 }
 
-/* 북마클릿은 assets/adcheck-grab.js를 그대로 눌러 만든다. 소스를 한 벌만
-   두면 고칠 때 두 군데를 맞출 필요가 없다. */
-(async function buildBookmarklet(){
-  try{
-    const src = await fetch('assets/adcheck-grab.js').then(r=>r.text());
-    const min = src.replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'')
-                   .replace(/\s+/g,' ').trim();
-    $('#bm').href = 'javascript:' + encodeURI(min);
-  }catch(e){ /* 못 만들면 버튼만 남는다 */ }
+/* 북마클릿은 '불러오는 것'만 담는다. 코드를 통째로 굽지 않는다.
+   한 번 북마크바에 올리면 그 시점 코드로 굳어버려서, 스크립트를 고쳐도
+   이미 설치한 사람에게는 반영되지 않기 때문이다. 실제로 그 일이 났다 —
+   큰 판형을 고르는 수정이 안 들어가 275px 썸네일이 쓰이고 있었다.
+   대신 매번 최신 스크립트를 불러다 실행한다. */
+(function buildBookmarklet(){
+  const src = new URL('assets/adcheck-grab.js', location.href).href;
+  const code =
+    "(function(){var s=document.createElement('script');" +
+    "s.src=" + JSON.stringify(src) + "+'?v='+Date.now();" +
+    "s.onerror=function(){alert('AdCheck 스크립트를 불러오지 못했습니다. 네트워크를 확인해주세요.');};" +
+    "document.body.appendChild(s);})()";
+  $('#bm').href = 'javascript:' + encodeURIComponent(code);
 })();
 
 $('#run').onclick = run;
