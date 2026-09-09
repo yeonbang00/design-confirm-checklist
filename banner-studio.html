@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AdCheck | 제작 스튜디오 미리보기</title>
+<title>AdCheck | 제작 스튜디오</title>
 <link rel="icon" href="assets/favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>
@@ -20,23 +20,70 @@
 .art.duo.original>img{top:0;left:0;width:50%;height:100%;object-fit:contain}.art.duo.original>img.second-photo{left:50%}
 @media(max-width:780px){.step-nav-inner{padding:12px 18px;gap:8px}.step-position{max-width:150px;font-size:11px}.step-nav .btn{padding:10px 12px}.editor{max-height:none}}
 </style>
-<link rel="stylesheet" href="assets/banner-studio-preview.css">
+<link rel="stylesheet" href="assets/banner-studio-preview.css"><link rel="stylesheet" href="assets/banner-studio-live.css?v=3">
+<link rel="stylesheet" href="assets/adcheck-nav.css?v=3">
 </head>
 <body>
-<header class="top"><a class="logo" href="index.html">AdCheck</a><nav aria-label="배너 생성"><a href="banner-studio.html" aria-current="page">제작 스튜디오</a><a href="banner-draft.html">시안 5종</a><a href="banner-maker.html">완성 배너</a></nav><span class="preview-tag">미리보기</span></header>
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
+    <button type="button" class="gnb-mobile-toggle" aria-expanded="false">메뉴</button>
+    <nav class="gnb gnb-primary" aria-label="주 메뉴">
+      <a href="index.html" class="gnb-link">배너 분석</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">배너 생성</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="banner-studio.html" class="gnb-dropdown-item active" aria-current="page">제작 스튜디오</a>
+          <a href="banner-draft.html" class="gnb-dropdown-item">시안 5종</a>
+          <a href="banner-maker.html" class="gnb-dropdown-item">완성 배너</a>
+        </div></div>
+      </div>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div></div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">폰트</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="font-pairing.html" class="gnb-dropdown-item">폰트 페어링</a>
+          <a href="font-game.html" class="gnb-dropdown-item">폰트 오락실</a>
+        </div></div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+    </nav>
+    <nav class="gnb gnb-secondary">
+      <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">로드맵</a>
+    </nav>
+  </div>
+</div>
 <main class="shell">
 <div class="page-title"><div><h1>제작 스튜디오</h1><p class="description">다른 구매 이유를 찾고, 좋은 구성을 다음 상품으로 이어가세요.</p></div><button class="btn quiet" id="openSaved">저장함 <span class="library-count" id="savedCount">0</span></button></div>
-<div class="notice">예시 데이터 · 실제 생성 없음 — 상품 원본·기존 AI 이미지·SSF 참고 사례로 작업 흐름을 체험합니다.</div>
+<div class="notice">상품 원본으로 시안을 구성하고, AI로 카피를 제안합니다. 장면·착장 합성은 연출 설정까지만 지원합니다.</div>
 <nav class="steps" aria-label="제작 단계"><button class="step" data-step="0" aria-current="step"><span>1</span>상품 확인</button><button class="step" data-step="1"><span>2</span>제작 방식</button><button class="step" data-step="2"><span>3</span><span id="stepThreeText">시안 비교·수정</span></button><button class="step" data-step="3"><span>4</span>저장·전달</button></nav>
 <section id="productStep">
 <div class="product-grid"><div><div class="product-hero"><img id="heroPhoto" alt="블루핏 검은 티셔츠를 착용한 상품 원본 사진"><span class="photo-label">상품 원본 · 재생성하지 않음</span></div><div class="thumbs" id="photoChoices"></div></div>
-<div><h2>먼저, 광고에 쓸 사실부터.</h2><p class="description">상품과 혜택을 확인하면 그 안에서 다양한 시안을 제안합니다.</p><div class="mode-tabs"><button class="btn" disabled>링크 가져오기 · 준비 중</button><button class="btn" disabled>북마클릿 · 준비 중</button></div><p class="hint">지금은 블루핏 예시 상품으로 체험합니다. 실제 가져오기는 다음 단계에서 연결합니다.</p><label class="field">상품명<input id="productName" readonly value="블루핏 리브 티셔츠 4종" maxlength="80"></label><div class="facts"><div class="fact"><small>확인한 판매가</small><span class="value">79,000원</span></div><div class="fact"><small>구성</small><span class="value">티셔츠 4종</span></div></div><hr class="section-rule"><h3>혜택은 조건까지 함께</h3><p class="hint">상품 페이지에서 확인한 특정 카드 5% 할인입니다. 전체 고객 할인이나 최대 50% 혜택으로 바꾸지 않습니다.</p><label class="check"><input type="checkbox" id="benefitCheck"><span>카드 할인 조건을 확인했고, 예시 카피에 사용합니다.<br><small class="muted">롯데·NH 카드 조건 · 라이브 전 적용 여부 재확인 필요</small></span></label><hr class="section-rule"><label class="check"><input type="checkbox" id="factCheck"><span>상품명·판매가·구성을 확인했습니다.</span></label><p id="productError" class="error" role="alert" hidden></p></div></div>
+<div><h2>먼저, 광고에 쓸 사실부터.</h2><p class="description">상품과 혜택을 확인하면 그 안에서 다양한 시안을 제안합니다.</p><div class="import-product">
+<label class="field">상품 링크<input id="productUrl" type="url" placeholder="https://쇼핑몰/상품주소"></label><button class="btn" id="importUrl">링크에서 상품 가져오기</button>
+<details id="grabHelp"><summary>링크가 막히면 북마클릿으로 가져오기</summary><p class="hint">아래 버튼을 브라우저 북마크 바에 끌어다 놓으세요. 상품 페이지를 연 뒤 저장한 북마크를 누르고, 복사된 상품 정보를 여기에 붙여넣으세요.</p><a class="btn" id="grabLink">AdCheck 상품 담기</a><label class="field">복사한 상품 정보<textarea id="grabData" rows="3" placeholder="상품 담기에서 복사한 JSON"></textarea></label><button class="btn" id="importGrab">붙여넣은 상품 가져오기</button></details>
+<p class="hint" id="importStatus" role="status">블루핏 예시가 열려 있습니다. 새 상품을 가져오거나 아래 정보를 직접 수정하세요.</p><label class="field" id="importChoiceField" hidden>가져온 상품 선택<select id="importChoice"></select></label>
+</div><label class="field">상품명<input id="productName" value="블루핏 리브 티셔츠 4종" maxlength="80"></label>
+<div class="fields"><label class="field">브랜드<input id="productBrand" value="BLUEFIT" maxlength="40"></label><label class="field">판매가 (원)<input id="productPrice" type="number" min="1" step="1" value="79000"></label><label class="field">구성 수량 (종, 모르면 비워두세요)<input id="productQuantity" type="number" min="1" step="1" value="4"></label></div>
+<label class="field">확인한 상품 특징<textarea id="productDescription" maxlength="600" rows="2" placeholder="소재, 구성 등 상품 페이지에서 확인한 정보"></textarea></label>
+<details><summary>상품 사진 직접 등록</summary><label class="field">사진 주소 (한 줄에 하나, 최대 12장)<textarea id="productImages" rows="3"></textarea></label><button class="btn" id="applyImages">사진 적용</button><p class="hint">상품 사진의 공개 http 또는 https 주소를 사용하세요.</p></details>
+<hr class="section-rule"><h3>혜택은 조건까지 함께</h3><div class="fields"><label class="field">할인율 (%)<input id="benefitRate" type="number" min="1" max="100" value="5"></label><label class="field">혜택 표현<select id="benefitKind"><option>정률</option><option>최대</option></select></label></div><label class="field">적용 조건<input id="benefitCondition" maxlength="100" value="롯데·NH 카드 결제 시" placeholder="예: 첫 구매 고객 · 일부 상품 한정"></label><label class="check"><input type="checkbox" id="benefitCheck"><span>적용 조건을 확인했고 카피에 사용합니다.</span></label><hr class="section-rule"><label class="check"><input type="checkbox" id="factCheck"><span>상품명·판매가·구성을 확인했습니다.</span></label><p id="productError" class="error" role="alert" hidden></p></div></div>
 </section>
 <section id="directionStep" hidden>
 <h2>어떤 방식으로 만들까요?</h2><p class="description">원본을 활용하거나, 유지할 장면과 교체할 대상을 정하세요.</p>
 <div class="production-modes" id="productionModes" aria-label="제작 방식 선택"></div>
-<details class="reference-library"><summary id="librarySummary">AdCheck 레퍼런스로 방향 잡기 · 선택 사항</summary><div class="library-body"><div class="row"><p class="hint">패션 · 기존 유형별 사례 / 참고 광고의 할인율·상품 정보는 가져오지 않습니다.</p><a class="btn quiet" href="https://2026-adcheck.vercel.app/reference-board.html" target="_blank" rel="noopener">전체 레퍼런스 열기</a></div><div id="libraryChoices" class="library-choices"></div><div class="row"><p id="referencePrinciple" class="hint"></p><button id="clearReference" class="btn quiet">선택 해제</button></div><p class="hint">유형을 선택하면 새 시안에 예시 카피를 적용합니다. 이미 편집 중인 시안은 3단계에서 적용 버튼을 눌러 바꿀 수 있습니다.</p></div></details>
-<div id="templateChoices"><h2>같은 상품, 여섯 가지 구성.</h2><p class="description" id="templateNote"></p><div class="directions" id="directions"></div></div>
+<details class="reference-library"><summary id="librarySummary">AdCheck 레퍼런스로 방향 잡기 · 선택 사항</summary><div class="library-body"><div class="row"><p class="hint">분류와 설명을 카피·컨셉에 참고합니다. 참고 광고의 할인율은 가져오지 않습니다.</p><a class="btn quiet" href="https://2026-adcheck.vercel.app/reference-board.html" target="_blank" rel="noopener">전체 레퍼런스 열기</a></div><div class="fields"><label class="field">업종<select id="referenceCategory"><option value="fashion">패션</option></select></label><label class="field">유형<select id="referenceType"><option value="">전체 유형</option></select></label></div><p id="referenceStatus" class="hint" role="status"></p><button class="btn quiet" id="reloadReferences">목록 불러오기</button><div id="libraryChoices" class="library-choices"></div><div class="row"><p id="referencePrinciple" class="hint"></p><button id="clearReference" class="btn quiet">선택 해제</button></div><p class="hint">참고 사례를 고르고 AI 카피 제안을 누르면 선택한 시안의 문구와 컨셉을 만듭니다. 이미지 자체를 AI로 분석하는 기능은 포함하지 않습니다.</p></div></details>
+<div id="templateChoices"><h2>같은 상품, 여섯 가지 구성.</h2><p class="description" id="templateNote"></p><div class="row" style="margin-top:16px"><button class="btn primary" id="generateCopies">선택한 시안 AI 카피 제안</button><span id="copyStatus" class="hint" role="status"></span></div><div class="directions" id="directions"></div></div>
 <div class="production-setup" id="productionSetup" hidden>
 <figure class="reference-figure"><img id="referenceImage" alt="SSF SHOP 연출 참고"><figcaption id="referenceCaption"></figcaption></figure>
 <div class="setup-side"><h2>유지할 것과 바꿀 것을 분리합니다.</h2><p class="notice">참고 사례를 보며 연출 설정을 준비합니다. 이 단계에서 상품 합성은 실행하지 않습니다.</p>
@@ -47,9 +94,10 @@
 <p class="hint" id="sourceRequirements"></p><label class="field">추가 연출 지시<textarea id="recipeNotes" rows="3" maxlength="500"></textarea></label>
 <p class="hint">다음 단계에서 지시서를 확인하고 저장합니다. 실제 생성 전에 자체 배경·모델 원본과 상품 자료가 필요합니다.</p>
 </div></div></section>
-<section id="boardStep" hidden><div class="product-strip"><img id="stripPhoto" alt="예시 상품"><div><p id="stripName"></p><span class="hint" id="stripFacts"></span></div><button class="btn quiet" data-go="0" style="margin-left:auto">정보 수정</button></div><button class="btn quiet" id="restoreWorkspace" hidden>이전 비교로 돌아가기</button><div id="boardWorkspace"><div class="workspace"><div><div class="board-head"><h2>같은 상품, 다른 설득.</h2><div class="row"><button class="btn quiet" data-go="1">제작 방식 변경</button></div></div><p class="hint">시안을 선택하면 아래 또는 오른쪽에서 수정할 수 있습니다.</p><div class="board" id="board"></div></div><aside class="editor" aria-label="선택 시안 편집"><span class="selected-info" id="editIndex"></span><h2 tabindex="-1" id="editTitle" style="margin-top:7px"></h2><p class="hint" id="imageOrigin"></p><p class="hint" id="editReference"></p><button class="btn" id="applyReference"></button><label class="check"><input type="checkbox" id="originalView">카피 없이 원본 보기</label><label class="field">메인 카피<textarea id="mainCopy" maxlength="100" rows="2"></textarea></label><label class="field">서브 카피<textarea id="subCopy" maxlength="150" rows="2"></textarea></label><label class="field">CTA 문구<input id="ctaCopy" maxlength="40"></label><label class="check"><input id="showCta" type="checkbox">CTA 표시</label><label class="field">조판 구성<select id="layout"><option value="price">큰 가격 · 상단 좌측</option><option value="split">사진·카피 분할</option><option value="top-center">상단 중앙</option><option value="top-left">상단 좌측</option><option value="bottom-right">하단 우측</option><option value="duo">사진 2장 · 컬러 비교</option></select></label><p class="hint" id="offerInfo" hidden></p><p id="fitWarning" class="error" role="status" hidden>카피가 시안 영역을 벗어납니다. 문구나 줄바꿈을 줄이거나 다른 조판을 선택해주세요.</p><hr class="section-rule"><h3>바꾸지 않을 요소</h3><label class="check"><input id="lockImage" type="checkbox">사진 유지</label><label class="check"><input id="lockLayout" type="checkbox">조판 유지</label><div class="editor-actions"><button class="btn" id="varyCopy">카피 예시 바꾸기</button><button class="btn" id="varyScene">다른 사진·조판 예시</button><button class="btn primary" id="saveVariant">이 구성을 저장</button></div><p class="hint" id="reviewPoints"></p><p class="hint">항목별 반려사례는 검토 기준으로 활용합니다. 이 화면은 자동 검수를 실행하지 않습니다.</p><p class="hint">직접 수정한 혜택 문구는 자동 검증하지 않습니다. 저장 전 조건을 확인해주세요.</p></aside></div></div><div id="recipeReview" hidden></div></section>
+<section id="boardStep" hidden><div class="product-strip"><img id="stripPhoto" alt="예시 상품"><div><p id="stripName"></p><span class="hint" id="stripFacts"></span></div><button class="btn quiet" data-go="0" style="margin-left:auto">정보 수정</button></div><button class="btn quiet" id="restoreWorkspace" hidden>이전 비교로 돌아가기</button><div id="boardWorkspace"><div class="workspace"><div><div class="board-head"><h2>같은 상품, 다른 설득.</h2><div class="row"><button class="btn quiet" data-go="1">제작 방식 변경</button></div></div><p class="hint">시안을 선택하면 아래 또는 오른쪽에서 수정할 수 있습니다.</p><div class="board" id="board"></div></div><aside class="editor" aria-label="선택 시안 편집"><span class="selected-info" id="editIndex"></span><h2 tabindex="-1" id="editTitle" style="margin-top:7px"></h2><p class="hint" id="conceptInfo"></p><p class="hint" id="imageOrigin"></p><p class="hint" id="editReference"></p><button class="btn" id="applyReference"></button><label class="check"><input type="checkbox" id="originalView">카피 없이 원본 보기</label><label class="field">메인 카피<textarea id="mainCopy" maxlength="100" rows="2"></textarea></label><label class="field">서브 카피<textarea id="subCopy" maxlength="150" rows="2"></textarea></label><label class="field">CTA 문구<input id="ctaCopy" maxlength="40"></label><label class="check"><input id="showCta" type="checkbox">CTA 표시</label><label class="field">조판 구성<select id="layout"><option value="price">큰 가격 · 상단 좌측</option><option value="split">사진·카피 분할</option><option value="top-center">상단 중앙</option><option value="top-left">상단 좌측</option><option value="bottom-right">하단 우측</option><option value="duo">사진 2장 · 컬러 비교</option></select></label><p class="hint" id="offerInfo" hidden></p><p id="fitWarning" class="error" role="status" hidden>카피가 시안 영역을 벗어납니다. 문구나 줄바꿈을 줄이거나 다른 조판을 선택해주세요.</p><hr class="section-rule"><h3>바꾸지 않을 요소</h3><label class="check"><input id="lockImage" type="checkbox">사진 유지</label><label class="check"><input id="lockLayout" type="checkbox">조판 유지</label><div class="editor-actions"><button class="btn" id="varyCopy">선택 시안 AI 카피 제안</button><button class="btn" id="varyScene">다른 사진·조판</button><button class="btn primary" id="saveVariant">이 구성을 저장</button></div><p class="hint" id="reviewPoints"></p><p class="hint">항목별 반려사례는 검토 기준으로 활용합니다. 이 화면은 자동 검수를 실행하지 않습니다.</p><p class="hint">직접 수정한 혜택 문구는 자동 검증하지 않습니다. 저장 전 조건을 확인해주세요.</p></aside></div></div><div id="recipeReview" hidden></div></section>
 <section id="savedStep" hidden><div class="board-head"><div><h2>좋은 구성을 다음 작업으로.</h2><p class="description">이 브라우저에 저장됩니다. 팀 공유·서버 저장은 아직 연결되지 않았습니다.</p></div><button class="btn" id="exportAll">작업 정보 내려받기</button></div><div class="empty" id="emptySaved"><h3>아직 저장한 작업이 없습니다.</h3><p class="hint">시안 또는 연출 설정을 저장하면 여기에서 다시 사용할 수 있습니다.</p><button class="btn primary" data-go="2">작업으로 돌아가기</button></div><h2 class="saved-heading" id="variantSavedTitle">저장한 시안</h2><div class="saved-grid" id="savedGrid"></div><h2 class="saved-heading" id="recipeSavedTitle">저장한 연출 설정</h2><div class="recipe-saved-grid" id="recipeSavedGrid"></div><p class="hint" style="margin-top:24px">전달 파일에는 카피·배치·사진 출처·혜택 조건이 포함됩니다. 최종 배너 파일은 디자이너가 조판하고 확인합니다.</p></section>
-<footer class="footer">AdCheck · 제작 스튜디오 미리보기 0.2　 /　최종 조판과 컨펌은 디자이너가 진행합니다.</footer>
+<footer class="footer">AdCheck · 제작 스튜디오 베타 0.3　 /　최종 조판과 컨펌은 디자이너가 진행합니다.</footer>
 </main><nav class="step-nav" aria-label="이전 다음 단계"><div class="step-nav-inner"><button class="btn" id="stepPrev">◀ 이전</button><span id="stepPosition" class="step-position" aria-live="polite">1 / 4 · 상품 확인</span><button class="btn primary" id="stepNext">다음 ▶</button></div></nav><div id="toast" class="toast" role="status" hidden></div>
-<script src="assets/banner-studio-preview.js"></script>
+<script type="module" src="assets/banner-studio-preview.js?v=3"></script>
+<script src="assets/adcheck-nav.js?v=3"></script>
 </body></html>

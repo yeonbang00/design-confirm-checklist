@@ -1,0 +1,2 @@
+document.querySelectorAll('.gnb-mobile-toggle').forEach(button=>button.addEventListener('click',()=>{const open=button.closest('.gnb-bar').classList.toggle('expanded');button.setAttribute('aria-expanded',String(open));button.textContent=open?'닫기':'메뉴'}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.gnb-mobile-toggle[aria-expanded="true"]').forEach(b=>b.click())});

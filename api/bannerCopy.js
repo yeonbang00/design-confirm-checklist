@@ -1,3 +1,4 @@
+import { studioCopy } from './_studioCopy.js';
 // POST /api/bannerCopy
 // Body: { product: {...}, tone: 'product'|'emotion'|'benefit'|'price'|'season',
 //         concept?: {...}, limits?: {...} }
@@ -139,6 +140,8 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'AI 카피 생성이 설정되지 않았습니다.' }); return; }
+
+  if (req.body?.mode === 'studio') return studioCopy(req,res,apiKey);
 
   const { product, tone, concept, limits } = req.body || {};
   if (!product || !product.productName) {
