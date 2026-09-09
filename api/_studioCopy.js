@@ -1,5 +1,5 @@
 import { callOpenAI, OPENAI_MODEL } from './_openaiClient.js';
-import { factSlots, resolveCopy } from '../assets/studio-data.mjs';
+import { factSlots, resolveCopy } from './_studioData.js';
 
 export async function studioCopy(req,res,apiKey) {
   try {
