@@ -1,6 +1,7 @@
 // POST /api/bannerImage
 // Body: { imageUrl?: string, base64?: string, mediaType?: string,
-//         imagePrompt: string, size?: '1024x1024'|'1024x1536'|'1536x1024' }
+//         scene?: string, keep?: 'person'|'item'|'product',
+//         imagePrompt?: string, size?: '1024x1024'|'1024x1536'|'1536x1024' }
 // Returns: { imageUrl } | { error }
 //
 // 컨셉 배경 이미지를 만든다. 제품을 새로 그리지 않는다 — 원본 상품 사진을
@@ -25,34 +26,65 @@ const ALLOWED_SIZES = new Set(['1024x1024', '1024x1536', '1536x1024']);
 
 export const config = { api: { bodyParser: { sizeLimit: '20mb' } } };
 
-// 무엇을 지키고 무엇을 바꿀지 나눠서 지시한다. 예전에는 "포즈까지 그대로"를
-// 요구했는데, 그러면 항공샷 원본이 식탁 컨셉에서도 항공샷 그대로 남아 장면이
-// 어색해진다. 상품의 정체성(형태·비율·색·포장·개수)은 지키되, 카메라 앵글과
-// 놓인 자리는 컨셉에 맞게 다시 잡게 한다.
-const KEEP = [
-  'KEEP THE SAME: the product itself — its shape and proportions, colour, material and',
-  'texture, packaging and label design, and the number of items. If a person wears or',
-  'holds it, keep that same person: same face, hair and body type, wearing the same garment.',
-  '',
-  'CHANGE FREELY: the pose and body position, where the limbs are, where the eyes look,',
-  'the camera angle, distance and framing, the lighting, and the whole environment.',
-  '',
-  'Do NOT copy the pose from the reference photo. Re-stage the shot: give the subject a',
-  'posture that person would naturally take in the new scene — walking, reaching, leaning,',
-  'looking at something — and frame it the way a photographer would shoot that scene.',
-  'For a product with no person, do not copy the original overhead packshot angle either;',
-  'place it in the scene at a natural eye-level or three-quarter view.',
-  'Re-light everything to match the new scene and add contact shadows and reflections',
-  'consistent with that light.',
-  'It must read as one photograph taken on location, not a subject cut out and pasted',
-  'onto a different background.',
-].join(' ');
+/* 프롬프트를 장면부터 쓴다.
+ *
+ * 예전에는 "상품을 유지하라"를 1,100자쯤 앞에 깔고 장면을 뒤에 한 줄
+ * 붙였다. 그렇게 하면 gpt-image-2는 원본 사진을 거의 그대로 되돌려준다.
+ * 실측 — 같은 원본에 "의자에 앉혀라", "가까이 당겨라", "멀리 빼라" 세 가지를
+ * 각각 시켰더니 셋 다 원본과 같은 거리, 같은 간판, 같은 포즈가 나왔다.
+ * 사용자가 "여섯 컷이 다 똑같다"고 한 것이 이 지점이다.
+ *
+ * 순서를 뒤집으니 바뀌었다 — (1) 새 장면을 먼저 선언하고 (2) "원본의 장소는
+ * 아무것도 남기지 마라"를 박고 (3) 지킬 것을 짧게 뒤에 붙인다. 같은 원본에서
+ * 실내 좌식컷과 무인 스튜디오컷이 실제로 나왔다.
+ *
+ * KEEP은 세 가지뿐이고 서버가 문장으로 바꾼다. 클라이언트가 문장을 통째로
+ * 보내면 "사람을 지워라" 같은 지시가 섞여 들어올 수 있다.
+ */
+const KEEPS = {
+  // 사람이 든 사진 — 사람과 입은 것을 전부 지킨다
+  person:
+    'FROM THE REFERENCE, KEEP ONLY: the same person — same face, hair and body type — wearing '
+    + 'exactly the same garments. Every item they wear must stay identical in colour, cut and '
+    + 'length, including the trousers and the shoes. Change nothing about what they are wearing.',
+  // 사람이 든 사진에서 그 물건만 꺼낸다
+  item:
+    'FROM THE REFERENCE, KEEP ONLY: the product the person is wearing or holding — its exact '
+    + 'colour, material, texture, proportions and details. Do not include the person.',
+  // 사람이 있는지 확인하지 못한 사진 — 어느 쪽이든 깨지지 않게 둔다
+  subject:
+    'FROM THE REFERENCE, KEEP ONLY: the product itself — its exact shape and proportions, '
+    + 'colour, material and texture, packaging and label design. If a person appears in the '
+    + 'reference, keep that same person and exactly the same garments they wear.',
+  // 사람이 없는 상품 사진
+  product:
+    'FROM THE REFERENCE, KEEP ONLY: the product itself — its exact shape and proportions, '
+    + 'colour, material and texture, packaging and label design, and the number of items. '
+    + 'Do not add a person.',
+};
+
+const CUT_TIES =
+  'NOTHING from the reference photograph\'s location or setting may appear — none of its '
+  + 'background, no part of its street, room, signage, furniture or props. Discard its pose and '
+  + 'its camera angle entirely and shoot the scene above from scratch. '
+  + 'It must read as one photograph taken on location, not a subject cut out and pasted onto a '
+  + 'different background: re-light everything to match the new scene and add contact shadows '
+  + 'and reflections consistent with that light.';
+
 const NO_TEXT = 'Do not render any text, letters, numbers, logos or watermarks anywhere in the image.';
 // 카피가 얹힐 자리를 비워두게 한다. 안 그러면 제품이 화면을 꽉 채워
 // 글자를 놓을 곳이 없고, 어두운 영역을 아무리 걸어도 읽기 어려워진다.
 const ROOM = 'Compose the frame so that roughly one third of the image is calm, uncluttered '
   + 'background with no important detail — this empty area is reserved for text that will be '
   + 'added later. Keep the product clearly inside the remaining area.';
+
+function buildPrompt({ scene, keep, imagePrompt }) {
+  // 예전 호출부는 imagePrompt 한 덩어리만 보낸다. 그대로 받아 준다.
+  if (!scene) return `${imagePrompt} ${KEEPS.product} ${ROOM} ${NO_TEXT}`;
+  const keeper = KEEPS[keep] || KEEPS.product;
+  return `Generate a completely new photograph. THE NEW SCENE: ${scene} `
+    + `${CUT_TIES} ${keeper} ${imagePrompt ? imagePrompt + ' ' : ''}${ROOM} ${NO_TEXT}`;
+}
 
 async function fetchSource(imageUrl) {
   const r = await fetch(imageUrl, {
@@ -73,10 +105,14 @@ export default async function handler(req, res) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'AI 이미지 생성이 설정되지 않았습니다.' }); return; }
 
-  const { imageUrl, base64, mediaType, imagePrompt, size } = req.body || {};
-  if (!imagePrompt) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
+  const { imageUrl, base64, mediaType, imagePrompt, scene, keep, size } = req.body || {};
+  if (!imagePrompt && !scene) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
   const outSize = ALLOWED_SIZES.has(size) ? size : '1024x1024';
-  const prompt = `${KEEP} ${imagePrompt} ${ROOM} ${NO_TEXT}`;
+  const prompt = buildPrompt({
+    scene: typeof scene === 'string' ? scene.slice(0, 900) : '',
+    keep: typeof keep === 'string' ? keep : '',
+    imagePrompt: typeof imagePrompt === 'string' ? imagePrompt.slice(0, 500) : '',
+  });
 
   try {
     let apiRes;

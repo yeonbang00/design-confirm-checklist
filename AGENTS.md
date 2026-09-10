@@ -12,9 +12,11 @@ AdCheck — 광고 배너를 AI가 검수하고, 배너 소재를 만들어주�
 
 | 하려는 일 | 열어야 할 파일 | 크기 |
 |---|---|---|
-| 배너 소재 생성(시안 3종) | `banner-draft.html`, `api/bannerDraft.js`, `api/bannerImage.js`, `assets/banner-text.js` | ~40KB |
-| 완성 배너 조판 | `banner-maker.html`, `assets/banner-text.js` | ~100KB |
-| 상품 링크 파싱 | `api/productScrape.js`, `assets/adcheck-grab.js` | ~16KB |
+| 배너 생성(시안 6종) | `banner-studio.html`, `assets/banner-studio-preview.js`, `assets/studio-auto-plan.mjs` | ~85KB |
+| 시안 6종이 무슨 컷인가 | `assets/studio-auto-plan.mjs` **한 파일만** | 8KB |
+| 생성 이미지 프롬프트 | `api/bannerImage.js` **한 파일만** | 8KB |
+| 사진 분류·로고 제거 | `api/productPhotos.js`, `api/imageText.js`, `assets/studio-logo-scrub.mjs` | ~12KB |
+| 상품 링크 파싱 | `api/productScrape.js`, `assets/adcheck-grab.js` | ~24KB |
 | 배너 17개 항목 검수 | `api/analyze.js` **한 파일만** | 110KB |
 | 검수 화면 | `index.html` **한 파일만** | 173KB |
 | 로그인/계정 | `middleware.js` | 30KB |
@@ -98,24 +100,36 @@ AI에게 숫자를 맡기면 지어낸다 — 실제로 신세계 딜 페이지 
 보낸 요청은 417로 막는다. `api/productScrape.js`가 프로필 사다리로 시도하고,
 막히면 북마클릿(`assets/adcheck-grab.js`)으로 사용자 브라우저에서 담아온다.
 
+**생성 프롬프트는 장면부터.** `images/edits`에 "상품을 유지하라"를 길게 앞에 깔고
+장면을 뒤에 붙이면 원본이 거의 그대로 돌아온다. 실측 — 같은 원본에 "의자에 앉혀라 /
+가까이 당겨라 / 멀리 빼라"를 각각 시켰더니 셋 다 원본과 같은 거리·간판·포즈였다.
+순서를 뒤집자(장면 → "원본 장소는 남기지 마라" → 짧은 KEEP) 실제로 바뀌었다.
+`api/bannerImage.js`의 `buildPrompt()`가 이 순서를 강제한다.
+
+**로고는 프롬프트로 안 지워진다.** "이 워드마크를 지워라"도, 좌표를 문장에 적어
+넣어도 세 번 다 그대로 남았다. 픽셀을 먼저 덮어야 사라진다. 서버에 이미지
+라이브러리가 없으므로(Sharp·Canvas 불가) `api/imageText.js`가 바이트와 OCR 좌표만
+주고, `assets/studio-logo-scrub.mjs`가 브라우저 canvas에서 덮는다.
+
 **Blob CDN 캐시.** 공개 URL은 엣지에 30일 캐시되고 **쿼리스트링은 캐시 키에 들어가지
 않는다**. `?ts=` 같은 캐시 무력화는 통하지 않는다. 덮어쓰는 파일은
 `api/_blobPut.js`가 쓰기 시점에 `x-cache-control-max-age: 0`을 붙인다.
 
 ---
 
-## 지금 상태 (2026-09-08)
+## 지금 상태 (2026-09-10)
 
-최근 작업은 **배너 생성**이다. GNB의 `배너 생성` 아래 두 페이지가 있다.
-- `banner-draft.html` 시안 3종 — 링크 → 카피 3세트 + 이미지 3장, 이미지만 내려받음
-- `banner-maker.html` 완성 배너 — 조판 + PNG 내보내기
+**배너 생성은 `banner-studio.html` 한 페이지다.** `banner-draft.html`과
+`banner-maker.html`은 삭제됐다.
+
+흐름 — 링크/북마클릿 → 사진 수확 → 사진 분류(`/api/productPhotos`) →
+로고 제거(`/api/imageText` + canvas) → 계획(`createPlan`) → 카피(`/api/bannerCopy`)와
+이미지(`/api/bannerImage`) 동시 생성 → 이미지만 내려받아 포토샵에서 조판.
+
+시안 6종은 **서로 다른 종류의 컷**이다(배경만 바꾼 여섯 장이 아니다).
+메인 원본 · 스튜디오 단품 · 스타일링 세트 · 상세 원본 · 넓은 프레임 · 모델 재촬영.
+상세컷이 없어 '상세 원본'이 대표컷과 겹치면 '다른 장소'로 바꿔 끼운다.
 
 **아직 실제 서버에서 한 번도 실행되지 않은 코드가 있다.** 로그인 게이트 때문에
-개발자가 배포본을 열지 못해서다. 아래는 문법 검사와 응답 흉내내기까지만 확인됐다.
-
-- `api/productScrape.js` — 저장된 3사 HTML로 파싱 결과는 대조함
-- `api/bannerDraft.js` — 프롬프트는 9개 상품으로 직접 호출해 확인, 엔드포인트는 미실행
-- `api/bannerCopy.js` — 같음
-- `api/bannerImage.js` — 이미지 생성 자체는 확인, 버튼→서버→Blob 경로는 미실행
-
-**여기부터 보면 문제를 찾을 가능성이 높다.**
+개발자가 배포본을 열지 못해서다. 아래는 로컬 정적 서버와 OpenAI 직접 호출까지만
+확인됐다 — `/api/productPhotos`와 `/api/imageText`는 배포본에서 첫 실행이다.

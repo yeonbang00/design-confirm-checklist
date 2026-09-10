@@ -8,7 +8,22 @@
  * 상품 페이지에서 북마클릿을 누르면 상품 정보를 클립보드에 담고,
  * AdCheck 입력칸에 붙여넣으면 된다.
  */
-(function () {
+(async function () {
+  /* 상세 페이지 컷은 스크롤해야 뜬다(lazy-load). 안 훑고 읽으면 대표컷
+     한 장만 잡히고, 시안 여섯 장이 전부 같은 사진이 된다.
+     페이지를 한 번 훑어 내렸다가 원래 자리로 돌아온다. */
+  function sweep() {
+    var back = window.scrollY, step = Math.round(innerHeight * 0.9), y = 0, n = 0;
+    return new Promise(function (done) {
+      (function next() {
+        if (n++ > 60 || y > document.body.scrollHeight) {
+          window.scrollTo(0, back); setTimeout(function () { done(); }, 350); return;
+        }
+        window.scrollTo(0, y); y += step; setTimeout(next, 90);
+      })();
+    });
+  }
+
   function meta(p) {
     var el = document.querySelector('meta[property="' + p + '"], meta[name="' + p + '"]');
     return el ? el.content : null;
@@ -52,9 +67,16 @@
      같은 상품의 더 큰 판형이 있으면 그걸 쓴다. */
   function loadedImages() {
     return Array.prototype.slice.call(document.images)
-      .filter(function (i) { return i.naturalWidth >= 300 && i.currentSrc; })
-      .map(function (i) { return { url: i.currentSrc.split('?')[0], w: i.naturalWidth, h: i.naturalHeight }; });
+      .filter(function (i) { return i.naturalWidth >= 240 && i.currentSrc; })
+      .map(function (i) {
+        // 상세 영역 안에 있는지 본다. 상세컷은 배너에서 다른 종류의 소재라
+        // 대표컷과 섞지 않고 따로 표시한다.
+        var inDetail = !!i.closest('[class*="detail" i],[id*="detail" i],[class*="desc" i],'
+                                 + '[id*="desc" i],[class*="prd-info" i],[class*="goods-cont" i]');
+        return { url: i.currentSrc.split('?')[0], w: i.naturalWidth, h: i.naturalHeight, detail: inDetail };
+      });
   }
+
   function biggestOf(url, pool) {
     if (!url) return url;
     var bare = String(url).split('?')[0];
@@ -70,6 +92,15 @@
     same.sort(function (a, b) { return b.w - a.w; });
     return same[0].w > 400 ? same[0].url : bare;
   }
+
+  var busy = document.createElement('div');
+  busy.textContent = '상품 사진을 모으는 중… 페이지가 잠깐 스크롤됩니다';
+  busy.style.cssText = 'position:fixed;left:50%;top:22px;transform:translateX(-50%);z-index:2147483647;'
+    + 'background:#12151A;color:#EDEEF0;font:600 13px/1.5 -apple-system,sans-serif;'
+    + 'padding:12px 18px;border-radius:10px;border:1px solid #C3FF4D';
+  document.body.appendChild(busy);
+  await sweep();
+  busy.remove();
 
   var pool = loadedImages();
   var blocks = ld();
@@ -96,23 +127,41 @@
     // image[0]이 제품 뒷면인 몰이 있다. 사람이 고른 대표컷을 우선한다.
     if (og) { it.mainImage = og; if (it.images.indexOf(og) < 0) it.images.unshift(og); }
     it.mainImage = biggestOf(it.mainImage, pool);
-    // 같은 상품의 다른 컷을 모은다. 상품 페이지에는 추천 상품·배너·후기까지
-    // 섞여 있어서 큰 이미지를 아무거나 담으면 남의 상품이 들어온다.
-    // 대표컷 파일명의 상품 코드가 들어간 것만 고른다.
-    // (신세계 예: goods/881/1002447881_l_....png → 1002447881 이 코드)
-    var code = (String(it.mainImage || '').split('/').pop().match(/\d{6,}/) || [])[0];
-    var sameProduct = code
-      ? pool.filter(function (q) { return q.url.indexOf(code) >= 0; })
-      : [];
-    // 배너로 쓸 만한 비율만 남긴다. 세로로 아주 긴 것은 상세페이지 스크롤
-    // 이미지라 그대로는 못 쓴다.
-    var usable = sameProduct.filter(function (q) {
-      var r = q.w / q.h;
-      return r > 0.6 && r < 1.8 && q.w >= 500;
-    }).sort(function (a, b) { return b.w * b.h - a.w * a.h; });
+    /* 같은 상품의 다른 컷을 모은다.
+       예전에는 (가) 대표컷 파일명의 상품 코드가 들어간 것만 남기고
+       (나) 세로로 긴 것을 버렸다. 그 두 줄 때문에 SSF처럼 상세 컷이 다른
+       경로에 있는 몰에서는 대표컷 한 장만 남았고, 시안 여섯 장이 전부
+       같은 사진이 됐다.
 
-    it.images = [it.mainImage].concat(usable.map(function (q) { return q.url; }), it.images)
-      .filter(function (u, i, arr) { return u && arr.indexOf(u) === i; }).slice(0, 8);
+       이제는 버리지 않고 점수로 줄을 세운다. 상품 코드가 있으면 강한
+       가산점이고, 없어도 상세 영역 안이면 남긴다. 세로로 긴 컷은
+       'detail'로 표시해 두고, 배너 비율은 나중에 잘라 쓴다. */
+    var code = (String(it.mainImage || '').split('/').pop().match(/\d{6,}/) || [])[0];
+    var mainBare = String(it.mainImage || '').split('?')[0];
+    var scored = pool.map(function (q) {
+      var s = 0, r = q.h / q.w;
+      if (code && q.url.indexOf(code) >= 0) s += 100;
+      if (q.detail) s += 40;
+      if (q.w >= 700) s += 20; else if (q.w >= 400) s += 10;
+      if (r > 0.6 && r < 1.8) s += 15;          // 배너에 바로 얹기 좋은 비율
+      if (r >= 3) s -= 25;                       // 통짜 스크롤 이미지는 뒤로
+      if (/logo|icon|sprite|banner|badge|btn|blank|dummy/i.test(q.url)) s -= 60;
+      return { url: q.url, w: q.w, h: q.h, tall: r >= 1.7, score: s };
+    }).filter(function (q) {
+      return q.score > 0 && q.w >= 400 && q.url.split('?')[0] !== mainBare;
+    }).sort(function (a, b) { return b.score - a.score || b.w * b.h - a.w * a.h; });
+
+    // 같은 사진의 다른 판형이 여러 장 잡힌다. 뿌리가 같으면 큰 것만 남긴다.
+    var seen = {}, picked = [];
+    scored.forEach(function (q) {
+      var root = q.url.replace(/\/[^/]*$/, '') + '/' + (q.url.split('/').pop() || '')
+                  .replace(/_[a-z]_/i, '_').replace(/\.[a-z]+$/i, '');
+      if (seen[root]) return;
+      seen[root] = 1; picked.push(q);
+    });
+
+    it.meta = [{ url: it.mainImage, w: 0, h: 0, tall: false }].concat(picked.slice(0, 9));
+    it.images = it.meta.map(function (q) { return q.url; });
     it.imageCount = it.images.length;
     items = [it];
   } else {
@@ -127,6 +176,10 @@
       description: meta('og:description'),
       mainImage: (big[0] && big[0].currentSrc) || meta('og:image'),
       images: big.slice(0, 8).map(function (i) { return i.currentSrc; }),
+      meta: big.slice(0, 8).map(function (i) {
+        return { url: i.currentSrc, w: i.naturalWidth, h: i.naturalHeight,
+                 tall: i.naturalHeight / i.naturalWidth >= 1.7 };
+      }),
     }];
   }
 
@@ -141,7 +194,10 @@
       // 상품이 여러 개인 딜 페이지에서도 각 상품의 컷을 담는다. 예전에는
       // 클립보드가 커진다고 단일 상품일 때만 담았는데, 그러면 딜에서 상품을
       // 고른 뒤 원본을 쓸 방법이 없어진다. 개수를 줄여 담는다.
-      images: (it.images || []).slice(0, total === 1 ? 8 : 3),
+      images: (it.images || []).slice(0, total === 1 ? 10 : 3),
+      // 크기와 세로 여부를 함께 보낸다. 분류가 실패해도 이 값만으로
+      // 상세컷을 골라낼 수 있어 시안 종류가 무너지지 않는다.
+      imageMeta: (it.meta || []).slice(0, total === 1 ? 10 : 3),
       description: (it.description || '').slice(0, 120) || null,
     };
   });
