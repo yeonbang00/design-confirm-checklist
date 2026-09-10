@@ -23,6 +23,8 @@ export function resolveCopy(row,p) {
     if(/[0-9０-９%％]|무료|쿠폰|첫\s*구매|최저|최고|보장|한정|마감|배송|증정|캐시백/.test(remaining))throw Error('확인되지 않은 숫자나 혜택이 포함되어 적용하지 않았습니다. 다시 생성해주세요.');
     text=text.replace(/\{\{(\w+)\}\}/g,(_,k)=>{if(!slots[k])throw Error('확인하지 않은 수치가 포함되어 적용하지 않았습니다.');return slots[k]});
     if(/[{}]/.test(text)||!text.trim())throw Error('카피가 비어 있거나 형식이 맞지 않습니다.');
+    // Tokens already include units; models occasionally append the unit again.
+    text=text.replace(/(\d+)종\s*(?:가지|종)/g,'$1종').replace(/원\s*원/g,'원').replace(/% 혜택\s*혜택/g,'% 혜택');
     out[key]=text.trim();
   }
   // Conditions belong to code, so they cannot be dropped by generated copy.
