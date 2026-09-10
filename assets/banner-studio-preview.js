@@ -386,7 +386,11 @@ async function tuneScrim(i){
  if(!a.width||!r.width)return;
  const box={x:(r.left-a.left)/a.width,y:(r.top-a.top)/a.height,w:r.width/a.width,h:r.height/a.height};
  const s=await scrimFor(url,box,getJSON);
- if(s)art.style.setProperty('--scrim',String(s.alpha));
+ if(!s)return;
+ art.style.setProperty('--scrim',String(s.alpha));
+ /* 밝은 사진에 옅은 딤 + 검은 글씨는 사진만 바래고 글자는 안 또렷해진다.
+    밝기가 절반을 넘으면 어두운 딤 + 흰 글씨로 뒤집는다. 뒤집을 수 있는 조판만. */
+ if(['top-center','top-left','corner'].includes(v.layout))art.classList.toggle('inverted',s.luminance>0.5);
 }
 
 async function generateImage(plan,run){
@@ -396,7 +400,7 @@ async function generateImage(plan,run){
  const baked=plan.render==='baked';
  try{
  // 1단계: 장면을 만든다. 이 호출에는 글자 지시를 넣지 않는다.
- const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,productName:product.productName,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
  if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
  let finalUrl=shot.imageUrl;
 

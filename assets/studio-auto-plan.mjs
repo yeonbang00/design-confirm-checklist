@@ -84,17 +84,20 @@ export function guessRole(photo, index) {
   return 'model';
 }
 
-function pickPhoto(prefer, photos, used) {
+/* 같은 역할의 사진이 여러 장일 때 앞에서부터 집으면 매번 같은 장이 나온다.
+   착용컷이 다섯 장 있어도 늘 같은 두 장만 쓰게 된다. 무작위로 고른다. */
+function pickPhoto(prefer, photos, used, random = Math.random) {
+  const one = list => list[Math.floor(random() * list.length)];
   for (const role of prefer) {
-    const i = photos.findIndex((p, idx) => p.role === role && !used.has(idx));
-    if (i >= 0) return i;
+    const free = photos.map((p, i) => (p.role === role && !used.has(i) ? i : -1)).filter(i => i >= 0);
+    if (free.length) return one(free);
   }
   for (const role of prefer) {
-    const i = photos.findIndex(p => p.role === role);
-    if (i >= 0) return i;
+    const any = photos.map((p, i) => (p.role === role ? i : -1)).filter(i => i >= 0);
+    if (any.length) return one(any);
   }
-  const free = photos.findIndex((_, idx) => !used.has(idx));
-  return free >= 0 ? free : 0;
+  const free = photos.map((_, i) => (used.has(i) ? -1 : i)).filter(i => i >= 0);
+  return free.length ? one(free) : 0;
 }
 
 /* 조판을 '무엇을 앞세우나'로 묶는다. 아무 조판이나 아무 컷에 붙이면
@@ -109,13 +112,14 @@ function pickPhoto(prefer, photos, used) {
             손글씨, 3D 세트 안의 글자)이 열린다. 대신 픽셀에 박히므로 고칠 수
             없고, 숫자가 틀릴 수 있어 생성 뒤에 OCR로 대조한다.
    둘을 섞는다. 여섯 장이 전부 baked면 고칠 수 있는 시안이 하나도 없다. */
+/* 외곽선 타이포는 뺐다. 속이 빈 글자는 생성 품질이 눈에 띄게 떨어져
+   테두리가 뭉개지고 획이 붙어 버렸다. */
 export const TYPE_STYLES = [
   ['각진 대형 고딕', 'a very heavy geometric sans-serif, tightly set, with one word or number in a strong accent colour'],
   ['둥근 스티커', 'chunky rounded lettering shaped like a die-cut sticker, thick white outline and a soft drop shadow, slightly tilted'],
   ['손글씨 마커', 'hand-drawn marker lettering with visible brush edges, slightly irregular, with small doodle strokes beside it'],
   ['편집 명조', 'a refined high-contrast serif set large with generous letter spacing, editorial magazine feel'],
   ['장평 좁은 볼드', 'a condensed bold sans-serif stacked in two tight lines, filling the width edge to edge'],
-  ['외곽선 타이포', 'bold outlined lettering with a hollow centre, layered over the photograph'],
 ];
 
 export const EMPHASIS = {
@@ -166,7 +170,6 @@ export function createPlan(product, random = Math.random) {
   // 사람이 나오는 후보가 전부 빠져 여섯 자리를 못 채운다. 모를 때는 남긴다.
   const personKnown = photos.some(p => 'hasPerson' in p);
   const allowKeep = anyPerson || !personKnown;
-  const hasDetail = photos.some(p => p.role === 'detail');
 
   // 사람이 없는 상품에 '그 사람을 그대로 두고'를 시키면 없던 사람이 생긴다.
   const pool = shuffle(
@@ -177,12 +180,34 @@ export function createPlan(product, random = Math.random) {
   const used = new Set();
   const slots = [];
 
-  // 1. 대표컷은 생성하지 않고 그대로 쓴다
+  /* 1~2. 그대로 쓸 원본을 먼저 고른다.
+     예전에는 대표컷 한 장과 상세컷 한 장, 최대 두 자리로 못 박혀 있었다.
+     그래서 상세 페이지에 착용컷이 열 장 있어도 여섯 중 둘만 원본이고
+     나머지는 전부 생성이었다. 원본 착용컷이 생성물보다 나은데 그걸 안 썼다.
+     쓸 만한 원본이 많으면 원본 자리를 늘린다. 생성은 최소 두 자리만 남긴다. */
+  const byRole = r => photos.map((p, i) => (p.role === r ? i : -1)).filter(i => i >= 0);
+  const models = byRole('model'), details = byRole('detail');
+  const packs = [...byRole('packshot'), ...byRole('flat')];
+  const usable = 1 + models.length + details.length + packs.length;
+  /* 착용컷이 한 장이라도 있으면 그건 반드시 그대로 쓴다. 사람이 실제로 입은
+     모습은 생성물이 못 따라간다. 나머지는 가진 장수의 절반쯤을 원본으로 둔다. */
+  const plainWanted = Math.max(models.length ? 2 : 1, Math.min(4, Math.floor(usable / 2)));
+
   slots.push({ kind: 'plain', label: '메인 원본', desc: '상품 페이지 대표컷을 그대로 씁니다.', prefer: ['main'] });
-  // 2. 상세컷이 있으면 그것도 그대로 쓴다. 없으면 그 자리도 생성 컷으로 채운다.
-  if (hasDetail) {
+  // 착용컷은 사람이 실제로 입은 모습이라 생성물이 못 따라간다. 있는 만큼 쓴다.
+  for (let n = 0; n < models.length && slots.length < plainWanted; n++) {
+    slots.push({
+      kind: 'plain', label: n ? `착용 원본 ${n + 1}` : '착용 원본',
+      desc: '상세 페이지 착용컷을 그대로 씁니다.', prefer: ['model'],
+    });
+  }
+  if (details.length && slots.length < plainWanted) {
     slots.push({ kind: 'plain', label: '상세 원본', desc: '상세 페이지 컷을 그대로 씁니다. 크롭은 디자이너가 정합니다.', prefer: ['detail'] });
   }
+  if (packs.length && slots.length < plainWanted) {
+    slots.push({ kind: 'plain', label: '단품 원본', desc: '상품 단독컷을 그대로 씁니다.', prefer: ['packshot', 'flat'] });
+  }
+
   // 3. 스타일링 세트는 상품 종류별로 고정한다
   slots.push({
     kind: 'set', label: '스타일링 세트',
@@ -190,6 +215,7 @@ export function createPlan(product, random = Math.random) {
     scene: SETS[product.category] || SETS.other, person: 'none',
     prefer: ['packshot', 'flat', 'main', 'model'],
   });
+
   /* 4. 나머지는 후보에서 뽑는다. 그냥 섞어서 앞에서부터 집으면 축이 겹친다.
      실측으로 후보 12개 중 mount가 location인 것이 4개였다. 축이 겹치지 않도록
      골라야 '다양하다'가 결과로 나온다.
@@ -269,7 +295,7 @@ export function createPlan(product, random = Math.random) {
   }
 
   return shuffle(slots, random).map((slot, i) => {
-    const photo = pickPhoto(slot.prefer, photos, used);
+    const photo = pickPhoto(slot.prefer, photos, used, random);
     used.add(photo);
     const src = photos[photo] || {};
     const known = 'hasPerson' in src;

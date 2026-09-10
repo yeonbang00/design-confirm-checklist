@@ -48,10 +48,14 @@ const KEEPS = {
     + 'exactly the same garments. Every item they wear must stay identical in colour, cut and '
     + 'length, including the trousers and the shoes. Change nothing about what they are wearing.',
   // 사람이 든 사진에서 그 물건만 꺼낸다
+  /* '사람이 입거나 든 물건'만으로는 무엇인지 특정되지 않는다. 실측 — 티셔츠
+     착용컷에서 배경 간판을 물건으로 보고 엉뚱한 병을 그려 놨다. 상품 이름을
+     함께 박아 무엇을 남길지 말로도 못 박는다. */
   item:
-    'FROM THE REFERENCE, KEEP ONLY: the product the person is wearing or holding — its exact '
-    + 'colour, material, texture, proportions, printed label and packaging typography. '
-    + 'Do not include the person.',
+    'FROM THE REFERENCE, KEEP ONLY: {PRODUCT} that the person is wearing or holding, exactly '
+    + 'as it appears — its colour, material, texture, proportions, printed label and packaging '
+    + 'typography. Do not include the person. Do not put any other object in its place: '
+    + 'nothing from the background, no signage, no packaging that is not the product itself.',
   // 사람이 있는지 확인하지 못한 사진 — 어느 쪽이든 깨지지 않게 둔다
   subject:
     'FROM THE REFERENCE, KEEP ONLY: the product itself — its exact shape and proportions, '
@@ -85,8 +89,14 @@ const NO_TEXT =
 // 카피가 얹힐 자리를 비워두게 한다. 안 그러면 제품이 화면을 꽉 채워
 // 글자를 놓을 곳이 없고, 어두운 영역을 아무리 걸어도 읽기 어려워진다.
 const ROOM = 'Compose the frame so that roughly one third of the image is calm, uncluttered '
-  + 'background with no important detail — this empty area is reserved for text that will be '
-  + 'added later. Keep the product clearly inside the remaining area.';
+  + 'background with no important detail; this empty area is reserved for text that will be '
+  + 'added later. '
+  /* 잘림이 반복됐다. 실측 — 접힌 티셔츠가 오른쪽 프레임 밖으로 나가고, 아치 안에
+     들어간 인물이 무릎에서 잘렸다. 여백을 비우라는 말만으로는 안 되고, 잘리면 안
+     된다고 따로 말해야 한다. */
+  + 'THE WHOLE PRODUCT MUST BE INSIDE THE FRAME with a clear margin on every side. '
+  + 'Do not let any part of it touch or run past an edge. If a person is in the shot, do not '
+  + 'cut them at the knees, wrists or the top of the head.';
 
 /* 카피까지 그림에 그리는 모드.
  *
@@ -125,10 +135,11 @@ function textBlock({ headline, subline, offer, brand, cta, style }) {
 }
 const TYPE_STYLES_FALLBACK = 'a heavy geometric sans-serif';
 
-function buildPrompt({ scene, keep, imagePrompt, text }) {
+function buildPrompt({ scene, keep, imagePrompt, productName }) {
   // 예전 호출부는 imagePrompt 한 덩어리만 보낸다. 그대로 받아 준다.
   if (!scene) return `${imagePrompt} ${KEEPS.product} ${ROOM} ${NO_TEXT}`;
-  const keeper = KEEPS[keep] || KEEPS.product;
+  const keeper = (KEEPS[keep] || KEEPS.product)
+    .replace('{PRODUCT}', productName ? `the ${productName}` : 'the product');
   return `Generate a completely new photograph. THE NEW SCENE: ${scene} `
     + `${CUT_TIES} ${keeper} ${imagePrompt ? imagePrompt + ' ' : ''}${ROOM} ${NO_TEXT}`;
 }
@@ -168,6 +179,7 @@ export default async function handler(req, res) {
     scene: cut(scene, 900),
     keep: typeof keep === 'string' ? keep : '',
     imagePrompt: cut(imagePrompt, 500),
+    productName: cut(req.body?.productName, 60),
   });
 
   try {

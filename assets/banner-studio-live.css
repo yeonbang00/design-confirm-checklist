@@ -224,3 +224,17 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .art.has-cut>img{object-fit:contain!important}
 .art.offer.has-cut>img{left:32%;top:14%;width:62%;height:70%}
 .art.type-diagonal.has-cut>img{left:21%;top:23%;width:58%;height:56%}
+
+
+/* ---- 밝은 사진 위의 글자 ----
+   밝은 사진에 옅은 딤을 깔고 검은 글씨를 얹으면, 딤을 아무리 올려도 사진이
+   뿌옇게 바래기만 하고 글자는 안 또렷해진다. 밝은 사진에서는 반대로 간다.
+   어두운 딤을 깔고 흰 글씨를 올린다. 사진의 밝은 부분이 살아 있고 글자는
+   바로 읽힌다. 어느 쪽으로 갈지는 카피가 놓인 자리의 밝기를 재서 정한다. */
+.art.inverted{color:#fff}
+.art.top-center.inverted:after{background:linear-gradient(rgba(8,10,13,calc(.3 + var(--scrim,.5)*.62)),transparent 60%)}
+.art.top-left.inverted:after{background:linear-gradient(150deg,rgba(8,10,13,calc(.3 + var(--scrim,.5)*.66)),transparent 66%)}
+.art.corner.inverted:after{background:linear-gradient(205deg,rgba(8,10,13,calc(.3 + var(--scrim,.5)*.66)),transparent 58%)}
+.art.inverted .subline{opacity:.86}
+.art.inverted .cta{background:#faf8ee;color:#171a17}
+.art.inverted .brand{color:#fff}
