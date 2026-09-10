@@ -156,8 +156,14 @@ export function createPlan(product, random = Math.random) {
 
   // 조판은 강조 방향 안에서 고르고, 여섯 장이 같은 조판을 두 번 쓰지 않게 한다.
   const usedLayout = new Set();
+  /* 레퍼런스 배너를 본 분류가 이 업종에 어울리는 조판을 골라 준다. 같은 강조
+     묶음 안에 그 조판이 있으면 먼저 쓴다. 내가 짐작한 값보다 실제로 집행된
+     배너에서 읽은 값이 낫다. 없으면 원래대로 무작위로 뽑는다. */
+  const hints = Array.isArray(product.layoutHints) ? product.layoutHints : [];
   const layouts = emphasisPlan.map(em => {
-    const pool = shuffle(EMPHASIS[em], random)
+    const inGroup = EMPHASIS[em];
+    const hinted = shuffle(hints.filter(l => inGroup.includes(l)), random);
+    const pool = [...hinted, ...shuffle(inGroup, random)]
       .filter(l => !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1));
     const pick = pool[0] || shuffle(Object.values(EMPHASIS).flat(), random)
       .find(l => !usedLayout.has(l)) || 'header';

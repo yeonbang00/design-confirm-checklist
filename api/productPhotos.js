@@ -1,5 +1,5 @@
 // POST /api/productPhotos
-// Body: { urls: string[] }
+// Body: { urls: string[], referenceUrls?: string[] }
 // Returns: { photos:[...], category, usp, toneKo,
 //             cuts:[{name, person, mount, angle, crop, light, mood, scene}] }
 //
@@ -14,6 +14,7 @@ import { callOpenAI, OPENAI_MODEL } from './_openaiClient.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 const MAX_PHOTOS = 6;
+const MAX_REFS = 3;
 const ROLES = new Set(['main', 'model', 'packshot', 'flat', 'detail', 'unusable']);
 
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
@@ -117,13 +118,43 @@ scene 문장 규칙:
 - 글자, 로고, 간판, 가격표, 브랜드명을 장면에 넣지 마세요.
 - 상품의 형태가 읽혀야 합니다. 구기거나 뭉치거나 던져 놓은 연출은 쓰지 마세요.
 
+## 세 번째 일 — 레퍼런스 배너를 보고 조판을 고르기
+
+사진 뒤에 **이 업종에서 실제로 집행된 배너**가 몇 장 따라옵니다. 상품 사진이 아니라
+완성된 광고입니다. 어느 것이 상품 사진이고 어느 것이 레퍼런스인지는 아래 목록에 적혀
+있습니다.
+
+레퍼런스를 보고 **화면을 어떻게 나눴는지**를 읽으세요. 카피가 어디에 몇 덩어리로
+놓였는지, 사진을 몇 조각으로 썼는지, 색면이나 도형을 어떻게 깔았는지, 숫자를 얼마나
+키웠는지. 그리고 아래 조판 이름 중 이 상품에 어울릴 것을 **3개** 고르세요.
+
+  header(위 카피·아래 상품) split(좌 카피·우 사진) split-right(좌 사진·우 카피)
+  band(하단 정보 띠) top-center(상단 중앙) top-left(상단 좌측) bottom-right(하단 우측)
+  boxed(사진 위 흰 카피 카드) strip(위아래 띠·가운데 사진) corner(전면 사진·구석 카피)
+  offer(좌 텍스트 스택·우 색면·숫자 하이라이트) numeral(연출컷 위 숫자 하이라이트)
+  arch(아치 사진·숫자 강조) badge(전면 사진·우측 정렬 스택·검정 배지)
+  type-diagonal(대형 컬러 타이포 대각선) framed(중앙 정렬·헤어라인·아치)
+  duo-panel(좌 연출컷+큰 숫자·우 정보판) price(큰 가격·상단 좌측)
+
+- layoutHints: 고른 조판 이름 3개
+- refNote: 레퍼런스에서 읽은 이 업종의 구성 특징 한국어 한 문장
+
+레퍼런스가 없으면 layoutHints는 빈 배열, refNote는 빈 문자열로 두세요.
+레퍼런스의 문구나 브랜드명은 절대 가져오지 마세요. 구성만 봅니다.
+
 JSON만 출력하세요:
 {"photos":[{"index":0,"role":"main","hasPerson":true,"colorway":"검정","burnedText":"","note":""}],
  "category":"fashion-top","usp":"...","toneKo":"정갈한",
+ "layoutHints":["boxed","offer","badge"],"refNote":"...",
  "cuts":[{"name":"단상 정면컷","mount":"plinth","angle":"front","distance":"medium",
           "light":"studio-key","background":"seamless","composition":"centered",
           "palette":"warm-neutral","motion":"static","person":"none","pose":"",
           "mood":"clean","scene":"..."}]}`;
+
+// 계획이 아는 조판 이름만 받는다. 모델이 새 이름을 지어내면 못 쓴다.
+const LAYOUT_NAMES = new Set(['header', 'split', 'split-right', 'band', 'top-center', 'top-left',
+  'bottom-right', 'boxed', 'strip', 'corner', 'offer', 'numeral', 'arch', 'badge',
+  'type-diagonal', 'framed', 'duo-panel', 'price']);
 
 const AX = {
   mount: ['studio', 'plinth', 'table', 'chair', 'shelf', 'hanger', 'floor', 'held',
@@ -192,9 +223,10 @@ export default async function handler(req, res) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'AI 분류가 설정되지 않았습니다.' }); return; }
 
-  const urls = Array.isArray(req.body?.urls)
-    ? req.body.urls.filter(u => typeof u === 'string' && /^https?:\/\//.test(u)).slice(0, MAX_PHOTOS)
-    : [];
+  const clean = v => (Array.isArray(v) ? v.filter(u => typeof u === 'string' && /^https?:\/\//.test(u)) : []);
+  const urls = clean(req.body?.urls).slice(0, MAX_PHOTOS);
+  // 이 업종에서 실제로 집행된 배너. 구성을 읽히려고 함께 보낸다.
+  const refs = clean(req.body?.referenceUrls).slice(0, MAX_REFS);
   if (!urls.length) { res.status(400).json({ error: '분류할 사진 주소가 필요합니다.' }); return; }
 
   try {
@@ -203,9 +235,16 @@ export default async function handler(req, res) {
     fetched.forEach((img, i) => { if (img) { images.push(img); kept.push(urls[i]); } });
     if (!images.length) { res.status(502).json({ error: '상품 사진을 받아오지 못했습니다.' }); return; }
 
+    // 레퍼런스는 상품 사진 뒤에 붙인다. 어디부터가 레퍼런스인지 말로 알려준다.
+    const refImages = (await Promise.all(refs.map(u => fetchImage(u).catch(() => null)))).filter(Boolean);
+    const order = refImages.length
+      ? `\n\n[이번에 보내는 이미지 순서] 앞의 ${images.length}장은 상품 사진이고, `
+        + `뒤의 ${refImages.length}장은 이 업종에서 실제로 집행된 레퍼런스 배너입니다.`
+      : '\n\n[이번에 보내는 이미지 순서] 전부 상품 사진입니다. 레퍼런스 배너는 없습니다.';
+
     const data = await callOpenAI({
-      apiKey, promptText: PROMPT, images,
-      maxOutputTokens: 6500, reasoningEffort: 'low',
+      apiKey, promptText: PROMPT + order, images: [...images, ...refImages],
+      maxOutputTokens: 7000, reasoningEffort: 'low',
     });
 
     const rows = Array.isArray(data?.photos) ? data.photos : [];
@@ -226,6 +265,9 @@ export default async function handler(req, res) {
       category: CATEGORIES.has(data?.category) ? data.category : 'other',
       cuts: cleanCuts(data?.cuts),
       usp: String(data?.usp || '').slice(0, 160),
+      layoutHints: (Array.isArray(data?.layoutHints) ? data.layoutHints : [])
+        .filter(l => typeof l === 'string' && LAYOUT_NAMES.has(l)).slice(0, 3),
+      refNote: String(data?.refNote || '').slice(0, 120),
       toneKo: String(data?.toneKo || '').slice(0, 16),
       model: OPENAI_MODEL,
     });

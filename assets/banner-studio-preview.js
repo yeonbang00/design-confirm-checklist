@@ -272,6 +272,7 @@ function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;// 버튼이 둘 �
  for(const id of ['#quickGenerate','#quickGrabGenerate'])$(id).textContent=b?'시안 만드는 중…':'시안 6종 생성';
  $('#quickInput').disabled=b;$('#quickGrab').disabled=b;$('#quickGrabGenerate').disabled=b;if($('#dlAllImages'))$('#dlAllImages').disabled=b;$('#saveVariant').disabled=b;$('#varyCopy').disabled=b;$('#varyScene').disabled=b;$('#autoRetryCopy').disabled=b;$('#quickEditProduct').disabled=b;$('#openSaved').disabled=b;$('#quickResults').setAttribute('aria-busy',String(b));}
 function looksLikeProduct(data){return data&&data._adcheck==='product'&&Array.isArray(data.items)&&data.items.length}
+const shuffleRefs=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x};
 async function autoReferences(p){
  const name=p.productName;const category=/티셔츠|의류|가디건|니트|팬츠|스커트|블루핏|셔츠|코트|신발|패션/.test(name)?'fashion':null;
  if(!category)return [];
@@ -297,14 +298,21 @@ async function classifyPhotos(run){
  if(bigger){PHOTOS.splice(0,PHOTOS.length,...product.photos);renderPhotos?.()}
  const sizeNote=bigger?`사진 ${bigger}장을 원본 크기로 교체`:'';
  const urls=product.photos.slice(0,6).map(p=>p.url);
+ /* 우리 이미지 레퍼런스에 이 업종 배너가 쌓여 있다. 지금까지는 캡션만 카피
+    생성에 쓰고 이미지는 아무 데도 안 넣었다. 실제로 어떻게 구성했는지는
+    그림을 봐야 알 수 있다. 몇 장 함께 보내 조판을 고르게 한다. */
+ const refs=await autoReferences(product);
+ if(run!==autoRun)return;
+ const referenceUrls=shuffleRefs(refs).slice(0,3).map(r=>safeUrl(r.fullUrl||r.thumbUrl)).filter(Boolean);
  try{
-  const data=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})});
+  const data=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls,referenceUrls})});
   if(run!==autoRun)return;
   // 장면도 함께 받는다. 상품마다 달라야 하는 부분이라 코드에 박아 둘 수 없다.
   product.category=data.category||'other';product.cuts=Array.isArray(data.cuts)?data.cuts:[];
   // 사진에서 읽은 USP와 톤을 카피 생성으로 넘긴다. 상품명만 보고 쓰면
   // 어느 상품에나 맞는 말이 나온다.
   product.usp=data.usp||'';product.tone=data.toneKo||'';
+  product.layoutHints=Array.isArray(data.layoutHints)?data.layoutHints:[];product.refNote=data.refNote||'';
   const byUrl=new Map((data.photos||[]).map(x=>[x.url,x]));
   product.photos.forEach((p,i)=>{const x=byUrl.get(p.url);if(!x)return;
    p.role=x.role;p.hasPerson=x.hasPerson;p.colorway=x.colorway;p.burnedText=x.burnedText;p.note=x.note;
@@ -319,7 +327,9 @@ async function classifyPhotos(run){
   PHOTOS.splice(0,PHOTOS.length,...product.photos);
   if(SOURCE.includes('/1002447881'))PHOTOS.push(...SAMPLE_PHOTOS.slice(2));
   photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
-   +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다');
+   +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다')
+   +(referenceUrls.length?` · 레퍼런스 배너 ${referenceUrls.length}장 참고`:'')
+   +(product.refNote?` (${product.refNote})`:'');
  }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
  await scrubLogos(run);
  const cutNote=await cutoutPhotos(run);
