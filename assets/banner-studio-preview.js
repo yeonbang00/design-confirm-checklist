@@ -213,9 +213,19 @@ async function getJSON(url,options={}){
 }
 function acceptImport(data){
  if(!data||!Array.isArray(data.items)||!data.items.length)throw Error('상품 정보가 없습니다. 다른 상품 링크나 직접 입력을 사용해주세요.');
- importedSource=safeUrl(data.sourceUrl);importedItems=data.items.slice(0,40).map(x=>normalizeProduct(x,importedSource)).filter(x=>x.productName&&x.photos.length);
+ importedSource=safeUrl(data.sourceUrl);
+ /* 서버는 상세 페이지 이미지까지 24개를 모아 harvested로 돌려주는데 그걸 아무도
+    읽지 않고 있었다. 그래서 링크로 넣으면 대표컷 한두 장으로 끝나고, 여섯 장 중
+    원본이 한 장뿐이었다. 상품이 하나인 페이지에서만 합친다 — 딜 페이지에서는
+    페이지 전체 이미지라 남의 상품이 섞인다. */
+ const harvested=(data.items.length===1&&Array.isArray(data.harvested))
+  ?data.harvested.map(safeUrl).filter(Boolean):[];
+ importedItems=data.items.slice(0,40).map((x,i)=>normalizeProduct(
+  i===0&&harvested.length
+   ?{...x,images:[...(Array.isArray(x.images)?x.images:[]),...harvested]}
+   :x, importedSource)).filter(x=>x.productName&&x.photos.length);
  if(!importedItems.length)throw Error('상품명과 사진을 가져오지 못했습니다. 직접 입력하거나 상품 담기를 다시 실행해주세요.');
- $('#importChoice').innerHTML=importedItems.map((p,i)=>`<option value="${i}">${esc(p.productName)}</option>`).join('');$('#importChoiceField').hidden=importedItems.length<2;setProduct(importedItems[0]);$('#importStatus').textContent=`${importedItems.length}개 상품을 가져왔습니다. 가격·구성·사진을 확인해주세요. 할인 조건은 직접 확인 후 입력하세요.`;
+ $('#importChoice').innerHTML=importedItems.map((p,i)=>`<option value="${i}">${esc(p.productName)}</option>`).join('');$('#importChoiceField').hidden=importedItems.length<2;setProduct(importedItems[0]);$('#importStatus').textContent=`${importedItems.length}개 상품을 가져왔습니다. 사진 ${importedItems[0].photos.length}장`+(harvested.length?` (상세 페이지 포함)`:'')+`. 가격·구성·사진을 확인해주세요. 할인 조건은 직접 확인 후 입력하세요.`;
 }
 $('#importChoice').onchange=()=>setProduct(importedItems[Number($('#importChoice').value)]);
 $('#importUrl').onclick=async()=>{const url=safeUrl($('#productUrl').value);if(!url){$('#importStatus').textContent='올바른 http 또는 https 상품 링크를 입력해주세요.';return}const request=++importRequest,startedRevision=revision;$('#importUrl').disabled=true;$('#importStatus').textContent='상품 정보를 가져오는 중…';try{const data=await getJSON('/api/productScrape?url='+encodeURIComponent(url));if(request!==importRequest||startedRevision!==revision){$('#importStatus').textContent='가져오는 동안 상품이 변경되어 이전 응답을 적용하지 않았습니다.';return}acceptImport(data)}catch(e){$('#importStatus').textContent=e.message+' 북마클릿 또는 직접 입력으로 계속할 수 있습니다.';$('#grabHelp').open=true}finally{$('#importUrl').disabled=false}};
@@ -298,7 +308,13 @@ async function classifyPhotos(run){
  if(run!==autoRun)return;
  if(bigger){PHOTOS.splice(0,PHOTOS.length,...product.photos);renderPhotos?.()}
  const sizeNote=bigger?`사진 ${bigger}장을 원본 크기로 교체`:'';
- const urls=product.photos.slice(0,6).map(p=>p.url);
+ /* 분류에 여섯 장까지 보낸다. 앞에서 여섯 장을 자르면 대표컷과 그 옆 판형만
+    가고 상세컷은 한 장도 안 간다. 앞 세 장은 그대로 두고 나머지는 뒤에서
+    고르게 뽑아 상세컷이 반드시 섞이게 한다. */
+ const all=product.photos;
+ const step=Math.max(1,Math.floor((all.length-3)/3));
+ const picked=all.length<=6?all:[...all.slice(0,3),all[3+step*0],all[3+step*1],all[3+step*2]].filter(Boolean);
+ const urls=[...new Set(picked.map(p=>p.url))].slice(0,6);
  /* 우리 이미지 레퍼런스에 이 업종 배너가 쌓여 있다. 지금까지는 캡션만 카피
     생성에 쓰고 이미지는 아무 데도 안 넣었다. 실제로 어떻게 구성했는지는
     그림을 봐야 알 수 있다. 몇 장 함께 보내 조판을 고르게 한다. */
@@ -319,6 +335,10 @@ async function classifyPhotos(run){
    p.role=x.role;p.hasPerson=x.hasPerson;p.colorway=x.colorway;p.burnedText=x.burnedText;p.note=x.note;
    p.label=(x.colorway?x.colorway+' ':'')+({main:'대표컷',model:'모델컷',packshot:'단품컷',flat:'펼침컷',detail:'상세컷',unusable:'배너 부적합'}[x.role]||'상품 원본 '+(i+1));});
   // 배너에 못 쓰는 것(정보 고시표·사이즈표)은 뺀다. 다 빼면 원래대로 둔다.
+  /* 분류에 못 보낸 사진은 역할이 없다. 비율로 짐작해 채운다. 안 그러면
+     상세컷 열 장이 전부 '역할 없음'이 되어 원본 자리에 못 들어간다. */
+  product.photos.forEach((p,i)=>{if(p.role)return;
+   const r=p.w&&p.h?p.h/p.w:0;p.role=r>=1.7?'detail':(i===0?'main':'detail');p.personKind=p.personKind||'none'});
   const usable=product.photos.filter(p=>p.role!=='unusable');
   const dropped=product.photos.length-usable.length;
   // PHOTOS는 setProduct에서 product.photos를 그대로 복사해 둔 목록이고,

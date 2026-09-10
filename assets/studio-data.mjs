@@ -6,7 +6,7 @@ export function normalizeProduct(raw={}, source='') {
   const urls=[raw.mainImage,...(Array.isArray(raw.images)?raw.images:[])].map(safeUrl).filter(Boolean);
   // 북마클릿이 보낸 크기 정보. 분류가 실패해도 이것만으로 상세컷을 가른다.
   const meta=new Map((Array.isArray(raw.imageMeta)?raw.imageMeta:[]).map(m=>[safeUrl(m?.url),m]).filter(([u])=>u));
-  return {productName:String(raw.productName||'').trim().slice(0,80),brand:String(raw.brand||'').slice(0,40),salePrice:number(raw.salePrice),quantity:number(raw.quantity),description:String(raw.description||'').slice(0,600),sourceUrl:safeUrl(source||raw.sourceUrl),photos:[...new Set(urls)].slice(0,12).map((url,i)=>{const m=meta.get(url)||{};return {url,label:`상품 원본 ${i+1}`,kind:'original',w:Number(m.w)||0,h:Number(m.h)||0,role:i===0?'main':(m.tall?'detail':'')}}),benefitRate:null,benefitCondition:'',benefitKind:'정률',benefitConfirmed:false};
+  return {productName:String(raw.productName||'').trim().slice(0,80),brand:String(raw.brand||'').slice(0,40),salePrice:number(raw.salePrice),quantity:number(raw.quantity),description:String(raw.description||'').slice(0,600),sourceUrl:safeUrl(source||raw.sourceUrl),photos:[...new Set(urls)].slice(0,16).map((url,i)=>{const m=meta.get(url)||{};return {url,label:`상품 원본 ${i+1}`,kind:'original',w:Number(m.w)||0,h:Number(m.h)||0,role:i===0?'main':(m.tall?'detail':'')}}),benefitRate:null,benefitCondition:'',benefitKind:'정률',benefitConfirmed:false};
 }
 export function factSlots(p) {
   const slots={};

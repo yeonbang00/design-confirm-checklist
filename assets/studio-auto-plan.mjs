@@ -240,11 +240,19 @@ export function createPlan(product, random = Math.random) {
       desc: '상세 페이지 착용컷을 그대로 씁니다.', prefer: ['model'],
     });
   }
-  if (details.length && slots.length < plainWanted) {
-    slots.push({ kind: 'plain', label: '상세 원본', desc: '상세 페이지 컷을 그대로 씁니다. 크롭은 디자이너가 정합니다.', prefer: ['detail'] });
+  /* 상세컷 자리도 한 개만 만들고 있었다. 상세 페이지 이미지가 열다섯 장
+     들어와도 그중 한 장만 쓰였다. 남는 자리만큼 만든다. */
+  for (let n = 0; n < details.length && slots.length < plainWanted; n++) {
+    slots.push({
+      kind: 'plain', label: n ? `상세 원본 ${n + 1}` : '상세 원본',
+      desc: '상세 페이지 컷을 그대로 씁니다. 크롭은 디자이너가 정합니다.', prefer: ['detail'],
+    });
   }
-  if (packs.length && slots.length < plainWanted) {
-    slots.push({ kind: 'plain', label: '단품 원본', desc: '상품 단독컷을 그대로 씁니다.', prefer: ['packshot', 'flat'] });
+  for (let n = 0; n < packs.length && slots.length < plainWanted; n++) {
+    slots.push({
+      kind: 'plain', label: n ? `단품 원본 ${n + 1}` : '단품 원본',
+      desc: '상품 단독컷을 그대로 씁니다.', prefer: ['packshot', 'flat'],
+    });
   }
 
   // 3. 스타일링 세트는 상품 종류별로 고정한다
