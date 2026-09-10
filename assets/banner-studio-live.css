@@ -247,3 +247,68 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 
 /* 고화질로 다시 뽑는 버튼. 내려받기 버튼 위에 같은 폭으로 둔다. */
 .card-hq{display:block;width:calc(100% - 24px);margin:0 12px 8px;padding:8px;font-size:12px;font-weight:600;background:transparent}
+
+
+/* ---- 항목가이드 2번(위계 및 구조)을 조판에 적용한다 ----
+   조판 열여덟을 재봤더니 열여덟 개 전부 규칙을 어기고 있었다. 가이드는
+   우리가 쓴 문서인데 조판 CSS는 눈으로 짰기 때문이다.
+
+   가이드가 말하는 배너 카피 3계층 구조 —
+     서브카피(브랜드·태그) → 메인카피(핵심 메시지) → 상세설명(조건·부가정보)
+   그런데 화면에는 브랜드·헤드라인·숫자·서브·조건·CTA 여섯 덩어리가 늘 다
+   떠 있었다. "문구 덩어리가 4개 이상 잘게 쪼개지면 3초 안에 읽기 어렵다"에
+   정면으로 걸린다.
+
+   덩어리를 지우는 대신 묶는다. 게슈탈트 근접성 — 가까이 있으면 한 그룹으로
+   읽힌다. 그룹 안은 좁게, 그룹 사이는 넓게 두면 여섯 요소가 세 덩어리로
+   읽힌다. 간격 편차가 큰 것도 같은 규칙으로 잡힌다. */
+.art .copy .headline{margin-top:0}
+/* 숫자는 헤드라인과 한 덩어리다. 붙여 둔다. */
+.art .copy .offer-value{margin-top:.1em}
+/* 여기서 새 덩어리가 시작된다. 앞 간격을 크게 벌린다. */
+.art .copy .subline{margin-top:1.45em}
+/* 조건은 서브의 부속이다. 붙인다. */
+.art .copy .benefit-condition{margin-top:.35em}
+/* CTA는 세 번째 덩어리. 다시 벌린다. */
+.art .copy .cta{margin-top:1.15em}
+
+/* 절대 배치나 flex 밀어내기를 쓰는 조판은 위 규칙에서 뺀다. 덮으면 판이 깨진다. */
+.art.offer .copy .offer-value,
+.art.arch .copy .offer-value,
+.art.numeral .copy .offer-value,
+.art.type-diagonal .copy .offer-value{margin-top:auto}
+.art.framed .copy .offer-value,
+.art.duo-panel .copy .offer-value{margin-top:0}
+
+/* ---- 모듈러 스케일 1.25배 ----
+   가장 큰 계층과 다음 계층의 비율이 1.25배는 되어야 위계가 인지된다(Weber).
+   실측으로 price 1.22 / badge 1.15 / type-diagonal 1.00 / framed 1.23이 걸렸다.
+
+   세 개는 원인이 같았다. 헤드라인과 숫자가 비슷한 크기라 무엇이 주인지
+   안 읽힌다. 가이드의 "우선순위가 크기로 구분되는가"에 걸린다.
+   조판마다 누가 주인공인지 정해서 한쪽을 확실히 올린다.
+     price   숫자가 주인공이다. 숫자를 올린다.
+     badge   말이 주인공이다. 헤드라인을 올린다.
+     framed  말이 주인공이다. 숫자를 내린다. */
+.art.price .headline{font-size:9.4cqw}
+.art.price .offer-value{font-size:12.4cqw;line-height:1}
+.art.badge .headline{font-size:9.5cqw}
+.art.type-diagonal .headline{font-size:11.5cqw}
+.art.framed .offer-value{font-size:6.6cqw}
+
+/* framed는 숫자를 오른쪽 아래에 따로 앉히므로 세로 줄기에서 빠진다.
+   남은 줄기의 안쪽 간격이 들쭉날쭉했다(편차 25). 같은 그룹으로 맞춘다. */
+.art.framed .copy .subline{margin-top:1.45em}
+.art.framed .copy .cta{margin-top:1.15em}
+
+/* badge는 숫자를 서브와 한 덩어리로 붙여 둔다. 1.6%는 다른 간격과 어긋나
+   같은 그룹인데 따로 노는 것으로 읽혔다(간격 편차 30). */
+.art.badge .copy .offer-value{margin-top:.1em}
+
+/* ---- CTA 크기 (Fitts) ----
+   타겟이 작으면 클릭까지 이어질 확률이 떨어진다. 카드 높이의 4% 아래로
+   내려간 여섯 조판을 올린다. */
+.art.offer .cta,.art.arch .cta,.art.numeral .cta,
+.art.type-diagonal .cta,.art.framed .cta,.art.duo-panel .cta{
+  font-size:2.9cqw;padding:2cqw 3.2cqw;
+}
