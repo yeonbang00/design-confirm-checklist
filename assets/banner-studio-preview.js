@@ -259,8 +259,10 @@ let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFail
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
 renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}})};
-function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickEmpty').hidden=true;$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
-function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;$('#quickGenerate').textContent=b?'시안 만드는 중…':'시안 6종 생성';$('#quickInput').disabled=b;$('#quickGrab').disabled=b;$('#quickGrabGenerate').disabled=b;if($('#dlAllImages'))$('#dlAllImages').disabled=b;$('#saveVariant').disabled=b;$('#varyCopy').disabled=b;$('#varyScene').disabled=b;$('#autoRetryCopy').disabled=b;$('#quickEditProduct').disabled=b;$('#openSaved').disabled=b;$('#quickResults').setAttribute('aria-busy',String(b));}
+function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
+function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;// 버튼이 둘 다 '시안 6종 생성'이라, 진행 중 표시도 둘 다 해야 어느 쪽을 눌렀든 보인다.
+ for(const id of ['#quickGenerate','#quickGrabGenerate'])$(id).textContent=b?'시안 만드는 중…':'시안 6종 생성';
+ $('#quickInput').disabled=b;$('#quickGrab').disabled=b;$('#quickGrabGenerate').disabled=b;if($('#dlAllImages'))$('#dlAllImages').disabled=b;$('#saveVariant').disabled=b;$('#varyCopy').disabled=b;$('#varyScene').disabled=b;$('#autoRetryCopy').disabled=b;$('#quickEditProduct').disabled=b;$('#openSaved').disabled=b;$('#quickResults').setAttribute('aria-busy',String(b));}
 function looksLikeProduct(data){return data&&data._adcheck==='product'&&Array.isArray(data.items)&&data.items.length}
 async function autoReferences(p){
  const name=p.productName;const category=/티셔츠|의류|가디건|니트|팬츠|스커트|블루핏|셔츠|코트|신발|패션/.test(name)?'fashion':null;
@@ -352,19 +354,26 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   const queue=autoPlan.filter(p=>p.method==='newscene');
   await Promise.all([copyTask,...Array.from({length:2},async()=>{while(queue.length){await generateImage(queue.shift(),run)}})]);
   renderBoard();fillEditor();finishMessage();
- }catch(e){autoMessage(e.message);if(!useCurrent&&!fromGrab){$('#quickFallback').open=true;$('#quickGrab').focus()}}finally{setBusy(false)}
+ }catch(e){autoMessage(e.message);if(!useCurrent&&!fromGrab)$('#quickGrab').focus()}finally{setBusy(false)}
 }
 $('#quickGenerate').onclick=()=>startAutomatic($('#quickInput').value);
 $('#quickInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();startAutomatic($('#quickInput').value)}};
 $('#quickGrabGenerate').onclick=()=>startAutomatic($('#quickGrab').value,true);
-$('#quickSample').onclick=()=>startAutomatic('',false,true);
+$('#quickGrab').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();startAutomatic($('#quickGrab').value,true)}};
 $('#autoRetryCopy').onclick=async()=>{if(autoBusy)return;setBusy(true);autoMessage('카피만 다시 만드는 중…');try{await autoCopies(autoRun)}catch(e){autoCopyFailed=true;$('#autoCopyError').textContent=e.message}finally{setBusy(false);finishMessage()}};
 $('#quickEditProduct').onclick=()=>{if(autoBusy)return;$('#productStep').hidden=!$('#productStep').hidden;$('#productStep').scrollIntoView({behavior:'smooth',block:'start'})};
 $('#quickApplyProduct').onclick=()=>startAutomatic('',false,true);
+/* 붙여넣은 것을 지우려면 전체 선택 후 삭제밖에 없었다. 값이 있을 때만 X를 띄운다. */
+$$('.quick-clear').forEach(btn=>{
+ const input=$('#'+btn.dataset.clear);if(!input)return;
+ const sync=()=>{btn.hidden=!input.value};
+ input.addEventListener('input',sync);sync();
+ btn.onclick=()=>{input.value='';sync();input.focus()};
+});
 $('#quickBookmarklet').href=$('#grabLink').href;$('#quickBookmarklet').onclick=e=>{e.preventDefault();notify('북마크 바에 끌어다 놓고 상품 페이지에서 실행해주세요.')};
 // Enter the existing save/edit views without exposing the former setup steps.
 const legacyGo=go;
-go=function(n){if(autoBusy)return;if(n===1){$('#productStep').hidden=false;return}legacyGo(n);if(n===2){$('#directionStep').hidden=true;$('#productStep').hidden=true;}if(n===3){$('#quickResults').hidden=false;$('#quickEmpty').hidden=true}};
-$('#quickBack') && ($('#quickBack').onclick=()=>{if(variants.length)enterResults();else{$('#savedStep').hidden=true;$('#quickResults').hidden=true;$('#quickEmpty').hidden=false}});
+go=function(n){if(autoBusy)return;if(n===1){$('#productStep').hidden=false;return}legacyGo(n);if(n===2){$('#directionStep').hidden=true;$('#productStep').hidden=true;}if(n===3){$('#quickResults').hidden=false}};
+$('#quickBack') && ($('#quickBack').onclick=()=>{if(variants.length)enterResults();else{$('#savedStep').hidden=true;$('#quickResults').hidden=true}});
 const legacyFill=fillEditor;fillEditor=function(){legacyFill();$('#saveVariant').disabled=autoBusy||!!variants[selected]?.imageFailed;$('#varyCopy').disabled=autoBusy;$('#varyScene').disabled=autoBusy;$('#applyReference').disabled=autoBusy||!activeReference};
 $('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=true;$('#savedStep').hidden=true;

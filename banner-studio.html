@@ -61,12 +61,25 @@
 <main class="shell">
 <div class="page-title"><div><h1>링크 하나로, 다른 시안 여섯 개.</h1><p class="description">상품에 맞는 광고 유형·텍스트 배치·이미지 연출을 자동으로 조합합니다.</p></div><button class="btn quiet" id="openSaved">저장함 <span class="library-count" id="savedCount">0</span></button></div>
 <section class="quick-entry" aria-label="배너 생성">
-<label class="quick-label" for="quickInput">상품 링크</label><div class="quick-bar"><input id="quickInput" type="url" placeholder="광고할 상품의 링크를 붙여넣으세요" autocomplete="url"><button class="btn primary" id="quickGenerate">시안 6종 생성</button></div>
-<p class="hint">사진을 보고 이 상품에 맞는 컷 후보 10여 개를 만든 뒤, 그중에서 뽑아 여섯 장을 만듭니다 — 다시 만들면 다른 조합이 나옵니다. 대표컷과 상세컷은 생성하지 않고 그대로 씁니다. <a href="banner-generation-guide.html">배너 생성 가이드</a></p>
-<details id="quickFallback"><summary>링크가 막히나요? 북마클릿으로 가져오기</summary><p class="hint">아래 버튼을 북마크 바에 끌어다 놓으세요. 상품 페이지에서 실행하고, 복사된 정보를 여기에 붙여넣으면 됩니다.</p><a class="btn" id="quickBookmarklet">AdCheck 상품 담기</a><label class="field">복사한 상품 정보<textarea id="quickGrab" rows="3" placeholder="AdCheck 상품 담기로 복사한 정보"></textarea></label><button class="btn primary" id="quickGrabGenerate">가져온 상품으로 6종 생성</button></details>
+<div class="quick-fields">
+  <div class="quick-field">
+    <label class="quick-label" for="quickInput">상품 링크</label>
+    <div class="quick-bar">
+      <span class="quick-input"><input id="quickInput" type="url" placeholder="광고할 상품의 링크를 붙여넣으세요" autocomplete="url"><button type="button" class="quick-clear" data-clear="quickInput" aria-label="상품 링크 지우기" hidden>&times;</button></span>
+      <button class="btn primary" id="quickGenerate">시안 6종 생성</button>
+    </div>
+  </div>
+  <div class="quick-field">
+    <label class="quick-label" for="quickGrab">북마클릿으로 복사한 상품 정보</label>
+    <div class="quick-bar">
+      <span class="quick-input"><input id="quickGrab" type="text" placeholder="링크가 막히는 몰이면 여기에 붙여넣으세요"><button type="button" class="quick-clear" data-clear="quickGrab" aria-label="복사한 정보 지우기" hidden>&times;</button></span>
+      <button class="btn primary" id="quickGrabGenerate">시안 6종 생성</button>
+    </div>
+  </div>
+</div>
+<p class="hint"><a id="quickBookmarklet" class="quick-bm">AdCheck 상품 담기</a>를 북마크 바에 끌어다 놓고 상품 페이지에서 실행하면 상품 정보가 복사됩니다. 사진을 보고 이 상품에 맞는 컷 후보 10여 개를 만든 뒤, 그중에서 뽑아 여섯 장을 만듭니다 — 다시 만들면 다른 조합이 나옵니다. <a href="banner-generation-guide.html">배너 생성 가이드</a></p>
 <p id="autoStatus" class="quick-status" role="status" aria-live="polite"></p><p id="quickProductCount" class="hint"></p>
 </section>
-<div id="quickEmpty" class="quick-empty"><h2>선택은 시안을 본 다음에.</h2><p>상품 사진과 정보를 바탕으로 카피와 구성을 제안합니다.<br>마음에 드는 시안의 문구·배치를 수정하고 저장하세요.</p><div class="row"><a class="btn quiet" href="banner-generation-guide.html">배너 생성 가이드</a><button id="quickSample" class="btn quiet">블루핏 예시로 6종 생성</button></div></div>
 <div id="quickResults" hidden><div class="quick-result-head"><div><h2 id="quickProduct">생성 결과</h2><p class="hint">내려받는 것은 조판 없는 원본 크기 이미지입니다. 카드의 카피는 어울리는지 보시라고 얹어둔 것이라 파일에는 들어가지 않습니다.</p></div><div class="row"><button class="btn primary" id="dlAllImages">이미지 전부 내려받기</button><button class="btn quiet" id="quickEditProduct">상품 정보 수정</button><button class="btn" id="autoRetryCopy" hidden>카피만 다시 생성</button></div></div><p class="error" id="autoCopyError"></p></div>
 <nav class="steps" aria-label="제작 단계" hidden><button data-step="0"></button><button data-step="1"></button><button data-step="2"><span id="stepThreeText"></span></button><button data-step="3"></button></nav>
 <section id="productStep">
