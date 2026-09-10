@@ -414,7 +414,7 @@
     const rowsHtml = (m.specs && m.specs.length)
       ? '<div class="mg-rows">' + m.specs.map(s => {
           const value = [s.size, s.format, s.maxSize].filter(Boolean).join(' · ');
-          return '<div class="mg-row"><span class="mg-row-label">' + escapeHtml(s.label) + '</span><span class="mg-row-value">' + escapeHtml(value || '—') + '</span></div>';
+          return '<div class="mg-row"><span class="mg-row-label">' + escapeHtml(s.label) + '</span><span class="mg-row-value">' + escapeHtml(value || '-') + '</span></div>';
         }).join('') + '</div>'
       : '';
 

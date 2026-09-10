@@ -93,7 +93,7 @@ export function createPlan(product, random = Math.random) {
      섞는다. 위치만 여섯 개면 같은 배너를 여섯 번 본 느낌이 된다. */
   const layouts = shuffle(['header', 'split', 'split-right', 'band', 'top-center', 'top-left',
     'bottom-right', 'boxed', 'strip', 'corner',
-    ...(product.salePrice || hasBenefit ? ['offer', 'numeral'] : [])], random).slice(0, 6);
+    ...(product.salePrice || hasBenefit ? ['offer', 'numeral', 'arch'] : [])], random).slice(0, 6);
 
   const photos = (product.photos.length ? product.photos : [{}])
     .map((p, i) => ({ ...p, role: guessRole(p, i) }));

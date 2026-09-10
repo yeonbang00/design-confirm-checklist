@@ -923,11 +923,11 @@
     uploadBatchMsg.textContent = '';
     uploadBatchMsg.className = 'upload-modal-msg';
     batchItems = [];
-    uploadBatchTitle.textContent = files.length + '장 선택됨 — AI가 분류 중…';
+    uploadBatchTitle.textContent = files.length + '장 선택됨 · AI가 분류 중…';
     let classifiedCount = 0;
     function noteClassified(){
       classifiedCount++;
-      if(classifiedCount >= files.length) uploadBatchTitle.textContent = files.length + '장 선택됨 — 확인 후 등록해주세요';
+      if(classifiedCount >= files.length) uploadBatchTitle.textContent = files.length + '장 선택됨 · 확인 후 등록해주세요';
     }
 
     files.forEach(file => {
@@ -992,7 +992,7 @@
           statusEl.textContent = '';
           statusEl.className = 'ub-status pending';
         }catch(e){
-          statusEl.textContent = '자동분류 실패 — 직접 입력';
+          statusEl.textContent = '자동분류 실패 · 직접 입력';
           statusEl.className = 'ub-status error';
         }finally{
           noteClassified();

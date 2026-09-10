@@ -1,5 +1,6 @@
 import {createPlan} from './studio-auto-plan.mjs';
 import {scrubLogo} from './studio-logo-scrub.mjs';
+import {upgradePhotos} from './studio-photo-size.mjs';
 import {normalizeProduct,safeUrl,factSlots} from './studio-data.mjs';
 // Product originals + editable designer drafts. Image synthesis is not connected.
 'use strict';
@@ -35,7 +36,7 @@ const MODES={
  outfit:{name:'모델 착장 교체',summary:'모델·포즈를 유지하고 지정한 옷을 바꿉니다.',image:PHOTOS[0].url,caption:'블루핏 모델 원본 · 교체 전 예시'},
  newscene:{name:'새로운 장면',summary:'같은 상품으로 새로운 배경과 분위기를 찾습니다.',image:PHOTOS[3].url,caption:'이전에 생성한 블루핏 AI 예시'}
 };
-const LAYOUTS={header:'헤더 + 상품',offer:'큰 가격·혜택',split:'좌측 카피·우측 사진','split-right':'좌측 사진·우측 카피',duo:'사진 2장 비교',band:'하단 정보 띠',price:'큰 가격 · 상단 좌측','top-center':'상단 중앙','top-left':'상단 좌측','bottom-right':'하단 우측',boxed:'사진 위 카피 카드',strip:'상하 띠 · 가운데 사진',numeral:'초대형 숫자',corner:'전면 사진 · 구석 카피'};
+const LAYOUTS={header:'헤더 + 상품',offer:'큰 가격·혜택',split:'좌측 카피·우측 사진','split-right':'좌측 사진·우측 카피',duo:'사진 2장 비교',band:'하단 정보 띠',price:'큰 가격 · 상단 좌측','top-center':'상단 중앙','top-left':'상단 좌측','bottom-right':'하단 우측',boxed:'사진 위 카피 카드',strip:'상하 띠 · 가운데 사진',numeral:'초대형 숫자',corner:'전면 사진 · 구석 카피',arch:'아치 사진 · 숫자 강조'};
 let step=0,selected=0,photo=0,mode='original',variants=[],choice=new Set([0,1,2,3,4,5]);
 let saved=[],recipes=[],previousWorkspace=null,copyRound=0,timer,modeDrafts={};
 function notify(text){$('#toast').textContent=text;$('#toast').hidden=false;clearTimeout(timer);timer=setTimeout(()=>$('#toast').hidden=true,4000)}
@@ -97,7 +98,7 @@ function go(n){
 function openSelectedBoard(){if(!isPlan()){if(!choice.size)return;variants=directionVariants().filter(v=>choice.has(v.id));selected=0}go(2)}
 function updateStepNav(){const names=['상품 확인','제작 방식',isPlan()?'연출 검토':'시안 비교·수정','저장·전달'];$('#stepPosition').textContent=`${step+1} / 4 · ${names[step]}`+(step===1&&!isPlan()?` · ${choice.size}개 선택`:'');$('#stepPrev').disabled=step===0;$('#stepNext').disabled=step===3||(step===1&&(isPlan()?!planState[mode].name.trim():!choice.size));$('#stepNext').textContent=step===1&&isPlan()?'연출 검토 ▶':'다음 ▶';$('#stepPrev').setAttribute('aria-label',step>0?`이전: ${names[step-1]}`:'이전 단계 없음');$('#stepNext').setAttribute('aria-label',step<3?`다음: ${names[step+1]}`:'마지막 단계');$('#stepThreeText').textContent=names[2]}
 const srcOf=p=>(p&&(p.cleanUrl||p.url))||'';
-function art(v){const photos=v.photos||PHOTOS,p=photos[v.photo]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;return `<div class="art ${esc(v.layout)}${v.original?' original':''}"><img src="${esc(srcOf(p))}" alt="${esc(p.label)}" loading="lazy">${v.layout==='duo'?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${(v.layout==='offer'||v.layout==='numeral')&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
+function art(v){const photos=v.photos||PHOTOS,p=photos[v.photo]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;return `<div class="art ${esc(v.layout)}${v.original?' original':''}"><img src="${esc(srcOf(p))}" alt="${esc(p.label)}" loading="lazy">${v.layout==='duo'?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
  $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div><span class="badge">${selected===i?'수정 중':'시안 '+(i+1)}</span></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
@@ -282,8 +283,14 @@ async function autoCopies(run){
    비율만으로는 모델컷과 단품컷이 구분되지 않아서, 사진을 실제로 보고 역할을
    붙인다. 실패해도 진행한다 — createPlan이 비율로 짐작해 여섯 종을 채운다. */
 async function classifyPhotos(run){
+ if(!product.photos.length)return;
+ // 몰이 준 대표 이미지가 썸네일인 경우가 있다. 신세계는 275px짜리를 준다.
+ // 생성에 넣기 전에 가장 큰 판형으로 올린다.
+ const bigger=await upgradePhotos(product.photos);
+ if(run!==autoRun)return;
+ if(bigger){PHOTOS.splice(0,PHOTOS.length,...product.photos);renderPhotos?.()}
+ const sizeNote=bigger?`사진 ${bigger}장을 원본 크기로 교체`:'';
  const urls=product.photos.slice(0,6).map(p=>p.url);
- if(!urls.length)return;
  try{
   const data=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})});
   if(run!==autoRun)return;
@@ -302,9 +309,9 @@ async function classifyPhotos(run){
   if(usable.length&&dropped)product.photos=usable;
   PHOTOS.splice(0,PHOTOS.length,...product.photos);
   if(SOURCE.includes('/1002447881'))PHOTOS.push(...SAMPLE_PHOTOS.slice(2));
-  photoNotice=`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
+  photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다');
- }catch(e){photoNotice='사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
+ }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
  await scrubLogos(run);
 }
 

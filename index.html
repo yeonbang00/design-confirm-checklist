@@ -1293,7 +1293,7 @@
     } else {
       row.removeAttribute('data-status');
       pill.removeAttribute('data-status');
-      pill.textContent = '—';
+      pill.textContent = '-';
     }
   }
 
@@ -2482,7 +2482,7 @@
     const b = document.createElement('b');
     b.textContent = String(name).trim();
     cap.appendChild(b);
-    cap.appendChild(document.createTextNode(' — ' + msg));
+    cap.appendChild(document.createTextNode(' · ' + msg));
   }
 
   // 같은 줄(세로로 겹침)에 있고 가로 간격이 글자 높이보다 좁으면 한 덩어리로 본다
@@ -2697,8 +2697,8 @@
       const badge = document.getElementById('briefVerdictBadge');
       badge.textContent = VERDICT_LABELS[ba.verdict] || '기획 부합도';
       badge.className = 'verdict-badge' + (ba.verdict ? ' v-' + ba.verdict : '');
-      document.getElementById('briefSummary').textContent = ba.summary || '—';
-      document.getElementById('briefGaps').textContent = ba.gaps || '—';
+      document.getElementById('briefSummary').textContent = ba.summary || '-';
+      document.getElementById('briefGaps').textContent = ba.gaps || '-';
       briefBlock.classList.add('show');
     } else {
       briefBlock.classList.remove('show');
@@ -2711,7 +2711,7 @@
     const ls = result.layoutStats;
     if(ls && ls.sampleCount){
       document.getElementById('layoutStatsCaption').textContent =
-        (ls.categoryName || '') + ' 카테고리 레퍼런스 ' + ls.sampleCount + '장을 분석한 참고 수치입니다 — "정답"이 아니라 "경쟁사들이 흔히 쓰는 배치"이니 그대로 따라야 하는 기준으로 쓰지 마세요.' +
+        (ls.categoryName || '') + ' 카테고리 레퍼런스 ' + ls.sampleCount + '장을 분석한 참고 수치입니다. "정답"이 아니라 "경쟁사들이 흔히 쓰는 배치"이니 그대로 따라야 하는 기준으로 쓰지 마세요.' +
         (ls.reliable ? '' : ' (표본이 적어 참고 신뢰도가 낮습니다)');
       const grid = document.getElementById('layoutStatsGrid');
       grid.innerHTML = '';
@@ -2748,7 +2748,7 @@
       const parts = [];
       if(bgr && bgr.differs) parts.push(bgr.differs);
       if(gaps) parts.push(gaps);
-      document.getElementById('bgDiffers').textContent = parts.join('\n\n') || '—';
+      document.getElementById('bgDiffers').textContent = parts.join('\n\n') || '-';
       document.getElementById('bgNeedsCheck').textContent = (bgr && bgr.needsCheck) || '—';
       bgBlock.classList.add('show');
     } else {
@@ -2758,7 +2758,7 @@
     const mgBlock = document.getElementById('mediaGuideBlock');
     const mgr = result.mediaGuideReview;
     if(mediaPicked && mgr && (mgr.differs || mgr.needsCheck)){
-      document.getElementById('mgDiffers').textContent = mgr.differs || '—';
+      document.getElementById('mgDiffers').textContent = mgr.differs || '-';
       document.getElementById('mgNeedsCheck').textContent = mgr.needsCheck || '—';
       mgBlock.classList.add('show');
     } else {
@@ -2850,11 +2850,11 @@
         document.querySelector('.checklist-card').classList.remove('pending');
         const detail = (lastErr && lastErr.message) ? lastErr.message : '알 수 없는 오류';
         if(lastErr.status === 429){
-          setStatus('AI 분석 요청이 계속 거절되고 있습니다 ('+detail+') — 일시적 혼잡이 아니라 OpenAI 계정의 사용 한도·결제 문제일 수 있으니 계정을 확인해주세요.', false);
+          setStatus('AI 분석 요청이 계속 거절되고 있습니다 ('+detail+') 일시적 혼잡이 아니라 OpenAI 계정의 사용 한도·결제 문제일 수 있으니 계정을 확인해주세요.', false);
         } else if(lastErr.status === 503 || lastErr.status >= 500){
           setStatus('AI 서버가 일시적으로 혼잡합니다 (OpenAI 쪽 문제로, 앱 문제가 아니에요). 잠시 후 다시 시도해주세요.', false);
         } else {
-          setStatus('분석에 실패했습니다: '+detail+' — 다시 시도해주세요.', false);
+          setStatus('분석에 실패했습니다: '+detail+' 다시 시도해주세요.', false);
         }
       }
     }catch(err){

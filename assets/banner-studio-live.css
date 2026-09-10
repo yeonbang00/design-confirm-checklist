@@ -88,14 +88,14 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 /* 카피를 사진 위 흰 카드에 앉힌다 */
 .art.boxed>img{inset:0;width:100%;height:100%;object-fit:cover}
 .art.boxed .brand{left:6%;top:5%;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.45)}
-.art.boxed .copy{left:6.5%;right:6.5%;bottom:6.5%;max-width:none;background:#fbf9f4;color:#15150f;padding:5.5% 5.5% 5%}
+.art.boxed .copy{left:6.5%;right:6.5%;bottom:6.5%;max-width:none;background:#fbf9f4;color:#15150f;padding:5.5% 5.5% 5%;border-radius:3cqw}
 .art.boxed .headline{font-size:5.5cqw}
 .art.boxed .subline{font-size:2.6cqw;margin-top:2.5%}
 .art.boxed .cta{margin-top:4%;font-size:2.4cqw;padding:1.5cqw 2.6cqw}
 
 /* 위아래를 띠로 잡고 가운데만 사진 — SSF의 '첫 구매 웰컴딜' 형태 */
 .art.strip{background:#12130f}
-.art.strip>img{top:9.5%;height:74%;object-fit:cover}
+.art.strip>img{top:9.5%;height:74%;object-fit:cover;border-radius:0 0 9cqw 9cqw}
 .art.strip .brand{left:0;top:0;width:100%;padding:2.6% 6%;background:#12130f;color:#fff;font-size:2.4cqw;letter-spacing:.2em}
 .art.strip .copy{left:0;bottom:0;width:100%;max-width:none;padding:3.4% 6% 3.8%;background:#12130f;color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:0 4%}
 /* 헤드라인이 한 줄을 다 쓰고, 서브와 CTA가 아래 줄에서 좌우로 갈린다.
@@ -105,20 +105,23 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .art.strip .cta{flex:0 0 auto;margin:1.6% 0 0 auto;font-size:2.1cqw;background:#f2f0e8;color:#12130f;padding:1.2cqw 2cqw}
 .art.strip .benefit-condition{flex:1 1 100%;margin-top:1.4%;font-size:2cqw;opacity:.6}
 
-/* 숫자를 화면 절반만큼 키운다 */
-.art.numeral{background:#f2efe8}
-.art.numeral>img{left:54%;top:0;width:46%;height:100%;object-fit:cover}
-.art.numeral .brand{left:6%;top:6%;font-size:2.5cqw}
-.art.numeral .copy{left:6%;top:18%;bottom:auto;max-width:46%;display:flex;flex-direction:column;align-items:flex-start}
-/* 10cqw인 이유 — '72,000원'처럼 여덟 자짜리 값이 들어와도 46% 폭 안에 든다.
-   실측으로 11cqw에서 9px 넘쳤다. 더 키우면 '5% 혜택'은 멋있지만 가격이 잘린다. */
-.art.numeral .offer-value{display:block;order:-1;font-size:10cqw;line-height:.95;font-weight:800;letter-spacing:-.045em;white-space:nowrap}
-.art.numeral .headline{font-size:4cqw;margin-top:5%}
-.art.numeral .subline{font-size:2.3cqw;margin-top:2%}
-.art.numeral .cta{font-size:2.2cqw;margin-top:6%;padding:1.4cqw 2.2cqw}
+/* 연출컷을 아래 두 모서리만 둥근 판에 넣고, 숫자는 밝은 바닥에 얹는다.
+   처음엔 바탕을 검게 두고 숫자도 검게 뒀다가 숫자가 통째로 사라졌다.
+   하이라이트 장치는 띠 위쪽으로 글자가 삐져나오는 게 핵심이라, 바닥이
+   글자색과 붙어 있으면 성립하지 않는다. 바닥은 반드시 글자와 반대여야 한다. */
+.art.numeral{background:#fbfaf8;color:#15150f;--bar:#C3FF4D}
+.art.numeral>img{left:0;top:0;width:100%;height:72%;object-fit:cover;border-radius:0 0 12cqw 12cqw}
+.art.numeral:after{content:'';position:absolute;left:0;top:0;width:100%;height:72%;border-radius:0 0 12cqw 12cqw;background:linear-gradient(180deg,rgba(8,10,12,.5),transparent 48%)}
+.art.numeral .brand{left:7%;top:5.5%;font-size:3.4cqw;font-weight:800;letter-spacing:-.02em;color:#fff;z-index:2}
+.art.numeral .copy{inset:0;padding:12.5% 7% 6.5%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
+.art.numeral .headline{font-size:5.4cqw;max-width:72%;line-height:1.12;color:#fff}
+.art.numeral .subline{font-size:2.7cqw;margin-top:2.2%;max-width:58%;color:rgba(255,255,255,.84)}
+.art.numeral .offer-value{display:inline-block;margin:auto 0 0 -7%;padding:0 3cqw 0 7%;font-size:10.5cqw;line-height:1.04;font-weight:800;letter-spacing:-.045em;white-space:nowrap;color:#15150f;background:linear-gradient(transparent 52%,var(--bar) 52%,var(--bar) 94%,transparent 94%)}
+.art.numeral .cta{position:absolute;right:6.5%;bottom:7.5%;margin:0;padding:0;background:transparent;color:#9a978e;font-size:2.6cqw;font-weight:700}
 
 /* 사진을 다 보여주고 구석만 쓴다 */
 .art.corner>img{inset:0;width:100%;height:100%;object-fit:cover}
+.art.corner .cta{border-radius:99px}
 .art.corner:after{content:'';position:absolute;inset:0;background:linear-gradient(205deg,#f6f2e9f2,transparent 52%)}
 .art.corner .brand{left:6%;bottom:6%;top:auto}
 .art.corner .copy{left:auto;right:6%;top:7%;bottom:auto;max-width:46%;text-align:right}

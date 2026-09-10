@@ -20,7 +20,40 @@ figcaption{font-size:12px;color:var(--muted);line-height:1.7;margin-top:12px}
 .recipe-summary{padding:22px;background:var(--panel);border:1px solid var(--line);border-radius:10px}.recipe-summary dl{margin:20px 0}.recipe-summary dt{color:var(--muted);font-size:12px;margin-top:18px}.recipe-summary dd{margin:6px 0 0;font-size:14px;white-space:pre-line;overflow-wrap:anywhere}
 .saved-heading{margin:30px 0 18px;font-size:18px}.recipe-saved-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.recipe-saved{display:flex;gap:18px;border:1px solid var(--line);border-radius:10px;padding:18px;align-items:start}.recipe-saved>img{width:120px;aspect-ratio:1;object-fit:contain;background:#222}.recipe-saved>div{min-width:0}.recipe-saved h3{margin:12px 0 0;overflow-wrap:anywhere}.recipe-saved .preview-tag{white-space:normal;font-size:10px;display:inline-block}
 .art.header>img{top:39%;left:6%;width:88%;height:57%;object-fit:contain}.art.header .copy{top:11%;bottom:auto;left:6%;width:88%;max-width:88%}.art.header .headline{font-size:6.2cqw}.art.header .subline{margin-top:2%;font-size:2.8cqw}.art.header .cta{margin-top:2%;padding:1.4cqw 2.4cqw;font-size:2.6cqw}
-.art.offer>img{top:13%;left:37%;width:59%;height:62%;object-fit:cover}.art.offer .brand{display:none}.art.offer .copy{inset:0;padding:6%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}.art.offer .headline{font-size:6.2cqw;max-width:85%}.art.offer .subline{font-size:2.6cqw;max-width:45%}.offer-value{display:none}.art.offer .offer-value{display:block;margin-top:auto;font-size:15cqw;line-height:1;font-weight:800;letter-spacing:-.04em;white-space:nowrap}.art.offer .cta{margin-top:3%;font-size:2.5cqw;padding:1.6cqw 2.4cqw}
+/* SSF 배너의 구조를 가져온다. 요소를 어디 놓느냐가 아니라 '무엇으로 묶느냐'가
+   짜인 느낌을 만든다. 레퍼런스에서 반복되는 장치는 셋이다.
+
+     1. 좌상단 텍스트 스택 — 브랜드(굵게) → 헤드라인(굵게) → 서브(작게·흐리게).
+        셋의 크기 차이가 곧 위계다. 흩어 놓으면 위계가 사라진다.
+     2. 숫자 하이라이트 — 색 띠가 숫자 '아래쪽 절반'에만 깔리고 숫자는 검정이다.
+        띠를 꽉 채우고 흰 글자를 얹으면 그냥 버튼처럼 보인다. 형광펜처럼
+        아래만 걸쳐야 숫자가 살고 띠는 구조가 된다. 띠는 화면 왼쪽 끝까지 뺀다.
+     3. 사진 뒤의 판 — 제품 뒤에 색 블록이나 아치를 깔아 사진이 '잘려 들어간'
+        게 아니라 '놓인' 것으로 보이게 한다.
+
+   CTA는 버튼으로 띄우지 않는다. 레퍼런스도 우하단에 매체 로고만 작게 둔다.
+   숫자가 주인공인 판에서 버튼까지 크면 둘 다 안 읽힌다. */
+.art.offer{background:#fbfaf8;color:#15150f;--bar:#F2521B}
+.art.offer:before{content:'';position:absolute;right:0;top:0;width:56%;height:100%;background:#e7e5e0}
+.art.offer>img{left:30%;top:11%;width:66%;height:76%;object-fit:contain}
+.art.offer .brand{left:7%;top:7%;font-size:5.4cqw;font-weight:800;letter-spacing:-.03em;z-index:2}
+.art.offer .copy{inset:0;padding:15% 7% 7%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
+.art.offer .headline{font-size:6.4cqw;max-width:78%;line-height:1.12}
+.art.offer .subline{font-size:2.9cqw;margin-top:2.8%;max-width:64%;color:#6a685f}
+/* margin-left가 음수인 이유: .copy의 좌측 padding(7%)을 지워 띠를 프레임 끝까지 뺀다 */
+.art.offer .offer-value{display:inline-block;margin:auto 0 0 -7%;padding:0 3cqw 0 7%;font-size:11cqw;line-height:1.04;font-weight:800;letter-spacing:-.045em;white-space:nowrap;color:#15150f;background:linear-gradient(transparent 52%,var(--bar) 52%,var(--bar) 94%,transparent 94%)}
+.art.offer .cta{position:absolute;right:6.5%;bottom:7.5%;margin:0;padding:0;background:transparent;color:#9a978e;font-size:2.6cqw;font-weight:700;letter-spacing:.02em}
+
+/* 사진을 아치에 넣는다. 각진 사각형만 여섯 장이면 잘라 붙인 것처럼 보인다.
+   위 두 모서리만 크게 굴리면 판이 하나 놓인 것으로 읽힌다. */
+.art.arch{background:#fbfaf8;color:#15150f;--bar:#C3FF4D}
+.art.arch>img{left:36%;top:9%;width:60%;height:86%;object-fit:cover;border-radius:50% 50% 0 0/32% 32% 0 0}
+.art.arch .brand{left:7%;top:7%;font-size:5.4cqw;font-weight:800;letter-spacing:-.03em;z-index:2}
+.art.arch .copy{inset:0;padding:15% 7% 7%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
+.art.arch .headline{font-size:6.4cqw;max-width:60%;line-height:1.12}
+.art.arch .subline{font-size:2.9cqw;margin-top:2.8%;max-width:52%;color:#6a685f}
+.art.arch .offer-value{display:inline-block;margin:auto 0 0 -7%;padding:0 3cqw 0 7%;font-size:11cqw;line-height:1.04;font-weight:800;letter-spacing:-.045em;white-space:nowrap;color:#15150f;background:linear-gradient(transparent 52%,var(--bar) 52%,var(--bar) 94%,transparent 94%)}
+.art.arch .cta{position:absolute;right:6.5%;bottom:7.5%;margin:0;padding:0;background:transparent;color:#9a978e;font-size:2.6cqw;font-weight:700}
 .art.split-right>img{left:0;width:57%;object-position:center}.art.split-right .brand{left:63%;top:8%;font-size:2.7cqw}.art.split-right .copy{left:63%;top:26%;bottom:auto;max-width:31%}.art.split-right .headline{font-size:5.5cqw}.art.split-right .subline{font-size:2.5cqw}.art.split-right .cta{font-size:2.3cqw;padding:1.5cqw 2cqw}
 .art.band>img{height:76%;object-fit:cover}.art.band .copy{left:0;bottom:0;width:100%;max-width:100%;padding:5% 6%;background:#101110;color:#fff}.art.band .headline{font-size:6cqw}.art.band .subline{font-size:2.8cqw;margin-top:2%}.art.band .cta{background:#eee;color:#111;font-size:2.5cqw;margin-top:3%;padding:1.3cqw 2cqw}
 .art.original>img{inset:0;width:100%;height:100%;object-fit:contain}.art.original .offer-value{display:none}

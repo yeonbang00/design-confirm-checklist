@@ -237,9 +237,9 @@
 
 
   <div class="section" id="logSection">
-    <div class="section-title">판정 분포 <span class="log-note">— 프롬프트 고도화용. 누가 분석했는지는 기록하지 않습니다.</span></div>
+    <div class="section-title">판정 분포 <span class="log-note">프롬프트 고도화용. 누가 분석했는지는 기록하지 않습니다.</span></div>
     <div id="logSummary"></div>
-    <div class="section-title" style="margin-top:28px;">최근 분석 <span class="log-note">— 소재별로 무엇이 걸렸는지</span></div>
+    <div class="section-title" style="margin-top:28px;">최근 분석 <span class="log-note">소재별로 무엇이 걸렸는지</span></div>
     <div id="logEntries"></div>
   </div>
 
@@ -347,7 +347,7 @@
   // ---------- 판정 분포 ----------
   // 17개 항목 각각이 얼마나 자주 걸렸는지(검토+반려 비율)를 높은 순으로 보여준다.
   // 프롬프트를 어느 항목부터 손볼지 정하는 근거로 쓰기 위한 화면.
-  const STATUS_LABEL = { pass:'통과', needsfix:'검토필요', reject:'반려', na:'해당없음', null:'—', '':'—' };
+  const STATUS_LABEL = { pass:'통과', needsfix:'검토필요', reject:'반려', na:'해당없음', null:'-', '':'-' };
   const ITEM_NAMES = {
     1:'전략 적합성', 2:'위계 및 구조', 3:'타이포·정렬·여백·명도대비', 4:'정보 정확성',
     5:'컬러 일관성', 6:'합성 리얼리티', 7:'피사체 보정', 8:'그래픽 완성도',
@@ -493,7 +493,7 @@
       // 두 번 하는 데다 초록 칩이 판정 배지처럼 읽혀 오해를 준다.
       const flags = flagged.map(v => '<span class="log-flag ' + v.status + '">'
         + String(v.id).padStart(2,'0') + ' ' + escapeHtml(ITEM_NAMES[v.id] || '')
-        + (v.note ? ' — ' + escapeHtml(v.note) : '') + '</span>').join('');
+        + (v.note ? ' · ' + escapeHtml(v.note) : '') + '</span>').join('');
       return '<div class="log-entry">' + thumb + '<div class="log-entry-body">'
         + '<div class="log-meta">' + meta + '</div>'
         + (flags ? '<div class="log-flags">' + flags + '</div>' : '')
