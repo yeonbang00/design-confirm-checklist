@@ -304,7 +304,7 @@ async function classifyPhotos(run){
   if(SOURCE.includes('/1002447881'))PHOTOS.push(...SAMPLE_PHOTOS.slice(2));
   photoNotice=`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다');
- }catch(e){photoNotice='사진 분류를 건너뛰었습니다 — 비율로 나눕니다.';}
+ }catch(e){photoNotice='사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
  await scrubLogos(run);
 }
 

@@ -213,7 +213,7 @@
     d.textContent = ok
       ? '상품 ' + slim.length + (total > slim.length ? '개(전체 ' + total + '개 중)' : '개')
         + (imgN > 1 ? ' · 이미지 ' + imgN + '장' : '')
-        + '를 복사했습니다 — AdCheck 입력칸에 붙여넣으세요'
+        + '를 복사했습니다. AdCheck 입력칸에 붙여넣으세요'
       : '복사에 실패했습니다. 아래 상자의 내용을 직접 복사하세요.';
     d.style.cssText = 'position:fixed;left:50%;top:22px;transform:translateX(-50%);z-index:2147483647;'
       + 'background:#12151A;color:#EDEEF0;font:600 13px/1.5 -apple-system,sans-serif;'

@@ -26,6 +26,9 @@ export function resolveCopy(row,p) {
     if(/[{}]/.test(text)||!text.trim())throw Error('카피가 비어 있거나 형식이 맞지 않습니다.');
     // Tokens already include units; models occasionally append the unit again.
     text=text.replace(/(\d+)종\s*(?:가지|종)/g,'$1종').replace(/원\s*원/g,'원').replace(/% 혜택\s*혜택/g,'% 혜택');
+    // 줄표와 슬래시로 이은 문장은 사람이 쓴 카피로 안 읽힌다. 프롬프트로 막지만
+    // 새어 나오는 경우가 있어 여기서 한 번 더 끊는다.
+    text=text.replace(/\s*[—–]\s*/g,', ').replace(/(\S)\s*\/\s*(\S)/g,'$1, $2').replace(/,\s*,/g,',');
     out[key]=text.trim();
   }
   // Conditions belong to code, so they cannot be dropped by generated copy.
