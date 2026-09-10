@@ -11,6 +11,16 @@ export function createPlan(product,random=Math.random){
   ['저녁빛 연출','A warm evening interior, indirect amber lighting and rich but natural shadows.'],
   ['밝은 공간','An airy white interior, soft diffused light, clean premium editorial mood.']
  ],random);
- const methods=shuffle(['original','original','newscene','newscene','newscene','newscene'],random);let sceneIndex=0;
- return methods.map((method,i)=>{const scene=method==='original'?['상품 원본','']:scenes[sceneIndex++];return {id:i,method,layout:layouts[i],type:types[i%types.length],photo:i%product.photos.length,sceneName:scene[0],scene:scene[1]}});
+ const methods=shuffle(['original','original','newscene','newscene','newscene','newscene'],random);
+ // 사진은 방식별로 따로 돌린다. i를 그대로 쓰면 methods가 섞였을 때
+ // 원본 2종이 같은 사진을 집어 카드 두 장이 똑같아진다.
+ const photoOrder=shuffle(product.photos.map((_,i)=>i),random);
+ let originalSeen=0, sceneSeen=0, sceneIndex=0;
+ return methods.map((method,i)=>{
+  const scene=method==='original'?['상품 원본','']:scenes[sceneIndex++];
+  const photo=method==='original'
+   ? photoOrder[originalSeen++ % photoOrder.length]
+   : photoOrder[(photoOrder.length-1-(sceneSeen++)) % photoOrder.length];
+  return {id:i,method,layout:layouts[i],type:types[i%types.length],photo,sceneName:scene[0],scene:scene[1]};
+ });
 }
