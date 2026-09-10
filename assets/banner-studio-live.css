@@ -105,7 +105,7 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 /* 카피를 사진 위 흰 카드에 앉힌다 */
 .art.boxed>img{inset:0;width:100%;height:100%;object-fit:cover}
 .art.boxed .brand{left:6%;top:5%;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.45)}
-.art.boxed .copy{left:6.5%;right:6.5%;bottom:6.5%;max-width:none;background:#fbf9f4;color:#15150f;padding:5.5% 5.5% 5%;border-radius:3cqw}
+.art.boxed .copy{left:6.5%;right:6.5%;bottom:6.5%;max-width:none;background:var(--art-ground,#fbf9f4);color:var(--art-ink,#15150f);padding:5.5% 5.5% 5%;border-radius:3cqw}
 .art.boxed .headline{font-size:5.5cqw}
 .art.boxed .subline{font-size:2.6cqw;margin-top:2.5%}
 .art.boxed .cta{margin-top:4%;font-size:2.4cqw;padding:1.5cqw 2.6cqw}
@@ -119,14 +119,14 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
    셋을 한 줄에 넣으면 CTA가 띠 밖으로 밀려 잘렸다. */
 .art.strip .headline{flex:1 1 100%;font-size:4.2cqw}
 .art.strip .subline{flex:1 1 auto;margin-top:1.6%;font-size:2.3cqw;opacity:.72;min-width:0}
-.art.strip .cta{flex:0 0 auto;margin:1.6% 0 0 auto;font-size:2.1cqw;background:#f2f0e8;color:#12130f;padding:1.2cqw 2cqw}
+.art.strip .cta{flex:0 0 auto;margin:1.6% 0 0 auto;font-size:2.1cqw;background:var(--art-ground,#f2f0e8);color:var(--art-ink,#12130f);padding:1.2cqw 2cqw}
 .art.strip .benefit-condition{flex:1 1 100%;margin-top:1.4%;font-size:2cqw;opacity:.6}
 
 /* 연출컷을 아래 두 모서리만 둥근 판에 넣고, 숫자는 밝은 바닥에 얹는다.
    처음엔 바탕을 검게 두고 숫자도 검게 뒀다가 숫자가 통째로 사라졌다.
    하이라이트 장치는 띠 위쪽으로 글자가 삐져나오는 게 핵심이라, 바닥이
    글자색과 붙어 있으면 성립하지 않는다. 바닥은 반드시 글자와 반대여야 한다. */
-.art.numeral{background:#fbfaf8;color:#15150f;--bar:#C3FF4D}
+.art.numeral{background:var(--art-ground,#fbfaf8);color:var(--art-ink,#15150f);--bar:var(--art-accent,#8a7f6a)}
 .art.numeral>img{left:0;top:0;width:100%;height:72%;object-fit:cover;border-radius:0 0 12cqw 12cqw}
 .art.numeral:after{content:'';position:absolute;left:0;top:0;width:100%;height:72%;border-radius:0 0 12cqw 12cqw;background:linear-gradient(180deg,rgba(8,10,12,calc(var(--scrim,.5)*1.05)),transparent 48%)}
 .art.numeral .brand{left:7%;top:5.5%;font-size:3.4cqw;font-weight:800;letter-spacing:-.02em;color:#fff;z-index:2}
@@ -171,12 +171,13 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 
 /* BEANPOLE 쑈핑데이형. 컬러 대형 타이포 두 덩어리를 좌상단과 우하단에 두고
    그 사이 대각선 빈 자리에 제품을 놓는다. 타이포가 주인공인 판이다. */
-.art.type-diagonal{background:linear-gradient(152deg,#f5f3ef,#e6e3dc);color:#3b4cca;--bar:#3b4cca}
+/* 빈폴 배너의 파랑을 그대로 박아 놨었다. 상품 색으로 바꾼다. */
+.art.type-diagonal{background:linear-gradient(152deg,var(--art-ground,#f5f3ef),var(--art-ground-deep,#e6e3dc));color:var(--art-accent,#4a4436);--bar:var(--art-accent,#4a4436)}
 .art.type-diagonal>img{left:19%;top:21%;width:62%;height:60%;object-fit:contain}
 .art.type-diagonal .brand{left:7%;top:6.5%;font-size:7cqw;font-weight:800;letter-spacing:-.035em;color:var(--bar);z-index:2}
 .art.type-diagonal .copy{inset:0;padding:17.5% 7% 7%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
 .art.type-diagonal .headline{font-size:6.6cqw;line-height:1.1;color:var(--bar);max-width:64%}
-.art.type-diagonal .subline{margin-top:5%;font-size:2.8cqw;color:#3c3b34;max-width:48%}
+.art.type-diagonal .subline{margin-top:5%;font-size:2.8cqw;color:var(--art-ink,#3c3b34);max-width:48%}
 .art.type-diagonal .offer-value{display:block;margin:auto 0 0 auto;text-align:right;font-size:7cqw;line-height:1.14;font-weight:800;letter-spacing:-.035em;color:var(--bar)}
 .art.type-diagonal .cta{position:absolute;right:7%;top:6.5%;margin:0;padding:0;background:transparent;color:#7a786e;font-size:2.5cqw;font-weight:700}
 
@@ -194,10 +195,10 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 
 /* 모노앳디형. 왼쪽은 연출컷에 초대형 숫자만, 오른쪽은 정보 전체.
    사진 두 장을 쓴다 — 연출컷과 단품컷이 한 판에서 각자 역할을 한다. */
-.art.duo-panel{background:#efeae1;color:#2a2620}
+.art.duo-panel{background:var(--art-ground,#efeae1);color:var(--art-ink,#2a2620)}
 .art.duo-panel>img{left:0;top:0;width:50%;height:100%;object-fit:cover;border-radius:0}
 .art.duo-panel>img.second-photo{left:57%;top:33%;width:36%;height:36%;object-fit:contain}
-.art.duo-panel .brand{left:56%;top:9%;font-size:2.5cqw;font-weight:700;letter-spacing:-.01em;color:#c0392b}
+.art.duo-panel .brand{left:56%;top:9%;font-size:2.5cqw;font-weight:700;letter-spacing:-.01em;color:var(--art-accent,#c0392b)}
 .art.duo-panel .copy{inset:0;padding:14.5% 6% 7% 56%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
 .art.duo-panel .headline{font-size:5cqw;line-height:1.2;max-width:100%}
 .art.duo-panel .subline{margin-top:auto;font-size:2.4cqw;color:#6d665a;max-width:100%}

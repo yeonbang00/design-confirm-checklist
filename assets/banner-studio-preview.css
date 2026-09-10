@@ -33,20 +33,23 @@ figcaption{font-size:12px;color:var(--muted);line-height:1.7;margin-top:12px}
 
    CTA는 버튼으로 띄우지 않는다. 레퍼런스도 우하단에 매체 로고만 작게 둔다.
    숫자가 주인공인 판에서 버튼까지 크면 둘 다 안 읽힌다. */
-.art.offer{background:#fbfaf8;color:#15150f;--bar:#F2521B}
-.art.offer:before{content:'';position:absolute;right:0;top:0;width:56%;height:100%;background:#e7e5e0}
+/* 색을 박아 두지 않는다. SSF 배너에서 구조를 가져오면서 그쪽 주황까지
+   같이 가져왔더니 설화수 배너에 남의 브랜드 색이 떴다. 상품 사진에서 뽑은
+   값을 --accent/--ground/--ink로 넣어 준다. 못 뽑으면 아래 기본값을 쓴다. */
+.art.offer{background:var(--art-ground,#fbfaf8);color:var(--art-ink,#15150f);--bar:var(--art-accent,#8a7f6a)}
+.art.offer:before{content:'';position:absolute;right:0;top:0;width:56%;height:100%;background:var(--art-ground-deep,#e7e5e0)}
 .art.offer>img{left:30%;top:11%;width:66%;height:76%;object-fit:contain}
 .art.offer .brand{left:7%;top:7%;font-size:5.4cqw;font-weight:800;letter-spacing:-.03em;z-index:2}
 .art.offer .copy{inset:0;padding:15% 7% 7%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
 .art.offer .headline{font-size:6.4cqw;max-width:78%;line-height:1.12}
-.art.offer .subline{font-size:2.9cqw;margin-top:2.8%;max-width:64%;color:#6a685f}
+.art.offer .subline{font-size:2.9cqw;margin-top:2.8%;max-width:64%;color:var(--art-ink,#15150f);opacity:.62}
 /* margin-left가 음수인 이유: .copy의 좌측 padding(7%)을 지워 띠를 프레임 끝까지 뺀다 */
 .art.offer .offer-value{display:inline-block;margin:auto 0 0 -7%;padding:0 3cqw 0 7%;font-size:11cqw;line-height:1.04;font-weight:800;letter-spacing:-.045em;white-space:nowrap;color:#15150f;background:linear-gradient(transparent 52%,var(--bar) 52%,var(--bar) 94%,transparent 94%)}
 .art.offer .cta{position:absolute;right:6.5%;bottom:7.5%;margin:0;padding:0;background:transparent;color:#9a978e;font-size:2.6cqw;font-weight:700;letter-spacing:.02em}
 
 /* 사진을 아치에 넣는다. 각진 사각형만 여섯 장이면 잘라 붙인 것처럼 보인다.
    위 두 모서리만 크게 굴리면 판이 하나 놓인 것으로 읽힌다. */
-.art.arch{background:#fbfaf8;color:#15150f;--bar:#C3FF4D}
+.art.arch{background:var(--art-ground,#fbfaf8);color:var(--art-ink,#15150f);--bar:var(--art-accent,#8a7f6a)}
 .art.arch>img{left:36%;top:9%;width:60%;height:86%;object-fit:cover;border-radius:50% 50% 0 0/32% 32% 0 0}
 .art.arch .brand{left:7%;top:7%;font-size:5.4cqw;font-weight:800;letter-spacing:-.03em;z-index:2}
 .art.arch .copy{inset:0;padding:15% 7% 7%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}

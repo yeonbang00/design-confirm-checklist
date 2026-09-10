@@ -2,7 +2,7 @@ import {createPlan} from './studio-auto-plan.mjs';
 import {scrubLogo} from './studio-logo-scrub.mjs';
 import {upgradePhotos} from './studio-photo-size.mjs';
 import {checkBakedText} from './studio-text-check.mjs';
-import {cutout,scrimFor} from './studio-pixels.mjs';
+import {cutout,scrimFor,paletteFrom} from './studio-pixels.mjs';
 import {normalizeProduct,safeUrl,factSlots} from './studio-data.mjs';
 // Product originals + editable designer drafts. Image synthesis is not connected.
 'use strict';
@@ -338,11 +338,30 @@ async function classifyPhotos(run){
  }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
 }
 
+/* 조판에 색을 박아 두면 남의 브랜드 색이 상품 위에 얹힌다. 대표컷에서
+   한 번 뽑아 모든 카드에 넣는다. 여섯 장이 한 세트로 보이는 효과도 있다. */
+async function readPalette(run){
+ const main=product.photos[0];if(!main)return;
+ const p=await paletteFrom(main.cutUrl||main.url,getJSON);
+ if(run!==autoRun||!p)return;
+ product.palette=p;
+ /* :root에 넣으면 안 된다. 이 페이지의 --ink는 본문 글자색(#edeef0)이라
+    덮어쓰면 사이트 전체 글자가 뒤집힌다. 카드 전용 이름으로 보드에만 넣는다. */
+ const board=$('#board');
+ if(board){
+  board.style.setProperty('--art-accent',p.accent);
+  board.style.setProperty('--art-ground',p.ground);
+  board.style.setProperty('--art-ground-deep',p.groundDeep);
+  board.style.setProperty('--art-ink',p.ink);
+ }
+ photoNotice+=` · 상품 색으로 배색(${p.accent})`;
+}
+
 /* 로고 지우기와 누끼는 분류가 끝나야 시작할 수 있지만, 계획을 세우고 카드를
    그리고 카피를 만드는 일과는 상관이 없다. 예전에는 이걸 다 기다린 뒤에야
    화면이 떴다. 이제 시작만 걸어 두고, 생성 직전에만 기다린다. */
 function startPixelWork(run){
- return Promise.all([scrubLogos(run),cutoutPhotos(run)]).then(([,cutNote])=>{
+ return Promise.all([scrubLogos(run),cutoutPhotos(run),readPalette(run)]).then(([,cutNote])=>{
   if(run!==autoRun)return;
   if(cutNote)photoNotice+=' · '+cutNote;
   PHOTOS.splice(0,PHOTOS.length,...product.photos);

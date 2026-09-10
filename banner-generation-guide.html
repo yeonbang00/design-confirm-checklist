@@ -388,6 +388,37 @@
     </div>
 
     <div class="rule">
+      <h3>색은 상품에서 뽑습니다</h3>
+      <p>조판에 색을 박아 놨었습니다. 대형 타이포는 빈폴 배너의 파랑, 숫자 띠는 SSF의 주황,
+         하이라이트는 우리 라임. <b>레퍼런스에서 구조를 가져오면서 색까지 같이 가져온 것</b>입니다.
+         그래서 설화수 배너에 빈폴 파랑이 떴습니다.</p>
+      <p>이제 대표컷의 픽셀을 훑어 색을 뽑습니다. 무채색(바탕)과 유채색(제품)을 갈라 각각
+         대표값을 내고, 제품 쪽에서 강조색을, 같은 색상의 아주 옅은 판에서 바닥색을 만듭니다.
+         색상환은 원형이라 평균을 그냥 내면 빨강과 자주가 초록이 되므로 벡터로 더합니다.</p>
+      <p>인물이 있으면 피부가 화면의 상당 부분이라 그게 대표색이 됩니다. 살구빛 계열
+         (색상 12~46도, 채도 낮고 밝음)을 빼고 보되, 빼서 남는 게 거의 없으면 그 상품이 정말
+         그 색이니 도로 넣습니다.</p>
+    </div>
+
+    <div class="rule">
+      <h3>조판 열여덟이 사실은 장치 다섯 개였습니다</h3>
+      <p>여섯 장이 계속 비슷해 보이는 이유를 찾았습니다. <code>offer · numeral · arch</code>는
+         전부 같은 숫자 하이라이트 띠이고, <code>split · split-right · duo-panel</code>은
+         전부 좌우 면분할입니다. 혜택 강조가 회당 두세 자리니 같은 장치가 세 번씩 나왔습니다.
+         <b>조판 이름이 달라도 눈에는 같은 배너</b>입니다.</p>
+      <table>
+        <tr><th style="width:20%">시각 장치</th><th>조판</th></tr>
+        <tr><td>숫자 하이라이트</td><td><code>offer · numeral · arch</code></td></tr>
+        <tr><td>좌우 면분할</td><td><code>split · split-right · duo-panel</code></td></tr>
+        <tr><td>사진 위 글자</td><td><code>top-center · top-left · bottom-right · corner · badge</code></td></tr>
+        <tr><td>카드·띠</td><td><code>boxed · strip · band · header</code></td></tr>
+        <tr><td>타이포 지배</td><td><code>type-diagonal · price · framed</code></td></tr>
+      </table>
+      <p>이제 <b>한 장치는 여섯 중 최대 두 번</b>입니다. 400회 측정 결과 한 회차에 같은 장치가
+         세 번 이상 나온 경우 0건이고, 다섯 장치가 회당 0.90~1.50회로 고르게 나옵니다.</p>
+    </div>
+
+    <div class="rule">
       <h3>여섯 장을 다 고화질로 뽑을 이유가 없습니다</h3>
       <p>화질 설정이 속도를 거의 전부 결정합니다. 같은 프롬프트로 실측한 값입니다.</p>
       <table>

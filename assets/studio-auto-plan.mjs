@@ -130,6 +130,20 @@ export const TYPE_STYLES = [
   ['장평 좁은 볼드', 'a condensed bold sans-serif stacked in two tight lines, filling the width edge to edge'],
 ];
 
+/* 조판 열여덟이라고 했지만 눈에 보이는 장치는 다섯 가지다. offer·numeral·arch는
+   전부 같은 숫자 하이라이트 띠고, split·split-right·duo-panel은 전부 면분할이다.
+   혜택 강조가 회당 두세 자리니 같은 장치가 세 번씩 나왔다. 여섯 장이 다르게
+   보이려면 조판 이름이 아니라 장치가 달라야 한다. 한 장치는 최대 두 번. */
+export const DEVICE = {
+  highlight: ['offer', 'numeral', 'arch'],          // 숫자 아래 색 띠
+  split: ['split', 'split-right', 'duo-panel'],     // 좌우 면분할
+  overlay: ['top-center', 'top-left', 'bottom-right', 'corner', 'badge'], // 사진 위 글자
+  card: ['boxed', 'strip', 'band', 'header'],       // 카드·띠로 글자를 담음
+  type: ['type-diagonal', 'price', 'framed'],       // 타이포가 판을 지배
+};
+export const deviceOf = layout =>
+  Object.keys(DEVICE).find(k => DEVICE[k].includes(layout)) || 'other';
+
 export const EMPHASIS = {
   offer: ['offer', 'numeral', 'arch', 'type-diagonal', 'duo-panel', 'price'],
   product: ['boxed', 'corner', 'badge', 'framed', 'strip', 'split-right'],
@@ -164,6 +178,7 @@ export function createPlan(product, random = Math.random) {
 
   // 조판은 강조 방향 안에서 고르고, 여섯 장이 같은 조판을 두 번 쓰지 않게 한다.
   const usedLayout = new Set();
+  const deviceCount = {};
   /* 레퍼런스 배너를 본 분류가 이 업종에 어울리는 조판을 골라 준다. 같은 강조
      묶음 안에 그 조판이 있으면 먼저 쓴다. 내가 짐작한 값보다 실제로 집행된
      배너에서 읽은 값이 낫다. 없으면 원래대로 무작위로 뽑는다. */
@@ -171,11 +186,15 @@ export function createPlan(product, random = Math.random) {
   const layouts = emphasisPlan.map(em => {
     const inGroup = EMPHASIS[em];
     const hinted = shuffle(hints.filter(l => inGroup.includes(l)), random);
-    const pool = [...hinted, ...shuffle(inGroup, random)]
-      .filter(l => !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1));
-    const pick = pool[0] || shuffle(Object.values(EMPHASIS).flat(), random)
-      .find(l => !usedLayout.has(l)) || 'header';
+    const free = l => !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1);
+    const fresh = l => (deviceCount[deviceOf(l)] || 0) < 2;
+    const ranked = [...hinted, ...shuffle(inGroup, random)].filter(free);
+    // 장치가 두 번을 넘지 않는 것 먼저, 없으면 강조 묶음 안에서, 그래도 없으면 전체에서
+    const pick = ranked.find(fresh) || ranked[0]
+      || shuffle(Object.values(EMPHASIS).flat(), random).filter(free).find(fresh)
+      || shuffle(Object.values(EMPHASIS).flat(), random).find(free) || 'header';
     usedLayout.add(pick);
+    deviceCount[deviceOf(pick)] = (deviceCount[deviceOf(pick)] || 0) + 1;
     return pick;
   });
 

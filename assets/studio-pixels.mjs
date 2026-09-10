@@ -142,3 +142,81 @@ export async function cutout(url, getJSON, tolerance = 34) {
   ctx.putImageData(im, 0, 0);
   return { ok: true, dataUrl: canvas.toDataURL('image/png'), ratio: Math.round(ratio * 100), dev: Math.round(dev) };
 }
+
+
+/* ---- 상품에서 색을 뽑는다 ----
+   조판에 색을 박아 놨었다. type-diagonal은 빈폴 배너의 파랑, 숫자 띠는
+   SSF의 주황, 하이라이트는 우리 라임. 레퍼런스에서 구조를 가져오면서 색까지
+   같이 가져온 것이다. 그래서 설화수 배너에 빈폴 파랑이 떴다.
+   색은 상품 사진에서 나와야 한다.
+
+   방법 — 픽셀을 성기게 훑어 색을 모으고, 무채색(바탕)과 유채색(제품)을
+   갈라 각각 대표값을 뽑는다. 바탕은 판의 바닥색이 되고, 제품에서 나온
+   가장 진한 유채색이 강조색이 된다. */
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return [h, sat, l];
+}
+const hslToHex = (h, s, l) => {
+  const f = n => {
+    const k = (n + h * 12) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const v = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(v * 255).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+};
+
+export async function paletteFrom(url, getJSON) {
+  try {
+    const px = await pixelsOf(url, getJSON);
+    const d = px.ctx.getImageData(0, 0, px.w, px.h).data;
+    const chroma = [], grey = [];
+    for (let i = 0; i < d.length; i += 40) {
+      if (d[i + 3] < 200) continue;              // 누끼로 지운 자리
+      const [h, s, l] = rgbToHsl(d[i], d[i + 1], d[i + 2]);
+      if (l < 0.06 || l > 0.97) continue;        // 완전한 검정·흰색은 바탕이다
+      (s > 0.22 ? chroma : grey).push([h, s, l]);
+    }
+    if (!chroma.length && !grey.length) return null;
+
+    // 색상환은 원형이라 평균을 그냥 내면 빨강과 자주가 초록이 된다. 벡터로 더한다.
+    const hueOf = list => {
+      let x = 0, y = 0;
+      for (const [h] of list) { x += Math.cos(h * 2 * Math.PI); y += Math.sin(h * 2 * Math.PI); }
+      const a = Math.atan2(y, x) / (2 * Math.PI);
+      return a < 0 ? a + 1 : a;
+    };
+    const mid = (list, k) => {
+      const v = list.map(c => c[k]).sort((a, b) => a - b);
+      return v[Math.floor(v.length / 2)] || 0;
+    };
+
+    /* 인물이 있으면 피부가 화면의 상당 부분이라 그게 대표색이 된다. 살구빛
+       계열(색상 15~45도, 채도 낮고 밝음)을 빼고 본다. 뺐더니 남는 게 거의
+       없으면 그 상품은 정말 그 색이니 도로 넣는다. */
+    const skin = ([h, s, l]) => h * 360 >= 12 && h * 360 <= 46 && s < 0.55 && l > 0.42;
+    const notSkin = chroma.filter(c => !skin(c));
+    const pool = notSkin.length > chroma.length * 0.25 ? notSkin : chroma;
+    const src = pool.length > grey.length * 0.08 ? pool : grey;
+    const h = hueOf(src);
+    const s = mid(src, 1), l = mid(src, 2);
+
+    // 강조색은 읽혀야 한다. 채도를 올리고 명도를 중간으로 당긴다.
+    const accent = hslToHex(h, Math.min(0.92, Math.max(0.52, s * 1.6)), Math.min(0.52, Math.max(0.36, l * 0.8)));
+    // 바닥은 같은 색상의 아주 옅은 판. 제품과 같은 계열이라 겉돌지 않는다.
+    const ground = hslToHex(h, Math.min(0.16, s * 0.35), 0.945);
+    const groundDeep = hslToHex(h, Math.min(0.22, s * 0.45), 0.9);
+    const ink = hslToHex(h, Math.min(0.3, s * 0.5), 0.12);
+    return { accent, ground, groundDeep, ink, hue: Math.round(h * 360), sat: Math.round(s * 100) };
+  } catch { return null; }
+}
