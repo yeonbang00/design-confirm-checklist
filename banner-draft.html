@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>location.replace("banner-studio.html");</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AdCheck | 시안 5종</title>
@@ -199,10 +200,10 @@
       <div class="gnb-dropdown">
         <button type="button" class="gnb-link gnb-dropdown-toggle active">배너 생성</button>
         <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
-          <a href="banner-studio.html" class="gnb-dropdown-item">제작 스튜디오</a>
-          <a href="banner-draft.html" class="gnb-dropdown-item active" aria-current="page">시안 5종</a>
-          <a href="banner-maker.html" class="gnb-dropdown-item">완성 배너</a>
-        </div></div>
+          <a href="banner-studio.html" class="gnb-dropdown-item">배너 생성</a>
+          <a href="banner-generation-guide.html" class="gnb-dropdown-item">배너 생성 가이드</a>
+
+          </div></div>
       </div>
       <div class="gnb-dropdown">
         <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
@@ -299,8 +300,8 @@
       <div class="footer-col"><span class="footer-col-title">배너</span>
         <a href="index.html">배너 분석</a>
         <a href="banner-studio.html">제작 스튜디오 · 미리보기</a>
-        <a href="banner-draft.html" class="is-current">시안 5종</a>
-        <a href="banner-maker.html">완성 배너</a>
+        <a href="banner-studio.html">배너 생성</a>
+        <a href="banner-generation-guide.html">배너 생성 가이드</a>
         <a href="brief-helper.html">기획안 헬퍼</a></div>
       <div class="footer-col"><span class="footer-col-title">가이드</span>
         <a href="criteria-guide.html">항목 가이드</a><a href="guide.html">브랜드 가이드</a>
@@ -341,22 +342,90 @@ let product = null;      // 선택된 상품
 let picked  = [];        // 링크에서 나온 상품 목록
 let sets    = [];        // 시안 3종
 
+/* ── 줄 균형 잡기 ────────────────────────────────────────────────
+   앞에서부터 채우는 줄바꿈(greedy)은 첫 줄이 길고 둘째 줄이 짧아지기 쉽다.
+   "겨울에도 스타일리시한 블루핏 / 스커트" 같은 모양이 그래서 나온다.
+   끊을 수 있는 자리를 다 시험해 두 줄 폭 차이가 가장 작은 곳에서 끊는다.
+   (CSS의 text-wrap:balance와 같은 생각인데, 여기서는 폭을 직접 재므로
+   그 값을 다음 단계에서 그대로 쓸 수 있다) */
+function balancedWrap(text, cfg, size, width){
+  const paras = String(text==null?'':text).split('\n');
+  if(paras.length > 1) return paras;                 // 사용자가 직접 나눈 줄은 존중
+  const words = paras[0].split(/\s+/).filter(Boolean);
+  if(words.length < 2) return paras;
+  const w = str => T.textW(str, cfg, size);
+  if(w(paras[0]) <= width) return paras;             // 한 줄에 들어가면 그대로
+
+  let best = null;
+  for(let k=1; k<words.length; k++){
+    const a = words.slice(0,k).join(' '), b = words.slice(k).join(' ');
+    const wa = w(a), wb = w(b);
+    if(wa > width || wb > width) continue;
+    const diff = Math.abs(wa - wb);
+    if(!best || diff < best.diff) best = { lines:[a,b], diff, wa, wb };
+  }
+  return best ? best.lines : null;                   // 못 찾으면 기본 줄바꿈으로
+}
+
+/* 두 줄 폭이 거의 같으면 자간을 아주 조금 늘려 딱 맞춘다. 신문·포스터에서
+   쓰는 양끝맞춤과 같은 방식이다. 차이가 크면 손대지 않는다 — 억지로 늘리면
+   글자 사이가 벌어져 티가 난다. */
+const JUSTIFY_WITHIN = 0.14;   // 긴 줄 대비 14% 이내면 맞춘다
+const MAX_EXTRA_LS   = 0.05;   // 자간은 글자 크기의 5%까지만 벌린다
+function justifyPair(lines, cfg, size){
+  if(lines.length !== 2) return lines.map(t=>({text:t, ls:cfg.ls}));
+  const w0 = T.textW(lines[0], cfg, size), w1 = T.textW(lines[1], cfg, size);
+  const wide = Math.max(w0, w1), narrow = Math.min(w0, w1);
+  const out = lines.map(t=>({text:t, ls:cfg.ls}));
+  if(wide === 0 || (wide - narrow) / wide > JUSTIFY_WITHIN) return out;
+  const i = w0 < w1 ? 0 : 1;
+  const gaps = Math.max(1, lines[i].length - 1);
+  const extra = (wide - narrow) / gaps;
+  if(extra > size * MAX_EXTRA_LS) return out;        // 너무 벌어지면 포기
+  out[i].ls = cfg.ls + extra;
+  out[i].justified = true;
+  return out;
+}
+
 /* ── 조판 계산 ──────────────────────────────────────────────────
    완성 배너와 같은 텍스트 엔진(assets/banner-text.js)을 쓴다. 줄바꿈이
    두 화면에서 다르면 여기서 확인한 게 저기서 안 맞는다. */
 function layout(copy){
   const parts=[], bw=L.blockW;
+  let textRight = 0;                 // 카피가 실제로 끝나는 x — CTA 폭을 여기 맞춘다
+
   if(copy.headline){
-    const f=T.fitText(copy.headline, L.headline, bw);
-    parts.push({kind:'headline', ...f, cfg:L.headline, gap:L.headline.gap});
+    const f = T.fitText(copy.headline, L.headline, bw);
+    // 줄이 둘이면 균형 잡힌 자리에서 다시 끊고, 폭이 비슷하면 딱 맞춘다
+    let lines = f.lines;
+    if(lines.length === 2 || (lines.length === 1 && f.size < L.headline.size)){
+      const bal = balancedWrap(copy.headline, L.headline, f.size, bw);
+      if(bal && bal.length === 2) lines = bal;
+    }
+    const rich = justifyPair(lines, L.headline, f.size);
+    const widths = rich.map(r=>T.textW(r.text, {...L.headline, ls:r.ls}, f.size));
+    textRight = Math.max(textRight, ...widths);
+    parts.push({kind:'headline', ...f, lines:rich, cfg:L.headline, gap:L.headline.gap});
   }
   if(copy.subcopy){
-    const f=T.fitText(copy.subcopy, L.subcopy, bw);
-    parts.push({kind:'subcopy', ...f, cfg:L.subcopy, gap:L.subcopy.gap});
+    // 서브는 메인에 비례한다. 메인이 줄면 서브도 같이 줄어야 위계가 유지된다.
+    const head = parts.find(p=>p.kind==='headline');
+    const scale = head ? head.size / L.headline.size : 1;
+    const cfg = { ...L.subcopy, size: Math.round(L.subcopy.size * scale),
+                  min: Math.round((L.subcopy.min||L.subcopy.size) * scale) };
+    const f = T.fitText(copy.subcopy, cfg, bw);
+    textRight = Math.max(textRight, ...f.lines.map(t=>T.textW(t, cfg, f.size)));
+    parts.push({kind:'subcopy', ...f,
+                lines:f.lines.map(t=>({text:t, ls:cfg.ls})), cfg, gap:L.subcopy.gap});
   }
   if(copy.cta){
-    const b=L.cta, w=T.textW(copy.cta+'  ›', b, b.size)+b.padX*2, h=b.size*1.2+b.padY*2;
-    parts.push({kind:'cta', text:copy.cta, cfg:b, width:w, height:h, gap:0});
+    const b=L.cta, h=b.size*1.2+b.padY*2;
+    const natural = T.textW(copy.cta+'  ›', b, b.size) + b.padX*2;
+    // 카피 오른쪽 끝에 맞춘다. 다만 글자보다 좁아지면 안 되고, 지나치게
+    // 길어져도 버튼처럼 안 보이므로 카피 폭의 절반까지만 늘린다.
+    const target = Math.max(natural, Math.min(textRight, natural * 2.2));
+    parts.push({kind:'cta', text:copy.cta, cfg:b, width:Math.round(target), height:h, gap:0,
+                snapped: target > natural + 1});
   }
   const total = parts.reduce((s,p,i)=>s+p.height+(i<parts.length-1?p.gap:0),0);
   let y = L.h - L.margin - total;
@@ -386,8 +455,12 @@ function bannerHTML(set, imageUrl){
     } else {
       const op = p.kind==='subcopy' ? '.9' : '1';
       h += `<div class="bn-el" style="left:${p.x}px;top:${p.y}px;width:${L.blockW}px;">`
-         + p.lines.map(ln=>`<span class="bn-line" style="font:${p.cfg.weight} ${p.size}px/${p.cfg.lh} ${T.FONT};`
-             + `letter-spacing:${p.cfg.ls}px;color:${set.ink};opacity:${op};">${esc(ln)||'&nbsp;'}</span>`).join('')
+         + p.lines.map(ln=>{
+             const t = typeof ln === 'string' ? ln : ln.text;
+             const ls = typeof ln === 'string' ? p.cfg.ls : ln.ls;
+             return `<span class="bn-line" style="font:${p.cfg.weight} ${p.size}px/${p.cfg.lh} ${T.FONT};`
+                  + `letter-spacing:${ls}px;color:${set.ink};opacity:${op};">${esc(t)||'&nbsp;'}</span>`;
+           }).join('')
          + `</div>`;
     }
   }

@@ -1,3 +1,4 @@
+import {createPlan} from './studio-auto-plan.mjs';
 import {normalizeProduct,safeUrl,factSlots} from './studio-data.mjs';
 // Product originals + editable designer drafts. Image synthesis is not connected.
 'use strict';
@@ -152,7 +153,7 @@ function syncFacts(){
 for(const id of ['productName','productBrand','productPrice','productQuantity','productDescription','benefitRate','benefitKind','benefitCondition','benefitCheck'])$('#'+id).addEventListener('change',syncFacts);
 validProduct=function(){syncFacts();let error='';if(!product.productName)error='상품명을 입력해주세요.';else if(!product.photos.length)error='상품 사진을 한 장 이상 등록해주세요.';else if(product.salePrice!==null&&(!Number.isInteger(product.salePrice)||product.salePrice<1))error='판매가를 양의 정수로 입력해주세요.';else if(product.quantity!==null&&(!Number.isInteger(product.quantity)||product.quantity<1))error='구성 수량을 양의 정수로 입력해주세요.';else if(product.benefitConfirmed&&!factSlots(product).BENEFIT)error='1~100% 할인율과 적용 조건을 함께 입력해주세요.';else if(!$('#factCheck').checked)error='상품명·판매가·구성을 확인하고 체크해주세요.';$('#productError').textContent=error;$('#productError').hidden=!error;return !error};
 async function getJSON(url,options={}){
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),90000);
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),240000);
  try{const response=await fetch(url,{...options,signal:controller.signal});let data;try{data=await response.json()}catch{throw Error('응답을 읽지 못했습니다. 로그인 상태와 서버 연결을 확인해주세요. 로컬 화면에서는 API가 실행되지 않습니다.')}
  if(!response.ok){const e=Error(data.error||'요청을 처리하지 못했습니다. 다시 시도해주세요.');e.blocked=data.blocked;throw e}return data;
  }catch(e){if(e.name==='AbortError')throw Error('응답 시간이 길어졌습니다. 잠시 후 다시 시도해주세요.');throw e}finally{clearTimeout(timeout)}
@@ -207,3 +208,70 @@ updateReferenceEditor=function(){oldRefEditor();$('#applyReference').textContent
 // Legacy saved drafts retain their original example images even after a product switch.
 for(const entry of saved)if(!entry.variant.photos)entry.variant.photos=structuredClone(SAMPLE_PHOTOS);
 setProduct(product);renderSaved();renderLibrary();updateStepNav();
+
+// Automatic entry flow. The existing editor and saved drafts are reused after results.
+let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false;
+const autoMessage=text=>{$('#autoStatus').textContent=text};
+const originalBoard=renderBoard;
+renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}})};
+function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickEmpty').hidden=true;$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
+function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;$('#quickGenerate').textContent=b?'시안 만드는 중…':'시안 6종 생성';$('#quickInput').disabled=b;$('#quickGrab').disabled=b;$('#quickGrabGenerate').disabled=b;$('#saveVariant').disabled=b;$('#varyCopy').disabled=b;$('#varyScene').disabled=b;$('#autoRetryCopy').disabled=b;$('#quickEditProduct').disabled=b;$('#openSaved').disabled=b;$('#quickResults').setAttribute('aria-busy',String(b));}
+function looksLikeProduct(data){return data&&data._adcheck==='product'&&Array.isArray(data.items)&&data.items.length}
+async function autoReferences(p){
+ const name=p.productName;const category=/티셔츠|의류|가디건|니트|팬츠|스커트|블루핏|셔츠|코트|신발|패션/.test(name)?'fashion':null;
+ if(!category)return [];
+ try{const data=await getJSON('/api/referenceImages?category='+category);return (data.items||[]).filter(x=>safeUrl(x.thumbUrl)).map(x=>({...x,brand:x.brandName||x.brand||'레퍼런스',category,source:'AdCheck 이미지 레퍼런스'}))}catch{return []}
+}
+async function autoCopies(run){
+ const refs=await autoReferences(product);if(run!==autoRun)return;
+ const references=autoPlan.map(p=>{const candidates=refs.filter(r=>r.type===p.type);const ref=candidates[Math.floor(Math.random()*candidates.length)];return ref?{...ref,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'표현 방식과 카피 구조를 참고합니다.'}:{type:p.type,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'상품 사실 안에서 표현합니다.'}});
+ const data=await getJSON('/api/bannerCopy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'studio',autoPlan:true,product,layouts:autoPlan.map(p=>p.layout),references,plans:autoPlan})});
+ if(run!==autoRun)return;
+ if(!Array.isArray(data.copies)||data.copies.length!==6)throw Error('카피가 6개 돌아오지 않았습니다. 카피만 다시 시도해주세요.');
+ variants.forEach((v,i)=>Object.assign(v,data.copies[i],{reference:references[i],copyModel:data.model,copyEdited:false}));autoCopyFailed=false;renderBoard();fillEditor();
+}
+async function generateImage(plan,run){
+ const variant=variants.find(v=>v.id===plan.id);if(!variant)return;
+ variant.autoStatus='이미지 생성 중';variant.imageFailed=false;renderBoard();
+ try{const result=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:product.photos[plan.photo].url,imagePrompt:`${plan.scene} Adapt the environment to the supplied product. Preserve its identity. Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ if(run!==autoRun)return;if(!safeUrl(result.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
+ const index=PHOTOS.push({url:result.imageUrl,label:plan.sceneName+' · AI 생성',kind:'ai'})-1;
+ variant.photo=index;variant.photos=undefined;variant.autoStatus=plan.sceneName+' · AI 생성 · 상품 일치 확인 필요';variant.imageFailed=false;failedImages.delete(plan.id);
+ }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
+ renderBoard();fillEditor();
+}
+async function retryImage(id){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun)}finally{setBusy(false);finishMessage()}}
+function finishMessage(){autoMessage(autoCopyFailed?'이미지는 처리됐지만 카피 생성에 실패했습니다. 카피만 다시 시도할 수 있습니다.':failedImages.size?`6종 중 이미지 ${failedImages.size}개가 실패했습니다. 해당 카드에서 다시 생성할 수 있습니다.`:'시안 6종이 완성됐습니다. 마음에 드는 시안을 선택해 수정·저장하세요.');$('#autoRetryCopy').hidden=!autoCopyFailed}
+async function startAutomatic(raw,fromGrab=false,useCurrent=false){
+ if(autoBusy)return;if(!useCurrent&&!raw.trim()){autoMessage('상품 링크를 넣어주세요.');$('#quickInput').focus();return}
+ const run=++autoRun;setBusy(true);autoMessage('상품 정보를 분석하는 중…');
+ try{
+  if(!useCurrent){let data;if(fromGrab){if(raw.length>2000000)throw Error('상품 정보가 너무 큽니다. 상세 페이지에서 다시 담아주세요.');try{data=JSON.parse(raw)}catch{throw Error('복사한 상품 정보를 빠짐없이 붙여넣어주세요.')}if(!looksLikeProduct(data))throw Error('AdCheck 상품 담기로 복사한 정보가 아닙니다.');}
+  else{const url=safeUrl(raw);if(!url)throw Error('올바른 상품 링크를 넣어주세요.');data=await getJSON('/api/productScrape?url='+encodeURIComponent(url));}
+  acceptImport(data);$('#quickProductCount').textContent=importedItems.length>1?`${importedItems.length}개 중 첫 상품으로 생성합니다. 결과의 상품 정보에서 바꿀 수 있습니다.`:'';
+  }
+  syncFacts();if(!product.productName||!product.photos.length)throw Error('상품명과 사진이 필요합니다. 상품 정보를 직접 입력해주세요.');
+  $('#factCheck').checked=true;mode='original';autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
+  const slots=factSlots(product);
+  variants=autoPlan.map(p=>({id:p.id,title:REF_TYPES[p.type]+' · '+LAYOUTS[p.layout],layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?'상품 원본 · 카피 준비 중':'이미지 생성 중'}));
+  selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
+  const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;$('#autoCopyError').textContent=e.message});
+  const queue=autoPlan.filter(p=>p.method==='newscene');
+  await Promise.all([copyTask,...Array.from({length:2},async()=>{while(queue.length){await generateImage(queue.shift(),run)}})]);
+  variants.filter(v=>autoPlan[v.id]?.method==='original').forEach(v=>v.autoStatus='원본 + 템플릿');renderBoard();fillEditor();finishMessage();
+ }catch(e){autoMessage(e.message);if(!useCurrent&&!fromGrab){$('#quickFallback').open=true;$('#quickGrab').focus()}}finally{setBusy(false)}
+}
+$('#quickGenerate').onclick=()=>startAutomatic($('#quickInput').value);
+$('#quickInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();startAutomatic($('#quickInput').value)}};
+$('#quickGrabGenerate').onclick=()=>startAutomatic($('#quickGrab').value,true);
+$('#quickSample').onclick=()=>startAutomatic('',false,true);
+$('#autoRetryCopy').onclick=async()=>{if(autoBusy)return;setBusy(true);autoMessage('카피만 다시 만드는 중…');try{await autoCopies(autoRun)}catch(e){autoCopyFailed=true;$('#autoCopyError').textContent=e.message}finally{setBusy(false);finishMessage()}};
+$('#quickEditProduct').onclick=()=>{if(autoBusy)return;$('#productStep').hidden=!$('#productStep').hidden;$('#productStep').scrollIntoView({behavior:'smooth',block:'start'})};
+$('#quickApplyProduct').onclick=()=>startAutomatic('',false,true);
+$('#quickBookmarklet').href=$('#grabLink').href;$('#quickBookmarklet').onclick=e=>{e.preventDefault();notify('북마크 바에 끌어다 놓고 상품 페이지에서 실행해주세요.')};
+// Enter the existing save/edit views without exposing the former setup steps.
+const legacyGo=go;
+go=function(n){if(autoBusy)return;if(n===1){$('#productStep').hidden=false;return}legacyGo(n);if(n===2){$('#directionStep').hidden=true;$('#productStep').hidden=true;}if(n===3){$('#quickResults').hidden=false;$('#quickEmpty').hidden=true}};
+$('#quickBack').onclick=()=>{if(variants.length)enterResults();else{$('#savedStep').hidden=true;$('#quickResults').hidden=true;$('#quickEmpty').hidden=false}};
+const legacyFill=fillEditor;fillEditor=function(){legacyFill();$('#saveVariant').disabled=autoBusy||!!variants[selected]?.imageFailed;$('#varyCopy').disabled=autoBusy;$('#varyScene').disabled=autoBusy;$('#applyReference').disabled=autoBusy||!activeReference};
+$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=true;$('#savedStep').hidden=true;
