@@ -1,6 +1,6 @@
 // POST /api/productPhotos
 // Body: { urls: string[] }
-// Returns: { photos: [{ url, role, hasPerson, colorway, note }] } | { error }
+// Returns: { photos:[{url,role,hasPerson,colorway,note}], category, cuts:[{name,person,scene}] }
 //
 // 시안 6종을 서로 다른 '컷'으로 만들려면, 가진 사진이 각각 무엇인지 알아야
 // 한다. 단품컷을 모델 재촬영에 넣으면 없던 사람이 생기고, 모델컷을 스튜디오
@@ -34,8 +34,60 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 
 첫 번째 사진이 대표컷입니다. 그 사진이 model이나 packshot에 해당하더라도 role은 "main"으로 하세요.
 
+## 두 번째 일 — 이 상품으로 찍을 만한 컷 후보 10개 쓰기
+
+이 상품으로 배너 시안을 만듭니다. **서로 확실히 다른 촬영 컷 10개**를 제안하세요.
+화장품·식품·신발·티셔츠는 어울리는 장면이 전혀 다릅니다. 사진에 보이는 것과
+상품 종류에 맞는 장면만 쓰세요.
+
+- category: fashion-top, fashion-outer, fashion-bottom, shoes, bag, accessory, beauty,
+  food, kitchen, home, electronics, kids, sports, pet, other 중 하나
+
+- cuts: 10개. 각 항목은
+  - name: 한국어 짧은 이름 (4~8자). 예 "아침 주방", "무지 스튜디오", "창가 정물"
+  - person: "none"(사람 없이 상품만) / "keep"(원본의 그 사람을 그대로 두고 장소만 바꿈)
+  - scene: 영어 40~70단어. 장소·소품·빛·카메라 거리와 각도만.
+
+10개를 이렇게 섞으세요.
+- **4개 이상은 person을 "none"** 으로. 그중 최소 2개는 무지 배경 촬영 스튜디오,
+  나머지는 실제 공간에 놓인 정물이나 위에서 내려다본 구성.
+- 사진에 사람이 있으면 **3개 이상은 person을 "keep"** 으로, 서로 다른 장소에서.
+  사람이 없는 상품이면 "keep"을 하나도 쓰지 말고 **10개 전부 "none"** 으로 하세요.
+- 거리를 섞으세요 — 아주 가까이 붙은 질감 컷, 보통 거리, 멀찍이 빠진 넓은 컷.
+- 장소를 겹치지 마세요. 같은 방, 같은 배경을 두 번 쓰면 안 됩니다.
+
+scene 문장 규칙:
+- 상품의 색이나 모양은 쓰지 마세요 — 그건 원본 사진에서 가져옵니다.
+- 글자, 로고, 간판, 가격표, 브랜드명을 장면에 넣지 마세요.
+- person이 "none"이면 문장 끝에 "No person in the frame."을 붙이세요.
+
 JSON만 출력하세요:
-{"photos":[{"index":0,"role":"main","hasPerson":true,"colorway":"검정","burnedText":"","note":""}]}`;
+{"photos":[{"index":0,"role":"main","hasPerson":true,"colorway":"검정","burnedText":"","note":""}],
+ "category":"fashion-top",
+ "cuts":[{"name":"무지 스튜디오","person":"none","scene":"..."}]}`;
+
+const CATEGORIES = new Set(['fashion-top', 'fashion-outer', 'fashion-bottom', 'shoes', 'bag',
+  'accessory', 'beauty', 'food', 'kitchen', 'home', 'electronics', 'kids', 'sports', 'pet', 'other']);
+// 장면에 글자가 들어가면 배너 조판 자리가 망가진다. 뚫고 들어오면 그 컷만 버린다.
+const BANNED = /\b(text|letter|word|logo|sign|signage|label|price tag|billboard|poster|brand name)\b/i;
+
+function cleanCuts(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [], seen = new Set();
+  for (const row of raw) {
+    const scene = typeof row?.scene === 'string' ? row.scene.trim().replace(/\s+/g, ' ') : '';
+    const name = typeof row?.name === 'string' ? row.name.trim().slice(0, 16) : '';
+    if (scene.length < 40 || scene.length > 700 || !name) continue;
+    if (BANNED.test(scene)) continue;
+    // 같은 장면을 이름만 바꿔 두 번 낸 경우를 막는다
+    const finger = scene.slice(0, 70).toLowerCase();
+    if (seen.has(finger)) continue;
+    seen.add(finger);
+    out.push({ name, person: row.person === 'keep' ? 'keep' : 'none', scene });
+    if (out.length >= 14) break;
+  }
+  return out;
+}
 
 async function fetchImage(url) {
   const r = await fetch(url, {
@@ -73,7 +125,7 @@ export default async function handler(req, res) {
 
     const data = await callOpenAI({
       apiKey, promptText: PROMPT, images,
-      maxOutputTokens: 1400, reasoningEffort: 'low',
+      maxOutputTokens: 4200, reasoningEffort: 'low',
     });
 
     const rows = Array.isArray(data?.photos) ? data.photos : [];
@@ -89,7 +141,12 @@ export default async function handler(req, res) {
         note: String(row.note || '').slice(0, 120),
       };
     });
-    res.status(200).json({ photos, model: OPENAI_MODEL });
+    res.status(200).json({
+      photos,
+      category: CATEGORIES.has(data?.category) ? data.category : 'other',
+      cuts: cleanCuts(data?.cuts),
+      model: OPENAI_MODEL,
+    });
   } catch (err) {
     res.status(err.status === 429 ? 429 : (err.status || 500))
       .json({ error: err.message || '상품 사진을 분류하지 못했습니다.' });

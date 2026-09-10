@@ -284,6 +284,8 @@ async function classifyPhotos(run){
  try{
   const data=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})});
   if(run!==autoRun)return;
+  // 장면도 함께 받는다. 상품마다 달라야 하는 부분이라 코드에 박아 둘 수 없다.
+  product.category=data.category||'other';product.cuts=Array.isArray(data.cuts)?data.cuts:[];
   const byUrl=new Map((data.photos||[]).map(x=>[x.url,x]));
   product.photos.forEach((p,i)=>{const x=byUrl.get(p.url);if(!x)return;
    p.role=x.role;p.hasPerson=x.hasPerson;p.colorway=x.colorway;p.burnedText=x.burnedText;p.note=x.note;
@@ -297,7 +299,8 @@ async function classifyPhotos(run){
   if(usable.length&&dropped)product.photos=usable;
   PHOTOS.splice(0,PHOTOS.length,...product.photos);
   if(SOURCE.includes('/1002447881'))PHOTOS.push(...SAMPLE_PHOTOS.slice(2));
-  photoNotice=`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'');
+  photoNotice=`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
+   +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다');
  }catch(e){photoNotice='사진 분류를 건너뛰었습니다 — 비율로 나눕니다.';}
  await scrubLogos(run);
 }
