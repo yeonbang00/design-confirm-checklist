@@ -134,3 +134,62 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .art.original.numeral>img,.art.original.corner>img{inset:0;width:100%;height:100%;object-fit:contain}
 .art.original.strip{background:#e6e2dc}
 .art.original:after{display:none}
+
+
+/* ---- SSF 템플릿에서 뽑은 구조 4종 ----
+   앞의 것들이 '카피를 어디 놓나'였다면 이쪽은 판 자체의 짜임이다.
+   각각 다른 템플릿에서 왔고, 서로 겹치는 장치가 없다. */
+
+/* 8seconds형. 연출컷 전면, 헤드라인은 좌상단, 나머지는 우측 정렬로 아래에
+   모으고 검정 배지로 닫는다. 좌우가 갈려 있어 사진 가운데를 안 가린다. */
+.art.badge{color:#fff}
+.art.badge>img{inset:0;width:100%;height:100%;object-fit:cover}
+.art.badge:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28),transparent 26%,transparent 52%,rgba(0,0,0,.42))}
+.art.badge .brand{display:none}
+.art.badge .headline{position:absolute;left:7%;top:7%;max-width:62%;font-size:5.2cqw;font-weight:700;line-height:1.3;letter-spacing:-.03em;text-shadow:0 1px 14px rgba(0,0,0,.35)}
+.art.badge .copy{inset:auto 6% 7% 22%;max-width:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.art.badge .subline{font-size:4cqw;font-weight:600;margin:0;text-shadow:0 1px 14px rgba(0,0,0,.45)}
+.art.badge .offer-value{display:block;margin-top:1.6%;font-size:6cqw;font-weight:800;letter-spacing:-.04em}
+.art.badge .cta{margin-top:2.8%;background:#15150f;color:#fff;font-size:3cqw;font-weight:700;padding:1.5cqw 3cqw;border-radius:0}
+
+/* BEANPOLE 쑈핑데이형. 컬러 대형 타이포 두 덩어리를 좌상단과 우하단에 두고
+   그 사이 대각선 빈 자리에 제품을 놓는다. 타이포가 주인공인 판이다. */
+.art.type-diagonal{background:linear-gradient(152deg,#f5f3ef,#e6e3dc);color:#3b4cca;--bar:#3b4cca}
+.art.type-diagonal>img{left:19%;top:21%;width:62%;height:60%;object-fit:contain}
+.art.type-diagonal .brand{left:7%;top:6.5%;font-size:7cqw;font-weight:800;letter-spacing:-.035em;color:var(--bar);z-index:2}
+.art.type-diagonal .copy{inset:0;padding:17.5% 7% 7%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
+.art.type-diagonal .headline{font-size:6.6cqw;line-height:1.1;color:var(--bar);max-width:64%}
+.art.type-diagonal .subline{margin-top:5%;font-size:2.8cqw;color:#3c3b34;max-width:48%}
+.art.type-diagonal .offer-value{display:block;margin:auto 0 0 auto;text-align:right;font-size:7cqw;line-height:1.14;font-weight:800;letter-spacing:-.035em;color:var(--bar)}
+.art.type-diagonal .cta{position:absolute;right:7%;top:6.5%;margin:0;padding:0;background:transparent;color:#7a786e;font-size:2.5cqw;font-weight:700}
+
+/* RAB형. 위에 중앙 정렬 카피, 가로 헤어라인으로 끊고, 아래는 아치 안에
+   제품만. 좌우 가장자리에는 세로쓰기 라벨. 가장 절제된 판이다. */
+.art.framed{background:#eef1f6;color:#1b2430}
+.art.framed:before{content:'';position:absolute;left:0;right:0;top:27%;border-top:1px solid rgba(27,36,48,.2)}
+.art.framed>img{left:15%;top:30%;width:70%;height:63%;object-fit:contain;background:#fff;border-radius:50% 50% 0 0/42% 42% 0 0}
+.art.framed .brand{left:2.6%;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;font-size:2.3cqw;letter-spacing:.14em;color:#7d8798;font-weight:600}
+.art.framed .copy{inset:0;padding:8.5% 9% 0;max-width:none;display:flex;flex-direction:column;align-items:center;text-align:center}
+.art.framed .headline{font-size:5.2cqw;line-height:1.2}
+.art.framed .subline{margin-top:2.2%;font-size:2.9cqw;color:#5d6878}
+.art.framed .offer-value{position:absolute;right:6%;bottom:6%;font-size:6.4cqw;font-weight:800;letter-spacing:-.04em}
+.art.framed .cta{position:absolute;left:50%;bottom:4.5%;transform:translateX(-50%);margin:0;padding:0;background:transparent;color:#7d8798;font-size:2.4cqw;font-weight:700;letter-spacing:.1em;white-space:nowrap}
+
+/* 모노앳디형. 왼쪽은 연출컷에 초대형 숫자만, 오른쪽은 정보 전체.
+   사진 두 장을 쓴다 — 연출컷과 단품컷이 한 판에서 각자 역할을 한다. */
+.art.duo-panel{background:#efeae1;color:#2a2620}
+.art.duo-panel>img{left:0;top:0;width:50%;height:100%;object-fit:cover;border-radius:0}
+.art.duo-panel>img.second-photo{left:57%;top:33%;width:36%;height:36%;object-fit:contain}
+.art.duo-panel .brand{left:56%;top:9%;font-size:2.5cqw;font-weight:700;letter-spacing:-.01em;color:#c0392b}
+.art.duo-panel .copy{inset:0;padding:14.5% 6% 7% 56%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
+.art.duo-panel .headline{font-size:5cqw;line-height:1.2;max-width:100%}
+.art.duo-panel .subline{margin-top:auto;font-size:2.4cqw;color:#6d665a;max-width:100%}
+.art.duo-panel .offer-value{position:absolute;left:4%;bottom:4.5%;font-size:12cqw;line-height:1;font-weight:800;letter-spacing:-.05em;color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.art.duo-panel .cta{margin-top:2.4%;padding:0;background:transparent;color:#2a2620;font-size:2.6cqw;font-weight:700}
+
+/* 원본 보기에서는 새 구성도 사진만 남긴다 */
+.art.original.badge>img,.art.original.type-diagonal>img,
+.art.original.framed>img,.art.original.duo-panel>img{inset:0;width:100%;height:100%;object-fit:contain;border-radius:0}
+.art.original.duo-panel>img{width:50%}
+.art.original.duo-panel>img.second-photo{left:50%;top:0;width:50%;height:100%}
+.art.original.framed:before,.art.original.badge:after{display:none}
