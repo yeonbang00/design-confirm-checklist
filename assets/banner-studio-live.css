@@ -238,3 +238,11 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .art.inverted .subline{opacity:.86}
 .art.inverted .cta{background:#faf8ee;color:#171a17}
 .art.inverted .brand{color:#fff}
+
+
+/* 처음부터 고화질로 뽑는 선택. 기본은 꺼져 있다. */
+.quality-pick{font-size:12px;color:var(--muted);white-space:nowrap}
+.quality-pick input{width:16px;height:16px}
+
+/* 고화질로 다시 뽑는 버튼. 내려받기 버튼 위에 같은 폭으로 둔다. */
+.card-hq{display:block;width:calc(100% - 24px);margin:0 12px 8px;padding:8px;font-size:12px;font-weight:600;background:transparent}

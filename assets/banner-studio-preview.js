@@ -266,7 +266,8 @@ setProduct(product);renderSaved();renderLibrary();updateStepNav();
 let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, photoNotice='';
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
-renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}})};
+renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
+ else if(v.quality&&v.quality!=='high'){const up=document.createElement('button');up.className='btn card-hq';up.textContent='이 시안만 고화질로';up.onclick=e=>{e.stopPropagation();retryImage(v.id,'high')};card.append(up)}})};
 function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
 function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;// 버튼이 둘 다 '시안 6종 생성'이라, 진행 중 표시도 둘 다 해야 어느 쪽을 눌렀든 보인다.
  for(const id of ['#quickGenerate','#quickGrabGenerate'])$(id).textContent=b?'시안 만드는 중…':'시안 6종 생성';
@@ -335,9 +336,18 @@ async function classifyPhotos(run){
    +(product.photos.length<=2?' · 상세 페이지 컷을 못 가져왔습니다. 북마클릿으로 담으면 원본을 더 씁니다':'')
    +(product.refNote?` (${product.refNote})`:'');
  }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
- await scrubLogos(run);
- const cutNote=await cutoutPhotos(run);
- if(cutNote)photoNotice+=' · '+cutNote;
+}
+
+/* 로고 지우기와 누끼는 분류가 끝나야 시작할 수 있지만, 계획을 세우고 카드를
+   그리고 카피를 만드는 일과는 상관이 없다. 예전에는 이걸 다 기다린 뒤에야
+   화면이 떴다. 이제 시작만 걸어 두고, 생성 직전에만 기다린다. */
+function startPixelWork(run){
+ return Promise.all([scrubLogos(run),cutoutPhotos(run)]).then(([,cutNote])=>{
+  if(run!==autoRun)return;
+  if(cutNote)photoNotice+=' · '+cutNote;
+  PHOTOS.splice(0,PHOTOS.length,...product.photos);
+  renderBoard();
+ }).catch(()=>{});
 }
 
 /* 상품 사진에 브랜드가 덧씌운 로고가 있으면 지운다. 그대로 두면 우리 배너에
@@ -346,15 +356,18 @@ async function classifyPhotos(run){
 async function scrubLogos(run){
  const targets=product.photos.filter(p=>p.burnedText&&!p.cleanUrl).slice(0,4);
  if(!targets.length)return;
- let done=0;
- for(const p of targets){
-  if(run!==autoRun)return;
+ // 한 장씩 기다리면 네 장에 네 배가 걸린다. 서로 상관없는 일이라 한꺼번에 보낸다.
+ const results=await Promise.all(targets.map(async p=>{
   try{const out=await scrubLogo(p.url,getJSON);
-   if(out){p.cleanUrl=out.dataUrl;p.cleanBase64=out.base64;p.cleanType=out.mediaType;p.removedText=out.removed;done++}
-  }catch(e){/* 못 지우면 원본을 그대로 쓴다 */}
- }
+   if(!out)return 0;
+   p.cleanUrl=out.dataUrl;p.cleanBase64=out.base64;p.cleanType=out.mediaType;p.removedText=out.removed;return 1;
+  }catch(e){return 0}
+ }));
+ if(run!==autoRun)return;
+ const done=results.reduce((a,b)=>a+b,0);
  if(done)photoNotice+=` · 사진 ${done}장에서 로고를 지웠습니다`;
 }
+
 /* 어떤 축으로 뽑혔는지 카드에 적는다. 화면에 안 보이면 없는 것과 같다. */
 const AXIS_KO={
  emphasis:{offer:'혜택 강조',product:'제품 강조',story:'무드 강조'},
@@ -378,15 +391,18 @@ function axisLabel(p){
 async function cutoutPhotos(run){
  const targets=product.photos.filter(p=>['packshot','flat','main'].includes(p.role)&&!p.cutUrl).slice(0,3);
  if(!targets.length)return '';
- let done=0,why='';
- for(const p of targets){
-  if(run!==autoRun)return '';
+ let why='';
+ const results=await Promise.all(targets.map(async p=>{
   try{const r=await cutout(p.url,getJSON);
-   if(r.ok){p.cutUrl=r.dataUrl;p.cutRatio=r.ratio;done++}else why=r.reason;
-  }catch(e){why=e.message}
- }
+   if(r.ok){p.cutUrl=r.dataUrl;p.cutRatio=r.ratio;return 1}
+   why=r.reason;return 0;
+  }catch(e){why=e.message;return 0}
+ }));
+ if(run!==autoRun)return '';
+ const done=results.reduce((a,b)=>a+b,0);
  return done?`누끼 ${done}장`:(why?`누끼 실패(${why})`:'');
 }
+
 
 /* 딤 세기. 조판마다 고정값을 쓰면 밝은 스튜디오컷에는 진하고 어두운 야외컷에는
    모자란다. 카피가 실제로 놓인 자리의 밝기를 재서 정한다. */
@@ -407,14 +423,18 @@ async function tuneScrim(i){
  if(['top-center','top-left','corner'].includes(v.layout))art.classList.toggle('inverted',s.luminance>0.5);
 }
 
-async function generateImage(plan,run){
+/* 기본 화질. 실측 — low 17초 / medium 39초 / high 109초.
+   여섯 장을 다 고화질로 뽑으면 생성만 3분이 넘는다. 쓸 시안을 고른 뒤
+   그 한 장만 올린다. */
+let quality='medium';
+async function generateImage(plan,run,q){
  const variant=variants.find(v=>v.id===plan.id);if(!variant)return;
  variant.autoStatus='이미지 생성 중';variant.imageFailed=false;renderBoard();
  const src=product.photos[plan.photo]||{};
  const baked=plan.render==='baked';
  try{
  // 1단계: 장면을 만든다. 이 호출에는 글자 지시를 넣지 않는다.
- const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,productName:product.productName,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
  if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
  let finalUrl=shot.imageUrl;
 
@@ -422,14 +442,16 @@ async function generateImage(plan,run){
  // 장면과 글자를 한 번에 시키면 글자가 통째로 빠진다(두 번 시험해 두 번 다).
  if(baked){
   variant.autoStatus='카피를 그리는 중';renderBoard();
-  const withText=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:finalUrl,size:'1024x1024',text:{headline:variant.main,subline:variant.sub,offer:variant.offer,brand:product.brand,cta:variant.showCta?variant.cta:'',style:plan.typeStyle?.[1]||''}})});
+  const withText=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:finalUrl,size:'1024x1024',quality:q||quality,text:{headline:variant.main,subline:variant.sub,offer:variant.offer,brand:product.brand,cta:variant.showCta?variant.cta:'',style:plan.typeStyle?.[1]||''}})});
   if(run!==autoRun)return;
   if(safeUrl(withText.imageUrl))finalUrl=withText.imageUrl;
  }
 
  const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
  variant.photo=index;variant.photos=undefined;variant.baked=baked;variant.imageFailed=false;failedImages.delete(plan.id);
- variant.autoStatus=(variant.axes?variant.axes+' · ':'')+(baked?'카피까지 생성 · 숫자 확인 중':'AI 생성 · 상품 일치 확인 필요');
+ const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
+ variant.quality=q||quality;
+ variant.autoStatus=(variant.axes?variant.axes+' · ':'')+(baked?'카피까지 생성 · 숫자 확인 중':`AI 생성 · ${qLabel} · 상품 일치 확인 필요`);
  renderBoard();
 
  if(baked){
@@ -446,7 +468,7 @@ async function generateImage(plan,run){
  }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
  renderBoard();fillEditor();tuneScrim(variants.indexOf(variant));
 }
-async function retryImage(id){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun)}finally{setBusy(false);finishMessage()}}
+async function retryImage(id,q){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun,q)}finally{setBusy(false);finishMessage()}}
 function finishMessage(){autoMessage((photoNotice?photoNotice+' · ':'')+(autoCopyFailed?'카피 생성에 실패해 카피까지 그리는 시안은 만들지 못했습니다. 카피만 다시 시도할 수 있습니다.':failedImages.size?`6종 중 이미지 ${failedImages.size}개가 실패했습니다. 해당 카드에서 다시 생성할 수 있습니다.`:'시안 6종이 완성됐습니다. 마음에 드는 시안을 선택해 수정·저장하세요.'));$('#autoRetryCopy').hidden=!autoCopyFailed}
 async function startAutomatic(raw,fromGrab=false,useCurrent=false){
  if(autoBusy)return;if(!useCurrent&&!raw.trim()){autoMessage('상품 링크를 넣어주세요.');$('#quickInput').focus();return}
@@ -459,6 +481,8 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   syncFacts();if(!product.productName||!product.photos.length)throw Error('상품명과 사진이 필요합니다. 상품 정보를 직접 입력해주세요.');
   $('#factCheck').checked=true;mode='original';
   autoMessage('상품 사진을 살펴보는 중…');photoNotice='';await classifyPhotos(run);if(run!==autoRun)return;
+  // 로고 지우기와 누끼는 여기서 시작만 걸어 둔다. 계획·카드·카피와 겹쳐 돈다.
+  const pixelWork=startPixelWork(run);
   autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
   const slots=factSlots(product);
   variants=autoPlan.map(p=>({id:p.id,title:p.label+' · '+LAYOUTS[p.layout],recipe:p.recipe,layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}));
@@ -468,7 +492,11 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   // 그릴 수 있으므로 카피를 기다린다. 둘을 한 줄에 세우면 전부 늦어진다.
   const layerQueue=autoPlan.filter(p=>p.method==='newscene'&&p.render!=='baked');
   const bakedQueue=autoPlan.filter(p=>p.method==='newscene'&&p.render==='baked');
-  const drain=q=>Array.from({length:2},async()=>{while(q.length){await generateImage(q.shift(),run)}});
+  /* 한 장씩 두 줄로 돌리면 네 장에 두 바퀴가 걸린다. 생성 한 장이 가장 긴
+     구간이라 줄을 늘리는 것이 체감에 가장 크게 온다. */
+  const drain=q=>Array.from({length:4},async()=>{while(q.length){await generateImage(q.shift(),run)}});
+  await pixelWork;
+  if(run!==autoRun)return;
   await Promise.all([
    ...drain(layerQueue),
    copyTask.then(()=>autoCopyFailed?null:Promise.all(drain(bakedQueue))),
@@ -490,6 +518,7 @@ $$('.quick-clear').forEach(btn=>{
  input.addEventListener('input',sync);sync();
  btn.onclick=()=>{input.value='';sync();input.focus()};
 });
+$('#hqAll') && ($('#hqAll').onchange=e=>{quality=e.target.checked?'high':'medium'});
 $('#quickBookmarklet').href=$('#grabLink').href;$('#quickBookmarklet').onclick=e=>{e.preventDefault();notify('북마크 바에 끌어다 놓고 상품 페이지에서 실행해주세요.')};
 // Enter the existing save/edit views without exposing the former setup steps.
 const legacyGo=go;

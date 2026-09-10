@@ -1,7 +1,8 @@
 // POST /api/bannerImage
 // Body: { imageUrl?: string, base64?: string, mediaType?: string,
 //         scene?: string, keep?: 'person'|'item'|'product',
-//         imagePrompt?: string, size?: '1024x1024'|'1024x1536'|'1536x1024' }
+//         imagePrompt?: string, size?: '1024x1024'|'1024x1536'|'1536x1024',
+//         quality?: 'low'|'medium'|'high' (기본 medium) }
 // Returns: { imageUrl } | { error }
 //
 // 컨셉 배경 이미지를 만든다. 제품을 새로 그리지 않는다 — 원본 상품 사진을
@@ -23,6 +24,12 @@ const IMAGE_MODEL = 'gpt-image-2';
 const EDITS_URL = 'https://api.openai.com/v1/images/edits';
 const GEN_URL = 'https://api.openai.com/v1/images/generations';
 const ALLOWED_SIZES = new Set(['1024x1024', '1024x1536', '1536x1024']);
+/* 화질이 속도를 거의 전부 결정한다. 같은 프롬프트로 실측 —
+     low 17.2초 / medium 38.9초 / high 108.5초
+   시안 여섯 장을 만드는 동안 사람이 기다린다. high 고정이면 생성만 3분이
+   넘는다. 기본은 medium으로 두고, 쓸 시안을 고른 뒤 그 한 장만 high로
+   다시 뽑게 한다. 여섯 장을 다 고화질로 뽑을 이유가 없다. */
+const ALLOWED_QUALITY = new Set(['low', 'medium', 'high']);
 
 export const config = { api: { bodyParser: { sizeLimit: '20mb' } } };
 
@@ -167,6 +174,7 @@ export default async function handler(req, res) {
   const wantsText = text && typeof text === 'object' && (text.headline || text.offer);
   if (!imagePrompt && !scene && !wantsText) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
   const outSize = ALLOWED_SIZES.has(size) ? size : '1024x1024';
+  const outQuality = ALLOWED_QUALITY.has(req.body?.quality) ? req.body.quality : 'medium';
   // 그림에 넣을 문구는 길이를 자른다. 길면 글자가 화면을 덮는다.
   const cut = (v, n) => (typeof v === 'string' ? v.slice(0, n) : '');
   // 글자만 얹는 두 번째 호출. 장면 지시를 함께 주면 글자가 빠진다.
@@ -195,14 +203,14 @@ export default async function handler(req, res) {
       form.append('image', new Blob([buf], { type }), 'source.png');
       form.append('prompt', prompt);
       form.append('size', outSize);
-      form.append('quality', 'high');
+      form.append('quality', outQuality);
       apiRes = await fetch(EDITS_URL, { method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: form });
     } else {
       // 원본이 없으면 배경만 새로 만든다 (제품은 나중에 얹는다)
       apiRes = await fetch(GEN_URL, {
         method: 'POST',
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: IMAGE_MODEL, prompt, size: outSize, quality: 'high', n: 1 }),
+        body: JSON.stringify({ model: IMAGE_MODEL, prompt, size: outSize, quality: outQuality, n: 1 }),
       });
     }
 
@@ -217,7 +225,7 @@ export default async function handler(req, res) {
 
     const key = `banner-concepts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`;
     const url = await put(key, Buffer.from(b64, 'base64'), 'image/png');   // 문자열 URL을 돌려준다
-    res.status(200).json({ imageUrl: url, size: outSize });
+    res.status(200).json({ imageUrl: url, size: outSize, quality: outQuality });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message || '이미지 생성에 실패했습니다.' });
   }
