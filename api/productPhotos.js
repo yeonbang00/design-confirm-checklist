@@ -30,6 +30,11 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 
 추가로 각 사진에 대해:
 - hasPerson: 사람이 보이면 true
+- personKind: 사람이 어떻게 보이는지
+  "none"  사람이 안 보임
+  "hands" 손이나 팔만 보임 (제품을 들고 있거나 바르는 컷)
+  "body"  얼굴이나 상반신 이상이 보임 (모델 착용컷)
+  손만 나오는 컷을 "body"로 적지 마세요. 이 값으로 모델 재촬영을 할지 정합니다.
 - colorway: 상품 색을 한국어 한 단어로 (예: "검정", "크림", "핑크"). 모르면 ""
 - burnedText: 사진 위에 덧씌워진 글자나 로고가 있으면 그 글자를 그대로, 없으면 ""
 - note: 이 사진을 배너에 쓸 때 주의할 점 한 문장. 없으면 ""
@@ -107,9 +112,11 @@ cuts는 12개이고, 각 항목은 **축을 나눠서** 적습니다. 문장 하
   같은 값을 세 번 이상 쓰지 마세요.
 - background와 composition도 최소 5가지씩 다르게 하세요.
 - motion이 static인 것은 절반까지만. 나머지는 무언가 일어나고 있어야 합니다.
-- 사진에 사람이 있으면 person을 keep 3개 이상, hands 1개 이상 넣고,
-  keep끼리는 pose가 전부 달라야 합니다.
-  사람이 없는 상품이면 keep을 쓰지 말고 hands나 partial을 1~2개 넣으세요.
+- **사진에 personKind가 "body"인 것이 있을 때만** person을 keep으로 쓸 수 있습니다.
+  그때는 keep 3개 이상, hands 1개 이상 넣고 keep끼리 pose가 전부 달라야 합니다.
+- **손만 나오거나 사람이 아예 없는 상품이면 keep을 하나도 쓰지 마세요.**
+  화장품, 식품, 가전처럼 모델 착용컷이 없는 상품에 "모델이 공원을 걷는" 컷을 만들면
+  광고에 못 씁니다. 그런 상품은 hands(손이 제품을 들거나 바르는 컷)로 사람을 씁니다.
 - 절반 이상은 눈길이 한 번에 가는 연출이어야 합니다. 예쁜 방에 제품을 올려둔
   정물만 열두 개면 무드보드지 배너 소재가 아닙니다.
 
@@ -143,7 +150,7 @@ scene 문장 규칙:
 레퍼런스의 문구나 브랜드명은 절대 가져오지 마세요. 구성만 봅니다.
 
 JSON만 출력하세요:
-{"photos":[{"index":0,"role":"main","hasPerson":true,"colorway":"검정","burnedText":"","note":""}],
+{"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","note":""}],
  "category":"fashion-top","usp":"...","toneKo":"정갈한",
  "layoutHints":["boxed","offer","badge"],"refNote":"...",
  "cuts":[{"name":"단상 정면컷","mount":"plinth","angle":"front","distance":"medium",
@@ -255,6 +262,10 @@ export default async function handler(req, res) {
         url,
         role: i === 0 ? 'main' : role,
         hasPerson: !!row.hasPerson,
+        // 손만 나오는 컷을 '사람 있음'으로 읽으면 모델 재촬영이 열린다.
+        // 화장품 상세컷의 손 컷 때문에 모델이 공원을 걷는 컷이 나왔다.
+        personKind: ['none', 'hands', 'body'].includes(row.personKind) ? row.personKind
+          : (row.hasPerson ? 'body' : 'none'),
         colorway: String(row.colorway || '').slice(0, 12),
         burnedText: String(row.burnedText || '').slice(0, 60),
         note: String(row.note || '').slice(0, 120),

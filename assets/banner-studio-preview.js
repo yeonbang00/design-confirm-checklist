@@ -329,6 +329,10 @@ async function classifyPhotos(run){
   photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다')
    +(referenceUrls.length?` · 레퍼런스 배너 ${referenceUrls.length}장 참고`:'')
+   /* 사진이 적으면 여섯 장 중 원본이 한두 장뿐이고 나머지는 전부 생성이 된다.
+      링크만 넣으면 상세 페이지 이미지는 서버가 못 본다. 스크롤해야 뜨기 때문이다.
+      북마클릿은 사용자 브라우저에서 읽으므로 상세컷까지 가져온다. 그 차이를 알린다. */
+   +(product.photos.length<=2?' · 상세 페이지 컷을 못 가져왔습니다. 북마클릿으로 담으면 원본을 더 씁니다':'')
    +(product.refNote?` (${product.refNote})`:'');
  }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
  await scrubLogos(run);

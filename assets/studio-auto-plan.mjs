@@ -41,7 +41,13 @@ const SET_READ =
   + 'or throw it. A viewer must be able to tell exactly what kind of item it is.';
 const SET_BASE = 'Soft daylight from the left with a gentle contact shadow. '
   + 'Camera at the height of the prop, straight on, against a seamless warm-neutral backdrop. '
-  + 'No person in the frame. ' + SET_READ;
+  + 'No person in the frame. '
+  /* 3cm짜리 크림 병이 식탁 의자 위에 덩그러니 놓인 컷이 나왔다. 소품이 상품보다
+     열 배 크면 상품이 부스러기로 보인다. 소품은 상품 크기에 맞춰야 한다. */
+  + 'THE PROP MUST BE IN SCALE WITH THE PRODUCT: fill most of the frame with the product '
+  + 'itself, and choose a prop no more than about twice the size of the product. A small jar '
+  + 'or tube never sits on a full-size chair or table seen whole; move the camera in until '
+  + 'the product dominates. ' + SET_READ;
 export const SETS = {
   'fashion-top': 'a single wooden chair with a woven rattan back on a smooth pale floor; the garment is laid flat and open across the seat, front facing the camera, sleeves arranged down the sides and one cuff falling over the front edge. ' + SET_BASE,
   'fashion-outer': 'a single wooden chair with a woven rattan back on a smooth pale floor; the outerwear is laid open across the seat, front facing the camera so the collar, zip or buttons and the hem all read, sleeves arranged down the sides. ' + SET_BASE,
@@ -57,7 +63,9 @@ export const SETS = {
   kids: 'a small pale wooden child-size chair; the item is laid flat and open across the seat, front facing the camera. ' + SET_BASE,
   sports: 'a low pale wooden bench with a rolled towel at one end; the item is laid out along the bench, front facing the camera. ' + SET_BASE,
   pet: 'a low pale wooden platform with a folded blanket beside it; the item sits square on the platform, full outline visible. ' + SET_BASE,
-  other: 'a single wooden chair with a woven rattan back on a smooth pale floor; the product is placed square on the seat, or laid flat and open across it if it is soft. ' + SET_BASE,
+  /* 기본값이 의자였다. 의자는 옷에만 맞는 소품인데 분류가 실패하면 전부 의자로
+     갔다. 어떤 상품에도 어색하지 않은 낮은 단으로 바꾼다. */
+  other: 'a low pale stone plinth just wide enough for the product, on a smooth floor; the product stands square on the plinth, or is laid flat and open across it if it is soft. ' + SET_BASE,
 };
 
 /* 서버가 컷 후보를 못 준 경우에만 쓰는 예비 목록. 상품을 모르는 채로 쓰는
@@ -171,9 +179,13 @@ export function createPlan(product, random = Math.random) {
     return pick;
   });
 
-  const anyPerson = photos.some(p => p.hasPerson);
-  // 분류에 실패하면 hasPerson 자체가 없다. 그것을 '사람 없음'으로 읽으면
-  // 사람이 나오는 후보가 전부 빠져 여섯 자리를 못 채운다. 모를 때는 남긴다.
+  /* '사람이 있다'와 '모델이 있다'는 다르다. 화장품 상세페이지의 손 컷을
+     사람으로 읽었더니 모델이 공원을 걷는 컷이 나왔다. 전신·얼굴이 나오는
+     사진이 있을 때만 모델 재촬영을 연다. */
+  const anyPerson = photos.some(p => p.personKind === 'body' || (p.hasPerson && !p.personKind));
+  const anyHands = photos.some(p => p.personKind === 'hands' || p.personKind === 'body' || p.hasPerson);
+  // 분류에 실패하면 값 자체가 없다. 그것을 '사람 없음'으로 읽으면 사람이
+  // 나오는 후보가 전부 빠져 여섯 자리를 못 채운다. 모를 때는 남긴다.
   const personKnown = photos.some(p => 'hasPerson' in p);
   const allowKeep = anyPerson || !personKnown;
 
@@ -192,7 +204,9 @@ export function createPlan(product, random = Math.random) {
      나머지는 전부 생성이었다. 원본 착용컷이 생성물보다 나은데 그걸 안 썼다.
      쓸 만한 원본이 많으면 원본 자리를 늘린다. 생성은 최소 두 자리만 남긴다. */
   const byRole = r => photos.map((p, i) => (p.role === r ? i : -1)).filter(i => i >= 0);
-  const models = byRole('model'), details = byRole('detail');
+  // 착용 원본으로 쓸 수 있는 것은 모델이 나온 사진이다. 손 컷은 상세컷에 가깝다.
+  const models = byRole('model').filter(i => photos[i].personKind !== 'hands');
+  const details = [...byRole('detail'), ...byRole('model').filter(i => photos[i].personKind === 'hands')];
   const packs = [...byRole('packshot'), ...byRole('flat')];
   const usable = 1 + models.length + details.length + packs.length;
   /* 착용컷이 한 장이라도 있으면 그건 반드시 그대로 쓴다. 사람이 실제로 입은
@@ -267,6 +281,9 @@ export function createPlan(product, random = Math.random) {
       desc: pool.includes(cut) ? '이 상품에 맞춰 만든 장면입니다.' : '기본 장면입니다.',
       scene: cut.scene, person: cut.person,
       axes: {
+        // person이 빠져 있었다. 카드 설명에도 안 나오고 카피 생성도 사람이
+        // 나오는지 모른 채로 쓴다.
+        person: cut.person,
         mount: cut.mount, angle: cut.angle, distance: cut.distance, light: cut.light,
         background: cut.background, composition: cut.composition, palette: cut.palette,
         motion: cut.motion, pose: cut.pose, mood: cut.mood,
