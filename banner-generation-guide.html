@@ -265,6 +265,9 @@
     <div class="sec-head"><h2>텍스트 배치</h2><span>어디에 놓을까</span></div>
     <p class="sec-note">카피 길이와 사진에서 비어 있는 자리를 보고 정합니다.
        줄바꿈과 글자 크기는 배치가 정해진 뒤 자동으로 맞춰지고, 넘치면 폰트가 줄고 그래도 안 되면 경고가 뜹니다.</p>
+    <p class="sec-note">앞의 일곱 가지는 카피의 <b>위치</b>만 다릅니다 — 위·아래·좌·우.
+       그것만으로는 여섯 장이 같은 배너로 보입니다. 그래서 SSF 배너에서 쓰는
+       <b>구성</b> 자체가 다른 네 가지를 뒤에 더했습니다.</p>
     <table>
       <tr><th style="width:30%">배치</th><th style="width:14%">코드</th><th>언제 쓰나</th></tr>
       <tr><td><b>헤더 + 상품</b></td><td><code>header</code></td><td><span>위에 카피, 아래 상품. 가장 무난하고 어떤 비율에도 무너지지 않는다.</span></td></tr>
@@ -277,7 +280,19 @@
       <tr><td><b>큰 가격·혜택</b></td><td><code>offer</code></td><td><span>숫자가 주인공이다. 확인된 가격이 있을 때만 배정된다.</span></td></tr>
       <tr><td><b>큰 가격 · 상단 좌측</b></td><td><code>price</code></td><td><span>가격을 먼저 읽히게 한다.</span></td></tr>
       <tr><td><b>사진 2장 비교</b></td><td><code>duo</code></td><td><span>비교형과 짝을 이룬다.</span></td></tr>
+      <tr><td><b>사진 위 카피 카드</b></td><td><code>boxed</code></td><td><span>사진을 꽉 채우고 카피는 흰 카드에 앉힌다. 배경이 복잡해도 글자가 읽힌다.</span></td></tr>
+      <tr><td><b>상하 띠 · 가운데 사진</b></td><td><code>strip</code></td><td><span>위는 브랜드 띠, 아래는 정보 띠, 가운데만 사진. SSF의 '첫 구매 웰컴딜' 형태.</span></td></tr>
+      <tr><td><b>초대형 숫자</b></td><td><code>numeral</code></td><td><span>숫자를 화면 높이의 10분의 1로 키워 왼쪽에 세운다. 확인된 가격이 있을 때만.</span></td></tr>
+      <tr><td><b>전면 사진 · 구석 카피</b></td><td><code>corner</code></td><td><span>사진을 그대로 다 보여주고 오른쪽 위 구석만 쓴다. 연출컷이 좋을 때.</span></td></tr>
     </table>
+    <div class="rule">
+      <h3>글자가 넘치면 배너가 아니다</h3>
+      <p>조판 열넷을 같은 카피로 렌더링해 <b>카피 상자가 프레임을 벗어나는지, CTA와 숫자가
+         개별적으로 잘리는지</b>를 잽니다. 이번에 두 개가 걸렸습니다 — 상하 띠에서 CTA가
+         띠 밖으로 밀렸고, 초대형 숫자에서 '72,000원'이 9px 넘쳤습니다.</p>
+      <p>고친 값도 재서 정했습니다. 숫자는 10cqw입니다 — 여덟 자짜리 가격이 46% 폭 안에
+         드는 크기입니다. 더 키우면 '5% 혜택'은 시원하지만 가격이 잘립니다.</p>
+    </div>
   </section>
 
   <section>

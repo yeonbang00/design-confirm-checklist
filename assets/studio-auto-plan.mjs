@@ -89,8 +89,11 @@ export function createPlan(product, random = Math.random) {
   const hasBenefit = product.benefitConfirmed && product.benefitRate > 0 && product.benefitCondition;
   const types = shuffle(['product', 'usage', 'list', 'question', 'comparison',
     ...(hasBenefit ? ['benefit', 'numbers'] : product.salePrice ? ['numbers'] : [])], random);
-  const layouts = shuffle(['header', 'split', 'split-right', 'band', 'top-center', 'top-left', 'bottom-right',
-    ...(product.salePrice || hasBenefit ? ['offer'] : [])], random).slice(0, 6);
+  /* 위치만 다른 조판(위/아래/좌/우)과 구성 자체가 다른 조판(카드·띠·초대형 숫자·구석)을
+     섞는다. 위치만 여섯 개면 같은 배너를 여섯 번 본 느낌이 된다. */
+  const layouts = shuffle(['header', 'split', 'split-right', 'band', 'top-center', 'top-left',
+    'bottom-right', 'boxed', 'strip', 'corner',
+    ...(product.salePrice || hasBenefit ? ['offer', 'numeral'] : [])], random).slice(0, 6);
 
   const photos = (product.photos.length ? product.photos : [{}])
     .map((p, i) => ({ ...p, role: guessRole(p, i) }));

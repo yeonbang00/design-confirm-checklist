@@ -77,3 +77,57 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
   .page-footer{padding:64px 18px 100px; margin:0 -18px;}
   .page-footer .footer-logo{height:30px;}
 }
+
+
+/* ---- 텍스트 구성 4종 추가 ----
+   기존 열 가지는 카피 '위치'만 달랐다 — 위/아래/좌/우. SSF 배너를 보면
+   위치가 아니라 구성이 다르다. 흰 카드 안에 앉힌 것, 위아래를 띠로 잡은 것,
+   숫자를 화면 절반만큼 키운 것, 사진을 다 보여주고 구석만 쓴 것.
+   같은 사진에서도 다른 배너로 보이려면 이쪽이 필요하다. */
+
+/* 카피를 사진 위 흰 카드에 앉힌다 */
+.art.boxed>img{inset:0;width:100%;height:100%;object-fit:cover}
+.art.boxed .brand{left:6%;top:5%;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.art.boxed .copy{left:6.5%;right:6.5%;bottom:6.5%;max-width:none;background:#fbf9f4;color:#15150f;padding:5.5% 5.5% 5%}
+.art.boxed .headline{font-size:5.5cqw}
+.art.boxed .subline{font-size:2.6cqw;margin-top:2.5%}
+.art.boxed .cta{margin-top:4%;font-size:2.4cqw;padding:1.5cqw 2.6cqw}
+
+/* 위아래를 띠로 잡고 가운데만 사진 — SSF의 '첫 구매 웰컴딜' 형태 */
+.art.strip{background:#12130f}
+.art.strip>img{top:9.5%;height:74%;object-fit:cover}
+.art.strip .brand{left:0;top:0;width:100%;padding:2.6% 6%;background:#12130f;color:#fff;font-size:2.4cqw;letter-spacing:.2em}
+.art.strip .copy{left:0;bottom:0;width:100%;max-width:none;padding:3.4% 6% 3.8%;background:#12130f;color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:0 4%}
+/* 헤드라인이 한 줄을 다 쓰고, 서브와 CTA가 아래 줄에서 좌우로 갈린다.
+   셋을 한 줄에 넣으면 CTA가 띠 밖으로 밀려 잘렸다. */
+.art.strip .headline{flex:1 1 100%;font-size:4.2cqw}
+.art.strip .subline{flex:1 1 auto;margin-top:1.6%;font-size:2.3cqw;opacity:.72;min-width:0}
+.art.strip .cta{flex:0 0 auto;margin:1.6% 0 0 auto;font-size:2.1cqw;background:#f2f0e8;color:#12130f;padding:1.2cqw 2cqw}
+.art.strip .benefit-condition{flex:1 1 100%;margin-top:1.4%;font-size:2cqw;opacity:.6}
+
+/* 숫자를 화면 절반만큼 키운다 */
+.art.numeral{background:#f2efe8}
+.art.numeral>img{left:54%;top:0;width:46%;height:100%;object-fit:cover}
+.art.numeral .brand{left:6%;top:6%;font-size:2.5cqw}
+.art.numeral .copy{left:6%;top:18%;bottom:auto;max-width:46%;display:flex;flex-direction:column;align-items:flex-start}
+/* 10cqw인 이유 — '72,000원'처럼 여덟 자짜리 값이 들어와도 46% 폭 안에 든다.
+   실측으로 11cqw에서 9px 넘쳤다. 더 키우면 '5% 혜택'은 멋있지만 가격이 잘린다. */
+.art.numeral .offer-value{display:block;order:-1;font-size:10cqw;line-height:.95;font-weight:800;letter-spacing:-.045em;white-space:nowrap}
+.art.numeral .headline{font-size:4cqw;margin-top:5%}
+.art.numeral .subline{font-size:2.3cqw;margin-top:2%}
+.art.numeral .cta{font-size:2.2cqw;margin-top:6%;padding:1.4cqw 2.2cqw}
+
+/* 사진을 다 보여주고 구석만 쓴다 */
+.art.corner>img{inset:0;width:100%;height:100%;object-fit:cover}
+.art.corner:after{content:'';position:absolute;inset:0;background:linear-gradient(205deg,#f6f2e9f2,transparent 52%)}
+.art.corner .brand{left:6%;bottom:6%;top:auto}
+.art.corner .copy{left:auto;right:6%;top:7%;bottom:auto;max-width:46%;text-align:right}
+.art.corner .headline{font-size:5cqw}
+.art.corner .subline{font-size:2.4cqw;margin-top:2.5%}
+.art.corner .cta{font-size:2.2cqw;margin-top:4.5%;padding:1.4cqw 2.2cqw}
+
+/* 원본 보기에서는 새 구성도 사진만 남긴다 */
+.art.original.boxed>img,.art.original.strip>img,
+.art.original.numeral>img,.art.original.corner>img{inset:0;width:100%;height:100%;object-fit:contain}
+.art.original.strip{background:#e6e2dc}
+.art.original:after{display:none}

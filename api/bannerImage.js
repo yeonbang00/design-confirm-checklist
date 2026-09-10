@@ -50,7 +50,8 @@ const KEEPS = {
   // 사람이 든 사진에서 그 물건만 꺼낸다
   item:
     'FROM THE REFERENCE, KEEP ONLY: the product the person is wearing or holding — its exact '
-    + 'colour, material, texture, proportions and details. Do not include the person.',
+    + 'colour, material, texture, proportions, printed label and packaging typography. '
+    + 'Do not include the person.',
   // 사람이 있는지 확인하지 못한 사진 — 어느 쪽이든 깨지지 않게 둔다
   subject:
     'FROM THE REFERENCE, KEEP ONLY: the product itself — its exact shape and proportions, '
@@ -71,7 +72,16 @@ const CUT_TIES =
   + 'different background: re-light everything to match the new scene and add contact shadows '
   + 'and reflections consistent with that light.';
 
-const NO_TEXT = 'Do not render any text, letters, numbers, logos or watermarks anywhere in the image.';
+/* 예전에는 "이미지 어디에도 글자를 그리지 마라"였다. 그 한 줄이 상품에 원래
+ * 인쇄된 라벨까지 지웠다 — 설화수 병에서 제품명이 통째로 사라져 무지 병이
+ * 됐다. 배너에 얹을 카피를 AI가 그리지 못하게 하려던 지시가, 상품 정체성인
+ * 인쇄 라벨까지 함께 날린 것이다. 둘을 갈라 쓴다. */
+const NO_TEXT =
+  'Do not add any graphic text overlay to the picture — no headline, no caption, no price, '
+  + 'no watermark, no badge, no brand mark laid over the image. '
+  + 'But the product\'s OWN printed label, engraving and packaging typography must stay '
+  + 'exactly as it appears in the reference: same wording, same lettering, same size and same '
+  + 'position on the product. Never blank out, blur or simplify the product\'s own label.';
 // 카피가 얹힐 자리를 비워두게 한다. 안 그러면 제품이 화면을 꽉 채워
 // 글자를 놓을 곳이 없고, 어두운 영역을 아무리 걸어도 읽기 어려워진다.
 const ROOM = 'Compose the frame so that roughly one third of the image is calm, uncluttered '
