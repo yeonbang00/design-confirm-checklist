@@ -15,7 +15,9 @@ AdCheck — 광고 배너를 AI가 검수하고, 배너 소재를 만들어주�
 | 배너 생성(시안 6종) | `banner-studio.html`, `assets/banner-studio-preview.js`, `assets/studio-auto-plan.mjs` | ~85KB |
 | 시안 6종이 무슨 컷인가 | `assets/studio-auto-plan.mjs` **한 파일만** | 8KB |
 | 생성 이미지 프롬프트 | `api/bannerImage.js` **한 파일만** | 8KB |
-| 사진 분류·로고 제거 | `api/productPhotos.js`, `api/imageText.js`, `assets/studio-logo-scrub.mjs` | ~12KB |
+| 사진 분류·컷 후보 | `api/productPhotos.js` **한 파일만** | 14KB |
+| 로고 제거·누끼·딤 | `api/imageText.js`, `assets/studio-logo-scrub.mjs`, `assets/studio-pixels.mjs` | ~14KB |
+| 그림 속 숫자 대조 | `assets/studio-text-check.mjs` **한 파일만** | 3KB |
 | 상품 링크 파싱 | `api/productScrape.js`, `assets/adcheck-grab.js` | ~24KB |
 | 배너 17개 항목 검수 | `api/analyze.js` **한 파일만** | 110KB |
 | 검수 화면 | `index.html` **한 파일만** | 173KB |
@@ -112,11 +114,13 @@ AI에게 숫자를 맡기면 지어낸다 — 실제로 신세계 딜 페이지 
 것이다. 지금은 "덧씌우는 그래픽 텍스트 금지 / 상품 자체의 인쇄 라벨은 그대로"로
 갈라 놨다.
 
-**한글 타이포는 이제 생성된다(2026-09-10 실측).** gpt-image-2가 "단 7일 한정혜택!"
-같은 대형 고딕도, 스티커풍 둥근 레터링("올영세일")도 음절 구조까지 정확히 그린다.
-그래도 카피·숫자를 그림에 넣지 않는 이유는 글꼴 품질이 아니라 (가) 틀린 숫자가 박히면
-심의에 걸리고 (나) 디자이너가 픽셀을 못 고치고 (다) 17개 항목 검수가 좌표를 재야 하기
-때문이다. 사실이 없는 장식 타이포만 예외로 열 수 있다.
+**한글 타이포는 생성된다. 단 두 번에 나눠야 한다(2026-09-10 실측).**
+gpt-image-2가 대형 고딕도 스티커풍 둥근 레터링도 음절 구조까지 정확히 그린다.
+그런데 "제품 유지 + 새 장면 + 글자"를 한 프롬프트에 넣으면 글자가 통째로 빠지고
+원본 사진이 거의 그대로 돌아온다(두 번 시험, 순서를 바꿔도 같음).
+장면을 먼저 만들고 그 결과에 글자만 얹는 두 번째 호출로 나누면 된다.
+한 장에 생성이 두 번 들어간다(1024 고화질 약 600원).
+그림에 박힌 금액·퍼센트는 `assets/studio-text-check.mjs`가 OCR로 다시 읽어 대조한다.
 
 **로고는 프롬프트로 안 지워진다.** "이 워드마크를 지워라"도, 좌표를 문장에 적어
 넣어도 세 번 다 그대로 남았다. 픽셀을 먼저 덮어야 사라진다. 서버에 이미지

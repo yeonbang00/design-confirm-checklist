@@ -49,58 +49,101 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 cuts는 12개이고, 각 항목은 **축을 나눠서** 적습니다. 문장 하나에 뭉뚱그리지 마세요.
 
   name   한국어 짧은 이름 (4~8자). 예 "단상 정면컷", "손에 든 컷"
-  person 사람을 어떻게 쓰나
-         "none"  사람 없이 상품만
-         "hands" 손만 나온다 (얼굴은 프레임 밖)
-         "keep"  원본의 그 사람을 그대로 두고 장소·포즈만 바꾼다
-  mount  상품을 무엇 위에 두나
-         "studio"(무지 배경) "plinth"(단상) "table"(테이블) "chair"(의자)
-         "hanger"(옷걸이) "floor"(바닥) "held"(손·몸에 들림) "floating"(공중)
-         "water"(물·액체) "fabric"(천·종이) "location"(실제 공간)
-  angle  "front"(정면) "three-quarter"(사반신) "side"(측면)
-         "top-down"(항공·부감) "low"(로우앵글) "high"(하이앵글)
-  crop   "full"(전체가 다 보임) "detail"(일부 확대) "macro"(표면만, 형태는 안 보임)
-  light  "soft"(부드러운 확산광) "hard"(딱딱한 그림자) "back"(역광)
-         "rim"(윤곽광) "window"(창가 자연광) "studio-key"(스튜디오 키라이트)
-  mood   "clean" "warm" "premium" "playful" "fresh" "dramatic"
+
+  mount  상품을 무엇 위에 두나 (13)
+         studio(무지 배경) plinth(단상) table(테이블) chair(의자) shelf(선반)
+         hanger(옷걸이) floor(바닥) held(손·몸에 들림) floating(공중)
+         water(물·액체) fabric(천·종이) mirror(거울·유리) location(실제 공간)
+
+  angle  카메라 각도 (12)
+         front(정면) three-quarter(45도 사반신) side(측면 90도) back(후면)
+         top-down(직부감 90도) high-45(부감 45도) eye-level(눈높이)
+         low(로우앵글) worms-eye(극단 로우, 올려다봄) dutch(기울인 앵글)
+         over-shoulder(어깨 너머) close-front(정면 초근접)
+
+  distance 카메라 거리 (5)
+         extreme-close(표면만, 형태 안 보임) close(부분 확대)
+         medium(상품 전체가 꽉 참) wide(주변까지) very-wide(공간 안의 작은 상품)
+
+  light  빛 (10)
+         soft(부드러운 확산광) hard(딱딱한 그림자) back(역광) rim(윤곽광)
+         window(창가 자연광) studio-key(스튜디오 키라이트) split(반측광)
+         golden(황금시간대) neon(색조명) dappled(나뭇잎 그림자)
+
+  background 배경 처리 (9)
+         solid(단색) gradient(그라데이션) seamless(무한배경)
+         colour-block(색면 분할) textured(질감 있는 면) paper(종이·그리드)
+         blurred-scene(흐린 실제 공간) sharp-scene(선명한 실제 공간) dark(어두운 바닥)
+
+  composition 구도 (9)
+         centered(정중앙) thirds(삼분할) diagonal(대각선) symmetric(좌우 대칭)
+         grid(격자 반복) space-left(왼쪽 여백) space-right(오른쪽 여백)
+         stacked(위아래로 쌓임) overlap(겹쳐 놓기)
+
+  palette 색조 (8)
+         warm-neutral cool-neutral monochrome high-contrast
+         pastel saturated earth metallic
+
+  motion 움직임 (7)
+         static(정지) falling(떨어지는 중) splash(튀는 순간) pour(따르는 중)
+         float(떠 있음) wind(바람에 날림) hand-motion(손이 움직이는 중)
+
+  person 사람을 어떻게 쓰나 (4)
+         none(사람 없음) hands(손만, 얼굴은 프레임 밖)
+         partial(신체 일부만, 얼굴 없음) keep(원본의 그 사람을 그대로 유지)
+
+  pose   person이 none이 아닐 때만. (9)
+         standing(서 있음) walking(걷는 중) seated(앉음) leaning(기댐)
+         reaching(손을 뻗음) turning(돌아봄) crouching(웅크림)
+         back(등을 보임) close-portrait(얼굴 클로즈업)
+
+  mood   clean warm premium playful fresh dramatic serene bold nostalgic minimal
+
   scene  위 축들을 영어 한 문장(40~70단어)으로 푼 것. 장소·소품·빛·카메라만.
 
 12개를 이렇게 섞으세요.
-- **mount는 최소 7가지가 달라야 합니다.** 같은 mount를 세 번 이상 쓰지 마세요.
-- **angle도 최소 4가지.** front만 열두 개면 안 됩니다.
-- **crop은 full이 절반, detail과 macro가 나머지.**
-- 사진에 사람이 있으면 person을 "keep" 3개 이상, "hands" 1개 이상 넣으세요.
-  사람이 없는 상품이면 "keep"을 쓰지 말고 "hands"만 1~2개 넣으세요.
+- **mount는 최소 7가지, angle은 최소 7가지, distance는 최소 4가지가 달라야 합니다.**
+  같은 값을 세 번 이상 쓰지 마세요.
+- background와 composition도 최소 5가지씩 다르게 하세요.
+- motion이 static인 것은 절반까지만. 나머지는 무언가 일어나고 있어야 합니다.
+- 사진에 사람이 있으면 person을 keep 3개 이상, hands 1개 이상 넣고,
+  keep끼리는 pose가 전부 달라야 합니다.
+  사람이 없는 상품이면 keep을 쓰지 말고 hands나 partial을 1~2개 넣으세요.
 - 절반 이상은 눈길이 한 번에 가는 연출이어야 합니다. 예쁜 방에 제품을 올려둔
-  정물만 열두 개면 무드보드지 배너 소재가 아닙니다. 상품에 맞는 것만 골라 섞으세요 —
-  물이 튀는 순간, 공중 부양, 격자 반복, 표면 매크로, 손에 든 컷, 두 개 대각선,
-  내용물·원료 단독, 강한 단색 배경에 딱딱한 그림자, 젖은 표면 반사, 역광 실루엣,
-  올려다보는 로우앵글, 옷걸이에 건 컷, 단상 위 정면컷.
+  정물만 열두 개면 무드보드지 배너 소재가 아닙니다.
 
 scene 문장 규칙:
 - 상품의 색이나 모양은 쓰지 마세요. 그건 원본 사진에서 가져옵니다.
 - 글자, 로고, 간판, 가격표, 브랜드명을 장면에 넣지 마세요.
-- person이 "none"이나 "hands"면 문장 끝에 사람을 어떻게 다룰지 명시하세요.
 - 상품의 형태가 읽혀야 합니다. 구기거나 뭉치거나 던져 놓은 연출은 쓰지 마세요.
 
 JSON만 출력하세요:
 {"photos":[{"index":0,"role":"main","hasPerson":true,"colorway":"검정","burnedText":"","note":""}],
  "category":"fashion-top","usp":"...","toneKo":"정갈한",
- "cuts":[{"name":"단상 정면컷","person":"none","mount":"plinth","angle":"front",
-          "crop":"full","light":"studio-key","mood":"clean","scene":"..."}]}`;
-
-const CATEGORIES = new Set(['fashion-top', 'fashion-outer', 'fashion-bottom', 'shoes', 'bag',
-  'accessory', 'beauty', 'food', 'kitchen', 'home', 'electronics', 'kids', 'sports', 'pet', 'other']);
-// 장면에 글자가 들어가면 배너 조판 자리가 망가진다. 뚫고 들어오면 그 컷만 버린다.
-const BANNED = /\b(text|letter|word|logo|sign|signage|label|price tag|billboard|poster|brand name)\b/i;
+ "cuts":[{"name":"단상 정면컷","mount":"plinth","angle":"front","distance":"medium",
+          "light":"studio-key","background":"seamless","composition":"centered",
+          "palette":"warm-neutral","motion":"static","person":"none","pose":"",
+          "mood":"clean","scene":"..."}]}`;
 
 const AX = {
-  person: ['none', 'hands', 'keep'],
-  mount: ['studio', 'plinth', 'table', 'chair', 'hanger', 'floor', 'held', 'floating', 'water', 'fabric', 'location'],
-  angle: ['front', 'three-quarter', 'side', 'top-down', 'low', 'high'],
-  crop: ['full', 'detail', 'macro'],
-  light: ['soft', 'hard', 'back', 'rim', 'window', 'studio-key'],
-  mood: ['clean', 'warm', 'premium', 'playful', 'fresh', 'dramatic'],
+  mount: ['studio', 'plinth', 'table', 'chair', 'shelf', 'hanger', 'floor', 'held',
+    'floating', 'water', 'fabric', 'mirror', 'location'],
+  angle: ['front', 'three-quarter', 'side', 'back', 'top-down', 'high-45', 'eye-level',
+    'low', 'worms-eye', 'dutch', 'over-shoulder', 'close-front'],
+  distance: ['extreme-close', 'close', 'medium', 'wide', 'very-wide'],
+  light: ['soft', 'hard', 'back', 'rim', 'window', 'studio-key', 'split', 'golden', 'neon', 'dappled'],
+  background: ['solid', 'gradient', 'seamless', 'colour-block', 'textured', 'paper',
+    'blurred-scene', 'sharp-scene', 'dark'],
+  composition: ['centered', 'thirds', 'diagonal', 'symmetric', 'grid', 'space-left',
+    'space-right', 'stacked', 'overlap'],
+  palette: ['warm-neutral', 'cool-neutral', 'monochrome', 'high-contrast', 'pastel',
+    'saturated', 'earth', 'metallic'],
+  motion: ['static', 'falling', 'splash', 'pour', 'float', 'wind', 'hand-motion'],
+  person: ['none', 'hands', 'partial', 'keep'],
+  pose: ['', 'standing', 'walking', 'seated', 'leaning', 'reaching', 'turning',
+    'crouching', 'back', 'close-portrait'],
+  mood: ['clean', 'warm', 'premium', 'playful', 'fresh', 'dramatic', 'serene', 'bold',
+    'nostalgic', 'minimal'],
 };
 
 function cleanCuts(raw) {

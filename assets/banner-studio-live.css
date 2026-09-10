@@ -124,7 +124,7 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
    글자색과 붙어 있으면 성립하지 않는다. 바닥은 반드시 글자와 반대여야 한다. */
 .art.numeral{background:#fbfaf8;color:#15150f;--bar:#C3FF4D}
 .art.numeral>img{left:0;top:0;width:100%;height:72%;object-fit:cover;border-radius:0 0 12cqw 12cqw}
-.art.numeral:after{content:'';position:absolute;left:0;top:0;width:100%;height:72%;border-radius:0 0 12cqw 12cqw;background:linear-gradient(180deg,rgba(8,10,12,.5),transparent 48%)}
+.art.numeral:after{content:'';position:absolute;left:0;top:0;width:100%;height:72%;border-radius:0 0 12cqw 12cqw;background:linear-gradient(180deg,rgba(8,10,12,calc(var(--scrim,.5)*1.05)),transparent 48%)}
 .art.numeral .brand{left:7%;top:5.5%;font-size:3.4cqw;font-weight:800;letter-spacing:-.02em;color:#fff;z-index:2}
 .art.numeral .copy{inset:0;padding:12.5% 7% 6.5%;max-width:none;display:flex;flex-direction:column;align-items:flex-start}
 .art.numeral .headline{font-size:5.4cqw;max-width:72%;line-height:1.12;color:#fff}
@@ -135,7 +135,7 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 /* 사진을 다 보여주고 구석만 쓴다 */
 .art.corner>img{inset:0;width:100%;height:100%;object-fit:cover}
 .art.corner .cta{border-radius:99px}
-.art.corner:after{content:'';position:absolute;inset:0;background:linear-gradient(205deg,#f6f2e9f2,transparent 52%)}
+.art.corner:after{content:'';position:absolute;inset:0;background:linear-gradient(205deg,rgba(246,242,233,calc(.5 + var(--scrim,.45)*.6)),transparent 52%)}
 .art.corner .brand{left:6%;bottom:6%;top:auto}
 .art.corner .copy{left:auto;right:6%;top:7%;bottom:auto;max-width:46%;text-align:right}
 .art.corner .headline{font-size:5cqw}
@@ -157,7 +157,7 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
    모으고 검정 배지로 닫는다. 좌우가 갈려 있어 사진 가운데를 안 가린다. */
 .art.badge{color:#fff}
 .art.badge>img{inset:0;width:100%;height:100%;object-fit:cover}
-.art.badge:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28),transparent 26%,transparent 52%,rgba(0,0,0,.42))}
+.art.badge:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,calc(var(--scrim,.42)*.65)),transparent 26%,transparent 52%,rgba(0,0,0,calc(var(--scrim,.42)*.95)))}
 .art.badge .brand{display:none}
 .art.badge .headline{position:absolute;left:7%;top:7%;max-width:62%;font-size:5.2cqw;font-weight:700;line-height:1.3;letter-spacing:-.03em;text-shadow:0 1px 14px rgba(0,0,0,.35)}
 .art.badge .copy{inset:auto 6% 7% 22%;max-width:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
@@ -206,3 +206,17 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .art.original.duo-panel>img{width:50%}
 .art.original.duo-panel>img.second-photo{left:50%;top:0;width:50%;height:100%}
 .art.original.framed:before,.art.original.badge:after{display:none}
+
+
+/* 카피까지 그림에 그린 컷은 HTML 카피를 얹지 않는다. 두 번 겹쳐 보인다.
+   원본 보기(.original)와 달리 사진은 꽉 채운다 — 이미 배너 판형이다. */
+.art.baked .copy,.art.baked .brand,.art.baked:before,.art.baked:after{display:none!important}
+.art.baked>img{inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;border-radius:0!important}
+.card.baked-warn .card-meta small{color:#ffd3a4}
+
+
+/* 누끼가 뜬 사진은 제품이 배경 없이 놓인다. 잘라 넣은 게 아니라 얹은 것으로
+   보이려면 꽉 채우지 말고 여백 안에 담아야 한다. */
+.art.has-cut>img{object-fit:contain!important}
+.art.offer.has-cut>img{left:32%;top:14%;width:62%;height:70%}
+.art.type-diagonal.has-cut>img{left:21%;top:23%;width:58%;height:56%}

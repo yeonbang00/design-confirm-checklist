@@ -63,15 +63,15 @@ export const SETS = {
 /* 서버가 컷 후보를 못 준 경우에만 쓰는 예비 목록. 상품을 모르는 채로 쓰는
    문장이라 어느 상품에나 어색하지 않을 만큼만 두루뭉술하다. */
 export const FALLBACK_CUTS = [
-  { name: '무지 스튜디오', person: 'none', scene: 'a seamless pale grey studio backdrop with a smooth concrete floor. The product stands alone, lit by one key light from the left and a soft fill from the front, with a clean contact shadow underneath. Camera at product height, three-quarter view. No person in the frame.' },
-  { name: '질감 클로즈업', person: 'none', scene: 'a close, tightly framed studio shot that fills the frame with the surface of the product — its material, its seams and its finish. Soft directional light rakes across the surface. No person in the frame.' },
-  { name: '창가 정물', person: 'none', scene: 'a pale wooden surface beside a window with a sheer curtain; the product sits on the surface with soft leaf shadows falling across it, and the rest of the frame stays empty. No person in the frame.' },
-  { name: '플랫레이', person: 'none', scene: 'an overhead flat-lay on a pale linen cloth; the product is laid out neatly at the centre with generous empty cloth around it. Soft even daylight from above, camera looking straight down. No person in the frame.' },
-  { name: '낮은 단', person: 'none', scene: 'a low pale stone plinth on a smooth concrete floor in a wide empty room; the product stands on the plinth with a long soft shadow beside it, and the rest of the frame stays bare. No person in the frame.' },
-  { name: '넓은 실내', person: 'keep', scene: 'a wide, calm interior with plenty of empty space — a pale wall, a bare floor and one piece of simple furniture. The subject sits well off to one side and the camera is far back, so most of the picture is quiet. Soft even daylight.' },
-  { name: '거리 오후', person: 'keep', scene: 'a sunlit city street with low buildings and street trees in late afternoon light. The subject is re-staged completely — a different posture and a different camera distance from the reference.' },
-  { name: '공원 산책', person: 'keep', scene: 'a quiet park path with grass and out-of-focus trees under soft overcast light. The subject walks through the frame, re-staged with a new posture and a longer camera distance.' },
-  { name: '자연광 실내', person: 'keep', scene: 'a bright apartment interior with a large window, a sheer curtain and a pale wooden floor. The subject is re-staged near the window with a relaxed posture and generous empty space beside them.' },
+  { name: '무지 스튜디오', person: 'none', scene: 'a seamless pale grey studio backdrop with a smooth concrete floor. The product stands alone, lit by one key light from the left and a soft fill from the front, with a clean contact shadow underneath. Camera at product height, three-quarter view. No person in the frame.', mount: 'studio', angle: 'front', distance: 'medium', light: 'studio-key', background: 'seamless', composition: 'centered', palette: 'warm-neutral', motion: 'static', person: 'none', pose: '' },
+  { name: '질감 클로즈업', person: 'none', scene: 'a close, tightly framed studio shot that fills the frame with the surface of the product — its material, its seams and its finish. Soft directional light rakes across the surface. No person in the frame.', mount: 'fabric', angle: 'close-front', distance: 'extreme-close', light: 'rim', background: 'dark', composition: 'centered', palette: 'monochrome', motion: 'static', person: 'none', pose: '' },
+  { name: '창가 정물', person: 'none', scene: 'a pale wooden surface beside a window with a sheer curtain; the product sits on the surface with soft leaf shadows falling across it, and the rest of the frame stays empty. No person in the frame.', mount: 'table', angle: 'high-45', distance: 'wide', light: 'window', background: 'blurred-scene', composition: 'space-right', palette: 'warm-neutral', motion: 'static', person: 'none', pose: '' },
+  { name: '플랫레이', person: 'none', scene: 'an overhead flat-lay on a pale linen cloth; the product is laid out neatly at the centre with generous empty cloth around it. Soft even daylight from above, camera looking straight down. No person in the frame.', mount: 'fabric', angle: 'top-down', distance: 'wide', light: 'soft', background: 'textured', composition: 'symmetric', palette: 'pastel', motion: 'static', person: 'none', pose: '' },
+  { name: '낮은 단', person: 'none', scene: 'a low pale stone plinth on a smooth concrete floor in a wide empty room; the product stands on the plinth with a long soft shadow beside it, and the rest of the frame stays bare. No person in the frame.', mount: 'plinth', angle: 'worms-eye', distance: 'medium', light: 'hard', background: 'solid', composition: 'space-left', palette: 'high-contrast', motion: 'static', person: 'none', pose: '' },
+  { name: '넓은 실내', person: 'keep', scene: 'a wide, calm interior with plenty of empty space — a pale wall, a bare floor and one piece of simple furniture. The subject sits well off to one side and the camera is far back, so most of the picture is quiet. Soft even daylight.', mount: 'location', angle: 'eye-level', distance: 'very-wide', light: 'window', background: 'sharp-scene', composition: 'thirds', palette: 'cool-neutral', motion: 'static', person: 'keep', pose: 'seated' },
+  { name: '거리 오후', person: 'keep', scene: 'a sunlit city street with low buildings and street trees in late afternoon light. The subject is re-staged completely — a different posture and a different camera distance from the reference.', mount: 'location', angle: 'three-quarter', distance: 'wide', light: 'golden', background: 'blurred-scene', composition: 'space-left', palette: 'earth', motion: 'wind', person: 'keep', pose: 'walking' },
+  { name: '공원 산책', person: 'keep', scene: 'a quiet park path with grass and out-of-focus trees under soft overcast light. The subject walks through the frame, re-staged with a new posture and a longer camera distance.', mount: 'location', angle: 'side', distance: 'wide', light: 'dappled', background: 'sharp-scene', composition: 'diagonal', palette: 'earth', motion: 'hand-motion', person: 'keep', pose: 'walking' },
+  { name: '자연광 실내', person: 'keep', scene: 'a bright apartment interior with a large window, a sheer curtain and a pale wooden floor. The subject is re-staged near the window with a relaxed posture and generous empty space beside them.', mount: 'location', angle: 'eye-level', distance: 'medium', light: 'window', background: 'blurred-scene', composition: 'space-right', palette: 'warm-neutral', motion: 'static', person: 'keep', pose: 'leaning' },
 ];
 
 /* 분류가 없으면(분류 전이거나 실패) 비율로만 짐작한다. 틀려도 대체 순서가
@@ -102,6 +102,22 @@ function pickPhoto(prefer, photos, used) {
      offer   숫자·혜택이 주인공 (확인된 가격이 있을 때만)
      product 제품이 주인공, 카피는 비켜선다
      story   말이 주인공, 사진은 배경 */
+/* 글자를 어디에 둘 것인가.
+     layer  사진만 생성하고 카피는 HTML/CSS로 얹는다. 문구를 화면에서 고칠 수
+            있고 숫자는 코드가 채우므로 틀릴 일이 없다.
+     baked  카피까지 그림 안에 그린다. CSS로는 못 만드는 표현(스티커 레터링,
+            손글씨, 3D 세트 안의 글자)이 열린다. 대신 픽셀에 박히므로 고칠 수
+            없고, 숫자가 틀릴 수 있어 생성 뒤에 OCR로 대조한다.
+   둘을 섞는다. 여섯 장이 전부 baked면 고칠 수 있는 시안이 하나도 없다. */
+export const TYPE_STYLES = [
+  ['각진 대형 고딕', 'a very heavy geometric sans-serif, tightly set, with one word or number in a strong accent colour'],
+  ['둥근 스티커', 'chunky rounded lettering shaped like a die-cut sticker, thick white outline and a soft drop shadow, slightly tilted'],
+  ['손글씨 마커', 'hand-drawn marker lettering with visible brush edges, slightly irregular, with small doodle strokes beside it'],
+  ['편집 명조', 'a refined high-contrast serif set large with generous letter spacing, editorial magazine feel'],
+  ['장평 좁은 볼드', 'a condensed bold sans-serif stacked in two tight lines, filling the width edge to edge'],
+  ['외곽선 타이포', 'bold outlined lettering with a hollow centre, layered over the photograph'],
+];
+
 export const EMPHASIS = {
   offer: ['offer', 'numeral', 'arch', 'type-diagonal', 'duo-panel', 'price'],
   product: ['boxed', 'corner', 'badge', 'framed', 'strip', 'split-right'],
@@ -127,6 +143,10 @@ export function createPlan(product, random = Math.random) {
     ['offer', 'product', 'product', 'story', 'story', 'story'],   // 무드 중심
   ];
   const mix = MIXES[Math.floor(random() * MIXES.length)] || MIXES[1];
+  /* 여섯 장 중 둘은 카피까지 그림에 그린다. 어느 자리가 될지는 매번 다르다.
+     그대로 못 고치는 대신 CSS로는 안 되는 표현이 나온다. */
+  const bakedAt = new Set(shuffle([0, 1, 2, 3, 4, 5], random).slice(0, 2));
+  const typeOrder = shuffle(TYPE_STYLES, random);
   // 확인된 가격이 없으면 숫자를 앞세울 수 없다. 그 자리는 제품으로 돌린다.
   const emphasisPlan = shuffle(mix.map(e => (e === 'offer' && !canOffer ? 'product' : e)), random);
 
@@ -170,48 +190,65 @@ export function createPlan(product, random = Math.random) {
     scene: SETS[product.category] || SETS.other, person: 'none',
     prefer: ['packshot', 'flat', 'main', 'model'],
   });
-  /* 4. 나머지는 후보에서 뽑는다. 그냥 섞어서 앞에서부터 집으면 mount가
-     전부 location인 여섯 장이 나올 수 있다. 실제로 후보 12개 중 location이
-     4개였다. 축이 겹치지 않도록 골라야 '다양하다'가 결과로 나온다.
-       - mount(무엇 위에 두나)는 절대 겹치지 않는다
-       - angle(어느 각도)은 두 번까지
-       - 여섯 중 한 장은 반드시 확대컷(detail/macro)
-       - 사람이 있는 상품이면 keep 한 장, hands 한 장을 확보한다 */
+  /* 4. 나머지는 후보에서 뽑는다. 그냥 섞어서 앞에서부터 집으면 축이 겹친다.
+     실측으로 후보 12개 중 mount가 location인 것이 4개였다. 축이 겹치지 않도록
+     골라야 '다양하다'가 결과로 나온다.
+       - mount(무엇 위에 두나)와 composition(구도)은 절대 겹치지 않는다
+       - angle(각도) · background(배경) · palette(색조)는 두 번까지
+       - keep끼리는 pose가 겹치지 않는다. 같은 사람이 같은 자세로 두 번 나오면 한 장이다
+       - 여섯 중 한 장은 반드시 확대컷, 한 장은 움직임이 있는 컷 */
   const taken = new Set(pool.map(c => c.name));
   const topUp = FALLBACK_CUTS.filter(c => !taken.has(c.name) && (allowKeep || c.person !== 'keep'));
   const queue = [...pool, ...shuffle(topUp, random)];
 
-  const mounts = new Set(), angles = {};
+  const once = { mount: new Set(), composition: new Set(), pose: new Set() };
+  const twice = { angle: {}, background: {}, palette: {} };
   const need = {
-    close: !slots.some(x => x.crop && x.crop !== 'full'),
+    close: true,
+    motion: pool.some(c => c.motion && c.motion !== 'static'),
     keep: anyPerson,
-    hands: pool.some(c => c.person === 'hands'),
+    hands: pool.some(c => c.person === 'hands' || c.person === 'partial'),
   };
+  const isClose = c => c.distance === 'extreme-close' || c.distance === 'close';
   const fits = cut => {
-    if (cut.mount && mounts.has(cut.mount)) return false;
-    if (cut.angle && (angles[cut.angle] || 0) >= 2) return false;
+    for (const k of ['mount', 'composition']) if (cut[k] && once[k].has(cut[k])) return false;
+    // pose는 사람이 나오는 컷끼리만 본다
+    if (cut.pose && cut.person === 'keep' && once.pose.has(cut.pose)) return false;
+    for (const k of ['angle', 'background', 'palette']) {
+      if (cut[k] && (twice[k][cut[k]] || 0) >= 2) return false;
+    }
     return true;
   };
   const place = cut => {
-    if (cut.mount) mounts.add(cut.mount);
-    if (cut.angle) angles[cut.angle] = (angles[cut.angle] || 0) + 1;
-    if (cut.crop && cut.crop !== 'full') need.close = false;
+    for (const k of ['mount', 'composition']) if (cut[k]) once[k].add(cut[k]);
+    if (cut.pose && cut.person === 'keep') once.pose.add(cut.pose);
+    for (const k of ['angle', 'background', 'palette']) {
+      if (cut[k]) twice[k][cut[k]] = (twice[k][cut[k]] || 0) + 1;
+    }
+    if (isClose(cut)) need.close = false;
+    if (cut.motion && cut.motion !== 'static') need.motion = false;
     if (cut.person === 'keep') need.keep = false;
-    if (cut.person === 'hands') need.hands = false;
+    if (cut.person === 'hands' || cut.person === 'partial') need.hands = false;
     slots.push({
       kind: pool.includes(cut) ? 'made' : 'spare',
       label: cut.name,
       desc: pool.includes(cut) ? '이 상품에 맞춰 만든 장면입니다.' : '기본 장면입니다.',
-      scene: cut.scene, person: cut.person, crop: cut.crop, mount: cut.mount, angle: cut.angle,
+      scene: cut.scene, person: cut.person,
+      axes: {
+        mount: cut.mount, angle: cut.angle, distance: cut.distance, light: cut.light,
+        background: cut.background, composition: cut.composition, palette: cut.palette,
+        motion: cut.motion, pose: cut.pose, mood: cut.mood,
+      },
       prefer: cut.person === 'keep' ? ['model', 'main'] : ['packshot', 'flat', 'main', 'model'],
     });
   };
 
   // 꼭 필요한 축부터 채우고, 남는 자리는 겹치지 않는 것으로 채운다
   const wants = [
-    c => need.close && c.crop && c.crop !== 'full',
+    c => need.close && isClose(c),
     c => need.keep && c.person === 'keep',
-    c => need.hands && c.person === 'hands',
+    c => need.motion && c.motion && c.motion !== 'static',
+    c => need.hands && (c.person === 'hands' || c.person === 'partial'),
   ];
   for (const want of wants) {
     if (slots.length >= 6) break;
@@ -256,7 +293,10 @@ export function createPlan(product, random = Math.random) {
       sceneName: slot.label,
       scene: slot.scene || '',
       emphasis: emphasisPlan[i],
-      mount: slot.mount || '', angle: slot.angle || '', crop: slot.crop || '',
+      axes: slot.axes || null,
+      // 그대로 쓰는 컷은 생성 자체를 안 하므로 baked가 될 수 없다
+      render: slot.kind !== 'plain' && bakedAt.has(i) ? 'baked' : 'layer',
+      typeStyle: typeOrder[i % typeOrder.length],
       madeByAi: slot.kind === 'made',
     };
   });

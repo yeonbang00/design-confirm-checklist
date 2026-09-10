@@ -88,7 +88,44 @@ const ROOM = 'Compose the frame so that roughly one third of the image is calm, 
   + 'background with no important detail — this empty area is reserved for text that will be '
   + 'added later. Keep the product clearly inside the remaining area.';
 
-function buildPrompt({ scene, keep, imagePrompt }) {
+/* 카피까지 그림에 그리는 모드.
+ *
+ * 처음 설계는 "AI는 절대 글자를 그리지 않는다"였다. 그때는 한글이 깨졌기
+ * 때문이다. 2026-09-10 실측으로 gpt-image-2가 "단 7일 한정혜택!" 같은 대형
+ * 고딕도, 스티커풍 둥근 레터링도 음절 구조까지 정확히 그리는 것을 확인했다.
+ *
+ * 그래서 연다. 다만 무엇을 쓸지는 코드가 정한다. 모델에게 문구를 지어내게
+ * 하지 않고, 확인된 카피를 그대로 넣으라고 지시한다. 숫자가 틀리면 심의에
+ * 걸리므로 생성 뒤에 OCR로 대조한다(assets/studio-text-check.mjs).
+ *
+ * 한 번에 다 시키면 안 된다. "제품 유지 + 새 장면 + 글자"를 한 프롬프트에
+ * 넣으면 글자가 통째로 빠지고 원본 사진이 거의 그대로 돌아온다. 두 번 시험해
+ * 두 번 다 그랬다. 순서를 바꿔도 마찬가지였다.
+ * 두 번으로 나누면 된다 — (1) 장면을 만들고 (2) 그 결과에 글자만 얹는다.
+ * 두 번째 호출은 사진을 건드리지 말라는 지시 하나와 문구 목록만 담는다.
+ * 대신 한 장에 생성이 두 번 들어간다(고화질 1024 기준 대략 600원).
+ */
+function textBlock({ headline, subline, offer, brand, cta, style }) {
+  const lines = [
+    'Keep this photograph exactly as it is. Change nothing in the picture itself.',
+    'Add Korean advertising typography on top of it, and nothing else.',
+    'Reproduce every character exactly as given. Do not translate, rephrase, shorten or '
+    + 'add any word, number or symbol that is not listed here.',
+  ];
+  if (brand) lines.push(`Brand mark, small, top area: "${brand}"`);
+  if (headline) lines.push(`Headline, the largest text on the image: "${headline}"`);
+  if (offer) lines.push(`Offer figure, set very large next to or under the headline: "${offer}"`);
+  if (subline) lines.push(`Sub line, small, under the headline: "${subline}"`);
+  if (cta) lines.push(`Call to action, small, in a button or a bar: "${cta}"`);
+  lines.push(`Set the headline in ${style || TYPE_STYLES_FALLBACK}.`);
+  lines.push('Korean Hangul syllable blocks must be formed correctly and be perfectly '
+    + 'legible at a glance. Keep the text clear of the product so nothing important is '
+    + 'covered. No other text anywhere in the image.');
+  return lines.join(' ');
+}
+const TYPE_STYLES_FALLBACK = 'a heavy geometric sans-serif';
+
+function buildPrompt({ scene, keep, imagePrompt, text }) {
   // 예전 호출부는 imagePrompt 한 덩어리만 보낸다. 그대로 받아 준다.
   if (!scene) return `${imagePrompt} ${KEEPS.product} ${ROOM} ${NO_TEXT}`;
   const keeper = KEEPS[keep] || KEEPS.product;
@@ -115,13 +152,22 @@ export default async function handler(req, res) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) { res.status(503).json({ error: 'AI 이미지 생성이 설정되지 않았습니다.' }); return; }
 
-  const { imageUrl, base64, mediaType, imagePrompt, scene, keep, size } = req.body || {};
-  if (!imagePrompt && !scene) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
+  const { imageUrl, base64, mediaType, imagePrompt, scene, keep, size, text } = req.body || {};
+  const wantsText = text && typeof text === 'object' && (text.headline || text.offer);
+  if (!imagePrompt && !scene && !wantsText) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
   const outSize = ALLOWED_SIZES.has(size) ? size : '1024x1024';
-  const prompt = buildPrompt({
-    scene: typeof scene === 'string' ? scene.slice(0, 900) : '',
+  // 그림에 넣을 문구는 길이를 자른다. 길면 글자가 화면을 덮는다.
+  const cut = (v, n) => (typeof v === 'string' ? v.slice(0, n) : '');
+  // 글자만 얹는 두 번째 호출. 장면 지시를 함께 주면 글자가 빠진다.
+  const textOnly = text && typeof text === 'object' && !scene;
+  const prompt = textOnly ? textBlock({
+    headline: cut(text.headline, 60), subline: cut(text.subline, 80),
+    offer: cut(text.offer, 24), brand: cut(text.brand, 30),
+    cta: cut(text.cta, 24), style: cut(text.style, 200),
+  }) : buildPrompt({
+    scene: cut(scene, 900),
     keep: typeof keep === 'string' ? keep : '',
-    imagePrompt: typeof imagePrompt === 'string' ? imagePrompt.slice(0, 500) : '',
+    imagePrompt: cut(imagePrompt, 500),
   });
 
   try {

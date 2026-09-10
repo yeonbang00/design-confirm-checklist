@@ -1,5 +1,5 @@
 // POST /api/imageText
-// Body: { url: string }
+// Body: { url: string, ocr?: false }
 // Returns: { base64, mediaType, width?, height?, boxes:[{x,y,w,h,text}] } | { error }
 //
 // 상품 사진 위에 브랜드가 덧씌운 로고·워터마크의 자리를 알려준다.
@@ -33,6 +33,8 @@ export default async function handler(req, res) {
   if (rejectIfNotSameOrigin(req, res)) return;
 
   const url = typeof req.body?.url === 'string' ? req.body.url : '';
+  // 누끼와 딤 계산은 글자를 읽을 필요가 없다. OCR은 호출당 돈이 든다.
+  const skipOcr = req.body?.ocr === false;
   if (!/^https?:\/\//.test(url)) { res.status(400).json({ error: '사진 주소가 필요합니다.' }); return; }
 
   try {
@@ -48,6 +50,7 @@ export default async function handler(req, res) {
     if (buf.length > 6 * 1024 * 1024) { res.status(413).json({ error: '사진이 너무 큽니다.' }); return; }
     const base64 = buf.toString('base64');
 
+    if (skipOcr) { res.status(200).json({ base64, mediaType, boxes: [], ocr: false }); return; }
     const fields = await runOcr(base64, mediaType);
     const boxes = (fields || []).map(boxOf).filter(Boolean);
     res.status(200).json({ base64, mediaType, boxes, ocr: !!fields });

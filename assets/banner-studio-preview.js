@@ -1,6 +1,8 @@
 import {createPlan} from './studio-auto-plan.mjs';
 import {scrubLogo} from './studio-logo-scrub.mjs';
 import {upgradePhotos} from './studio-photo-size.mjs';
+import {checkBakedText} from './studio-text-check.mjs';
+import {cutout,scrimFor} from './studio-pixels.mjs';
 import {normalizeProduct,safeUrl,factSlots} from './studio-data.mjs';
 // Product originals + editable designer drafts. Image synthesis is not connected.
 'use strict';
@@ -97,8 +99,12 @@ function go(n){
 }
 function openSelectedBoard(){if(!isPlan()){if(!choice.size)return;variants=directionVariants().filter(v=>choice.has(v.id));selected=0}go(2)}
 function updateStepNav(){const names=['상품 확인','제작 방식',isPlan()?'연출 검토':'시안 비교·수정','저장·전달'];$('#stepPosition').textContent=`${step+1} / 4 · ${names[step]}`+(step===1&&!isPlan()?` · ${choice.size}개 선택`:'');$('#stepPrev').disabled=step===0;$('#stepNext').disabled=step===3||(step===1&&(isPlan()?!planState[mode].name.trim():!choice.size));$('#stepNext').textContent=step===1&&isPlan()?'연출 검토 ▶':'다음 ▶';$('#stepPrev').setAttribute('aria-label',step>0?`이전: ${names[step-1]}`:'이전 단계 없음');$('#stepNext').setAttribute('aria-label',step<3?`다음: ${names[step+1]}`:'마지막 단계');$('#stepThreeText').textContent=names[2]}
+/* 표시에 쓸 주소. 누끼 > 로고 지운 판 > 원본 순으로 고른다.
+   누끼는 제품만 살아 있는 판이라 색면 조판에서 확 달라진다. */
 const srcOf=p=>(p&&(p.cleanUrl||p.url))||'';
-function art(v){const photos=v.photos||PHOTOS,p=photos[v.photo]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;return `<div class="art ${esc(v.layout)}${v.original?' original':''}"><img src="${esc(srcOf(p))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
+const artSrc=(p,layout)=>(p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(layout))?p.cutUrl:srcOf(p);
+function art(v){const photos=v.photos||PHOTOS,p=photos[v.photo]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;const cut=p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(v.layout);
+ return `<div class="art ${esc(v.layout)}${v.original?' original':''}${v.baked?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
  $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div><span class="badge">${selected===i?'수정 중':'시안 '+(i+1)}</span></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
@@ -260,7 +266,7 @@ setProduct(product);renderSaved();renderLibrary();updateStepNav();
 let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, photoNotice='';
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
-renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}})};
+renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}})};
 function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
 function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;// 버튼이 둘 다 '시안 6종 생성'이라, 진행 중 표시도 둘 다 해야 어느 쪽을 눌렀든 보인다.
  for(const id of ['#quickGenerate','#quickGrabGenerate'])$(id).textContent=b?'시안 만드는 중…':'시안 6종 생성';
@@ -316,6 +322,8 @@ async function classifyPhotos(run){
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다');
  }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
  await scrubLogos(run);
+ const cutNote=await cutoutPhotos(run);
+ if(cutNote)photoNotice+=' · '+cutNote;
 }
 
 /* 상품 사진에 브랜드가 덧씌운 로고가 있으면 지운다. 그대로 두면 우리 배너에
@@ -333,19 +341,95 @@ async function scrubLogos(run){
  }
  if(done)photoNotice+=` · 사진 ${done}장에서 로고를 지웠습니다`;
 }
+/* 어떤 축으로 뽑혔는지 카드에 적는다. 화면에 안 보이면 없는 것과 같다. */
+const AXIS_KO={
+ emphasis:{offer:'혜택 강조',product:'제품 강조',story:'무드 강조'},
+ mount:{studio:'무지 배경',plinth:'단상',table:'테이블',chair:'의자',shelf:'선반',hanger:'옷걸이',floor:'바닥',held:'손에 듦',floating:'공중',water:'물',fabric:'천',mirror:'거울',location:'실제 공간'},
+ angle:{front:'정면','three-quarter':'사반신',side:'측면',back:'후면','top-down':'직부감','high-45':'부감 45도','eye-level':'눈높이',low:'로우앵글','worms-eye':'극단 로우',dutch:'기울임','over-shoulder':'어깨 너머','close-front':'정면 초근접'},
+ distance:{'extreme-close':'표면 매크로',close:'부분 확대',medium:'상품 전체',wide:'주변까지','very-wide':'넓은 공간'},
+ light:{soft:'확산광',hard:'딱딱한 그림자',back:'역광',rim:'윤곽광',window:'창가',['studio-key']:'키라이트',split:'반측광',golden:'황금시간',neon:'색조명',dappled:'나뭇잎 그림자'},
+ motion:{static:'',falling:'낙하',splash:'튀김',pour:'따름',float:'부양',wind:'바람','hand-motion':'손 움직임'},
+ person:{none:'',hands:'손만',partial:'신체 일부',keep:'모델 유지'},
+ pose:{standing:'서 있음',walking:'걷기',seated:'앉음',leaning:'기댐',reaching:'손 뻗기',turning:'돌아봄',crouching:'웅크림',back:'등',['close-portrait']:'얼굴 클로즈업'},
+};
+function axisLabel(p){
+ const a=p.axes||{};
+ return [AXIS_KO.emphasis[p.emphasis],AXIS_KO.mount[a.mount],AXIS_KO.angle[a.angle],
+  AXIS_KO.distance[a.distance],AXIS_KO.light[a.light],AXIS_KO.motion[a.motion],
+  AXIS_KO.person[a.person],AXIS_KO.pose[a.pose]].filter(Boolean).join(' · ');
+}
+
+/* 누끼. 단색 배경 단품컷에서만 된다. 되는지 먼저 재고, 안 되면 손대지 않는다.
+   억지로 지운 누끼는 원본보다 나쁘다. */
+async function cutoutPhotos(run){
+ const targets=product.photos.filter(p=>['packshot','flat','main'].includes(p.role)&&!p.cutUrl).slice(0,3);
+ if(!targets.length)return '';
+ let done=0,why='';
+ for(const p of targets){
+  if(run!==autoRun)return '';
+  try{const r=await cutout(p.url,getJSON);
+   if(r.ok){p.cutUrl=r.dataUrl;p.cutRatio=r.ratio;done++}else why=r.reason;
+  }catch(e){why=e.message}
+ }
+ return done?`누끼 ${done}장`:(why?`누끼 실패(${why})`:'');
+}
+
+/* 딤 세기. 조판마다 고정값을 쓰면 밝은 스튜디오컷에는 진하고 어두운 야외컷에는
+   모자란다. 카피가 실제로 놓인 자리의 밝기를 재서 정한다. */
+async function tuneScrim(i){
+ const v=variants[i];if(!v||v.baked)return;
+ const url=srcOf(PHOTOS[v.photo]);if(!url||url.startsWith('data:'))return;
+ const card=$(`[data-card="${i}"]`);if(!card)return;
+ const art=card.querySelector('.art'),copy=art&&art.querySelector('.copy');
+ if(!art||!copy)return;
+ const a=art.getBoundingClientRect(),r=copy.getBoundingClientRect();
+ if(!a.width||!r.width)return;
+ const box={x:(r.left-a.left)/a.width,y:(r.top-a.top)/a.height,w:r.width/a.width,h:r.height/a.height};
+ const s=await scrimFor(url,box,getJSON);
+ if(s)art.style.setProperty('--scrim',String(s.alpha));
+}
+
 async function generateImage(plan,run){
  const variant=variants.find(v=>v.id===plan.id);if(!variant)return;
  variant.autoStatus='이미지 생성 중';variant.imageFailed=false;renderBoard();
  const src=product.photos[plan.photo]||{};
- try{const result=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
- if(run!==autoRun)return;if(!safeUrl(result.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
- const index=PHOTOS.push({url:result.imageUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
- variant.photo=index;variant.photos=undefined;variant.autoStatus=(variant.axes?variant.axes+' · ':'')+'AI 생성 · 상품 일치 확인 필요';variant.imageFailed=false;failedImages.delete(plan.id);
+ const baked=plan.render==='baked';
+ try{
+ // 1단계: 장면을 만든다. 이 호출에는 글자 지시를 넣지 않는다.
+ const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
+ let finalUrl=shot.imageUrl;
+
+ // 2단계: 카피까지 그리는 컷만, 방금 만든 그림에 글자를 얹는다.
+ // 장면과 글자를 한 번에 시키면 글자가 통째로 빠진다(두 번 시험해 두 번 다).
+ if(baked){
+  variant.autoStatus='카피를 그리는 중';renderBoard();
+  const withText=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:finalUrl,size:'1024x1024',text:{headline:variant.main,subline:variant.sub,offer:variant.offer,brand:product.brand,cta:variant.showCta?variant.cta:'',style:plan.typeStyle?.[1]||''}})});
+  if(run!==autoRun)return;
+  if(safeUrl(withText.imageUrl))finalUrl=withText.imageUrl;
+ }
+
+ const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
+ variant.photo=index;variant.photos=undefined;variant.baked=baked;variant.imageFailed=false;failedImages.delete(plan.id);
+ variant.autoStatus=(variant.axes?variant.axes+' · ':'')+(baked?'카피까지 생성 · 숫자 확인 중':'AI 생성 · 상품 일치 확인 필요');
+ renderBoard();
+
+ if(baked){
+  // 그림에 박힌 금액·퍼센트를 다시 읽어 확인된 값과 맞춰 본다
+  const slots=factSlots(product);
+  const check=await checkBakedText(finalUrl,[slots.PRICE,slots.BENEFIT,slots.QUANTITY].filter(Boolean),getJSON);
+  if(run!==autoRun)return;
+  variant.textClaims=check?check.claims:null;
+  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+(
+   !check?'카피까지 생성 · 숫자 확인 못 함':
+   check.claims.length?'확인되지 않은 숫자: '+check.claims.join(', ')+' · 쓰기 전에 확인하세요':
+   '카피까지 생성 · 숫자 대조 통과');
+ }
  }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
- renderBoard();fillEditor();
+ renderBoard();fillEditor();tuneScrim(variants.indexOf(variant));
 }
 async function retryImage(id){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun)}finally{setBusy(false);finishMessage()}}
-function finishMessage(){autoMessage((photoNotice?photoNotice+' · ':'')+(autoCopyFailed?'이미지는 처리됐지만 카피 생성에 실패했습니다. 카피만 다시 시도할 수 있습니다.':failedImages.size?`6종 중 이미지 ${failedImages.size}개가 실패했습니다. 해당 카드에서 다시 생성할 수 있습니다.`:'시안 6종이 완성됐습니다. 마음에 드는 시안을 선택해 수정·저장하세요.'));$('#autoRetryCopy').hidden=!autoCopyFailed}
+function finishMessage(){autoMessage((photoNotice?photoNotice+' · ':'')+(autoCopyFailed?'카피 생성에 실패해 카피까지 그리는 시안은 만들지 못했습니다. 카피만 다시 시도할 수 있습니다.':failedImages.size?`6종 중 이미지 ${failedImages.size}개가 실패했습니다. 해당 카드에서 다시 생성할 수 있습니다.`:'시안 6종이 완성됐습니다. 마음에 드는 시안을 선택해 수정·저장하세요.'));$('#autoRetryCopy').hidden=!autoCopyFailed}
 async function startAutomatic(raw,fromGrab=false,useCurrent=false){
  if(autoBusy)return;if(!useCurrent&&!raw.trim()){autoMessage('상품 링크를 넣어주세요.');$('#quickInput').focus();return}
  const run=++autoRun;setBusy(true);autoMessage('상품 정보를 분석하는 중…');
@@ -359,14 +443,18 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   autoMessage('상품 사진을 살펴보는 중…');photoNotice='';await classifyPhotos(run);if(run!==autoRun)return;
   autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
   const slots=factSlots(product);
-  variants=autoPlan.map(p=>({id:p.id,title:p.label+' · '+LAYOUTS[p.layout],recipe:p.recipe,layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:[{offer:'혜택 강조',product:'제품 강조',story:'무드 강조'}[p.emphasis],
-  {studio:'무지 배경',plinth:'단상',table:'테이블',chair:'의자',hanger:'옷걸이',floor:'바닥',held:'손에 듦',floating:'공중',water:'물',fabric:'천',location:'실제 공간'}[p.mount],
-  {front:'정면',三:'',['three-quarter']:'사반신',side:'측면',['top-down']:'항공',low:'로우앵글',high:'하이앵글'}[p.angle],
-  {full:'전체',detail:'부분 확대',macro:'표면 매크로'}[p.crop]].filter(Boolean).join(' · ')}));
+  variants=autoPlan.map(p=>({id:p.id,title:p.label+' · '+LAYOUTS[p.layout],recipe:p.recipe,layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}));
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;$('#autoCopyError').textContent=e.message});
-  const queue=autoPlan.filter(p=>p.method==='newscene');
-  await Promise.all([copyTask,...Array.from({length:2},async()=>{while(queue.length){await generateImage(queue.shift(),run)}})]);
+  // 사진만 만드는 컷은 바로 시작한다. 카피까지 그리는 컷은 문구가 나와야
+  // 그릴 수 있으므로 카피를 기다린다. 둘을 한 줄에 세우면 전부 늦어진다.
+  const layerQueue=autoPlan.filter(p=>p.method==='newscene'&&p.render!=='baked');
+  const bakedQueue=autoPlan.filter(p=>p.method==='newscene'&&p.render==='baked');
+  const drain=q=>Array.from({length:2},async()=>{while(q.length){await generateImage(q.shift(),run)}});
+  await Promise.all([
+   ...drain(layerQueue),
+   copyTask.then(()=>autoCopyFailed?null:Promise.all(drain(bakedQueue))),
+  ]);
   renderBoard();fillEditor();finishMessage();
  }catch(e){autoMessage(e.message);if(!useCurrent&&!fromGrab)$('#quickGrab').focus()}finally{setBusy(false)}
 }
