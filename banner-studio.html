@@ -111,6 +111,7 @@
 </div></div></section>
 <section id="boardStep" hidden><div class="product-strip"><img id="stripPhoto" alt="예시 상품"><div><p id="stripName"></p><span class="hint" id="stripFacts"></span></div><button class="btn quiet" data-go="0" style="margin-left:auto">정보 수정</button></div><button class="btn quiet" id="restoreWorkspace" hidden>이전 비교로 돌아가기</button><div id="boardWorkspace"><div class="workspace"><div><div class="board-head"><h2>같은 상품, 다른 설득.</h2><div class="row"><a class="btn quiet" href="banner-generation-guide.html">생성 가이드</a></div></div><p class="hint">시안을 선택하면 아래 또는 오른쪽에서 수정할 수 있습니다.</p><div class="board" id="board"></div></div><aside class="editor" aria-label="선택 시안 편집"><span class="selected-info" id="editIndex"></span><h2 tabindex="-1" id="editTitle" style="margin-top:7px"></h2><p class="hint" id="conceptInfo"></p><p class="hint" id="imageOrigin"></p><p class="hint" id="editReference"></p><button class="btn" id="applyReference"></button><label class="check"><input type="checkbox" id="originalView">카피 없이 원본 보기</label><label class="field">메인 카피<textarea id="mainCopy" maxlength="100" rows="2"></textarea></label><label class="field">서브 카피<textarea id="subCopy" maxlength="150" rows="2"></textarea></label><label class="field">CTA 문구<input id="ctaCopy" maxlength="40"></label><label class="check"><input id="showCta" type="checkbox">CTA 표시</label><label class="field">조판 구성<select id="layout"><option value="price">큰 가격 · 상단 좌측</option><option value="split">사진·카피 분할</option><option value="top-center">상단 중앙</option><option value="top-left">상단 좌측</option><option value="bottom-right">하단 우측</option><option value="duo">사진 2장 · 컬러 비교</option></select></label><p class="hint" id="offerInfo" hidden></p><p id="fitWarning" class="error" role="status" hidden>카피가 시안 영역을 벗어납니다. 문구나 줄바꿈을 줄이거나 다른 조판을 선택해주세요.</p><hr class="section-rule"><h3>바꾸지 않을 요소</h3><label class="check"><input id="lockImage" type="checkbox">사진 유지</label><label class="check"><input id="lockLayout" type="checkbox">조판 유지</label><div class="editor-actions"><button class="btn" id="varyCopy">선택 시안 AI 카피 제안</button><button class="btn" id="varyScene">다른 사진·조판</button><button class="btn primary" id="saveVariant">이 구성을 저장</button></div><p class="hint" id="reviewPoints"></p><p class="hint">항목별 반려사례는 검토 기준으로 활용합니다. 이 화면은 자동 검수를 실행하지 않습니다.</p><p class="hint">직접 수정한 혜택 문구는 자동 검증하지 않습니다. 저장 전 조건을 확인해주세요.</p></aside></div></div><div id="recipeReview" hidden></div></section>
 <section id="savedStep" hidden><div class="board-head"><div><h2>좋은 구성을 다음 작업으로.</h2><p class="description">이 브라우저에 저장됩니다. 팀 공유·서버 저장은 아직 연결되지 않았습니다.</p></div><button class="btn" id="exportAll">작업 정보 내려받기</button></div><div class="empty" id="emptySaved"><h3>아직 저장한 작업이 없습니다.</h3><p class="hint">시안 또는 연출 설정을 저장하면 여기에서 다시 사용할 수 있습니다.</p><button class="btn primary" data-go="2">작업으로 돌아가기</button></div><h2 class="saved-heading" id="variantSavedTitle">저장한 시안</h2><div class="saved-grid" id="savedGrid"></div><h2 class="saved-heading" id="recipeSavedTitle">저장한 연출 설정</h2><div class="recipe-saved-grid" id="recipeSavedGrid"></div><p class="hint" style="margin-top:24px">전달 파일에는 카피·배치·사진 출처·혜택 조건이 포함됩니다. 최종 배너 파일은 디자이너가 조판하고 확인합니다.</p></section>
+</main>
 <div class="page-footer show" data-reveal>
     <div class="footer-top">
       <div class="footer-brand">
@@ -122,12 +123,12 @@
           <span class="footer-col-title">배너</span>
           <a href="index.html">배너 분석</a>
           <a href="banner-studio.html" class="is-current">배너 생성</a>
-          <a href="banner-generation-guide.html">배너 생성 가이드</a>
           <a href="brief-helper.html">기획안 헬퍼</a>
         </div>
         <div class="footer-col">
           <span class="footer-col-title">가이드</span>
           <a href="criteria-guide.html">항목 가이드</a>
+          <a href="banner-generation-guide.html">배너 생성 가이드</a>
           <a href="guide.html">브랜드 가이드</a>
           <a href="media-guide.html">매체 가이드</a>
           <a href="color-guide.html">컬러 가이드</a>
@@ -149,7 +150,7 @@
     </div>
     <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
   </div>
-</main><nav class="step-nav" aria-label="이전 다음 단계" hidden><div class="step-nav-inner"><button class="btn" id="stepPrev">◀ 이전</button><span id="stepPosition" class="step-position" aria-live="polite">1 / 4 · 상품 확인</span><button class="btn primary" id="stepNext">다음 ▶</button></div></nav><div id="toast" class="toast" role="status" hidden></div>
+<nav class="step-nav" aria-label="이전 다음 단계" hidden><div class="step-nav-inner"><button class="btn" id="stepPrev">◀ 이전</button><span id="stepPosition" class="step-position" aria-live="polite">1 / 4 · 상품 확인</span><button class="btn primary" id="stepNext">다음 ▶</button></div></nav><div id="toast" class="toast" role="status" hidden></div>
 <script type="module" src="assets/banner-studio-preview.js?v=4"></script>
 <script src="assets/adcheck-nav.js?v=3"></script>
 <script src="assets/adcheck-footer.js?v=4"></script>

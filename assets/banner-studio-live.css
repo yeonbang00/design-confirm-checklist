@@ -52,6 +52,15 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .art .copy .headline{ text-wrap:balance; }
 
 
+/* ---- 본문 컬럼을 다른 페이지와 맞춘다 ----
+   이 페이지만 폭 1700px에 상단 여백 104px, h1 44px였다. 다른 페이지는
+   전부 1180px에 120px, h1은 clamp(36px,4.6vw,68px)다. 나란히 놓으면
+   같은 사이트로 안 보인다. .page와 같은 값으로 맞춘다. */
+.shell{max-width:1180px;padding:120px 40px 0}
+.shell h1{font-size:clamp(36px,4.6vw,68px);font-weight:800;letter-spacing:-.055em;line-height:1}
+.page-title{align-items:flex-end;margin-bottom:34px}
+@media(max-width:760px){.shell{padding:96px 18px 0}.shell h1{font-size:clamp(30px,7vw,40px)}}
+
 /* ---- 푸터: 다른 페이지와 같은 모양 ----
    이 페이지만 푸터가 .shell 안에 갇혀 있어서 폭도 좁고 위 여백도 없었다.
    roadmap 등에서 쓰는 규칙과 같은 값으로 맞춘다. */
@@ -64,16 +73,20 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
      화면 바닥에 고정 바(.step-nav)가 뜬다. 40px면 저작권 줄이 그 뒤로 들어간다. */
   padding:96px 40px 100px; border-top:none;
   background:#0B0C0E;
-  /* 화면 끝까지 넓히되 100vw는 쓰지 않는다 — 100vw는 스크롤바 폭까지 세어서
-     이 페이지에서 가로로 5px 넘쳤다. .shell의 좌우 여백만큼만 빼면 정확히
-     화면 끝에 닿고, body에 overflow-x:hidden을 걸 필요도 없다
-     (걸면 .editor의 position:sticky가 죽는다). */
-  width:auto; margin:0 -32px;
+  /* 이 페이지만 푸터 문구가 본문과 같은 밝은 흰색이었다. 다른 페이지는
+     한 단계 어두운 회색이라 각주로 읽힌다. 같은 값으로 맞춘다. */
+  font:400 11.5px/1.9 Pretendard,-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+  letter-spacing:normal; color:#6E7365;
+  /* 푸터를 .shell 밖(</main> 뒤)으로 옮겼다. 안에 두면 본문 폭 1180px에
+     갇히고, 100vw로 빼면 스크롤바 폭까지 세어 가로로 5px 넘친다.
+     밖에 두면 body 폭을 그대로 쓰므로 계산이 필요 없다. */
+  width:auto; margin:0;
 }
-@media(max-width:1100px){.page-footer{margin:0 -24px}}
 .page-footer .footer-logo{height:38px; margin:0 0 16px; opacity:.42;}
+.page-footer .footer-col a{color:#EDEEF0;}
+.page-footer .footer-note{color:#6E7365;}
 .page-footer .footer-copy{margin-top:auto; padding-top:60px; opacity:.6;}
-@media (max-width:780px){
+@media (max-width:760px){
   .page-footer{padding:64px 18px 100px; margin:0 -18px;}
   .page-footer .footer-logo{height:30px;}
 }
