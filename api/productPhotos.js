@@ -1,6 +1,7 @@
 // POST /api/productPhotos
 // Body: { urls: string[] }
-// Returns: { photos:[{url,role,hasPerson,colorway,note}], category, cuts:[{name,person,scene}] }
+// Returns: { photos:[...], category, usp, toneKo,
+//             cuts:[{name, person, mount, angle, crop, light, mood, scene}] }
 //
 // 시안 6종을 서로 다른 '컷'으로 만들려면, 가진 사진이 각각 무엇인지 알아야
 // 한다. 단품컷을 모델 재촬영에 넣으면 없던 사람이 생기고, 모델컷을 스튜디오
@@ -34,56 +35,73 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 
 첫 번째 사진이 대표컷입니다. 그 사진이 model이나 packshot에 해당하더라도 role은 "main"으로 하세요.
 
-## 두 번째 일 — 이 상품으로 찍을 만한 컷 후보 10개 쓰기
+## 두 번째 일 — 이 상품으로 찍을 만한 컷 후보 12개 쓰기
 
-이 상품으로 배너 시안을 만듭니다. **서로 확실히 다른 촬영 컷 10개**를 제안하세요.
+이 상품으로 배너 시안을 만듭니다. **서로 확실히 다른 촬영 컷 12개**를 제안하세요.
 화장품·식품·신발·티셔츠는 어울리는 장면이 전혀 다릅니다. 사진에 보이는 것과
 상품 종류에 맞는 장면만 쓰세요.
 
 - category: fashion-top, fashion-outer, fashion-bottom, shoes, bag, accessory, beauty,
   food, kitchen, home, electronics, kids, sports, pet, other 중 하나
+- usp: 이 상품을 사게 만드는 이유 한 문장. 사진과 상품명에서 읽히는 것만.
+- toneKo: 이 상품에 맞는 톤앤매너 한국어 한 단어 (예: "정갈한", "발랄한", "고급스러운")
 
-- cuts: 10개. 각 항목은
-  - name: 한국어 짧은 이름 (4~8자). 예 "아침 주방", "무지 스튜디오", "창가 정물"
-  - person: "none"(사람 없이 상품만) / "keep"(원본의 그 사람을 그대로 두고 장소만 바꿈)
-  - scene: 영어 40~70단어. 장소·소품·빛·카메라 거리와 각도만.
+cuts는 12개이고, 각 항목은 **축을 나눠서** 적습니다. 문장 하나에 뭉뚱그리지 마세요.
 
-10개를 이렇게 섞으세요.
-- **4개 이상은 person을 "none"** 으로. 사진에 사람이 있으면 **3개 이상은 person을 "keep"** 으로,
-  서로 다른 장소에서. 사람이 없는 상품이면 **10개 전부 "none"** 으로 하세요.
-- 거리를 섞으세요 — 제품이 화면에 다 안 들어올 만큼 붙은 매크로, 보통 거리, 멀찍이 빠진 넓은 컷.
-- 장소·구성을 겹치지 마세요.
+  name   한국어 짧은 이름 (4~8자). 예 "단상 정면컷", "손에 든 컷"
+  person 사람을 어떻게 쓰나
+         "none"  사람 없이 상품만
+         "hands" 손만 나온다 (얼굴은 프레임 밖)
+         "keep"  원본의 그 사람을 그대로 두고 장소·포즈만 바꾼다
+  mount  상품을 무엇 위에 두나
+         "studio"(무지 배경) "plinth"(단상) "table"(테이블) "chair"(의자)
+         "hanger"(옷걸이) "floor"(바닥) "held"(손·몸에 들림) "floating"(공중)
+         "water"(물·액체) "fabric"(천·종이) "location"(실제 공간)
+  angle  "front"(정면) "three-quarter"(사반신) "side"(측면)
+         "top-down"(항공·부감) "low"(로우앵글) "high"(하이앵글)
+  crop   "full"(전체가 다 보임) "detail"(일부 확대) "macro"(표면만, 형태는 안 보임)
+  light  "soft"(부드러운 확산광) "hard"(딱딱한 그림자) "back"(역광)
+         "rim"(윤곽광) "window"(창가 자연광) "studio-key"(스튜디오 키라이트)
+  mood   "clean" "warm" "premium" "playful" "fresh" "dramatic"
+  scene  위 축들을 영어 한 문장(40~70단어)으로 푼 것. 장소·소품·빛·카메라만.
 
-**절반 이상은 눈길이 한 번에 가는 연출이어야 합니다.** 예쁜 방에 제품을 올려둔 정물만
-열 개 쓰면 무드보드가 됩니다. 아래 같은 것을 적극적으로 섞으세요 —
-상품 종류에 안 맞는 것은 빼고, 맞는 것만 고르세요.
-
-- 물·액체가 튀어 오르는 순간에 제품이 있는 컷
-- 제품이 공중에 떠 있고 그림자만 바닥에 있는 컷
-- 같은 제품을 격자나 대각선으로 반복 배치한 패턴 컷
-- 제품 표면에 완전히 붙은 매크로 — 질감만 보이고 전체 형태는 안 보임
-- 손이 제품을 들고 있는 컷 (얼굴은 프레임 밖)
-- 제품 두 개를 대각선으로 겹쳐 깊이를 만든 컷
-- 제품의 내용물·원료·질감만 단독으로 찍은 컷
-- 강한 단색 배경에 딱딱한 그림자를 떨어뜨린 그래픽 컷
-- 젖은 표면이나 거울에 비친 반사를 쓴 컷
-- 역광 실루엣, 또는 빛줄기가 제품을 가로지르는 컷
-- 제품을 훨씬 큰 구조물처럼 올려다보는 로우앵글 컷
+12개를 이렇게 섞으세요.
+- **mount는 최소 7가지가 달라야 합니다.** 같은 mount를 세 번 이상 쓰지 마세요.
+- **angle도 최소 4가지.** front만 열두 개면 안 됩니다.
+- **crop은 full이 절반, detail과 macro가 나머지.**
+- 사진에 사람이 있으면 person을 "keep" 3개 이상, "hands" 1개 이상 넣으세요.
+  사람이 없는 상품이면 "keep"을 쓰지 말고 "hands"만 1~2개 넣으세요.
+- 절반 이상은 눈길이 한 번에 가는 연출이어야 합니다. 예쁜 방에 제품을 올려둔
+  정물만 열두 개면 무드보드지 배너 소재가 아닙니다. 상품에 맞는 것만 골라 섞으세요 —
+  물이 튀는 순간, 공중 부양, 격자 반복, 표면 매크로, 손에 든 컷, 두 개 대각선,
+  내용물·원료 단독, 강한 단색 배경에 딱딱한 그림자, 젖은 표면 반사, 역광 실루엣,
+  올려다보는 로우앵글, 옷걸이에 건 컷, 단상 위 정면컷.
 
 scene 문장 규칙:
-- 상품의 색이나 모양은 쓰지 마세요 — 그건 원본 사진에서 가져옵니다.
+- 상품의 색이나 모양은 쓰지 마세요. 그건 원본 사진에서 가져옵니다.
 - 글자, 로고, 간판, 가격표, 브랜드명을 장면에 넣지 마세요.
-- person이 "none"이면 문장 끝에 "No person in the frame."을 붙이세요.
+- person이 "none"이나 "hands"면 문장 끝에 사람을 어떻게 다룰지 명시하세요.
+- 상품의 형태가 읽혀야 합니다. 구기거나 뭉치거나 던져 놓은 연출은 쓰지 마세요.
 
 JSON만 출력하세요:
 {"photos":[{"index":0,"role":"main","hasPerson":true,"colorway":"검정","burnedText":"","note":""}],
- "category":"fashion-top",
- "cuts":[{"name":"무지 스튜디오","person":"none","scene":"..."}]}`;
+ "category":"fashion-top","usp":"...","toneKo":"정갈한",
+ "cuts":[{"name":"단상 정면컷","person":"none","mount":"plinth","angle":"front",
+          "crop":"full","light":"studio-key","mood":"clean","scene":"..."}]}`;
 
 const CATEGORIES = new Set(['fashion-top', 'fashion-outer', 'fashion-bottom', 'shoes', 'bag',
   'accessory', 'beauty', 'food', 'kitchen', 'home', 'electronics', 'kids', 'sports', 'pet', 'other']);
 // 장면에 글자가 들어가면 배너 조판 자리가 망가진다. 뚫고 들어오면 그 컷만 버린다.
 const BANNED = /\b(text|letter|word|logo|sign|signage|label|price tag|billboard|poster|brand name)\b/i;
+
+const AX = {
+  person: ['none', 'hands', 'keep'],
+  mount: ['studio', 'plinth', 'table', 'chair', 'hanger', 'floor', 'held', 'floating', 'water', 'fabric', 'location'],
+  angle: ['front', 'three-quarter', 'side', 'top-down', 'low', 'high'],
+  crop: ['full', 'detail', 'macro'],
+  light: ['soft', 'hard', 'back', 'rim', 'window', 'studio-key'],
+  mood: ['clean', 'warm', 'premium', 'playful', 'fresh', 'dramatic'],
+};
 
 function cleanCuts(raw) {
   if (!Array.isArray(raw)) return [];
@@ -97,8 +115,13 @@ function cleanCuts(raw) {
     const finger = scene.slice(0, 70).toLowerCase();
     if (seen.has(finger)) continue;
     seen.add(finger);
-    out.push({ name, person: row.person === 'keep' ? 'keep' : 'none', scene });
-    if (out.length >= 14) break;
+    const cut = { name, scene };
+    // 축은 정해둔 값만 받는다. 모델이 새 단어를 지어내면 계획이 그 값을 못 읽는다.
+    for (const [key, list] of Object.entries(AX)) {
+      cut[key] = list.includes(row?.[key]) ? row[key] : list[0];
+    }
+    out.push(cut);
+    if (out.length >= 16) break;
   }
   return out;
 }
@@ -139,7 +162,7 @@ export default async function handler(req, res) {
 
     const data = await callOpenAI({
       apiKey, promptText: PROMPT, images,
-      maxOutputTokens: 5000, reasoningEffort: 'low',
+      maxOutputTokens: 6500, reasoningEffort: 'low',
     });
 
     const rows = Array.isArray(data?.photos) ? data.photos : [];
@@ -159,6 +182,8 @@ export default async function handler(req, res) {
       photos,
       category: CATEGORIES.has(data?.category) ? data.category : 'other',
       cuts: cleanCuts(data?.cuts),
+      usp: String(data?.usp || '').slice(0, 160),
+      toneKo: String(data?.toneKo || '').slice(0, 16),
       model: OPENAI_MODEL,
     });
   } catch (err) {

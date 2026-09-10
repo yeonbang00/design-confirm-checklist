@@ -296,6 +296,9 @@ async function classifyPhotos(run){
   if(run!==autoRun)return;
   // 장면도 함께 받는다. 상품마다 달라야 하는 부분이라 코드에 박아 둘 수 없다.
   product.category=data.category||'other';product.cuts=Array.isArray(data.cuts)?data.cuts:[];
+  // 사진에서 읽은 USP와 톤을 카피 생성으로 넘긴다. 상품명만 보고 쓰면
+  // 어느 상품에나 맞는 말이 나온다.
+  product.usp=data.usp||'';product.tone=data.toneKo||'';
   const byUrl=new Map((data.photos||[]).map(x=>[x.url,x]));
   product.photos.forEach((p,i)=>{const x=byUrl.get(p.url);if(!x)return;
    p.role=x.role;p.hasPerson=x.hasPerson;p.colorway=x.colorway;p.burnedText=x.burnedText;p.note=x.note;
@@ -337,7 +340,7 @@ async function generateImage(plan,run){
  try{const result=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
  if(run!==autoRun)return;if(!safeUrl(result.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
  const index=PHOTOS.push({url:result.imageUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
- variant.photo=index;variant.photos=undefined;variant.autoStatus=plan.sceneName+' · AI 생성 · 상품 일치 확인 필요';variant.imageFailed=false;failedImages.delete(plan.id);
+ variant.photo=index;variant.photos=undefined;variant.autoStatus=(variant.axes?variant.axes+' · ':'')+'AI 생성 · 상품 일치 확인 필요';variant.imageFailed=false;failedImages.delete(plan.id);
  }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
  renderBoard();fillEditor();
 }
@@ -356,7 +359,10 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   autoMessage('상품 사진을 살펴보는 중…');photoNotice='';await classifyPhotos(run);if(run!==autoRun)return;
   autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
   const slots=factSlots(product);
-  variants=autoPlan.map(p=>({id:p.id,title:p.label+' · '+LAYOUTS[p.layout],recipe:p.recipe,layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중'}));
+  variants=autoPlan.map(p=>({id:p.id,title:p.label+' · '+LAYOUTS[p.layout],recipe:p.recipe,layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:[{offer:'혜택 강조',product:'제품 강조',story:'무드 강조'}[p.emphasis],
+  {studio:'무지 배경',plinth:'단상',table:'테이블',chair:'의자',hanger:'옷걸이',floor:'바닥',held:'손에 듦',floating:'공중',water:'물',fabric:'천',location:'실제 공간'}[p.mount],
+  {front:'정면',三:'',['three-quarter']:'사반신',side:'측면',['top-down']:'항공',low:'로우앵글',high:'하이앵글'}[p.angle],
+  {full:'전체',detail:'부분 확대',macro:'표면 매크로'}[p.crop]].filter(Boolean).join(' · ')}));
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;$('#autoCopyError').textContent=e.message});
   const queue=autoPlan.filter(p=>p.method==='newscene');

@@ -56,7 +56,7 @@ function inventedNumbers(copy, product) {
     known.add(String(v));
     known.add(Number(v).toLocaleString('ko-KR'));
   }
-  const text = [product.productName, product.features, product.category, product.brand, product.description]
+  const text = [product.productName, product.features, product.usp, product.category, product.brand, product.description]
     .filter(Boolean).join(' ');
   for (const m of text.matchAll(/\d[\d,]*/g)) {
     known.add(m[0]);
@@ -79,6 +79,9 @@ function buildPrompt(product, tone, concept, limits, retryNote) {
     `브랜드: ${p.brand || '(미상)'}`,
     `카테고리: ${p.category || '(미상)'}`,
     `특징: ${p.features || '(없음)'}`,
+    // 사진을 본 분류 단계가 읽어낸 것. 상품명만으로는 안 나오는 정보다.
+    ...(p.usp ? [`사진에서 읽히는 강점: ${p.usp}`] : []),
+    ...(p.tone ? [`이 상품에 맞는 톤: ${p.tone}`] : []),
   ].join('\n');
 
   const conceptBlock = concept ? `
