@@ -21,3 +21,19 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .card-dl{display:block; width:calc(100% - 24px); margin:0 12px 12px; padding:9px;
          font-size:12px; font-weight:600;}
 .card.image-pending .card-dl{opacity:.4; pointer-events:none;}
+
+/* 한글 줄바꿈.
+   지정하지 않으면 브라우저가 어절 중간에서 끊는다 — "블루핏 데님 스커/트"가
+   그렇게 나온다. keep-all은 띄어쓰기에서만 끊게 하고, 한 어절이 통째로
+   넘칠 때만 break-word가 받아준다.
+   balance는 두 줄 폭을 브라우저가 알아서 고르게 맞춰준다. 첫 줄이 길고
+   둘째 줄이 짧아지는 모양을 막는다. */
+.art .copy .headline,
+.art .copy .subline,
+.art .copy .cta,
+.art .copy .offer-value,
+.art .copy .benefit-condition{
+  word-break:keep-all;
+  overflow-wrap:break-word;
+}
+.art .copy .headline{ text-wrap:balance; }

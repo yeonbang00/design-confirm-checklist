@@ -14,13 +14,16 @@ export function createPlan(product,random=Math.random){
  const methods=shuffle(['original','original','newscene','newscene','newscene','newscene'],random);
  // 사진은 방식별로 따로 돌린다. i를 그대로 쓰면 methods가 섞였을 때
  // 원본 2종이 같은 사진을 집어 카드 두 장이 똑같아진다.
- const photoOrder=shuffle(product.photos.map((_,i)=>i),random);
+ const photoOrder=product.photos.length?shuffle(product.photos.map((_,i)=>i),random):[0];
  let originalSeen=0, sceneSeen=0, sceneIndex=0;
  return methods.map((method,i)=>{
   const scene=method==='original'?['상품 원본','']:scenes[sceneIndex++];
+  // JS의 %는 음수를 그대로 남긴다. 뒤에서부터 세면 photoOrder[-1]이 되어
+  // 세 번째 새 장면부터 사진이 undefined가 된다. 먼저 나머지를 구하고 뒤집는다.
+  const n=photoOrder.length||1;
   const photo=method==='original'
-   ? photoOrder[originalSeen++ % photoOrder.length]
-   : photoOrder[(photoOrder.length-1-(sceneSeen++)) % photoOrder.length];
+   ? photoOrder[originalSeen++ % n]
+   : photoOrder[n-1-(sceneSeen++ % n)];
   return {id:i,method,layout:layouts[i],type:types[i%types.length],photo,sceneName:scene[0],scene:scene[1]};
  });
 }
