@@ -409,6 +409,7 @@ async function scrubLogos(run){
 
 /* 어떤 축으로 뽑혔는지 카드에 적는다. 화면에 안 보이면 없는 것과 같다. */
 const AXIS_KO={
+ want:{main:'대표컷',model:'착용컷',detail:'상세컷',cutout:'누끼 단품',mockup:'목업 정물',macro:'질감 매크로',scene:'연출컷',editorial:'화보컷'},
  emphasis:{offer:'혜택 강조',product:'제품 강조',story:'무드 강조'},
  mount:{studio:'무지 배경',plinth:'단상',table:'테이블',chair:'의자',shelf:'선반',hanger:'옷걸이',floor:'바닥',held:'손에 듦',floating:'공중',water:'물',fabric:'천',mirror:'거울',location:'실제 공간'},
  angle:{front:'정면','three-quarter':'사반신',side:'측면',back:'후면','top-down':'직부감','high-45':'부감 45도','eye-level':'눈높이',low:'로우앵글','worms-eye':'극단 로우',dutch:'기울임','over-shoulder':'어깨 너머','close-front':'정면 초근접'},
@@ -420,7 +421,7 @@ const AXIS_KO={
 };
 function axisLabel(p){
  const a=p.axes||{};
- return [AXIS_KO.emphasis[p.emphasis],AXIS_KO.mount[a.mount],AXIS_KO.angle[a.angle],
+ return [AXIS_KO.want[p.want],AXIS_KO.emphasis[p.emphasis],AXIS_KO.mount[a.mount],AXIS_KO.angle[a.angle],
   AXIS_KO.distance[a.distance],AXIS_KO.light[a.light],AXIS_KO.motion[a.motion],
   AXIS_KO.person[a.person],AXIS_KO.pose[a.pose]].filter(Boolean).join(' · ');
 }

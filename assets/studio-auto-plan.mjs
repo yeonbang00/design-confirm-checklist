@@ -144,6 +144,72 @@ export const DEVICE = {
 export const deviceOf = layout =>
   Object.keys(DEVICE).find(k => DEVICE[k].includes(layout)) || 'other';
 
+/* ---- 업종별 구성 규칙 ----
+   여섯 자리를 무엇으로 채울지는 업종마다 다르다. 패션은 모델이 입은 모습이
+   핵심이고, 화장품은 제품 자체와 질감이 핵심이다. 같은 배분을 쓰면 화장품
+   배너에 모델이 공원을 걷는 컷이 들어간다.
+
+   자리마다 무엇을 쓸지 적는다.
+     cutout  단순 배경 누끼컷 (원본 누끼가 뜨면 그것, 아니면 무지 배경 생성)
+     detail  상세 페이지 이미지 그대로
+     main    대표컷 그대로
+     model   착용컷 그대로
+     mockup  생성: 단상·테이블·선반 위 정물
+     macro   생성: 표면이 꽉 찬 질감 클로즈업
+     scene   생성: 실제 공간에 놓인 연출컷
+     editorial 생성: 모델 화보컷
+
+   원본이 없으면 아래 FALLBACK 순서로 내려간다. 억지로 자리를 비우지 않는다. */
+export const MIX = {
+  'fashion-top':    ['main', 'model', 'model', 'cutout', 'editorial', 'scene'],
+  'fashion-outer':  ['main', 'model', 'model', 'cutout', 'editorial', 'scene'],
+  'fashion-bottom': ['main', 'model', 'model', 'cutout', 'editorial', 'macro'],
+  shoes:            ['cutout', 'detail', 'detail', 'mockup', 'model', 'macro'],
+  bag:              ['cutout', 'detail', 'detail', 'mockup', 'model', 'macro'],
+  accessory:        ['cutout', 'detail', 'detail', 'mockup', 'macro', 'scene'],
+  beauty:           ['cutout', 'detail', 'detail', 'mockup', 'macro', 'scene'],
+  food:             ['main', 'detail', 'detail', 'mockup', 'macro', 'scene'],
+  kitchen:          ['cutout', 'detail', 'detail', 'mockup', 'scene', 'macro'],
+  home:             ['cutout', 'detail', 'mockup', 'scene', 'scene', 'macro'],
+  electronics:      ['cutout', 'detail', 'detail', 'mockup', 'macro', 'scene'],
+  kids:             ['main', 'model', 'detail', 'cutout', 'scene', 'mockup'],
+  sports:           ['main', 'model', 'detail', 'cutout', 'editorial', 'macro'],
+  pet:              ['main', 'detail', 'detail', 'mockup', 'scene', 'macro'],
+  other:            ['main', 'detail', 'cutout', 'mockup', 'scene', 'macro'],
+};
+
+// 자리를 못 채울 때 내려가는 순서. 원본이 없으면 생성으로, 생성도 안 되면 다른 생성으로.
+const FALLBACK = {
+  main: ['main', 'model', 'detail', 'cutout'],
+  model: ['model', 'main', 'editorial', 'detail'],
+  detail: ['detail', 'model', 'main', 'macro'],
+  cutout: ['cutout', 'mockup', 'main'],
+  mockup: ['mockup', 'cutout', 'scene'],
+  macro: ['macro', 'mockup', 'detail'],
+  scene: ['scene', 'mockup', 'editorial'],
+  editorial: ['editorial', 'scene', 'model'],
+};
+
+const SLOT_KO = {
+  main: ['메인 원본', '상품 페이지 대표컷을 그대로 씁니다.'],
+  model: ['착용 원본', '상세 페이지 착용컷을 그대로 씁니다.'],
+  detail: ['상세 원본', '상세 페이지 컷을 그대로 씁니다. 크롭은 디자이너가 정합니다.'],
+  cutout: ['누끼 단품', '배경을 지운 제품컷입니다. 무엇을 파는지가 바로 읽힙니다.'],
+  mockup: ['목업 정물', '단상·테이블 위에 제품만 올린 촬영컷입니다.'],
+  macro: ['질감 매크로', '표면이 화면을 채우는 클로즈업입니다.'],
+  scene: ['연출컷', '제품이 실제로 놓일 공간에서 찍습니다.'],
+  editorial: ['화보컷', '모델이 나오는 화보 형식입니다.'],
+};
+
+// 생성 자리는 컷 후보 중 축이 맞는 것을 고른다. 축을 정해 놓고 안 쓰고 있었다.
+const WANT_AXES = {
+  mockup: c => ['plinth', 'table', 'shelf', 'studio', 'floor'].includes(c.mount) && c.person === 'none',
+  macro: c => c.distance === 'extreme-close' || c.distance === 'close',
+  scene: c => c.mount === 'location' && c.person !== 'keep',
+  editorial: c => c.person === 'keep',
+  cutout: c => c.mount === 'studio' && c.person === 'none',
+};
+
 export const EMPHASIS = {
   offer: ['offer', 'numeral', 'arch', 'type-diagonal', 'duo-panel', 'price'],
   product: ['boxed', 'corner', 'badge', 'framed', 'strip', 'split-right'],
@@ -214,139 +280,110 @@ export function createPlan(product, random = Math.random) {
       .filter(c => allowKeep || c.person !== 'keep'),
     random);
 
-  const used = new Set();
   const slots = [];
 
-  /* 1~2. 그대로 쓸 원본을 먼저 고른다.
-     예전에는 대표컷 한 장과 상세컷 한 장, 최대 두 자리로 못 박혀 있었다.
-     그래서 상세 페이지에 착용컷이 열 장 있어도 여섯 중 둘만 원본이고
-     나머지는 전부 생성이었다. 원본 착용컷이 생성물보다 나은데 그걸 안 썼다.
-     쓸 만한 원본이 많으면 원본 자리를 늘린다. 생성은 최소 두 자리만 남긴다. */
+  /* ---- 여섯 자리를 업종 규칙대로 채운다 ----
+     예전에는 원본 몇 장 + 스타일링 세트 + 나머지 생성이라는 즉흥 배분이었다.
+     그래서 화장품에도 패션에도 같은 여섯 장이 나왔다. 업종별 표(MIX)가
+     자리마다 무엇을 쓸지 정하고, 없으면 FALLBACK을 따라 내려간다. */
   const byRole = r => photos.map((p, i) => (p.role === r ? i : -1)).filter(i => i >= 0);
   // 착용 원본으로 쓸 수 있는 것은 모델이 나온 사진이다. 손 컷은 상세컷에 가깝다.
-  const models = byRole('model').filter(i => photos[i].personKind !== 'hands');
-  const details = [...byRole('detail'), ...byRole('model').filter(i => photos[i].personKind === 'hands')];
-  const packs = [...byRole('packshot'), ...byRole('flat')];
-  const usable = 1 + models.length + details.length + packs.length;
-  /* 착용컷이 한 장이라도 있으면 그건 반드시 그대로 쓴다. 사람이 실제로 입은
-     모습은 생성물이 못 따라간다. 나머지는 가진 장수의 절반쯤을 원본으로 둔다. */
-  const plainWanted = Math.max(models.length ? 2 : 1, Math.min(4, Math.floor(usable / 2)));
-
-  slots.push({ kind: 'plain', label: '메인 원본', desc: '상품 페이지 대표컷을 그대로 씁니다.', prefer: ['main'] });
-  // 착용컷은 사람이 실제로 입은 모습이라 생성물이 못 따라간다. 있는 만큼 쓴다.
-  for (let n = 0; n < models.length && slots.length < plainWanted; n++) {
-    slots.push({
-      kind: 'plain', label: n ? `착용 원본 ${n + 1}` : '착용 원본',
-      desc: '상세 페이지 착용컷을 그대로 씁니다.', prefer: ['model'],
-    });
-  }
-  /* 상세컷 자리도 한 개만 만들고 있었다. 상세 페이지 이미지가 열다섯 장
-     들어와도 그중 한 장만 쓰였다. 남는 자리만큼 만든다. */
-  for (let n = 0; n < details.length && slots.length < plainWanted; n++) {
-    slots.push({
-      kind: 'plain', label: n ? `상세 원본 ${n + 1}` : '상세 원본',
-      desc: '상세 페이지 컷을 그대로 씁니다. 크롭은 디자이너가 정합니다.', prefer: ['detail'],
-    });
-  }
-  for (let n = 0; n < packs.length && slots.length < plainWanted; n++) {
-    slots.push({
-      kind: 'plain', label: n ? `단품 원본 ${n + 1}` : '단품 원본',
-      desc: '상품 단독컷을 그대로 씁니다.', prefer: ['packshot', 'flat'],
-    });
-  }
-
-  // 3. 스타일링 세트는 상품 종류별로 고정한다
-  slots.push({
-    kind: 'set', label: '스타일링 세트',
-    desc: '상품 종류에 맞는 고정 세트입니다. 색상별로 돌리면 한 시리즈가 됩니다.',
-    scene: SETS[product.category] || SETS.other, person: 'none',
-    prefer: ['packshot', 'flat', 'main', 'model'],
-  });
-
-  /* 4. 나머지는 후보에서 뽑는다. 그냥 섞어서 앞에서부터 집으면 축이 겹친다.
-     실측으로 후보 12개 중 mount가 location인 것이 4개였다. 축이 겹치지 않도록
-     골라야 '다양하다'가 결과로 나온다.
-       - mount(무엇 위에 두나)와 composition(구도)은 절대 겹치지 않는다
-       - angle(각도) · background(배경) · palette(색조)는 두 번까지
-       - keep끼리는 pose가 겹치지 않는다. 같은 사람이 같은 자세로 두 번 나오면 한 장이다
-       - 여섯 중 한 장은 반드시 확대컷, 한 장은 움직임이 있는 컷 */
-  const taken = new Set(pool.map(c => c.name));
-  const topUp = FALLBACK_CUTS.filter(c => !taken.has(c.name) && (allowKeep || c.person !== 'keep'));
-  const queue = [...pool, ...shuffle(topUp, random)];
-
-  const once = { mount: new Set(), composition: new Set(), pose: new Set() };
-  const twice = { angle: {}, background: {}, palette: {} };
-  const need = {
-    close: true,
-    motion: pool.some(c => c.motion && c.motion !== 'static'),
-    keep: anyPerson,
-    hands: pool.some(c => c.person === 'hands' || c.person === 'partial'),
+  const bank = {
+    main: byRole('main'),
+    model: byRole('model').filter(i => photos[i].personKind !== 'hands'),
+    detail: [...byRole('detail'), ...byRole('model').filter(i => photos[i].personKind === 'hands')],
+    cutout: photos.map((p, i) => (p.cutUrl ? i : -1)).filter(i => i >= 0),
+    pack: [...byRole('packshot'), ...byRole('flat')],
   };
-  const isClose = c => c.distance === 'extreme-close' || c.distance === 'close';
-  const fits = cut => {
-    for (const k of ['mount', 'composition']) if (cut[k] && once[k].has(cut[k])) return false;
-    // pose는 사람이 나오는 컷끼리만 본다
-    if (cut.pose && cut.person === 'keep' && once.pose.has(cut.pose)) return false;
-    for (const k of ['angle', 'background', 'palette']) {
-      if (cut[k] && (twice[k][cut[k]] || 0) >= 2) return false;
-    }
-    return true;
+  // 누끼가 안 떴으면 단품컷이 그 자리를 대신한다. 배경이 단순한 컷이라 가깝다.
+  if (!bank.cutout.length) bank.cutout = bank.pack.slice();
+
+  const usedPhoto = new Set();
+  const takePhoto = list => {
+    const free = list.filter(i => !usedPhoto.has(i));
+    if (!free.length) return -1;
+    const i = free[Math.floor(random() * free.length)];
+    usedPhoto.add(i);
+    return i;
   };
-  const place = cut => {
-    for (const k of ['mount', 'composition']) if (cut[k]) once[k].add(cut[k]);
-    if (cut.pose && cut.person === 'keep') once.pose.add(cut.pose);
-    for (const k of ['angle', 'background', 'palette']) {
-      if (cut[k]) twice[k][cut[k]] = (twice[k][cut[k]] || 0) + 1;
+
+  const usedCut = new Set();
+  const takeCut = want => {
+    const test = WANT_AXES[want];
+    const free = pool.filter(c => !usedCut.has(c.name) && (!test || test(c)));
+    if (!free.length) return null;
+    const c = free[Math.floor(random() * free.length)];
+    usedCut.add(c.name);
+    return c;
+  };
+
+  const plainSlot = (want, i) => {
+    const src = want === 'cutout' ? bank.cutout : bank[want];
+    const photo = src ? takePhoto(src) : -1;
+    if (photo < 0) return null;
+    const [label, desc] = SLOT_KO[want];
+    return { kind: 'plain', want, label: i ? `${label} ${i + 1}` : label, desc, photo };
+  };
+
+  const genSlot = want => {
+    const cut = takeCut(want);
+    const [label, desc] = SLOT_KO[want];
+    if (!cut) {
+      // 후보가 없으면 상품 종류별 고정 세트로 채운다. 빈자리를 두지 않는다.
+      if (want !== 'mockup' && want !== 'cutout') return null;
+      return {
+        kind: 'set', want, label: '스타일링 세트',
+        desc: '상품 종류에 맞는 고정 세트입니다. 색상별로 돌리면 한 시리즈가 됩니다.',
+        scene: SETS[product.category] || SETS.other, person: 'none',
+        prefer: ['packshot', 'flat', 'main', 'model'],
+      };
     }
-    if (isClose(cut)) need.close = false;
-    if (cut.motion && cut.motion !== 'static') need.motion = false;
-    if (cut.person === 'keep') need.keep = false;
-    if (cut.person === 'hands' || cut.person === 'partial') need.hands = false;
-    slots.push({
-      kind: pool.includes(cut) ? 'made' : 'spare',
-      label: cut.name,
-      desc: pool.includes(cut) ? '이 상품에 맞춰 만든 장면입니다.' : '기본 장면입니다.',
+    return {
+      kind: 'made', want, label: cut.name || label, desc,
       scene: cut.scene, person: cut.person,
       axes: {
-        // person이 빠져 있었다. 카드 설명에도 안 나오고 카피 생성도 사람이
-        // 나오는지 모른 채로 쓴다.
-        person: cut.person,
-        mount: cut.mount, angle: cut.angle, distance: cut.distance, light: cut.light,
-        background: cut.background, composition: cut.composition, palette: cut.palette,
-        motion: cut.motion, pose: cut.pose, mood: cut.mood,
+        person: cut.person, mount: cut.mount, angle: cut.angle, distance: cut.distance,
+        light: cut.light, background: cut.background, composition: cut.composition,
+        palette: cut.palette, motion: cut.motion, pose: cut.pose, mood: cut.mood,
       },
       prefer: cut.person === 'keep' ? ['model', 'main'] : ['packshot', 'flat', 'main', 'model'],
-    });
+    };
   };
 
-  // 꼭 필요한 축부터 채우고, 남는 자리는 겹치지 않는 것으로 채운다
-  const wants = [
-    c => need.close && isClose(c),
-    c => need.keep && c.person === 'keep',
-    c => need.motion && c.motion && c.motion !== 'static',
-    c => need.hands && (c.person === 'hands' || c.person === 'partial'),
-  ];
+  const IS_PLAIN = new Set(['main', 'model', 'detail', 'cutout']);
+  const wants = MIX[product.category] || MIX.other;
+  const seen = {};
   for (const want of wants) {
-    if (slots.length >= 6) break;
-    const i = queue.findIndex(c => want(c) && fits(c));
-    if (i >= 0) place(queue.splice(i, 1)[0]);
+    let made = null;
+    for (const step of (FALLBACK[want] || [want])) {
+      // 누끼는 원본 누끼가 있으면 그것, 없으면 생성으로 내려간다
+      made = IS_PLAIN.has(step) ? plainSlot(step, seen[step] || 0) : genSlot(step);
+      if (made) { seen[step] = (seen[step] || 0) + 1; break; }
+    }
+    if (made) slots.push(made);
   }
-  for (const cut of queue.filter(fits)) {
+  // 전부 실패한 자리는 예비 컷으로 메운다. 여섯 장은 어떤 경우에도 채운다.
+  for (const cut of shuffle(FALLBACK_CUTS.filter(c => allowKeep || c.person !== 'keep'), random)) {
     if (slots.length >= 6) break;
     if (slots.some(x => x.label === cut.name)) continue;
-    place(cut);
+    slots.push({
+      kind: 'spare', want: 'scene', label: cut.name, desc: '기본 장면입니다.',
+      scene: cut.scene, person: cut.person,
+      axes: { person: cut.person, mount: cut.mount, angle: cut.angle, distance: cut.distance,
+        light: cut.light, background: cut.background, composition: cut.composition,
+        palette: cut.palette, motion: cut.motion, pose: cut.pose, mood: cut.mood },
+      prefer: cut.person === 'keep' ? ['model', 'main'] : ['packshot', 'flat', 'main', 'model'],
+    });
   }
-  // 제약을 다 지키면 여섯이 안 채워지는 상품도 있다. 그때는 제약을 푼다.
-  for (const cut of [...queue, ...FALLBACK_CUTS]) {
-    if (slots.length >= 6) break;
-    if (slots.some(x => x.label === cut.name)) continue;
-    if (!allowKeep && cut.person === 'keep') continue;
-    place(cut);
-  }
+  while (slots.length > 6) slots.pop();
+
 
   return shuffle(slots, random).map((slot, i) => {
-    const photo = pickPhoto(slot.prefer, photos, used, random);
-    used.add(photo);
+    /* 그대로 쓰는 자리는 위에서 이미 사진을 골라 뒀다. 여기서 다시 고르면
+       같은 사진이 두 자리에 들어간다. 정해진 것이 있으면 그대로 쓴다. */
+    const photo = Number.isInteger(slot.photo) && slot.photo >= 0
+      ? slot.photo : pickPhoto(slot.prefer, photos, usedPhoto, random);
+    usedPhoto.add(photo);
     const src = photos[photo] || {};
     const known = 'hasPerson' in src;
     const person = !!src.hasPerson;
@@ -367,6 +404,8 @@ export function createPlan(product, random = Math.random) {
         : slot.person === 'none' ? (known && !person ? 'product' : 'item')
         : person ? 'person' : known ? 'product' : 'subject',
       sceneName: slot.label,
+      // 이 자리가 업종 규칙의 어떤 칸인지. 카드에 적고 검증에도 쓴다.
+      want: slot.want || '',
       scene: slot.scene || '',
       emphasis: emphasisPlan[i],
       axes: slot.axes || null,
