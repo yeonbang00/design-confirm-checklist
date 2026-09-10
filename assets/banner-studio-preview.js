@@ -98,7 +98,8 @@ function updateStepNav(){const names=['상품 확인','제작 방식',isPlan()?'
 function art(v){const photos=v.photos||PHOTOS,p=photos[v.photo]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;return `<div class="art ${esc(v.layout)}${v.original?' original':''}"><img src="${esc(p.url)}" alt="${esc(p.label)}" loading="lazy">${v.layout==='duo'?`<img class="second-photo" src="${esc(second.url)}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${v.layout==='offer'&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
- $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div><span class="badge">${selected===i?'수정 중':'시안 '+(i+1)}</span></div></article>`).join('');
+ $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div><span class="badge">${selected===i?'수정 중':'시안 '+(i+1)}</span></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
+ $$('[data-dlimg]').forEach(b=>b.onclick=e=>{e.stopPropagation();downloadImage(Number(b.dataset.dlimg))});
  $$('[data-card]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.card);renderBoard();fillEditor();if(innerWidth<781){$('#editTitle').focus({preventScroll:true});$('.editor').scrollIntoView({behavior:'instant',block:'start'})}else $(`[data-card="${selected}"]`).focus({preventScroll:true})});
 }
 function copyFits(i){const card=$(`[data-card="${i}"]`);if(!card)return true;const a=card.querySelector('.art').getBoundingClientRect(),copy=card.querySelector('.copy'),r=copy.getBoundingClientRect();if(!r.width&&!r.height)return true;return r.left>=a.left-1&&r.right<=a.right+1&&r.top>=a.top-1&&r.bottom<=a.bottom+1&&copy.scrollWidth<=copy.clientWidth+1&&copy.scrollHeight<=copy.clientHeight+1}
@@ -116,6 +117,42 @@ $('#restoreWorkspace').onclick=()=>{if(!previousWorkspace)return;setProduct(prev
 $('#saveVariant').onclick=()=>{const v=variants[selected];if(!v)return;if(v.original){notify('원본 보기를 끄고 카피를 확인한 뒤 저장해주세요.');return}if(!copyFits(selected)){updateFit();$('#mainCopy').focus();notify('카피가 시안 영역을 벗어나 저장하지 않았습니다.');return}if(saved.length>=50){notify('시안은 최대 50개까지 저장할 수 있습니다.');return}const entry={id:crypto.randomUUID(),savedAt:new Date().toISOString(),productName:$('#productName').value,price:product.salePrice,quantity:product.quantity,sourceUrl:SOURCE,product:structuredClone(product),benefit:factSlots(product).BENEFIT?factSlots(product).BENEFIT+' · '+product.benefitCondition:'혜택 미사용',variant:{...v,photos:structuredClone(PHOTOS),brand:product.brand,original:false}};const next=[entry,...saved];if(!writeStore(KEY,next))return;saved=next;renderSaved();notify('이 브라우저에 시안을 저장했습니다.')};
 function recipeData(){return {...planState[mode],product:structuredClone(product),name:planState[mode].name.trim(),mode,productName:$('#productName').value,sourceUrl:SOURCE,creativeReference:referenceBrief(),referenceUrl:MODES[mode].image,referenceOnly:true,generationStatus:'not-generated',kept:mode==='outfit'?['얼굴','포즈','손','하의','배경']:['의자','창문','식물','카메라 구도','빛 방향'],requirements:mode==='outfit'?['사용할 모델 원본','교체 의류의 고해상도 단품·디테일 자료']:['상품이 없는 자체 배경','교체 상품의 고해상도 단품 자료']}}
 function renderRecipeReview(){const r=recipeData();$('#recipeReview').innerHTML=`<div class="review-title"><div><h2>생성 전, 바꿀 것과 지킬 것을 확인합니다.</h2><p class="description">${esc(MODES[mode].name)} · ${esc(r.name)}</p></div><span class="preview-tag">연출 설정 · 합성 결과 없음</span></div><div class="recipe-review-grid"><figure><img src="${MODES[mode].image}" alt="${esc(MODES[mode].caption)}"><figcaption>${esc(MODES[mode].caption)}<br>우리 상품의 생성 결과가 아닙니다.</figcaption></figure><figure><img src="${PHOTOS[r.productPhoto].url}" alt="사용할 상품 자료"><figcaption>사용할 상품 자료 · ${esc((r.product?.photos||SAMPLE_PHOTOS)[r.productPhoto].label)}<br>교체 상품의 단품·디테일 자료 추가 필요</figcaption></figure><div class="recipe-summary"><h3>${esc(r.name)}</h3><dl><dt>유지할 요소</dt><dd>${r.kept.join(' · ')}</dd><dt>교체할 영역</dt><dd>${esc(r.range)}</dd><dt>카피·컨셉 참고</dt><dd>${r.creativeReference?esc(r.creativeReference.typeLabel+' · '+r.creativeReference.principle):'선택하지 않음'}</dd><dt>연출 지시</dt><dd>${esc(r.notes||'추가 지시 없음')}</dd><dt>실제 생성 전에 필요한 자료</dt><dd>${r.requirements.map(esc).join('<br>')}</dd></dl><p class="hint">원본과 결과를 나란히 확인하는 단계는 실제 합성을 연결할 때 추가합니다.</p><button class="btn primary" id="saveRecipe">이 연출 설정 저장</button></div></div>`;$('#saveRecipe').onclick=()=>{if(recipes.length>=50){notify('연출 설정은 최대 50개까지 저장할 수 있습니다.');return}const entry={...recipeData(),id:crypto.randomUUID(),savedAt:new Date().toISOString()};const next=[entry,...recipes];if(!writeStore(RECIPE_KEY,next))return;recipes=next;renderSaved();notify('연출 설정을 저장했습니다. 이미지 생성은 실행하지 않았습니다.')};}
+/* 이미지 내려받기.
+   a[download]는 다른 도메인 파일에는 무시돼서 새 탭으로 열리기만 한다.
+   AI 생성물은 Vercel Blob, 원본은 쇼핑몰 CDN이라 둘 다 다른 도메인이다.
+   그래서 바이트를 받아 blob으로 저장한다. CORS가 막힌 몰(홈플러스·더현대)은
+   그것마저 안 되므로 새 탭으로 열어 직접 저장하시게 안내한다. */
+function imageFileName(v,i){
+  const base=(product.productName||'banner').replace(/[^\w가-힣]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+  const photo=PHOTOS[v.photo]||{};
+  const tag=photo.kind==='ai'?'AI':'원본';
+  const scene=(photo.label||'').split('·')[0].trim().replace(/\s+/g,'') || ('시안'+(i+1));
+  const ext=(String(photo.url||'').split('?')[0].match(/\.(png|jpe?g|webp)$/i)||[,'png'])[1];
+  return `${base}_${i+1}_${tag}_${scene}.${ext}`;
+}
+async function downloadImage(i){
+  const v=variants[i]; if(!v) return;
+  const url=(PHOTOS[v.photo]||{}).url;
+  if(!url){ notify('이 시안에는 아직 이미지가 없습니다.'); return; }
+  try{
+    const r=await fetch(url,{mode:'cors'});
+    if(!r.ok) throw Error('status '+r.status);
+    const blob=await r.blob(), obj=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=obj; a.download=imageFileName(v,i);
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(obj),4000);
+  }catch(e){
+    window.open(url,'_blank','noopener');
+    notify('이 쇼핑몰 이미지는 바로 저장이 안 됩니다. 새 탭에서 우클릭 → 이미지 저장으로 받아주세요.');
+  }
+}
+async function downloadAllImages(){
+  const ready=variants.map((v,i)=>(PHOTOS[v.photo]||{}).url?i:-1).filter(i=>i>=0);
+  if(!ready.length){ notify('내려받을 이미지가 없습니다.'); return; }
+  for(const i of ready){ await downloadImage(i); await new Promise(r=>setTimeout(r,400)); }
+  notify(`이미지 ${ready.length}장을 내려받았습니다. 조판은 포토샵에서 하시면 됩니다.`);
+}
+
 function download(data,name){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function packageEntry(s){const photos=s.variant.photos||SAMPLE_PHOTOS;return {...s,image:{...photos[s.variant.photo]},images:s.variant.layout==='duo'?[photos[s.variant.photo],photos.filter(x=>x.kind==='original')[(photos.filter(x=>x.kind==='original').findIndex(x=>x.url===photos[s.variant.photo].url)+1)%photos.filter(x=>x.kind==='original').length]||photos[s.variant.photo]]:[photos[s.variant.photo]],previewOnly:false,note:'최종 조판은 디자이너 진행. 혜택과 상품 일치 확인 필요.'}}
 function packageRecipe(s){return {...s,productImage:(s.product?.photos||SAMPLE_PHOTOS)[s.productPhoto],referenceImage:{url:s.referenceUrl||(s.mode==='outfit'?(s.product?.photos||SAMPLE_PHOTOS)[0].url:MODES.scene.image),usage:MODES[s.mode].caption+'. 실제 사용할 배경/모델 원본으로 교체 필요.'},previewOnly:true}}
@@ -130,6 +167,7 @@ function renderSaved(){
  $$('[data-recipe-export]').forEach(b=>b.onclick=()=>download(packageRecipe(recipes.find(x=>x.id===b.dataset.recipeExport)),'AdCheck-연출지시서.json'));
  $$('[data-recipe-remove]').forEach(b=>b.onclick=()=>{const next=recipes.filter(x=>x.id!==b.dataset.recipeRemove);if(writeStore(RECIPE_KEY,next)){recipes=next;renderSaved();notify('연출 설정을 삭제했습니다.')}});
 }
+$('#dlAllImages') && ($('#dlAllImages').onclick=()=>downloadAllImages());
 $('#exportAll').onclick=()=>download({version:3,previewOnly:false,items:saved.map(packageEntry),recipes:recipes.map(packageRecipe)},'AdCheck-스튜디오-작업정보.json');
 $('#openSaved').onclick=()=>go(3);$('#stepPrev').onclick=()=>go(step-1);$('#stepNext').onclick=()=>step===1?openSelectedBoard():step<3&&go(step+1);
 $$('[data-step]').forEach(b=>b.onclick=()=>go(Number(b.dataset.step)));$$('[data-go]').forEach(b=>b.onclick=()=>go(Number(b.dataset.go)));
@@ -215,7 +253,7 @@ const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
 renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}})};
 function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickEmpty').hidden=true;$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
-function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;$('#quickGenerate').textContent=b?'시안 만드는 중…':'시안 6종 생성';$('#quickInput').disabled=b;$('#quickGrab').disabled=b;$('#quickGrabGenerate').disabled=b;$('#saveVariant').disabled=b;$('#varyCopy').disabled=b;$('#varyScene').disabled=b;$('#autoRetryCopy').disabled=b;$('#quickEditProduct').disabled=b;$('#openSaved').disabled=b;$('#quickResults').setAttribute('aria-busy',String(b));}
+function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;$('#quickGenerate').textContent=b?'시안 만드는 중…':'시안 6종 생성';$('#quickInput').disabled=b;$('#quickGrab').disabled=b;$('#quickGrabGenerate').disabled=b;if($('#dlAllImages'))$('#dlAllImages').disabled=b;$('#saveVariant').disabled=b;$('#varyCopy').disabled=b;$('#varyScene').disabled=b;$('#autoRetryCopy').disabled=b;$('#quickEditProduct').disabled=b;$('#openSaved').disabled=b;$('#quickResults').setAttribute('aria-busy',String(b));}
 function looksLikeProduct(data){return data&&data._adcheck==='product'&&Array.isArray(data.items)&&data.items.length}
 async function autoReferences(p){
  const name=p.productName;const category=/티셔츠|의류|가디건|니트|팬츠|스커트|블루핏|셔츠|코트|신발|패션/.test(name)?'fashion':null;
@@ -272,6 +310,6 @@ $('#quickBookmarklet').href=$('#grabLink').href;$('#quickBookmarklet').onclick=e
 // Enter the existing save/edit views without exposing the former setup steps.
 const legacyGo=go;
 go=function(n){if(autoBusy)return;if(n===1){$('#productStep').hidden=false;return}legacyGo(n);if(n===2){$('#directionStep').hidden=true;$('#productStep').hidden=true;}if(n===3){$('#quickResults').hidden=false;$('#quickEmpty').hidden=true}};
-$('#quickBack').onclick=()=>{if(variants.length)enterResults();else{$('#savedStep').hidden=true;$('#quickResults').hidden=true;$('#quickEmpty').hidden=false}};
+$('#quickBack') && ($('#quickBack').onclick=()=>{if(variants.length)enterResults();else{$('#savedStep').hidden=true;$('#quickResults').hidden=true;$('#quickEmpty').hidden=false}});
 const legacyFill=fillEditor;fillEditor=function(){legacyFill();$('#saveVariant').disabled=autoBusy||!!variants[selected]?.imageFailed;$('#varyCopy').disabled=autoBusy;$('#varyScene').disabled=autoBusy;$('#applyReference').disabled=autoBusy||!activeReference};
 $('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=true;$('#savedStep').hidden=true;
