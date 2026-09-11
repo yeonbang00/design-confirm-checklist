@@ -47,6 +47,15 @@ export default async function handler(req, res) {
      고쳐 쓰면 뒤 저장이 앞 저장을 덮어 소재가 조용히 사라진다(33장 중 12장만
      남은 적이 있다). defer로 올리기만 하고, 마지막에 register로 한 번에 적는다. */
   if (Array.isArray(req.body?.register)) {
+    /* 없는 업종으로 적히면 어느 탭에서도 안 보인다. 조용히 사라지는 것과 같다.
+       업종을 보낼 거면 아는 값이어야 하고, 아니면 아예 보내지 말아야 한다. */
+    const bad = req.body.register.find(
+      (x) => x && x.category && !REFERENCE_CATEGORIES[x.category]
+    );
+    if (bad) {
+      res.status(400).json({ error: `모르는 업종입니다: ${String(bad.category).slice(0, 24)}` });
+      return;
+    }
     try {
       const out = await addUploadedReferenceImages(req.body.register.slice(0, 300));
       res.status(200).json({ ok: true, ...out });
