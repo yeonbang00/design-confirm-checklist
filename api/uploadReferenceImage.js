@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { category, brandName, note, type, ownWork, thumb, full, defer } = req.body || {};
+  const { category, brandName, note, type, ownWork, thumb, full, defer, hash } = req.body || {};
 
   if (!category || !REFERENCE_CATEGORIES[category]) {
     res.status(400).json({ error: '알 수 없는 업종 카테고리입니다.' });
@@ -95,6 +95,9 @@ export default async function handler(req, res) {
       thumbUrl,
       fullUrl,
       type: type || undefined,
+      /* 64비트 지문. 다음에 같은 브랜드를 다시 담을 때 이미 있는 것을 가려낸다.
+         같은 소재도 광고마다 CDN 파일명이 달라 파일명으로는 못 잡는다. */
+      hash: (typeof hash === 'string' && /^[01]{64}$/.test(hash)) ? hash : undefined,
       ownWork: ownWork ? true : undefined,
       uploadedAt: new Date().toISOString(),
     };

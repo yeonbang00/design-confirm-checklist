@@ -23,7 +23,16 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { category } = req.query || {};
+  const { category, fields } = req.query || {};
+
+  /* 지문만 필요할 때가 있다(광고 담기에서 이미 있는 소재를 가려낼 때).
+     소재 전체를 내려보내면 400KB인데 지문만 모으면 몇 KB다. */
+  if (fields === 'hash') {
+    const uploaded = await getUploadedReferenceImages();
+    const hashes = uploaded.map((u) => u && u.hash).filter((h) => typeof h === 'string');
+    res.status(200).json({ hashes, total: uploaded.length, withHash: hashes.length });
+    return;
+  }
   const [uploaded, axes] = await Promise.all([
     getUploadedReferenceImages(),
     getReferenceAxes(),

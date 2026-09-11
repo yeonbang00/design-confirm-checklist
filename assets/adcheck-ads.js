@@ -76,21 +76,34 @@
     return 'wide';
   }
 
-  // 64비트 지문. 같은 소재가 광고마다 다른 파일명으로 올라오므로 파일명으로는 못 잡는다.
-  function hashOf(bitmap) {
+  /* 64비트 지문. 같은 소재가 광고마다 다른 파일명으로 올라오므로 파일명으로는 못 잡는다.
+     축소를 drawImage에 맡기면 안 된다. 캔버스 옵션(willReadFrequently)에 따라
+     GPU와 소프트웨어 경로가 갈리고, 같은 그림인데 지문이 17비트까지 벌어진다(실측).
+     임계 8을 훌쩍 넘어 대조가 아예 안 된다. 기계나 브라우저가 바뀌어도 같은 문제다.
+     그래서 1:1로 그려 픽셀을 그대로 읽고 9x8 평균은 직접 낸다. 두 경로 차이 0비트. */
+  function hashOf(bm) {
     var cv = document.createElement('canvas');
-    cv.width = 9; cv.height = 8;
+    cv.width = bm.width; cv.height = bm.height;
     var cx = cv.getContext('2d');
-    cx.drawImage(bitmap, 0, 0, 9, 8);
-    var d = cx.getImageData(0, 0, 9, 8).data, bits = '';
-    for (var y = 0; y < 8; y++) for (var x = 0; x < 8; x++) {
-      var i = (y * 9 + x) * 4, j = (y * 9 + x + 1) * 4;
-      var a = d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114;
-      var b = d[j] * .299 + d[j + 1] * .587 + d[j + 2] * .114;
-      bits += a > b ? '1' : '0';
+    cx.drawImage(bm, 0, 0);
+    var d = cx.getImageData(0, 0, bm.width, bm.height).data;
+    var W = 9, H = 8, g = new Float64Array(W * H), n = new Float64Array(W * H);
+    for (var y = 0; y < bm.height; y++) {
+      var gy = Math.min(H - 1, (y * H / bm.height) | 0);
+      for (var x = 0; x < bm.width; x++) {
+        var gx = Math.min(W - 1, (x * W / bm.width) | 0);
+        var i = (y * bm.width + x) * 4, k = gy * W + gx;
+        g[k] += d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+        n[k]++;
+      }
+    }
+    var bits = '';
+    for (var yy = 0; yy < H; yy++) for (var xx = 0; xx < W - 1; xx++) {
+      bits += (g[yy * W + xx] / n[yy * W + xx]) > (g[yy * W + xx + 1] / n[yy * W + xx + 1]) ? '1' : '0';
     }
     return bits;
   }
+
   function dist(a, b) { var n = 0; for (var i = 0; i < 64; i++) if (a[i] !== b[i]) n++; return n; }
 
   var busy = toast('광고를 훑는 중… 페이지가 스크롤됩니다', 60000);

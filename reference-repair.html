@@ -33,6 +33,7 @@ pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7
   <button id="scan">다시 확인</button>
   <button class="go" id="fix" disabled>되살리기</button>
   <button id="drop" disabled>못 찾은 것 버리기</button>
+  <button id="fp">지문 채우기</button>
   <input id="hints" placeholder="못 찾은 것의 광고주 이름 (쉼표로 구분)"
     style="flex:1;min-width:260px;font:inherit;padding:9px 12px;border-radius:9px;background:var(--panel);color:var(--ink);border:1px solid var(--line)">
 </div>
@@ -171,6 +172,67 @@ $('#fix').onclick = async () => {
     $('#log').textContent = '되살리지 못했습니다: ' + (e.message || e);
     $('#fix').disabled = false;
   }
+};
+
+/* 지문 채우기.
+   광고 담기가 지문을 저장하기 전에 담은 소재는 지문이 없다. 지문이 없으면
+   다음에 같은 브랜드를 다시 담을 때 이미 있는 것을 가려내지 못해 그대로
+   중복이 쌓인다. 이미지가 공개 주소에 있으니 여기서 다시 계산해 채운다.
+   AI 호출이 아니라 픽셀 계산이라 돈이 들지 않는다. */
+function dHash(bm) {
+  /* 광고 담기(assets/adcheck-ads.js)의 hashOf와 반드시 같은 값을 내야 한다.
+     축소를 drawImage에 맡기면 캔버스 옵션에 따라 17비트까지 벌어진다(실측).
+     1:1로 그려 픽셀을 그대로 읽고 9x8 평균은 직접 낸다. */
+  const cv = document.createElement('canvas');
+  cv.width = bm.width; cv.height = bm.height;
+  const cx = cv.getContext('2d');
+  cx.drawImage(bm, 0, 0);
+  const d = cx.getImageData(0, 0, bm.width, bm.height).data;
+  const W = 9, H = 8, g = new Float64Array(W * H), n = new Float64Array(W * H);
+  for (let y = 0; y < bm.height; y++) {
+    const gy = Math.min(H - 1, (y * H / bm.height) | 0);
+    for (let x = 0; x < bm.width; x++) {
+      const gx = Math.min(W - 1, (x * W / bm.width) | 0);
+      const i = (y * bm.width + x) * 4, k = gy * W + gx;
+      g[k] += d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+      n[k]++;
+    }
+  }
+  let bits = '';
+  for (let y = 0; y < H; y++) for (let x = 0; x < W - 1; x++) {
+    bits += (g[y * W + x] / n[y * W + x]) > (g[y * W + x + 1] / n[y * W + x + 1]) ? '1' : '0';
+  }
+  return bits;
+}
+
+$('#fp').onclick = async () => {
+  $('#fp').disabled = true;
+  try {
+    const all = await getJSON('/api/referenceImages?category=all');
+    // 업로드로 들어온 소재만 대상이다. 큐레이션 소재는 광고 담기와 겹치지 않는다.
+    const need = (all.items || []).filter(x => /\/upload-/.test(x.thumbUrl || '') && !x.hash);
+    if (!need.length) { $('#log').textContent = '지문이 빠진 소재가 없습니다.'; $('#fp').disabled = false; return; }
+    const out = [];
+    for (let i = 0; i < need.length; i++) {
+      $('#log').textContent = `지문 계산 ${i + 1} / ${need.length}`;
+      try {
+        const r = await fetch(need[i].thumbUrl);
+        if (!r.ok) continue;
+        const bm = await createImageBitmap(await r.blob());
+        out.push({ thumbUrl: need[i].thumbUrl, hash: dHash(bm) });
+        bm.close && bm.close();
+      } catch (e) { /* 한 장 실패해도 계속 */ }
+    }
+    const res = await getJSON('/api/uploadReferenceImage', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ register: out }),
+    });
+    $('#log').textContent = `지문 ${out.length}건을 채웠습니다 (갱신 ${res.updated}건).`
+      + (out.length < need.length ? `\n${need.length - out.length}건은 이미지를 받지 못했습니다.` : '');
+  } catch (e) {
+    $('#log').textContent = '지문을 채우지 못했습니다: ' + (e.message || e);
+  }
+  $('#fp').disabled = false;
 };
 
 $('#scan').onclick = scan;

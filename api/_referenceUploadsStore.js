@@ -33,17 +33,30 @@ export async function addUploadedReferenceImages(entries) {
   const list = Array.isArray(entries) ? entries : [entries];
   if (!list.length) return { added: 0, total: 0 };
   const items = await getUploadedReferenceImages();
-  const seen = new Set(items.map((x) => x && x.thumbUrl).filter(Boolean));
-  let added = 0;
+  const at = new Map();
+  items.forEach((x, i) => { if (x && x.thumbUrl) at.set(x.thumbUrl, i); });
+  let added = 0, updated = 0;
   for (const e of list) {
-    if (!e || !e.thumbUrl || seen.has(e.thumbUrl)) continue;
-    seen.add(e.thumbUrl);
+    if (!e || !e.thumbUrl) continue;
+    const i = at.get(e.thumbUrl);
+    // 같은 소재가 다시 오면 덮어쓰지 않고 값을 채워 넣는다. 지문처럼 나중에
+    // 생긴 값을 기존 소재에 붙일 때 쓴다. 비어 있는 값으로 덮지 않는다.
+    if (i !== undefined) {
+      const merged = { ...items[i] };
+      for (const [k, v] of Object.entries(e)) {
+        if (v !== undefined && v !== null && v !== '') merged[k] = v;
+      }
+      items[i] = merged;
+      updated += 1;
+      continue;
+    }
+    at.set(e.thumbUrl, items.length);
     items.push(e);
     added += 1;
   }
   const bytes = Buffer.from(JSON.stringify({ items }), 'utf-8');
   await put('reference-uploads.json', bytes, 'application/json', { allowOverwrite: true });
-  return { added, total: items.length };
+  return { added, updated, total: items.length };
 }
 
 // 한 장짜리 기존 호출부(이미지 올리기 모달)를 위해 남겨 둔다.
