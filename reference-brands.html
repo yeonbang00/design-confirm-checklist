@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AdCheck | 담을 브랜드</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="assets/adcheck-footer.css?v=4">
+<style>
+:root{color-scheme:dark;--bg:#0b0c0e;--panel:#14171c;--line:#30343b;--ink:#edeef0;--dim:#7e838c;--mid:#a2a7b0;--lime:#c3ff4d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.6 Pretendard,-apple-system,sans-serif;letter-spacing:-.015em;padding:26px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px}
+p.sub{color:var(--dim);font-size:12.5px;margin:0 0 18px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+input,select{font:inherit;padding:9px 12px;border-radius:9px;background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+input:focus,select:focus{outline:none;border-color:var(--lime)}
+#q{flex:1;min-width:220px}
+.count{color:var(--mid);font-size:12.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.b{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--panel);
+   border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--ink);min-width:0}
+.b:hover{border-color:var(--lime)}
+.b strong{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.b .tag{font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap}
+.exact{background:rgba(195,255,77,.14);color:var(--lime)}
+.loose{background:rgba(255,180,84,.14);color:#ffb454}
+.done{background:rgba(255,255,255,.08);color:var(--mid)}
+.note{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px 16px;margin-bottom:18px;color:var(--mid);font-size:12.5px}
+.note b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>담을 브랜드</h1>
+  <p class="sub">브랜드를 누르면 메타 광고 라이브러리가 열립니다. 거기서 <b>AdCheck 광고 담기</b> 북마클릿을 누르세요.</p>
+
+  <div class="note">
+    <b>초록 딱지</b>는 그 브랜드의 공식 페이지만 정확히 보여줍니다. 남의 광고가 안 섞입니다.<br>
+    <b>주황 딱지</b>는 이름으로 검색합니다. 본문에 그 이름이 들어간 남의 광고가 섞이니
+    담을 때 광고주를 보고 걸러주세요.
+  </div>
+
+  <div class="bar">
+    <input id="q" type="search" placeholder="브랜드 검색" autocomplete="off">
+    <select id="f">
+      <option value="all">전체</option>
+      <option value="exact">정확히 잡히는 것만</option>
+      <option value="todo">아직 안 담은 것만</option>
+      <option value="done">담은 것만</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script type="module">
+import { META_BRANDS, adLibraryUrl } from './assets/meta-brands.mjs';
+const $ = s => document.querySelector(s);
+const norm = s => String(s || '').normalize('NFC').toLowerCase().replace(/[\s·\-_.]/g, '');
+let done = new Set();
+
+/* 이미 담은 브랜드는 딱지를 달아 둔다. 357개를 훑으면서 어디까지 했는지
+   기억하는 건 사람이 할 일이 아니다. 이름이 정확히 같지 않아도(쿠쿠 / 쿠쿠-cuckoo)
+   서로를 품으면 같은 브랜드로 본다. */
+fetch('/api/referenceImages?category=all')
+  .then(r => r.json())
+  .then((d) => {
+    const have = [...new Set((d.items || [])
+      .filter(x => /\/upload-/.test(x.thumbUrl || ''))
+      .map(x => norm(x.brandName)))].filter(Boolean);
+    done = new Set(META_BRANDS.filter(b => {
+      const n = norm(b.name);
+      return have.some(h => h.includes(n) || n.includes(h));
+    }).map(b => b.name));
+    render();
+  })
+  .catch(() => render());
+
+function render() {
+  const q = norm($('#q').value);
+  const f = $('#f').value;
+  const rows = META_BRANDS.filter((b) => {
+    if (q && !norm(b.name).includes(q)) return false;
+    if (f === 'exact' && !b.pageId) return false;
+    if (f === 'todo' && done.has(b.name)) return false;
+    if (f === 'done' && !done.has(b.name)) return false;
+    return true;
+  });
+  $('#count').textContent = `${rows.length}곳 · 전체 ${META_BRANDS.length}곳 중 담은 곳 ${done.size}`;
+  $('#grid').innerHTML = rows.map((b) => {
+    const tag = done.has(b.name) ? '<span class="tag done">담음</span>'
+      : b.pageId ? '<span class="tag exact">정확</span>'
+      : '<span class="tag loose">검색</span>';
+    return `<a class="b" href="${adLibraryUrl(b)}" target="_blank" rel="noopener">`
+      + `<strong>${b.name.replace(/</g, '&lt;')}</strong>${tag}</a>`;
+  }).join('');
+}
+$('#q').addEventListener('input', render);
+$('#f').addEventListener('change', render);
+render();
+</script>
+<script src="assets/adcheck-footer.js?v=4"></script>
+</body>
+</html>

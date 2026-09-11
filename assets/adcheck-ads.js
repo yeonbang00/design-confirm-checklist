@@ -18,7 +18,9 @@
   // 2 — 지문 계산을 바꿨다(캔버스 축소 → 1:1 읽고 직접 평균). 옛 버전으로 담으면
   //     지문이 달라 이미 담은 소재를 못 가려낸다.
   // 3 — 스크롤을 끝까지 내린다. 여덟 번 고정이라 410건짜리 브랜드를 다 못 담았다.
-  var ADS_V = 3;
+  // 4 — 바닥으로 뛰지 않고 한 화면씩 내린다. 크게 뛰면 다음 묶음을 부르는
+  //     표식을 스쳐 지나가 버린다. 손으로 내리면 33장이 216장이 됐다.
+  var ADS_V = 4;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
@@ -46,33 +48,40 @@
       : 0;
   }
 
-  /* 더 불러오려면 끝까지 내려야 한다. 횟수를 고정하면 안 된다. 쿠쿠는 검색
-     결과가 410건이라 여덟 번으로는 절반도 못 채운다.
+  /* 한 화면씩 내린다. 바닥으로 한 번에 뛰면 중간을 건너뛴다. 다음 묶음을
+     부르는 쪽은 화면 아래쪽에 걸린 표식을 보고 깨어나는데, 크게 뛰면 그 표식이
+     화면을 스쳐 지나가 버려서 안 걸린다. 사람이 손으로 내리면 33장에서
+     216장까지 늘어난 것이 그 차이다.
 
-     한 번 밀 때마다 위로 뗐다가 내린다. 이미 바닥에 붙어 있으면 다시 바닥으로
-     보내도 위치가 그대로라 스크롤 이벤트가 안 나고, 그러면 다음 묶음을 부르는
-     쪽이 영영 깨어나지 않는다.
-
-     멈추는 조건은 넉넉하게 뒀다. 메타가 다음 묶음을 주는 속도가 일정하지 않아서
-     두어 번 안 늘었다고 끝내면 절반만 담고 끝난다. 네 번 연속 그대로일 때 멈춘다.
-     사용자가 미리 내려 둔 것도 그대로 쓰인다. */
-  function sweep(maxRounds, onTick) {
-    var back = window.scrollY, n = 0, last = -1, still = 0;
+     바닥에 닿으면 다음 묶음이 올 시간을 준다. 네 번 연속 안 늘면 끝으로 본다.
+     메타가 주는 속도가 일정하지 않아 두 번으로는 절반만 담고 끝난다. */
+  function sweep(maxBottoms, onTick) {
+    var back = window.scrollY, bottoms = 0, last = -1, still = 0;
+    function atBottom() {
+      return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
+    }
     return new Promise(function (done) {
-      (function next() {
-        var now = cardCount();
-        if (onTick) onTick(n, now, still);
-        if (now === last) { still++; } else { still = 0; }
-        last = now;
-        if (n++ >= maxRounds || still >= 4) {
-          window.scrollTo(0, back); setTimeout(done, 700); return;
+      (function step() {
+        if (!atBottom()) {
+          window.scrollBy(0, Math.round(window.innerHeight * 0.85));
+          if (onTick) onTick(bottoms, cardCount(), still);
+          setTimeout(step, 220);
+          return;
         }
-        var h = document.documentElement.scrollHeight;
-        window.scrollTo(0, Math.max(0, h - window.innerHeight * 3));
+        // 바닥이다. 다음 묶음을 기다린다.
+        bottoms++;
         setTimeout(function () {
-          window.scrollTo(0, document.documentElement.scrollHeight);
-          setTimeout(next, 1400);
-        }, 250);
+          var now = cardCount();
+          if (onTick) onTick(bottoms, now, still);
+          if (now === last) { still++; } else { still = 0; }
+          last = now;
+          if (bottoms >= maxBottoms || still >= 4) {
+            window.scrollTo(0, back); setTimeout(done, 700); return;
+          }
+          // 살짝 올렸다 내려야 다시 걸린다
+          window.scrollBy(0, -Math.round(window.innerHeight * 0.6));
+          setTimeout(step, 250);
+        }, 1400);
       })();
     });
   }
@@ -135,9 +144,9 @@
   function dist(a, b) { var n = 0; for (var i = 0; i < 64; i++) if (a[i] !== b[i]) n++; return n; }
 
   var busy = toast('광고를 훑는 중… 페이지가 스크롤됩니다', 120000);
-  await sweep(60, function (round, found, still) {
+  await sweep(60, function (bottoms, found, still) {
     busy.textContent = '광고를 훑는 중 ' + found + '장'
-      + (still ? ' · 더 안 늘어남 ' + still + '/4' : ' · ' + round + '번째 내림');
+      + (still ? ' · 더 안 늘어남 ' + still + '/4' : ' · 바닥 ' + bottoms + '번째');
   });
 
   var marks = [].filter.call(document.querySelectorAll('span,div'), function (e) {
