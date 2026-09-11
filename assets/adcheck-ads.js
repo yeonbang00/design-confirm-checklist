@@ -17,7 +17,8 @@
 (async function () {
   // 2 — 지문 계산을 바꿨다(캔버스 축소 → 1:1 읽고 직접 평균). 옛 버전으로 담으면
   //     지문이 달라 이미 담은 소재를 못 가려낸다.
-  var ADS_V = 2;
+  // 3 — 스크롤을 끝까지 내린다. 여덟 번 고정이라 410건짜리 브랜드를 다 못 담았다.
+  var ADS_V = 3;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
@@ -37,16 +38,41 @@
     return;
   }
 
-  /* 더 불러오려면 끝까지 내려야 한다. 29장에서 41장으로 늘어나는 것을 실측했다. */
-  function sweep(rounds) {
-    var back = window.scrollY, n = 0;
+  function cardCount() {
+    return document.querySelectorAll('span,div').length
+      ? [].filter.call(document.querySelectorAll('span,div'), function (e) {
+          return /^라이브러리 ID: \d+$/.test(e.textContent.trim()) && e.children.length === 0;
+        }).length
+      : 0;
+  }
+
+  /* 더 불러오려면 끝까지 내려야 한다. 횟수를 고정하면 안 된다. 쿠쿠는 검색
+     결과가 410건이라 여덟 번으로는 절반도 못 채운다.
+
+     한 번 밀 때마다 위로 뗐다가 내린다. 이미 바닥에 붙어 있으면 다시 바닥으로
+     보내도 위치가 그대로라 스크롤 이벤트가 안 나고, 그러면 다음 묶음을 부르는
+     쪽이 영영 깨어나지 않는다.
+
+     멈추는 조건은 넉넉하게 뒀다. 메타가 다음 묶음을 주는 속도가 일정하지 않아서
+     두어 번 안 늘었다고 끝내면 절반만 담고 끝난다. 네 번 연속 그대로일 때 멈춘다.
+     사용자가 미리 내려 둔 것도 그대로 쓰인다. */
+  function sweep(maxRounds, onTick) {
+    var back = window.scrollY, n = 0, last = -1, still = 0;
     return new Promise(function (done) {
       (function next() {
-        if (n++ >= rounds) {
-          window.scrollTo(0, back); setTimeout(done, 600); return;
+        var now = cardCount();
+        if (onTick) onTick(n, now, still);
+        if (now === last) { still++; } else { still = 0; }
+        last = now;
+        if (n++ >= maxRounds || still >= 4) {
+          window.scrollTo(0, back); setTimeout(done, 700); return;
         }
-        window.scrollTo(0, document.body.scrollHeight);
-        setTimeout(next, 1100);
+        var h = document.documentElement.scrollHeight;
+        window.scrollTo(0, Math.max(0, h - window.innerHeight * 3));
+        setTimeout(function () {
+          window.scrollTo(0, document.documentElement.scrollHeight);
+          setTimeout(next, 1400);
+        }, 250);
       })();
     });
   }
@@ -108,8 +134,11 @@
 
   function dist(a, b) { var n = 0; for (var i = 0; i < 64; i++) if (a[i] !== b[i]) n++; return n; }
 
-  var busy = toast('광고를 훑는 중… 페이지가 스크롤됩니다', 60000);
-  await sweep(8);
+  var busy = toast('광고를 훑는 중… 페이지가 스크롤됩니다', 120000);
+  await sweep(60, function (round, found, still) {
+    busy.textContent = '광고를 훑는 중 ' + found + '장'
+      + (still ? ' · 더 안 늘어남 ' + still + '/4' : ' · ' + round + '번째 내림');
+  });
 
   var marks = [].filter.call(document.querySelectorAll('span,div'), function (e) {
     return /^라이브러리 ID: \d+$/.test(e.textContent.trim()) && e.children.length === 0;
@@ -187,6 +216,7 @@
       + '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">'
       + '<b style="font-size:17px">AdCheck 광고 담기</b>'
       + '<span id="ac-count" style="color:#A2A7B0;font-size:12.5px"></span>'
+      + '<span style="color:#7E838C;font-size:11.5px">부족하면 닫고 페이지를 더 내린 뒤 다시 누르세요</span>'
       + '<span style="flex:1"></span>'
       + '<select id="ac-brand" style="font:inherit;padding:7px 10px;border-radius:8px;background:#14171C;color:#EDEEF0;border:1px solid #30343B"></select>'
       + '<button id="ac-all" style="font:inherit;font-weight:600;padding:8px 13px;border-radius:8px;background:#14171C;color:#EDEEF0;border:1px solid #30343B;cursor:pointer">전체 선택</button>'
