@@ -184,12 +184,20 @@ const sameBrand = (a, b) => {
   return !!x && x === y;
 };
 
-export function rankSimilar(target, pool, limit = 6) {
+/* 이 점수 아래는 "비슷하다"고 말하지 않는다. 실측 40장 기준 문턱별 채움이다.
+     0.25  여섯 칸을 채우는 소재 38/40
+     0.30  34/40, 한 장도 못 채우는 소재 0
+     0.35  19/40
+     0.40  1/40, 아예 못 채우는 소재 3건
+   0.30으로 잡는다. 무리가 978장으로 커지면 후보가 늘어 더 넉넉해진다. */
+export const SIMILAR_MIN = 0.3;
+
+export function rankSimilar(target, pool, limit = 6, min = SIMILAR_MIN) {
   const stats = valueStats(pool);
   return pool
     .filter(x => x !== target && !sameBrand(x, target))
     .map(x => ({ item: x, ...similarity(target.axes, x.axes, stats) }))
-    .filter(x => x.compared >= 4 && x.score > 0)
+    .filter(x => x.compared >= 4 && x.score >= min)
     .sort((p, q) => q.score - p.score)
     .slice(0, limit);
 }
