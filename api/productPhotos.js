@@ -37,6 +37,11 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
   손만 나오는 컷을 "body"로 적지 마세요. 이 값으로 모델 재촬영을 할지 정합니다.
 - colorway: 상품 색을 한국어 한 단어로 (예: "검정", "크림", "핑크"). 모르면 ""
 - burnedText: 사진 위에 덧씌워진 글자나 로고가 있으면 그 글자를 그대로, 없으면 ""
+- itemCount: 이 사진에 제품이 몇 개 보이는지 숫자. 기획세트 나열컷이면 그 개수.
+- isHero: 이 사진이 **제품 하나만** 크게 보여주는 컷이면 true. 여러 개가 나열돼
+  있으면 false. 배너에서 주인공으로 쓸 수 있는지를 가른다.
+- isGift: 이 사진이 **증정품·사은품**만 찍은 컷이면 true. 본품이면 false.
+  상품명에 "증정" "추가" "사은품"이 있거나 본품보다 작게 취급되는 것.
 - note: 이 사진을 배너에 쓸 때 주의할 점 한 문장. 없으면 ""
 
 첫 번째 사진이 대표컷입니다. 그 사진이 model이나 packshot에 해당하더라도 role은 "main"으로 하세요.
@@ -150,7 +155,7 @@ scene 문장 규칙:
 레퍼런스의 문구나 브랜드명은 절대 가져오지 마세요. 구성만 봅니다.
 
 JSON만 출력하세요:
-{"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","note":""}],
+{"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","itemCount":1,"isHero":true,"isGift":false,"note":""}],
  "category":"fashion-top","usp":"...","toneKo":"정갈한",
  "layoutHints":["boxed","offer","badge"],"refNote":"...",
  "cuts":[{"name":"단상 정면컷","mount":"plinth","angle":"front","distance":"medium",
@@ -262,6 +267,11 @@ export default async function handler(req, res) {
         url,
         role: i === 0 ? 'main' : role,
         hasPerson: !!row.hasPerson,
+        /* 기획세트 나열컷을 주인공으로 쓰면 증정품까지 다 같은 크기로 늘어서서
+           무엇을 파는지 안 읽힌다. 제품 하나만 크게 나온 컷을 따로 가린다. */
+        itemCount: Number.isFinite(Number(row.itemCount)) ? Math.max(1, Math.round(Number(row.itemCount))) : 1,
+        isHero: !!row.isHero,
+        isGift: !!row.isGift,
         // 손만 나오는 컷을 '사람 있음'으로 읽으면 모델 재촬영이 열린다.
         // 화장품 상세컷의 손 컷 때문에 모델이 공원을 걷는 컷이 나왔다.
         personKind: ['none', 'hands', 'body'].includes(row.personKind) ? row.personKind
