@@ -13,7 +13,7 @@ export const AXES = {
       discount: '할인·프로모션', newin: '신상·출시', material: '소재·품질',
       feature: '기능·성능', ease: '사용 편의', popular: '후기·인기',
       brand: '브랜드 가치', event: '이벤트·증정', price: '가격·구성',
-      worry: '고민·불안 해결',
+      worry: '고민·불안 해결', guide: '정보·가이드',
     },
   },
   goal: {

@@ -20,6 +20,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bar i{display:block;height:100%;background:#c3ff4d;width:0;transition:width .3s}
 pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7ccd4;background:#101317;border:1px solid #23272e;border-radius:10px;padding:14px;margin:0 0 14px}
 .warn{border-color:#5a4a2a;background:#1a1710;color:#e8d9b0}
+.chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#afb5bf}
+.chk input{width:15px;height:15px;accent-color:#c3ff4d}
 #fails{color:#ffb454;font-size:11.5px;white-space:pre-wrap}
 </style>
 </head>
@@ -36,6 +38,7 @@ pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7
   <button class="go" id="run" disabled>남은 것 태깅</button>
   <button class="stop" id="stop" disabled>멈추기</button>
   <button id="refresh">상태 새로고침</button>
+  <label class="chk"><input type="checkbox" id="patch"> 축이 빠진 것도 다시</label>
 </div>
 <div class="bar"><i id="prog"></i></div>
 <pre id="log">　</pre>
@@ -99,13 +102,27 @@ async function loadState() {
     $('#run').disabled = true;
     return [];
   }
-  done = new Set(Object.keys(saved.items || {}));
-  const left = all.filter(x => !done.has(axesKey(x.thumbUrl)));
+  const stored = saved.items || {};
+  done = new Set(Object.keys(stored));
+  /* 977장 중 13장이 소구를 못 받았다. 전부 정보·가이드형이라 목록에 값이
+     없었던 것이다. 값을 더했으니 그것만 다시 채울 수 있어야 한다.
+     전부 다시 돌리면 977번을 또 태우게 된다. */
+  const AXIS_COUNT = 12;
+  const thin = new Set(Object.entries(stored)
+    .filter(([, v]) => Object.keys(v?.axes || {}).length < AXIS_COUNT)
+    .map(([k]) => k));
+  const patchMode = $('#patch').checked;
+  const left = all.filter((x) => {
+    const k = axesKey(x.thumbUrl);
+    return !done.has(k) || (patchMode && thin.has(k));
+  });
+  $('#patch').parentElement.lastChild.textContent = ` 축이 빠진 것도 다시 (${thin.size}장)`;
   const byCat = {};
   left.forEach(x => { byCat[x.category] = (byCat[x.category] || 0) + 1; });
   $('#state').className = '';
   $('#state').textContent =
-    `전체 ${all.length}장 · 태깅됨 ${all.length - left.length} · 남음 ${left.length}\n`
+    `전체 ${all.length}장 · 태깅됨 ${done.size} · 남음 ${left.length}`
+    + (thin.size ? ` · 축이 덜 붙은 것 ${thin.size}` : '') + '\n'
     + (left.length ? '남은 업종  ' + Object.entries(byCat).map(([k, v]) => `${k} ${v}`).join(' · ') : '전부 끝났습니다.');
   $('#prog').style.width = (all.length ? (all.length - left.length) / all.length * 100 : 0) + '%';
   $('#run').disabled = !left.length && !results.size;
@@ -205,6 +222,7 @@ $('#run').onclick = async () => {
 };
 $('#stop').onclick = () => { stopping = true; $('#log').textContent += '\n멈추는 중… 진행 중인 것만 마칩니다.'; };
 $('#refresh').onclick = () => loadState();
+$('#patch').onchange = () => loadState();
 
 /* 창이 꺼져도 태깅한 것을 잃지 않는다. 한 장에 한 번씩 돈이 나가는 일이라
    다시 돌리는 비용이 그대로 비용이다. */
