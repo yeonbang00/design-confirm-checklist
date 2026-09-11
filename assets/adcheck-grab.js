@@ -202,6 +202,11 @@
     };
   });
   var payload = {
+    /* 버전을 함께 보낸다. 북마크 바에 저장된 스크립트는 한 번 넣으면 안 바뀌는데,
+       그걸 모르고 옛 코드가 돌면 대표컷 한 장만 담기고도 아무 표시가 없다.
+       실제로 그 일이 있었다 — images와 imageMeta가 통째로 빠진 payload가 왔다.
+       화면이 이 값을 보고 오래된 북마클릿이라고 알려 준다. */
+    _v: 3,
     _adcheck: 'product', sourceUrl: location.href, strategy: strategy,
     category: category, itemCount: total, truncated: total > slim.length, items: slim,
   };

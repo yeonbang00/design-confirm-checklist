@@ -273,7 +273,7 @@ for(const entry of saved)if(!entry.variant.photos)entry.variant.photos=structure
 setProduct(product);renderSaved();renderLibrary();updateStepNav();
 
 // Automatic entry flow. The existing editor and saved drafts are reused after results.
-let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, photoNotice='';
+let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, photoNotice='', grabSourceKind='link';
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
 renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
@@ -283,6 +283,18 @@ function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;// 버튼이 둘 �
  for(const id of ['#quickGenerate','#quickGrabGenerate'])$(id).textContent=b?'시안 만드는 중…':'시안 6종 생성';
  $('#quickInput').disabled=b;$('#quickGrab').disabled=b;$('#quickGrabGenerate').disabled=b;if($('#dlAllImages'))$('#dlAllImages').disabled=b;$('#saveVariant').disabled=b;$('#varyCopy').disabled=b;$('#varyScene').disabled=b;$('#autoRetryCopy').disabled=b;$('#quickEditProduct').disabled=b;$('#openSaved').disabled=b;$('#quickResults').setAttribute('aria-busy',String(b));}
 function looksLikeProduct(data){return data&&data._adcheck==='product'&&Array.isArray(data.items)&&data.items.length}
+/* 북마크 바에 저장된 스크립트는 한 번 넣으면 안 바뀐다. 로더로 바꾸기 전에
+   설치한 사람은 옛 코드가 계속 돈다. 그러면 상세 페이지 컷을 하나도 못 담고
+   대표컷 한 장만 오는데, 화면에는 아무 표시가 없어 원인을 알 수 없다.
+   실제로 그 일이 있었다. 버전과 필드 유무로 알아본다. */
+const GRAB_VERSION=3;
+function grabIsOld(data){
+ if(!data)return false;
+ if(Number(data._v)>=GRAB_VERSION)return false;
+ // 버전이 없어도 새 필드가 다 있으면 굳이 재설치를 시키지 않는다
+ const it=data.items&&data.items[0];
+ return !it||!Array.isArray(it.images)||!Array.isArray(it.imageMeta);
+}
 const shuffleRefs=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x};
 async function autoReferences(p){
  const name=p.productName;const category=/티셔츠|의류|가디건|니트|팬츠|스커트|블루핏|셔츠|코트|신발|패션/.test(name)?'fashion':null;
@@ -350,11 +362,17 @@ async function classifyPhotos(run){
   photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다')
    +(referenceUrls.length?` · 레퍼런스 배너 ${referenceUrls.length}장 참고`:'')
-   /* 사진이 적으면 여섯 장 중 원본이 한두 장뿐이고 나머지는 전부 생성이 된다.
-      링크만 넣으면 상세 페이지 이미지는 서버가 못 본다. 스크롤해야 뜨기 때문이다.
-      북마클릿은 사용자 브라우저에서 읽으므로 상세컷까지 가져온다. 그 차이를 알린다. */
-   +(product.photos.length<=2?' · 상세 페이지 컷을 못 가져왔습니다. 북마클릿으로 담으면 원본을 더 씁니다':'')
    +(product.refNote?` (${product.refNote})`:'');
+ /* 사진이 한두 장이면 여섯 장 중 원본이 한 장뿐이고 나머지는 전부 생성이 된다.
+    결과가 쓸 만할 수가 없다. 이 사실을 상태줄 끝에 흘리지 말고 맨 앞에 둔다.
+    어떻게 가져왔는지에 따라 할 말도 다르다. 링크로 넣었으면 북마클릿을 쓰라고
+    하면 되지만, 이미 북마클릿으로 담았는데도 한 장이면 다른 문제다. */
+ if(product.photos.length<=2){
+  photoNotice=(grabSourceKind==='grab'
+   ?'상세 페이지 사진을 못 찾았습니다. 상품 페이지에서 상세 설명까지 끝까지 스크롤한 뒤 다시 담아주세요. '
+   :'링크만으로는 상세 페이지 사진을 못 봅니다. 아래 북마클릿으로 담으면 원본을 여러 장 씁니다. ')
+   +`지금은 사진 ${product.photos.length}장뿐이라 여섯 중 다섯 장이 생성물입니다. · `+photoNotice;
+ }
  }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
 }
 
@@ -514,7 +532,8 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
  if(autoBusy)return;if(!useCurrent&&!raw.trim()){autoMessage('상품 링크를 넣어주세요.');$('#quickInput').focus();return}
  const run=++autoRun;setBusy(true);autoMessage('상품 정보를 분석하는 중…');
  try{
-  if(!useCurrent){let data;if(fromGrab){if(raw.length>2000000)throw Error('상품 정보가 너무 큽니다. 상세 페이지에서 다시 담아주세요.');try{data=JSON.parse(raw)}catch{throw Error('복사한 상품 정보를 빠짐없이 붙여넣어주세요.')}if(!looksLikeProduct(data))throw Error('AdCheck 상품 담기로 복사한 정보가 아닙니다.');}
+  if(!useCurrent){grabSourceKind=fromGrab?'grab':'link';let data;if(fromGrab){if(raw.length>2000000)throw Error('상품 정보가 너무 큽니다. 상세 페이지에서 다시 담아주세요.');try{data=JSON.parse(raw)}catch{throw Error('복사한 상품 정보를 빠짐없이 붙여넣어주세요.')}if(!looksLikeProduct(data))throw Error('AdCheck 상품 담기로 복사한 정보가 아닙니다.');
+   if(grabIsOld(data))throw Error('북마크에 저장된 상품 담기가 오래된 버전입니다. 상세 페이지 사진을 담지 못합니다. 아래 "AdCheck 상품 담기"를 북마크 바에 다시 끌어다 놓고 실행해주세요.');}
   else{const url=safeUrl(raw);if(!url)throw Error('올바른 상품 링크를 넣어주세요.');data=await getJSON('/api/productScrape?url='+encodeURIComponent(url));}
   acceptImport(data);$('#quickProductCount').textContent=importedItems.length>1?`${importedItems.length}개 중 첫 상품으로 생성합니다. 결과의 상품 정보에서 바꿀 수 있습니다.`:'';
   }
