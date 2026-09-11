@@ -15,6 +15,7 @@
 
 import { REFERENCE_CATEGORIES } from './_referenceLibrary.js';
 import { getUploadedReferenceImages } from './_referenceUploadsStore.js';
+import { getReferenceAxes, axesKey } from './_referenceAxesStore.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -23,11 +24,20 @@ export default async function handler(req, res) {
   }
 
   const { category } = req.query || {};
-  const uploaded = await getUploadedReferenceImages();
+  const [uploaded, axes] = await Promise.all([
+    getUploadedReferenceImages(),
+    getReferenceAxes(),
+  ]);
+  /* 큐레이션된 978장은 소스 파일에 박혀 있어 런타임에 못 고친다.
+     축 태그만 Blob 매니페스트에 따로 두고 여기서 붙여 내려보낸다. */
+  const withAxes = (list) => list.map((it) => {
+    const t = axes[axesKey(it.thumbUrl)];
+    return t?.axes ? { ...it, axes: t.axes } : it;
+  });
 
   if (!category || category === 'all') {
     const items = Object.values(REFERENCE_CATEGORIES).flatMap((cat) => cat.items || []);
-    res.status(200).json({ items: [...items, ...uploaded] });
+    res.status(200).json({ items: withAxes([...items, ...uploaded]) });
     return;
   }
 
@@ -38,5 +48,5 @@ export default async function handler(req, res) {
   }
 
   const uploadedForCategory = uploaded.filter((u) => u.category === category);
-  res.status(200).json({ items: [...(cat.items || []), ...uploadedForCategory] });
+  res.status(200).json({ items: withAxes([...(cat.items || []), ...uploadedForCategory]) });
 }

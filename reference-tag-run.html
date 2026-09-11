@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AdCheck | 레퍼런스 축 일괄 태깅</title>
+<link rel="icon" href="assets/favicon.png">
+<!-- 개발용 도구. 큐레이션된 레퍼런스에 축 태그를 한 번 입힌다.
+     끊겨도 이어서 할 수 있다. 저장된 것은 건너뛴다. -->
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#0b0c0e;color:#edeef0;font:13px/1.6 Pretendard,-apple-system,sans-serif;padding:24px;letter-spacing:-.015em;max-width:920px}
+h1{font-size:19px;margin:0 0 4px}
+p.sub{color:#8b9099;font-size:12.5px;margin:0 0 18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+button{font:inherit;font-weight:600;padding:9px 15px;border-radius:8px;border:1px solid #30343b;background:#14171c;color:#edeef0;cursor:pointer}
+button.go{background:#c3ff4d;color:#10120c;border-color:#c3ff4d}
+button.stop{border-color:#7a4a4a}
+button:disabled{opacity:.45;cursor:not-allowed}
+.bar{height:8px;border-radius:5px;background:#1b1f25;overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;background:#c3ff4d;width:0;transition:width .3s}
+pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7ccd4;background:#101317;border:1px solid #23272e;border-radius:10px;padding:14px;margin:0 0 14px}
+.warn{border-color:#5a4a2a;background:#1a1710;color:#e8d9b0}
+#fails{color:#ffb454;font-size:11.5px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>레퍼런스 축 일괄 태깅</h1>
+<p class="sub">큐레이션 레퍼런스에 축 열둘을 입힌다. 한 장에 vision 호출 한 번이라 비용이 든다.<br>
+   중간에 닫아도 된다. 다시 열면 저장된 것은 건너뛰고 남은 것만 이어서 한다.<br>
+   <b>처음에는 50장으로 한 번 돌려 시간과 비용을 확인한 뒤 숫자를 올리세요.</b></p>
+
+<pre id="state">상태를 확인하는 중…</pre>
+
+<div class="row">
+  <label>한 번에 <input id="cap" type="number" value="50" min="1" style="width:76px;font:inherit;padding:7px 9px;border-radius:7px;border:1px solid #424751;background:#0f1216;color:#edeef0"> 장까지</label>
+  <button class="go" id="run" disabled>남은 것 태깅</button>
+  <button class="stop" id="stop" disabled>멈추기</button>
+  <button id="refresh">상태 새로고침</button>
+</div>
+<div class="bar"><i id="prog"></i></div>
+<pre id="log">　</pre>
+<div id="fails"></div>
+
+<script type="module">
+const $ = s => document.querySelector(s);
+const CATS = ['beauty','shopping','telecom','fashion','finance','healthcare',
+              'electronics','education','food','travel','realestate','gaming','automotive'];
+const SAVE_EVERY = 25;   // 이만큼 모이면 저장한다. 저장은 반드시 하나씩 순서대로.
+const LANES = 4;         // 태깅 동시 실행 수
+
+let stopping = false, running = false;
+let all = [], done = new Set();
+
+async function getJSON(url, opt) {
+  const r = await fetch(url, opt);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+  return d;
+}
+// 매니페스트 키는 서버와 같은 규칙이어야 한다 (api/_referenceAxesStore.js)
+function axesKey(url) {
+  const name = String(url || '').split('?')[0].split('/').pop() || '';
+  const stem = name.replace(/\.[a-z0-9]+$/i, '');
+  const tail = stem.split('-').pop();
+  return tail && tail.length >= 8 ? tail : stem.slice(-40);
+}
+
+async function loadState() {
+  $('#state').textContent = '상태를 확인하는 중…';
+  const lists = await Promise.all(CATS.map(async (c) => {
+    try { const d = await getJSON('/api/referenceImages?category=' + c);
+      return (d.items || []).filter(x => x.thumbUrl).map(x => ({ ...x, category: c })); }
+    catch { return []; }
+  }));
+  all = lists.flat();
+  // 같은 이미지가 두 업종에 들어간 경우를 한 번만 센다
+  const seen = new Set();
+  all = all.filter(x => { const k = axesKey(x.thumbUrl); if (seen.has(k)) return false; seen.add(k); return true; });
+  if (!all.length) {
+    $('#state').className = 'warn';
+    $('#state').textContent = '레퍼런스를 가져오지 못했습니다. 배포본에서 열어야 합니다. 로컬에는 /api가 없습니다.';
+    $('#run').disabled = true;
+    return [];
+  }
+  let saved;
+  try { saved = await getJSON('/api/referenceAxes'); }
+  catch (e) {
+    $('#state').className = 'warn';
+    $('#state').textContent = '저장된 축 태그를 읽지 못했습니다: ' + (e.message || e)
+      + '\n배포본에서 열어야 합니다. 로컬에는 /api가 없습니다.';
+    $('#run').disabled = true;
+    return [];
+  }
+  done = new Set(Object.keys(saved.items || {}));
+  const left = all.filter(x => !done.has(axesKey(x.thumbUrl)));
+  const byCat = {};
+  left.forEach(x => { byCat[x.category] = (byCat[x.category] || 0) + 1; });
+  $('#state').className = '';
+  $('#state').textContent =
+    `전체 ${all.length}장 · 태깅됨 ${all.length - left.length} · 남음 ${left.length}\n`
+    + (left.length ? '남은 업종  ' + Object.entries(byCat).map(([k, v]) => `${k} ${v}`).join(' · ') : '전부 끝났습니다.');
+  $('#prog').style.width = (all.length ? (all.length - left.length) / all.length * 100 : 0) + '%';
+  $('#run').disabled = !left.length;
+  return left;
+}
+
+async function save(buf) {
+  if (!buf.length) return;
+  await getJSON('/api/referenceAxes', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: buf.map(x => ({ url: x.thumbUrl, axes: x.axes, note: x.note, type: x.type })) }),
+  });
+  buf.forEach(x => done.add(axesKey(x.thumbUrl)));
+}
+
+$('#run').onclick = async () => {
+  if (running) return;
+  running = true; stopping = false;
+  $('#run').disabled = true; $('#stop').disabled = false; $('#refresh').disabled = true;
+  const fails = [];
+  try {
+    let left = await loadState();
+    const cap = Number($('#cap').value) || left.length;
+    left = left.slice(0, cap);
+    let i = 0, ok = 0, buf = [];
+    const t0 = Date.now();
+
+    const tick = () => {
+      const per = ok ? (Date.now() - t0) / ok / 1000 : 0;
+      const rest = Math.max(0, left.length - ok - fails.length);
+      $('#log').textContent =
+        `태깅 ${ok + fails.length} / ${left.length}  (성공 ${ok} · 실패 ${fails.length})\n`
+        + `한 장당 ${per.toFixed(1)}초 · 남은 시간 약 ${Math.round(per * rest / 60)}분\n`
+        + `저장 대기 ${buf.length}건`;
+      $('#prog').style.width = ((done.size + buf.length) / all.length * 100) + '%';
+    };
+
+    // 저장은 직렬로. 여러 요청이 동시에 매니페스트를 읽고 쓰면 서로 덮어쓴다.
+    let saving = Promise.resolve();
+    const flush = () => {
+      const chunk = buf; buf = [];
+      saving = saving.then(() => save(chunk)).catch(e => { fails.push('저장 실패: ' + e.message); });
+      return saving;
+    };
+
+    const lane = async () => {
+      while (i < left.length && !stopping) {
+        const it = left[i++];
+        try {
+          const d = await getJSON('/api/analyzeReferenceImage', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: it.thumbUrl, brandName: it.brandName || '' }),
+          });
+          if (d.axes && Object.keys(d.axes).length) {
+            buf.push({ ...it, axes: d.axes, note: d.note, type: d.type }); ok++;
+          } else { fails.push(`${it.brandName} · 축 없음`); }
+        } catch (e) { fails.push(`${it.brandName} · ${String(e.message).slice(0, 50)}`); }
+        if (buf.length >= SAVE_EVERY) await flush();
+        tick();
+      }
+    };
+    await Promise.all(Array.from({ length: LANES }, lane));
+    await flush();
+    await saving;
+    $('#log').textContent += stopping ? '\n\n멈췄습니다. 지금까지 한 것은 저장됐습니다.' : '\n\n끝났습니다.';
+    if (fails.length) $('#fails').textContent = '실패 ' + fails.length + '건\n' + fails.slice(0, 40).join('\n');
+  } catch (e) {
+    $('#log').textContent += '\n오류: ' + (e.message || e);
+  } finally {
+    running = false; $('#stop').disabled = true; $('#refresh').disabled = false;
+    await loadState();
+  }
+};
+$('#stop').onclick = () => { stopping = true; $('#log').textContent += '\n멈추는 중… 진행 중인 것만 마칩니다.'; };
+$('#refresh').onclick = () => loadState();
+loadState();
+</script>
+</body>
+</html>
