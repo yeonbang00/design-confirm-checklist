@@ -203,6 +203,12 @@
   /* 그냥 다 담으면 안 쓸 것까지 들어온다. 영상을 걸러도 세로형과 중복과
      남의 브랜드가 남는다. 담기 전에 눈으로 보고 고르는 자리를 둔다. */
   function pick(list) {
+    /* 광고주끼리 묶어 정렬한다. 키워드로 검색하면 한 화면에 광고주가 스물다섯씩
+       섞여 나온다(정수기 검색 첫 30장에 25곳). 페이지 순서 그대로 두면
+       남의 광고를 골라 빼기가 어렵다. 같은 광고주가 붙어 있으면 한눈에 보인다. */
+    list = list.slice().sort(function (a, b) {
+      return (a.brand || '').localeCompare(b.brand || '', 'ko') || a.i - b.i;
+    });
     var brands = [];
     list.forEach(function (x) { if (x.brand && brands.indexOf(x.brand) < 0) brands.push(x.brand); });
     var chosen = {};
@@ -274,8 +280,13 @@
     count();
 
     ov.querySelector('#ac-go').onclick = function () {
+      /* data-i는 훑은 순서의 번호이고 list는 광고주순으로 정렬돼 있다.
+         자리로 찾으면 엉뚱한 소재를 집는다. 번호로 찾는다. */
+      var byId = {};
+      list.forEach(function (x) { byId[x.i] = x; });
       var take = boxes().filter(function (c) { return c.checked && shown(c); })
-        .map(function (c) { return list[Number(c.dataset.i)]; });
+        .map(function (c) { return byId[Number(c.dataset.i)]; })
+        .filter(Boolean);
       if (!take.length) { toast('고른 것이 없습니다.', 3000); return; }
       var payload = take.map(function (x) {
         return {
