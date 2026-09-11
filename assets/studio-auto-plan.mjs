@@ -133,7 +133,10 @@ export const TYPE_STYLES = [
 /* 조판 열여덟이라고 했지만 눈에 보이는 장치는 다섯 가지다. offer·numeral·arch는
    전부 같은 숫자 하이라이트 띠고, split·split-right·duo-panel은 전부 면분할이다.
    혜택 강조가 회당 두세 자리니 같은 장치가 세 번씩 나왔다. 여섯 장이 다르게
-   보이려면 조판 이름이 아니라 장치가 달라야 한다. 한 장치는 최대 두 번. */
+   보이려면 조판 이름이 아니라 장치가 달라야 한다.
+
+   면분할은 한 번까지만 쓴다. 사진 반 카피 반으로 나눈 판은 한 장 있으면
+   충분하고, 두 장만 돼도 여섯 장이 전부 그것처럼 보인다. 나머지는 두 번까지. */
 export const DEVICE = {
   highlight: ['offer', 'numeral', 'arch'],          // 숫자 아래 색 띠
   split: ['split', 'split-right', 'duo-panel'],     // 좌우 면분할
@@ -143,6 +146,8 @@ export const DEVICE = {
 };
 export const deviceOf = layout =>
   Object.keys(DEVICE).find(k => DEVICE[k].includes(layout)) || 'other';
+export const DEVICE_LIMIT = { split: 1 };
+const limitOf = dev => DEVICE_LIMIT[dev] || 2;
 
 /* ---- 업종별 구성 규칙 ----
    여섯 자리를 무엇으로 채울지는 업종마다 다르다. 패션은 모델이 입은 모습이
@@ -253,7 +258,7 @@ export function createPlan(product, random = Math.random) {
     const inGroup = EMPHASIS[em];
     const hinted = shuffle(hints.filter(l => inGroup.includes(l)), random);
     const free = l => !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1);
-    const fresh = l => (deviceCount[deviceOf(l)] || 0) < 2;
+    const fresh = l => (deviceCount[deviceOf(l)] || 0) < limitOf(deviceOf(l));
     const ranked = [...hinted, ...shuffle(inGroup, random)].filter(free);
     // 장치가 두 번을 넘지 않는 것 먼저, 없으면 강조 묶음 안에서, 그래도 없으면 전체에서
     const pick = ranked.find(fresh) || ranked[0]

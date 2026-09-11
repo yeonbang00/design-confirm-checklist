@@ -103,11 +103,19 @@ function updateStepNav(){const names=['상품 확인','제작 방식',isPlan()?'
    누끼는 제품만 살아 있는 판이라 색면 조판에서 확 달라진다. */
 const srcOf=p=>(p&&(p.cleanUrl||p.url))||'';
 const artSrc=(p,layout)=>(p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(layout))?p.cutUrl:srcOf(p);
-function art(v){const photos=v.photos||PHOTOS,p=photos[v.photo]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;const cut=p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(v.layout);
- return `<div class="art ${esc(v.layout)}${v.original?' original':''}${v.baked?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
+function art(v){const photos=v.photos||PHOTOS,
+ /* 원본 보기를 켜면 생성 전 사진으로 되돌린다. 카피까지 그린 컷은 글자가
+    그림에 박혀 있어서 HTML 카피만 숨겨서는 원본이 되지 않는다. */
+ pi=(v.original&&Number.isInteger(v.sourcePhoto)&&photos[v.sourcePhoto])?v.sourcePhoto:v.photo,
+ p=photos[pi]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;const cut=p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(v.layout);
+ /* 카피까지 그린 컷은 글자가 그림에 박혀 있다. '카피 없이 원본 보기'를 켜면
+    HTML 카피만 숨기는 게 아니라 생성 전 원본 사진으로 되돌려야 말이 된다.
+    그래서 original일 때는 baked 표시를 떼고 원본 사진을 보여준다. */
+ const asOriginal=!!v.original;
+ return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
- $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div><span class="badge">${selected===i?'수정 중':'시안 '+(i+1)}</span></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
+ $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
  $$('[data-dlimg]').forEach(b=>b.onclick=e=>{e.stopPropagation();downloadImage(Number(b.dataset.dlimg))});
  $$('[data-card]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.card);renderBoard();fillEditor();if(innerWidth<781){$('#editTitle').focus({preventScroll:true});$('.editor').scrollIntoView({behavior:'instant',block:'start'})}else $(`[data-card="${selected}"]`).focus({preventScroll:true})});
 }
@@ -273,11 +281,11 @@ for(const entry of saved)if(!entry.variant.photos)entry.variant.photos=structure
 setProduct(product);renderSaved();renderLibrary();updateStepNav();
 
 // Automatic entry flow. The existing editor and saved drafts are reused after results.
-let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, photoNotice='', grabSourceKind='link';
+let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, photoNotice='', grabSourceKind='link', grabStale=false;
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
 renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
- else if(v.quality&&v.quality!=='high'){const up=document.createElement('button');up.className='btn card-hq';up.textContent='이 시안만 고화질로';up.onclick=e=>{e.stopPropagation();retryImage(v.id,'high')};card.append(up)}})};
+})};
 function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
 function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;// 버튼이 둘 다 '시안 6종 생성'이라, 진행 중 표시도 둘 다 해야 어느 쪽을 눌렀든 보인다.
  for(const id of ['#quickGenerate','#quickGrabGenerate'])$(id).textContent=b?'시안 만드는 중…':'시안 6종 생성';
@@ -287,7 +295,8 @@ function looksLikeProduct(data){return data&&data._adcheck==='product'&&Array.is
    설치한 사람은 옛 코드가 계속 돈다. 그러면 상세 페이지 컷을 하나도 못 담고
    대표컷 한 장만 오는데, 화면에는 아무 표시가 없어 원인을 알 수 없다.
    실제로 그 일이 있었다. 버전과 필드 유무로 알아본다. */
-const GRAB_VERSION=3;
+const GRAB_VERSION=3;   // 이 아래는 images/imageMeta 자체가 없어 못 쓴다
+const GRAB_BEST=4;      // 후기·추천상품을 걸러내는 점수 규칙이 들어간 판
 function grabIsOld(data){
  if(!data)return false;
  if(Number(data._v)>=GRAB_VERSION)return false;
@@ -362,7 +371,8 @@ async function classifyPhotos(run){
   photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다')
    +(referenceUrls.length?` · 레퍼런스 배너 ${referenceUrls.length}장 참고`:'')
-   +(product.refNote?` (${product.refNote})`:'');
+   +(product.refNote?` (${product.refNote})`:'')
+   +(grabStale?' · 상품 담기를 다시 설치하면 후기 사진과 추천 상품을 걸러냅니다':'');
  /* 사진이 한두 장이면 여섯 장 중 원본이 한 장뿐이고 나머지는 전부 생성이 된다.
     결과가 쓸 만할 수가 없다. 이 사실을 상태줄 끝에 흘리지 말고 맨 앞에 둔다.
     어떻게 가져왔는지에 따라 할 말도 다르다. 링크로 넣었으면 북마클릿을 쓰라고
@@ -490,6 +500,8 @@ async function generateImage(plan,run,q){
  variant.autoStatus='이미지 생성 중';variant.imageFailed=false;renderBoard();
  const src=product.photos[plan.photo]||{};
  const baked=plan.render==='baked';
+ // 생성 전 사진을 기억해 둔다. '카피 없이 원본 보기'가 되돌아갈 자리다.
+ variant.sourcePhoto=plan.photo;
  try{
  // 1단계: 장면을 만든다. 이 호출에는 글자 지시를 넣지 않는다.
  const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
@@ -533,7 +545,8 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
  const run=++autoRun;setBusy(true);autoMessage('상품 정보를 분석하는 중…');
  try{
   if(!useCurrent){grabSourceKind=fromGrab?'grab':'link';let data;if(fromGrab){if(raw.length>2000000)throw Error('상품 정보가 너무 큽니다. 상세 페이지에서 다시 담아주세요.');try{data=JSON.parse(raw)}catch{throw Error('복사한 상품 정보를 빠짐없이 붙여넣어주세요.')}if(!looksLikeProduct(data))throw Error('AdCheck 상품 담기로 복사한 정보가 아닙니다.');
-   if(grabIsOld(data))throw Error('북마크에 저장된 상품 담기가 오래된 버전입니다. 상세 페이지 사진을 담지 못합니다. 아래 "AdCheck 상품 담기"를 북마크 바에 다시 끌어다 놓고 실행해주세요.');}
+   if(grabIsOld(data))throw Error('북마크에 저장된 상품 담기가 오래된 버전입니다. 상세 페이지 사진을 담지 못합니다. 아래 "AdCheck 상품 담기"를 북마크 바에 다시 끌어다 놓고 실행해주세요.');
+   grabStale=Number(data._v||0)<GRAB_BEST;}
   else{const url=safeUrl(raw);if(!url)throw Error('올바른 상품 링크를 넣어주세요.');data=await getJSON('/api/productScrape?url='+encodeURIComponent(url));}
   acceptImport(data);$('#quickProductCount').textContent=importedItems.length>1?`${importedItems.length}개 중 첫 상품으로 생성합니다. 결과의 상품 정보에서 바꿀 수 있습니다.`:'';
   }

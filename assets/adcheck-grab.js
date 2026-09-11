@@ -138,13 +138,26 @@
        'detail'로 표시해 두고, 배너 비율은 나중에 잘라 쓴다. */
     var code = (String(it.mainImage || '').split('/').pop().match(/\d{6,}/) || [])[0];
     var mainBare = String(it.mainImage || '').split('?')[0];
+    /* 실측으로 드러난 것 — 상품코드만 보고 점수를 주니 후기 사진이 최고점을
+       받았다. 신세계는 후기를 /comment/ 아래 두는데 파일명에 상품코드가 들어가
+       +100을 받고 1등으로 올라왔다. 남이 찍은 사진을 광고에 쓸 수는 없다.
+       반대로 진짜 상세 페이지 콘텐츠는 /htmleditor/ 아래 있는데 그건 가산점이
+       없었다. 경로가 무엇을 뜻하는지 봐야 한다. */
+    var REVIEW = /\/(comment|review|reviews|user|ugc)\//i;      // 구매자가 올린 사진
+    var EDITOR = /\/(htmleditor|editor|detail|contents?|desc)\//i; // 상세 페이지 콘텐츠
     var scored = pool.map(function (q) {
       var s = 0, r = q.h / q.w;
-      if (code && q.url.indexOf(code) >= 0) s += 100;
+      var hasCode = code && q.url.indexOf(code) >= 0;
+      if (REVIEW.test(q.url)) return { url: q.url, w: q.w, h: q.h, tall: r >= 1.7, score: -999 };
+      if (EDITOR.test(q.url)) s += 120;          // 상세 페이지 본문이 가장 쓸모 있다
+      if (hasCode) s += 100;
+      /* 같은 /goods/ 아래인데 상품코드가 다르면 추천 상품 영역이다.
+         실측 — 다른 상품 다섯 장이 섞여 들어왔다. */
+      if (!hasCode && /\/goods\//i.test(q.url)) s -= 90;
       if (q.detail) s += 40;
       if (q.w >= 700) s += 20; else if (q.w >= 400) s += 10;
       if (r > 0.6 && r < 1.8) s += 15;          // 배너에 바로 얹기 좋은 비율
-      if (r >= 3) s -= 25;                       // 통짜 스크롤 이미지는 뒤로
+      if (r >= 3) s -= 10;                       // 통짜 스크롤 이미지는 뒤로
       if (/logo|icon|sprite|banner|badge|btn|blank|dummy/i.test(q.url)) s -= 60;
       return { url: q.url, w: q.w, h: q.h, tall: r >= 1.7, score: s };
     }).filter(function (q) {
@@ -206,7 +219,7 @@
        그걸 모르고 옛 코드가 돌면 대표컷 한 장만 담기고도 아무 표시가 없다.
        실제로 그 일이 있었다 — images와 imageMeta가 통째로 빠진 payload가 왔다.
        화면이 이 값을 보고 오래된 북마클릿이라고 알려 준다. */
-    _v: 3,
+    _v: 4,
     _adcheck: 'product', sourceUrl: location.href, strategy: strategy,
     category: category, itemCount: total, truncated: total > slim.length, items: slim,
   };
