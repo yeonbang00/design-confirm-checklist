@@ -15,7 +15,9 @@
  * 버전을 같이 보내고, 수집 페이지가 옛 북마클릿이면 알려 준다.
  */
 (async function () {
-  var ADS_V = 1;
+  // 2 — 지문 계산을 바꿨다(캔버스 축소 → 1:1 읽고 직접 평균). 옛 버전으로 담으면
+  //     지문이 달라 이미 담은 소재를 못 가려낸다.
+  var ADS_V = 2;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
