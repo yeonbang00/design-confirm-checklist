@@ -128,6 +128,7 @@ $('#save').onclick = async () => {
   const category = $('#cat').value;
   let ok = 0; const fails = [];
   const axesBuf = [];
+  const regBuf = [];   // 목록에 적는 것은 마지막에 한 번만. 나눠 적으면 서로 덮어쓴다.
 
   for (let i = 0; i < ads.length; i++) {
     const x = ads[i];
@@ -150,12 +151,14 @@ $('#save').onclick = async () => {
           type: a.type || undefined,
           thumb: { base64: b64, mimeType: x.mime },
           full: { base64: b64, mimeType: x.mime },
+          defer: true,
         }),
       });
-      if (a.axes && Object.keys(a.axes).length && up.item?.thumbUrl) {
-        axesBuf.push({ url: up.item.thumbUrl, axes: a.axes });
+      if (up.item?.thumbUrl) {
+        regBuf.push(up.item);
+        if (a.axes && Object.keys(a.axes).length) axesBuf.push({ url: up.item.thumbUrl, axes: a.axes });
       }
-      st.textContent = '등록됨'; st.className = 'st ok'; ok++;
+      st.textContent = '올림'; st.className = 'st ok'; ok++;
     } catch (e) {
       st.textContent = String(e.message || e).slice(0, 22); st.className = 'st bad';
       fails.push(`${x.brand} · ${String(e.message || e).slice(0, 40)}`);
@@ -163,8 +166,22 @@ $('#save').onclick = async () => {
     $('#log').textContent = `등록 ${ok + fails.length} / ${ads.length}  (성공 ${ok} · 실패 ${fails.length})`;
   }
 
-  /* 축은 한 번에 모아서 보낸다. 매니페스트는 읽고 고쳐 쓰는 구조라
-     나눠 보내면 뒤 저장이 앞 저장을 덮는다. 977장 태깅에서 겪었다. */
+  /* 목록과 축 둘 다 한 번에 모아서 보낸다. 매니페스트는 읽고 고쳐 쓰는 구조라
+     나눠 보내면 뒤 저장이 앞 저장을 덮는다. 977장 태깅과 33장 수집에서 두 번 겪었다. */
+  if (regBuf.length) {
+    try {
+      const r = await getJSON('/api/uploadReferenceImage', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ register: regBuf }),
+      });
+      $('#log').textContent += `\n레퍼런스 목록에 ${r.added}건 추가 (전체 ${r.total}건)`;
+      if (r.added < regBuf.length) {
+        $('#log').textContent += `  ← 보낸 ${regBuf.length}건보다 적습니다`;
+      }
+    } catch (e) {
+      $('#log').textContent += `\n목록 저장 실패: ${e.message}  이미지는 올라갔으니 복구 도구로 되찾을 수 있습니다.`;
+    }
+  }
   if (axesBuf.length) {
     try {
       await getJSON('/api/referenceAxes', {

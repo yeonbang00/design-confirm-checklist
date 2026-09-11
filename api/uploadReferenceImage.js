@@ -15,7 +15,7 @@
 
 import { REFERENCE_CATEGORIES } from './_referenceLibrary.js';
 import { put } from './_blobPut.js';
-import { addUploadedReferenceImage } from './_referenceUploadsStore.js';
+import { addUploadedReferenceImage, addUploadedReferenceImages } from './_referenceUploadsStore.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 export const config = {
@@ -43,7 +43,20 @@ export default async function handler(req, res) {
   }
   if (rejectIfNotSameOrigin(req, res)) return;
 
-  const { category, brandName, note, type, ownWork, thumb, full } = req.body || {};
+  /* 여러 장을 올릴 때는 올리는 것과 목록에 적는 것을 나눈다. 한 장마다 목록을
+     고쳐 쓰면 뒤 저장이 앞 저장을 덮어 소재가 조용히 사라진다(33장 중 12장만
+     남은 적이 있다). defer로 올리기만 하고, 마지막에 register로 한 번에 적는다. */
+  if (Array.isArray(req.body?.register)) {
+    try {
+      const out = await addUploadedReferenceImages(req.body.register.slice(0, 300));
+      res.status(200).json({ ok: true, ...out });
+    } catch (err) {
+      res.status(502).json({ error: err?.message || '레퍼런스 목록을 저장하지 못했습니다.' });
+    }
+    return;
+  }
+
+  const { category, brandName, note, type, ownWork, thumb, full, defer } = req.body || {};
 
   if (!category || !REFERENCE_CATEGORIES[category]) {
     res.status(400).json({ error: '알 수 없는 업종 카테고리입니다.' });
@@ -86,8 +99,8 @@ export default async function handler(req, res) {
       uploadedAt: new Date().toISOString(),
     };
 
-    await addUploadedReferenceImage(item);
-    res.status(200).json({ ok: true, item });
+    if (!defer) await addUploadedReferenceImage(item);
+    res.status(200).json({ ok: true, item, deferred: !!defer });
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : '업로드 중 알 수 없는 오류가 발생했습니다.' });
   }
