@@ -671,18 +671,28 @@
   });
   document.addEventListener('click', () => appealOptMenu.classList.remove('open'));
 
-  /* 북마클릿은 북마크 바에 저장되는 스크립트라 한 번 넣으면 안 바뀐다.
-     그래서 코드를 심지 않고 우리 서버의 파일을 그때그때 불러오게 한다.
-     상품 담기와 같은 방식이다. */
+  /* 상품 담기처럼 우리 서버의 스크립트를 불러오는 방식은 여기서 안 통한다.
+     페이스북 CSP가 script-src-elem으로 외부 스크립트를 막고 connect-src로
+     fetch까지 막는다(둘 다 실측). 그래서 코드를 북마클릿 안에 통째로 넣는다.
+     주석을 걷어내면 URL 인코딩해서 21KB 남짓이라 북마크에 들어간다.
+     대신 고치면 다시 끌어다 놓아야 한다. 수집 페이지가 버전을 보고 알려 준다. */
   (function(){
-    const src = location.origin + '/assets/adcheck-ads.js';
-    document.getElementById('adsBm').href = 'javascript:' + encodeURIComponent(
-      "(function(){var s=document.createElement('script');s.src=" + JSON.stringify(src)
-      + "+'?v='+Date.now();s.onerror=function(){alert('광고 담기를 불러오지 못했습니다.')};"
-      + "document.body.appendChild(s)})()");
-    document.getElementById('adsBm').addEventListener('click', (e) => {
+    const chip = document.getElementById('adsBm');
+    fetch('/assets/adcheck-ads.js').then(r => r.text()).then((code) => {
+      const lean = code
+        .replace(/\/\*[\s\S]*?\*\//g, '')                                  // 블록 주석
+        .split('\n').filter(l => !l.trim().startsWith('//') && l.trim())   // 줄 주석과 빈 줄
+        .join('\n');
+      chip.href = 'javascript:' + encodeURIComponent(lean + ';void 0;');
+      chip.dataset.size = Math.round(chip.href.length / 1024) + 'KB';
+    }).catch(() => {
+      chip.textContent = '광고 담기를 준비하지 못했습니다';
+    });
+    chip.addEventListener('click', (e) => {
       e.preventDefault();
-      alert('이 버튼을 북마크 바에 끌어다 놓으세요.\n그런 다음 메타 광고 라이브러리에서 그 북마크를 누르면 됩니다.');
+      alert('이 버튼을 북마크 바에 끌어다 놓으세요.\n'
+        + '그런 다음 메타 광고 라이브러리에서 그 북마크를 누르면 됩니다.\n\n'
+        + '누르는 게 아니라 끌어다 놓는 것입니다.');
     });
   })();
 

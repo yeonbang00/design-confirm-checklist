@@ -7,8 +7,15 @@
  *
  * 서버에서 이 페이지를 fetch하면 403이다. 렌더된 화면에서만 읽힌다.
  * 크롤러가 아니라 사용자가 이미 열어 둔 페이지에서 한 번 누르는 방식인 이유다.
+ *
+ * 이 파일은 북마클릿 안에 통째로 들어간다. 상품 담기처럼 우리 서버의 스크립트를
+ * 불러오는 방식은 여기서 안 통한다 — 페이스북 CSP가 script-src-elem으로
+ * 외부 스크립트를 막고 connect-src로 fetch까지 막는다(둘 다 실측).
+ * 그래서 북마크에 코드가 박힌다. 고치면 사용자가 다시 끌어다 놓아야 하므로
+ * 버전을 같이 보내고, 수집 페이지가 옛 북마클릿이면 알려 준다.
  */
 (async function () {
+  var ADS_V = 1;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
@@ -238,7 +245,7 @@
       function handshake(e) {
         if (e.source !== win || e.data !== 'adcheck-collect-ready' || sent) return;
         sent = true;
-        win.postMessage({ kind: 'adcheck-ads', v: 1, items: payload }, HOST);
+        win.postMessage({ kind: 'adcheck-ads', v: ADS_V, items: payload }, HOST);
         window.removeEventListener('message', handshake);
         urls.forEach(URL.revokeObjectURL);
         ov.remove();

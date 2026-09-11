@@ -52,6 +52,7 @@ pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7
 
 <script type="module">
 const $ = s => document.querySelector(s);
+const ADS_V = 1;   // assets/adcheck-ads.js의 ADS_V와 맞출 것
 let ads = [];
 const urls = [];
 
@@ -66,6 +67,14 @@ window.addEventListener('message', (e) => {
   const d = e.data;
   if (!d || d.kind !== 'adcheck-ads' || !Array.isArray(d.items)) return;
   ads = d.items;
+  /* 북마클릿은 코드가 북마크에 박혀 있어 고쳐도 저절로 안 바뀐다.
+     옛 버전이 도는 줄 모르면 왜 결과가 다른지 알 길이 없다. */
+  if (Number(d.v || 0) < ADS_V) {
+    $('#hint').hidden = false;
+    $('#hint').innerHTML = '<b style="color:#ffb454">북마클릿이 옛 버전입니다.</b> '
+      + '이미지 레퍼런스 페이지에서 <b>AdCheck 광고 담기</b>를 북마크 바에 다시 끌어다 놓아주세요. '
+      + '지금 담은 것은 그대로 등록할 수 있습니다.';
+  }
   render();
 });
 if (window.opener) window.opener.postMessage('adcheck-collect-ready', '*');
