@@ -184,7 +184,7 @@ function renderSaved(){
 }
 $('#dlAllImages') && ($('#dlAllImages').onclick=()=>downloadAllImages());
 $('#exportAll').onclick=()=>download({version:3,previewOnly:false,items:saved.map(packageEntry),recipes:recipes.map(packageRecipe)},'AdCheck-스튜디오-작업정보.json');
-$('#openSaved').onclick=()=>go(3);$('#stepPrev').onclick=()=>go(step-1);$('#stepNext').onclick=()=>step===1?openSelectedBoard():step<3&&go(step+1);
+$('#stepPrev').onclick=()=>go(step-1);$('#stepNext').onclick=()=>step===1?openSelectedBoard():step<3&&go(step+1);
 $$('[data-step]').forEach(b=>b.onclick=()=>go(Number(b.dataset.step)));$$('[data-go]').forEach(b=>b.onclick=()=>go(Number(b.dataset.go)));
 
 let importedItems=[], importedSource='', revision=0, copyBusy=false, referenceRequest=0, importRequest=0;
@@ -563,6 +563,19 @@ $('#quickBookmarklet').href=$('#grabLink').href;$('#quickBookmarklet').onclick=e
 // Enter the existing save/edit views without exposing the former setup steps.
 const legacyGo=go;
 go=function(n){if(autoBusy)return;if(n===1){$('#productStep').hidden=false;return}legacyGo(n);if(n===2){$('#directionStep').hidden=true;$('#productStep').hidden=true;}if(n===3){$('#quickResults').hidden=false}};
-$('#quickBack') && ($('#quickBack').onclick=()=>{if(variants.length)enterResults();else{$('#savedStep').hidden=true;$('#quickResults').hidden=true}});
+/* 저장함은 펼치기만 되고 접히지 않았다. 같은 버튼을 다시 누르면 닫히는 게
+   맞다. 닫을 때 갈 곳은 두 군데다 — 시안이 있으면 결과로, 없으면 입력 화면으로. */
+function closeSaved(){
+ if(variants.length)enterResults();
+ else{step=0;['productStep','directionStep','boardStep','savedStep'].forEach(id=>$('#'+id).hidden=true);$('#quickResults').hidden=true}
+ syncSavedToggle();
+}
+function syncSavedToggle(){
+ const open=!$('#savedStep').hidden;
+ $('#openSaved').setAttribute('aria-expanded',String(open));
+ $('#openSaved').classList.toggle('is-open',open);
+}
+$('#openSaved').onclick=()=>{if($('#savedStep').hidden){go(3);syncSavedToggle()}else closeSaved()};
+$('#quickBack') && ($('#quickBack').onclick=()=>closeSaved());
 const legacyFill=fillEditor;fillEditor=function(){legacyFill();$('#saveVariant').disabled=autoBusy||!!variants[selected]?.imageFailed;$('#varyCopy').disabled=autoBusy;$('#varyScene').disabled=autoBusy;$('#applyReference').disabled=autoBusy||!activeReference};
 $('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=true;$('#savedStep').hidden=true;
