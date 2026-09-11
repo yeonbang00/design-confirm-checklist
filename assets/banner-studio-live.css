@@ -57,13 +57,38 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
    넘칠 때만 break-word가 받아준다.
    balance는 두 줄 폭을 브라우저가 알아서 고르게 맞춰준다. 첫 줄이 길고
    둘째 줄이 짧아지는 모양을 막는다. */
+.art .copy .eyebrow,
 .art .copy .headline,
 .art .copy .subline,
 .art .copy .cta,
 .art .copy .offer-value,
-.art .copy .benefit-condition{
+.art .copy .benefit-condition,
+.art .copy .footnote{
   word-break:keep-all;
   overflow-wrap:break-word;
+}
+
+/* ---- 라벨과 각주 ----
+   레퍼런스 배너에서 반복되는 장치다. 위에는 이 시안이 무엇을 말하는지
+   한 조각으로 알리는 알약 라벨, 아래에는 숫자의 근거. 실제 광고가
+   광고로 보이는 이유의 큰 몫이 이 둘에 있다.
+
+   라벨은 헤드라인과 한 덩어리로 읽혀야 하므로 간격을 그룹 안쪽 값(0.35em)으로
+   붙인다. 떼어 놓으면 덩어리가 하나 늘어 위계가 무너진다. */
+.art .copy .eyebrow{
+  display:inline-block; margin-bottom:.4em;
+  padding:.42em .85em; border-radius:999px;
+  font-size:2.3cqw; font-weight:700; line-height:1;
+  letter-spacing:.02em; white-space:nowrap;
+  background:var(--art-ink,#1b1a16); color:var(--art-paper,#f6f3ec);
+}
+.art.bottom-right .copy .eyebrow,
+.art.corner .copy .eyebrow,
+.art.badge .copy .eyebrow{ background:var(--art-paper,#f6f3ec); color:var(--art-ink,#1b1a16); }
+.art .copy .footnote{
+  display:block; margin-top:.9em;
+  font-size:1.7cqw; line-height:1.45; opacity:.62;
+  font-weight:400; letter-spacing:0;
 }
 .art .copy .headline{ text-wrap:balance; }
 

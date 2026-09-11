@@ -112,7 +112,7 @@ function art(v){const photos=v.photos||PHOTOS,
     HTML 카피만 숨기는 게 아니라 생성 전 원본 사진으로 되돌려야 말이 된다.
     그래서 original일 때는 baked 표시를 떼고 원본 사진을 보여준다. */
  const asOriginal=!!v.original;
- return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy"><span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}</div></div>`}
+ return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy">${v.eyebrow?`<span class="eyebrow">${esc(v.eyebrow)}</span>`:''}<span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}${v.footnote?`<span class="footnote">${esc(v.footnote)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
  $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
@@ -313,7 +313,7 @@ async function autoReferences(p){
 async function autoCopies(run){
  const refs=await autoReferences(product);if(run!==autoRun)return;
  const references=autoPlan.map(p=>{const candidates=refs.filter(r=>r.type===p.type);const ref=candidates[Math.floor(Math.random()*candidates.length)];return ref?{...ref,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'표현 방식과 카피 구조를 참고합니다.'}:{type:p.type,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'상품 사실 안에서 표현합니다.'}});
- const data=await getJSON('/api/bannerCopy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'studio',autoPlan:true,product,layouts:autoPlan.map(p=>p.layout),references,plans:autoPlan})});
+ const data=await getJSON('/api/bannerCopy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'studio',autoPlan:true,product,layouts:autoPlan.map(p=>p.layout),references,plans:autoPlan,facts:product.facts||[]})});
  if(run!==autoRun)return;
  if(!Array.isArray(data.copies)||data.copies.length!==6)throw Error('카피가 6개 돌아오지 않았습니다. 카피만 다시 시도해주세요.');
  variants.forEach((v,i)=>Object.assign(v,data.copies[i],{reference:references[i],copyModel:data.model,copyEdited:false}));autoCopyFailed=false;renderBoard();fillEditor();
@@ -350,6 +350,9 @@ async function classifyPhotos(run){
   // 사진에서 읽은 USP와 톤을 카피 생성으로 넘긴다. 상품명만 보고 쓰면
   // 어느 상품에나 맞는 말이 나온다.
   product.usp=data.usp||'';product.tone=data.toneKo||'';
+  /* 상세 페이지 이미지에 인쇄된 임상 수치·성분·후기·인증을 읽어 온다.
+     이 목록이 카피가 숫자를 쓸 수 있는 유일한 화이트리스트다. */
+  product.facts=Array.isArray(data.facts)?data.facts:[];
   product.layoutHints=Array.isArray(data.layoutHints)?data.layoutHints:[];product.refNote=data.refNote||'';
   const byUrl=new Map((data.photos||[]).map(x=>[x.url,x]));
   product.photos.forEach((p,i)=>{const x=byUrl.get(p.url);if(!x)return;
@@ -512,7 +515,7 @@ async function generateImage(plan,run,q){
  // 장면과 글자를 한 번에 시키면 글자가 통째로 빠진다(두 번 시험해 두 번 다).
  if(baked){
   variant.autoStatus='카피를 그리는 중';renderBoard();
-  const withText=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:finalUrl,size:'1024x1024',quality:q||quality,text:{headline:variant.main,subline:variant.sub,offer:variant.offer,brand:product.brand,cta:variant.showCta?variant.cta:'',style:plan.typeStyle?.[1]||''}})});
+  const withText=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:finalUrl,size:'1024x1024',quality:q||quality,text:{headline:variant.main,subline:variant.sub,offer:variant.offer,brand:product.brand,cta:variant.showCta?variant.cta:'',style:plan.typeStyle?.[1]||'',eyebrow:variant.eyebrow||'',footnote:variant.footnote||''}})});
   if(run!==autoRun)return;
   if(safeUrl(withText.imageUrl))finalUrl=withText.imageUrl;
  }
@@ -527,7 +530,11 @@ async function generateImage(plan,run,q){
  if(baked){
   // 그림에 박힌 금액·퍼센트를 다시 읽어 확인된 값과 맞춰 본다
   const slots=factSlots(product);
-  const check=await checkBakedText(finalUrl,[slots.PRICE,slots.BENEFIT,slots.QUANTITY].filter(Boolean),getJSON);
+  /* 그림에 그린 숫자를 OCR로 다시 읽어 대조한다. 확인된 값에는 가격·혜택뿐
+     아니라 상세 페이지에서 읽은 사실도 들어간다. 근거가 있는 11.44%를
+     '확인되지 않은 숫자'로 잡으면 오탐만 는다. */
+  const verified=[slots.PRICE,slots.BENEFIT,slots.QUANTITY,...(product.facts||[]).map(f=>f.text),variant.footnote||''].filter(Boolean);
+  const check=await checkBakedText(finalUrl,verified,getJSON);
   if(run!==autoRun)return;
   variant.textClaims=check?check.claims:null;
   variant.autoStatus=(variant.axes?variant.axes+' · ':'')+(
@@ -557,7 +564,7 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   const pixelWork=startPixelWork(run);
   autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
   const slots=factSlots(product);
-  variants=autoPlan.map(p=>({id:p.id,title:p.label+' · '+LAYOUTS[p.layout],recipe:p.recipe,layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}));
+  variants=autoPlan.map(p=>({id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}));
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;$('#autoCopyError').textContent=e.message});
   // 사진만 만드는 컷은 바로 시작한다. 카피까지 그리는 컷은 문구가 나와야

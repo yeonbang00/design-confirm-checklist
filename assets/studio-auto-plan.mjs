@@ -18,6 +18,8 @@
  * 프롬프트를 장면부터 쓰는 이유는 `api/bannerImage.js`에 적어 뒀다.
  */
 
+import { pickAngles, angleContext } from './studio-angles.mjs';
+
 export function shuffle(items, random = Math.random) {
   const a = [...items];
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
@@ -223,8 +225,6 @@ export const EMPHASIS = {
 
 export function createPlan(product, random = Math.random) {
   const hasBenefit = product.benefitConfirmed && product.benefitRate > 0 && product.benefitCondition;
-  const types = shuffle(['product', 'usage', 'list', 'question', 'comparison',
-    ...(hasBenefit ? ['benefit', 'numbers'] : product.salePrice ? ['numbers'] : [])], random);
   const photos = (product.photos.length ? product.photos : [{}])
     .map((p, i) => ({ ...p, role: guessRole(p, i) }));
   /* 여섯 장의 강조 방향을 먼저 정한다. 퍼포먼스 배너는 할인율을 앞세우는 판과
@@ -382,6 +382,9 @@ export function createPlan(product, random = Math.random) {
   }
   while (slots.length > 6) slots.pop();
 
+  /* 설득 앵글을 자리마다 붙인다. 강조 방향과 맞는 것을 먼저 쓰고, 자료가
+     없는 유형은 후보에 올리지 않는다. 후기가 없는데 후기형을 만들 수 없다. */
+  const angles = pickAngles(emphasisPlan, angleContext(product, photos), random);
 
   return shuffle(slots, random).map((slot, i) => {
     /* 그대로 쓰는 자리는 위에서 이미 사진을 골라 뒀다. 여기서 다시 고르면
@@ -400,7 +403,8 @@ export function createPlan(product, random = Math.random) {
       label: slot.label,
       desc: slot.desc,
       layout: layouts[i],
-      type: types[i % types.length],
+      type: angles[i].id,
+      angle: { id: angles[i].id, ko: angles[i].ko, how: angles[i].how, badge: angles[i].badge },
       photo,
       photoRole: src.role,
       // 장면이 '사람 없음'을 못 박은 컷은 사람 여부를 몰라도 물건만 꺼내면 된다.

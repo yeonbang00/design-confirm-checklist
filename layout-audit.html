@@ -19,7 +19,7 @@
 @media(max-width:780px){.step-nav-inner{padding:12px 18px;gap:8px}.step-position{max-width:150px;font-size:11px}.step-nav .btn{padding:10px 12px}.editor{max-height:none}}
 </style>
 <link rel="stylesheet" href="/assets/banner-studio-preview.css?a=6">
-<link rel="stylesheet" href="/assets/banner-studio-live.css?a=6">
+<link rel="stylesheet" href="/assets/banner-studio-live.css?a=8">
 <style>
 body{background:#0b0c0e;padding:12px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:1100px}
@@ -29,8 +29,8 @@ body{background:#0b0c0e;padding:12px}
 const L=['header','offer','split','split-right','band','price','top-center','top-left','bottom-right','boxed','strip','numeral','corner','badge','type-diagonal','framed','duo-panel','arch'];
 const img='/assets/banner-demo/concept-cafe.jpg';
 document.getElementById('g').innerHTML=L.map(k=>`<div class="art ${k}"><img src="${img}"><span class="brand">설화수</span>
-<div class="copy"><span class="headline">오늘의 무드,\n무엇으로 채울까?</span><span class="subline">단단한 빛과 그림자 사이</span>
-<strong class="offer-value">130,000원</strong><span class="cta">제품 자세히 보기</span><span class="benefit-condition">롯데카드 결제 시</span></div></div>`).join('');
+<div class="copy"><span class="eyebrow">임상 결과</span><span class="headline">오늘의 무드,\n무엇으로 채울까?</span><span class="subline">단단한 빛과 그림자 사이</span>
+<strong class="offer-value">130,000원</strong><span class="cta">제품 자세히 보기</span><span class="benefit-condition">롯데카드 결제 시</span><span class="footnote">인체적용시험 · (주)마리디엠 피부과학연구소 · 2025.04.14~04.18</span></div></div>`).join('');
 await new Promise(r=>setTimeout(r,600));
 const rows=L.map((k,i)=>{
  const art=document.querySelectorAll('.art')[i], a=art.getBoundingClientRect();
@@ -38,7 +38,7 @@ const rows=L.map((k,i)=>{
   if(!el||getComputedStyle(el).display==='none')return null;
   const r=el.getBoundingClientRect(); if(!r.width)return null;
   return {sel,size:parseFloat(getComputedStyle(el).fontSize),top:r.top-a.top,bottom:r.bottom-a.top,left:r.left-a.left,abs:getComputedStyle(el).position==='absolute'};};
- const all=['.headline','.offer-value','.subline','.benefit-condition','.cta','.brand'].map(pick).filter(Boolean);
+ const all=['.eyebrow','.headline','.offer-value','.subline','.benefit-condition','.cta','.brand','.footnote'].map(pick).filter(Boolean);
  const sizes=all.map(x=>x.size).sort((x,y)=>y-x);
  const ratio=sizes.length>1?sizes[0]/sizes[1]:0;
  /* 절대배치로 따로 앉힌 것은 본문 줄기가 아니다. 회전된 브랜드 마크나

@@ -122,7 +122,7 @@ const ROOM = 'Compose the frame so that roughly one third of the image is calm, 
  * 두 번째 호출은 사진을 건드리지 말라는 지시 하나와 문구 목록만 담는다.
  * 대신 한 장에 생성이 두 번 들어간다(고화질 1024 기준 대략 600원).
  */
-function textBlock({ headline, subline, offer, brand, cta, style }) {
+function textBlock({ headline, subline, offer, brand, cta, style, eyebrow, footnote }) {
   const lines = [
     'Keep this photograph exactly as it is. Change nothing in the picture itself.',
     'Add Korean advertising typography on top of it, and nothing else.',
@@ -130,10 +130,16 @@ function textBlock({ headline, subline, offer, brand, cta, style }) {
     + 'add any word, number or symbol that is not listed here.',
   ];
   if (brand) lines.push(`Brand mark, small, top area: "${brand}"`);
+  // 레퍼런스 배너에서 반복되는 알약 라벨. 헤드라인 바로 위에 붙어야 한 덩어리로 읽힌다.
+  if (eyebrow) lines.push('Small pill-shaped label directly above the headline, solid '
+    + `filled shape with the text in the opposite colour: "${eyebrow}"`);
   if (headline) lines.push(`Headline, the largest text on the image: "${headline}"`);
   if (offer) lines.push(`Offer figure, set very large next to or under the headline: "${offer}"`);
   if (subline) lines.push(`Sub line, small, under the headline: "${subline}"`);
   if (cta) lines.push(`Call to action, small, in a button or a bar: "${cta}"`);
+  // 숫자의 근거. 실제 광고는 이 한 줄이 있어서 광고로 보인다.
+  if (footnote) lines.push('Footnote, the smallest text, along the bottom edge, muted: '
+    + `"${footnote}"`);
   lines.push(`Set the headline in ${style || TYPE_STYLES_FALLBACK}.`);
   lines.push('Korean Hangul syllable blocks must be formed correctly and be perfectly '
     + 'legible at a glance. Keep the text clear of the product so nothing important is '
@@ -183,6 +189,7 @@ export default async function handler(req, res) {
     headline: cut(text.headline, 60), subline: cut(text.subline, 80),
     offer: cut(text.offer, 24), brand: cut(text.brand, 30),
     cta: cut(text.cta, 24), style: cut(text.style, 200),
+    eyebrow: cut(text.eyebrow, 14), footnote: cut(text.footnote, 120),
   }) : buildPrompt({
     scene: cut(scene, 900),
     keep: typeof keep === 'string' ? keep : '',

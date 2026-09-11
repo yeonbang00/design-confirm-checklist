@@ -130,7 +130,30 @@ scene 문장 규칙:
 - 글자, 로고, 간판, 가격표, 브랜드명을 장면에 넣지 마세요.
 - 상품의 형태가 읽혀야 합니다. 구기거나 뭉치거나 던져 놓은 연출은 쓰지 마세요.
 
-## 세 번째 일 — 레퍼런스 배너를 보고 조판을 고르기
+## 세 번째 일 — 사진에 인쇄된 사실 읽기
+
+상세 페이지 이미지에는 임상 수치, 시험 기관, 성분 함량, 후기 원문, 인증, 순위가
+글자로 박혀 있습니다. 이걸 읽지 않으면 카피가 형용사로만 채워집니다.
+**사진 안에 실제로 쓰여 있는 글만** 옮기세요. 추측하거나 일반 상식으로 채우지 마세요.
+
+역할이 "unusable"인 사진(정보 고시표, 글자가 화면을 채운 이미지)도 여기서는 읽습니다.
+배너에 못 쓰는 사진이지 못 읽는 사진이 아닙니다.
+
+facts는 최대 8개이고, 각 항목은:
+  text   숫자나 근거가 들어간 짧은 한국어 문장. 사진에 쓰인 그대로.
+         예 "피부톤 균일도 11.44% 개선", "6시간 후 커버 유지력 94.87%",
+            "징크옥사이드 20.9% 함유", "글로벌 온라인 판매 1위"
+  source 그 옆이나 아래에 적힌 근거. 시험 기관, 기간, 출처, 매체.
+         예 "인체적용시험 · (주)마리디엠 피부과학연구소 · 2025.04.14~04.18"
+         근거가 안 적혀 있으면 빈 문자열.
+  kind   clinical(시험·임상 수치) ingredient(성분·함량) review(구매 후기 원문)
+         authority(인증·수상·순위) beforeafter(사용 전후 비교) spec(제품 사양)
+         중 하나.
+
+읽을 것이 없으면 빈 배열로 두세요. 지어내는 것보다 비어 있는 편이 낫습니다.
+가격과 할인율은 여기에 넣지 마세요. 그건 상품 데이터에서 따로 확인합니다.
+
+## 네 번째 일 — 레퍼런스 배너를 보고 조판을 고르기
 
 사진 뒤에 **이 업종에서 실제로 집행된 배너**가 몇 장 따라옵니다. 상품 사진이 아니라
 완성된 광고입니다. 어느 것이 상품 사진이고 어느 것이 레퍼런스인지는 아래 목록에 적혀
@@ -157,6 +180,7 @@ scene 문장 규칙:
 JSON만 출력하세요:
 {"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","itemCount":1,"isHero":true,"isGift":false,"note":""}],
  "category":"fashion-top","usp":"...","toneKo":"정갈한",
+ "facts":[{"text":"피부톤 균일도 11.44% 개선","source":"인체적용시험 · (주)마리디엠 피부과학연구소 · 2025.04.14~04.18","kind":"clinical"}],
  "layoutHints":["boxed","offer","badge"],"refNote":"...",
  "cuts":[{"name":"단상 정면컷","mount":"plinth","angle":"front","distance":"medium",
           "light":"studio-key","background":"seamless","composition":"centered",
@@ -188,6 +212,30 @@ const AX = {
   mood: ['clean', 'warm', 'premium', 'playful', 'fresh', 'dramatic', 'serene', 'bold',
     'nostalgic', 'minimal'],
 };
+
+const FACT_KINDS = new Set(['clinical', 'ingredient', 'review', 'authority', 'beforeafter', 'spec']);
+
+/* 사진에서 읽은 사실. 카피가 이 목록 안에서만 숫자를 쓸 수 있게 하는
+   화이트리스트이기도 하므로, 여기를 느슨하게 열면 없는 숫자가 배너에 박힌다.
+   가격·할인은 상품 데이터에서 따로 확인하므로 여기서 받지 않는다. */
+function cleanFacts(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [], seen = new Set();
+  for (const row of raw) {
+    const text = String(row?.text || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+    if (text.length < 4) continue;
+    const key = text.replace(/\s/g, '');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      text,
+      source: String(row?.source || '').trim().replace(/\s+/g, ' ').slice(0, 120),
+      kind: FACT_KINDS.has(row?.kind) ? row.kind : 'spec',
+    });
+    if (out.length >= 8) break;
+  }
+  return out;
+}
 
 function cleanCuts(raw) {
   if (!Array.isArray(raw)) return [];
@@ -286,6 +334,7 @@ export default async function handler(req, res) {
       category: CATEGORIES.has(data?.category) ? data.category : 'other',
       cuts: cleanCuts(data?.cuts),
       usp: String(data?.usp || '').slice(0, 160),
+      facts: cleanFacts(data?.facts),
       layoutHints: (Array.isArray(data?.layoutHints) ? data.layoutHints : [])
         .filter(l => typeof l === 'string' && LAYOUT_NAMES.has(l)).slice(0, 3),
       refNote: String(data?.refNote || '').slice(0, 120),
