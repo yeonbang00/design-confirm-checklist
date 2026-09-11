@@ -45,8 +45,16 @@ pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7
 const $ = s => document.querySelector(s);
 const CATS = ['beauty','shopping','telecom','fashion','finance','healthcare',
               'electronics','education','food','travel','realestate','gaming','automotive'];
-const SAVE_EVERY = 25;   // 이만큼 모이면 저장한다. 저장은 반드시 하나씩 순서대로.
+const SAVE_EVERY = 25;   // 이만큼 모이면 중간 저장한다
 const LANES = 4;         // 태깅 동시 실행 수
+const BACKUP = 'adcheck.refAxes.backup';
+
+/* 저장은 '지금까지 태깅한 전부'를 매번 통째로 보낸다.
+   델타만 보내다가 952장 중 425장만 남은 적이 있다. 서버가 매니페스트를
+   읽고 고쳐 쓰는데, 방금 쓴 내용이 아직 반영되기 전에 다음 요청이 읽으면
+   그 사이 것이 통째로 사라진다. 클라이언트에서 순서를 지켜도 소용없다.
+   읽는 쪽이 뒤처지는 문제라서다.
+   전부를 보내면 어떤 순서로 끼어들어도 마지막 쓰기에 전부 들어 있다. */
 
 let stopping = false, running = false;
 let all = [], done = new Set();
@@ -100,17 +108,27 @@ async function loadState() {
     `전체 ${all.length}장 · 태깅됨 ${all.length - left.length} · 남음 ${left.length}\n`
     + (left.length ? '남은 업종  ' + Object.entries(byCat).map(([k, v]) => `${k} ${v}`).join(' · ') : '전부 끝났습니다.');
   $('#prog').style.width = (all.length ? (all.length - left.length) / all.length * 100 : 0) + '%';
-  $('#run').disabled = !left.length;
+  $('#run').disabled = !left.length && !results.size;
   return left;
 }
 
-async function save(buf) {
-  if (!buf.length) return;
-  await getJSON('/api/referenceAxes', {
+const results = new Map();   // 이번 판에 태깅한 전부. 키는 thumbUrl.
+
+let backupAt = 0;
+function backup(force) {
+  if (!force && results.size - backupAt < 10) return;
+  backupAt = results.size;
+  try { localStorage.setItem(BACKUP, JSON.stringify([...results])); } catch (e) { /* 용량 초과는 무시 */ }
+}
+
+async function save() {
+  if (!results.size) return 0;
+  const d = await getJSON('/api/referenceAxes', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items: buf.map(x => ({ url: x.thumbUrl, axes: x.axes, note: x.note, type: x.type })) }),
+    body: JSON.stringify({ items: [...results].map(([url, axes]) => ({ url, axes })) }),
   });
-  buf.forEach(x => done.add(axesKey(x.thumbUrl)));
+  results.forEach((_, url) => done.add(axesKey(url)));
+  return d.total || 0;
 }
 
 $('#run').onclick = async () => {
@@ -122,7 +140,7 @@ $('#run').onclick = async () => {
     let left = await loadState();
     const cap = Number($('#cap').value) || left.length;
     left = left.slice(0, cap);
-    let i = 0, ok = 0, buf = [];
+    let i = 0, ok = 0, since = 0;
     const t0 = Date.now();
 
     const tick = () => {
@@ -131,15 +149,15 @@ $('#run').onclick = async () => {
       $('#log').textContent =
         `태깅 ${ok + fails.length} / ${left.length}  (성공 ${ok} · 실패 ${fails.length})\n`
         + `한 장당 ${per.toFixed(1)}초 · 남은 시간 약 ${Math.round(per * rest / 60)}분\n`
-        + `저장 대기 ${buf.length}건`;
-      $('#prog').style.width = ((done.size + buf.length) / all.length * 100) + '%';
+        + `이번 판 보관 ${results.size}건`;
+      $('#prog').style.width = ((done.size + results.size) / all.length * 100) + '%';
     };
 
-    // 저장은 직렬로. 여러 요청이 동시에 매니페스트를 읽고 쓰면 서로 덮어쓴다.
+    // 저장은 직렬로. 매번 전부를 보내므로 순서가 어긋나도 내용이 사라지지 않는다.
     let saving = Promise.resolve();
     const flush = () => {
-      const chunk = buf; buf = [];
-      saving = saving.then(() => save(chunk)).catch(e => { fails.push('저장 실패: ' + e.message); });
+      since = 0;
+      saving = saving.then(() => save()).catch(e => { fails.push('저장 실패: ' + e.message); });
       return saving;
     };
 
@@ -152,17 +170,31 @@ $('#run').onclick = async () => {
             body: JSON.stringify({ url: it.thumbUrl, brandName: it.brandName || '' }),
           });
           if (d.axes && Object.keys(d.axes).length) {
-            buf.push({ ...it, axes: d.axes, note: d.note, type: d.type }); ok++;
+            results.set(it.thumbUrl, d.axes); ok++; since++; backup();
           } else { fails.push(`${it.brandName} · 축 없음`); }
         } catch (e) { fails.push(`${it.brandName} · ${String(e.message).slice(0, 50)}`); }
-        if (buf.length >= SAVE_EVERY) await flush();
+        if (since >= SAVE_EVERY) await flush();
         tick();
       }
     };
     await Promise.all(Array.from({ length: LANES }, lane));
+    backup(true);
     await flush();
     await saving;
-    $('#log').textContent += stopping ? '\n\n멈췄습니다. 지금까지 한 것은 저장됐습니다.' : '\n\n끝났습니다.';
+
+    /* 보낸 만큼 실제로 남았는지 다시 읽어 대조한다. 조용히 사라지는 일이
+       한 번 있었으므로 확인 없이 끝났다고 말하지 않는다. */
+    const check = await getJSON('/api/referenceAxes');
+    const saved = new Set(Object.keys(check.items || {}));
+    const missing = [...results.keys()].filter(u => !saved.has(axesKey(u)));
+    $('#log').textContent += stopping ? '\n\n멈췄습니다.' : '\n\n끝났습니다.';
+    $('#log').textContent += `\n보낸 ${results.size}건 중 저장 확인 ${results.size - missing.length}건`;
+    if (missing.length) {
+      $('#log').textContent += `\n\n${missing.length}건이 저장되지 않았습니다. 다시 돌리기를 누르면 그것만 재시도합니다.`;
+    } else {
+      try { localStorage.removeItem(BACKUP); } catch (e) { /* 없어도 그만 */ }
+      results.clear();
+    }
     if (fails.length) $('#fails').textContent = '실패 ' + fails.length + '건\n' + fails.slice(0, 40).join('\n');
   } catch (e) {
     $('#log').textContent += '\n오류: ' + (e.message || e);
@@ -173,6 +205,17 @@ $('#run').onclick = async () => {
 };
 $('#stop').onclick = () => { stopping = true; $('#log').textContent += '\n멈추는 중… 진행 중인 것만 마칩니다.'; };
 $('#refresh').onclick = () => loadState();
+
+/* 창이 꺼져도 태깅한 것을 잃지 않는다. 한 장에 한 번씩 돈이 나가는 일이라
+   다시 돌리는 비용이 그대로 비용이다. */
+try {
+  const b = JSON.parse(localStorage.getItem(BACKUP) || '[]');
+  if (Array.isArray(b) && b.length) {
+    b.forEach(([url, axes]) => results.set(url, axes));
+    $('#log').textContent = `저장 못 한 ${results.size}건이 이 브라우저에 남아 있습니다. 돌리기를 누르면 먼저 저장합니다.`;
+  }
+} catch (e) { /* 백업이 깨졌으면 그냥 무시 */ }
+
 loadState();
 </script>
 </body>

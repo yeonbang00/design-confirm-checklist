@@ -23,7 +23,11 @@ export default async function handler(req, res) {
   }
   if (rejectIfNotSameOrigin(req, res)) return;
 
-  const entries = Array.isArray(req.body?.items) ? req.body.items.slice(0, 200) : [];
+  /* 러너가 '지금까지 태깅한 전부'를 매번 통째로 보낸다. 델타만 보내면
+     방금 쓴 매니페스트가 반영되기 전에 다음 요청이 읽어 그 사이 것이
+     사라진다(952장 중 425장만 남은 적이 있다). 그래서 한도를 넉넉히 둔다.
+     여기서 자르면 잘린 만큼이 조용히 사라진다. */
+  const entries = Array.isArray(req.body?.items) ? req.body.items.slice(0, 2000) : [];
   if (!entries.length) {
     res.status(400).json({ error: '저장할 항목이 없습니다.' });
     return;
