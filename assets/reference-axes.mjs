@@ -179,8 +179,9 @@ export function whySimilar(shared) {
    실측 — 표본 40장에서 1위가 LG유플러스 두 장(0.72)이었다.
    유사 광고가 답해야 하는 질문은 "다른 브랜드는 이 구성을 어떻게 풀었나"다. */
 const sameBrand = (a, b) => {
-  const x = String(a?.brandName || '').trim().toLowerCase();
-  const y = String(b?.brandName || '').trim().toLowerCase();
+  // 한글 완성형과 자모 분리형은 눈에 같고 문자열로 다르다. 맞춰 놓고 비교한다.
+  const norm = v => String(v || '').normalize('NFC').trim().toLowerCase();
+  const x = norm(a?.brandName), y = norm(b?.brandName);
   return !!x && x === y;
 };
 
@@ -199,8 +200,11 @@ export const SIMILAR_MIN = 0.4;
 
 export function rankSimilar(target, pool, limit = 6, min = SIMILAR_MIN) {
   const stats = valueStats(pool);
+  /* 같은 소재를 두 번 받아 오면 객체가 달라 자기 자신이 자기 닮은 컷에 뜬다.
+     화면은 업종별로 한 번, 전체로 한 번 받으므로 실제로 일어난다. */
+  const self = target?.thumbUrl || '';
   return pool
-    .filter(x => x !== target && !sameBrand(x, target))
+    .filter(x => x !== target && !(self && x?.thumbUrl === self) && !sameBrand(x, target))
     .map(x => ({ item: x, ...similarity(target.axes, x.axes, stats) }))
     .filter(x => x.compared >= 4 && x.score >= min)
     .sort((p, q) => q.score - p.score)
