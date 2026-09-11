@@ -57,3 +57,16 @@ export async function mergeReferenceAxes(entries) {
   await put('reference-axes.json', bytes, 'application/json', { allowOverwrite: true });
   return { added, total: Object.keys(items).length };
 }
+
+/* 키를 지운다. 되살릴 가치가 없는 소재의 축 태그가 남아 있으면 복구 도구가
+   영원히 "빠진 것 N건"이라고 말한다. 그러면 진짜 사고가 났을 때 눈에 안 띈다. */
+export async function removeReferenceAxes(keys) {
+  const items = await getReferenceAxes();
+  let removed = 0;
+  for (const k of keys) {
+    if (typeof k === 'string' && items[k]) { delete items[k]; removed += 1; }
+  }
+  const bytes = Buffer.from(JSON.stringify({ schema: AXES_SCHEMA, items }), 'utf-8');
+  await put('reference-axes.json', bytes, 'application/json', { allowOverwrite: true });
+  return { removed, total: Object.keys(items).length };
+}
