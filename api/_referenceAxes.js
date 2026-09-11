@@ -38,7 +38,7 @@ export const AXES = {
     },
   },
   distance: {
-    ko: '거리', weight: 1, score: false,
+    ko: '거리', weight: 1,
     values: {
       macro: '표면 매크로', close: '부분 확대', product: '제품 전체',
       around: '주변까지', wide: '넓은 공간',
@@ -58,6 +58,27 @@ export const AXES = {
       'warm-neutral': '웜뉴트럴', 'cool-neutral': '쿨뉴트럴', mono: '모노크롬',
       contrast: '고대비', pastel: '파스텔', saturated: '채도 높음',
       earth: '어스톤', metallic: '메탈릭',
+    },
+  },
+  /* 색조는 '파스텔·고대비' 같은 성질이지 색 자체가 아니다. 실측 40장에서
+     상위 쌍이 전부 핑크 계열이었는데 색조 축으로는 파스텔과 채도 높음으로
+     갈렸다. 눈에 가장 먼저 들어오는 것을 축에서 빠뜨리고 있었다. */
+  hue: {
+    ko: '주조색', weight: 2,
+    values: {
+      neutral: '무채·화이트', black: '블랙', red: '레드', pink: '핑크',
+      orange: '오렌지', yellow: '옐로', green: '그린', blue: '블루',
+      purple: '퍼플', beige: '베이지·브라운',
+    },
+  },
+  /* 톤앤매너. 색조·주조색이 '무슨 색'이라면 이쪽은 '어떤 느낌'이다.
+     컷 후보를 받을 때 쓰는 mood 어휘를 그대로 가져왔다. */
+  mood: {
+    ko: '무드', weight: 2,
+    values: {
+      clean: '깔끔한', warm: '따뜻한', premium: '고급스러운', playful: '발랄한',
+      fresh: '산뜻한', dramatic: '극적인', serene: '차분한', bold: '강한',
+      nostalgic: '복고풍', minimal: '미니멀',
     },
   },
   subject: {

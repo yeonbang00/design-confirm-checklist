@@ -66,6 +66,9 @@ ${axisBlock}
   · chunks는 눈에 몇 덩어리로 읽히는지입니다. 줄 수가 아니라 덩어리 수입니다.
   · figure는 할인율이나 가격 숫자가 얼마나 큰지입니다. 숫자가 없으면 none입니다.
   · appeal은 무엇을 팔고 있는지, type은 어떻게 말하고 있는지입니다. 둘은 다릅니다.
+  · palette는 색의 성질(파스텔인지 고대비인지), hue는 화면을 지배하는 실제 색입니다.
+    둘은 다릅니다. 연한 핑크 배너는 palette가 pastel이고 hue가 pink입니다.
+  · mood는 톤앤매너입니다. 색이 아니라 느낌입니다.
 
 반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트는 포함하지 마세요:
 {"note":"...","type":"...","category":"...","axes":{${AXIS_KEYS.map(k => `"${k}":"..."`).join(',')}}${needBrandGuess ? ',"brandName":"..."' : ''}}`;

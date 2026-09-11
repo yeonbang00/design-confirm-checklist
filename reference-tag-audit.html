@@ -37,6 +37,7 @@ pre{font:11px/1.7 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7ccd
   <label>표본 <input id="n" type="number" value="20" min="4" max="60"></label>
   <button class="go" id="run">돌리기</button>
   <button id="stop" disabled>멈추기</button>
+  <button id="copy" disabled>결과 복사</button>
 </div>
 <div id="log"></div>
 <div id="out"></div>
@@ -156,6 +157,7 @@ ${spread}
     pairs.push({ s, a: ok[a], b: ok[b] });
   }
   pairs.sort((x, y) => y.s.score - x.s.score);
+  // 같은 브랜드 쌍은 추천에서 빠지므로 여기서도 표시만 하고 구분해 둔다
   html += '<h1 style="font-size:15px;margin:18px 0 8px">가장 비슷하다고 나온 쌍</h1>';
   for (const p of pairs.slice(0, 8)) {
     html += `<div class="pair"><img src="${p.a.thumbUrl}"><img src="${p.b.thumbUrl}">`
@@ -163,7 +165,20 @@ ${spread}
       + `<span style="color:#8b9099">${p.a.brandName} · ${p.b.brandName}</span></div></div>`;
   }
   $('#out').innerHTML = html;
+  /* 다음 판에서 가중치를 손으로 짐작하지 않으려면 태깅 결과 자체가 있어야 한다.
+     그림 없이 축만 있으면 되므로 가볍다. */
+  window.__rows = rows.map(r => ({
+    brandName: r.brandName || '', category: r.category, type: r.type || '',
+    thumbUrl: r.thumbUrl, axes: r.axes,
+  }));
+  $('#copy').disabled = false;
 }
+
+$('#copy').onclick = async () => {
+  const t = JSON.stringify(window.__rows || []);
+  try { await navigator.clipboard.writeText(t); log(`결과 ${(window.__rows || []).length}장을 복사했습니다.`); }
+  catch { const a = document.createElement('textarea'); a.value = t; document.body.append(a); a.select(); document.execCommand('copy'); a.remove(); log('복사했습니다.'); }
+};
 
 $('#run').onclick = async () => {
   abort = false; $('#run').disabled = true; $('#stop').disabled = false; $('#out').innerHTML = '';
