@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AdCheck | 광고 담기</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{color-scheme:dark;--bg:#0b0c0e;--panel:#14171c;--line:#30343b;--ink:#edeef0;--muted:#a2a7b0;--dim:#7e838c;--lime:#c3ff4d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.6 Pretendard,-apple-system,sans-serif;letter-spacing:-.015em;padding:26px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px}
+p.sub{color:var(--dim);font-size:12.5px;margin:0 0 20px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+select,input{font:inherit;padding:9px 12px;border-radius:9px;background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+button{font:inherit;font-weight:600;padding:9px 16px;border-radius:9px;background:var(--panel);color:var(--ink);border:1px solid var(--line);cursor:pointer}
+button.go{background:var(--lime);color:#10120c;border-color:var(--lime)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.note{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:var(--muted);font-size:12.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px}
+.card{min-width:0}
+.card img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;display:block}
+.card b{display:block;margin-top:6px;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card small{display:block;font-size:10.5px;color:var(--dim);line-height:1.45;max-height:2.9em;overflow:hidden}
+.card .st{display:block;margin-top:3px;font:600 10.5px/1.5 ui-monospace,Menlo,monospace}
+.ok{color:var(--lime)} .bad{color:#ffb454}
+pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7ccd4;background:#101317;border:1px solid #23272e;border-radius:10px;padding:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>광고 담기</h1>
+  <p class="sub">메타 광고 라이브러리에서 고른 소재를 이미지 레퍼런스에 등록합니다.</p>
+
+  <div class="note" id="hint">
+    메타 광고 라이브러리 탭에서 <b>AdCheck 광고 담기</b> 북마클릿을 눌러주세요.
+    이 페이지는 그때 자동으로 열립니다.
+  </div>
+
+  <div class="bar" id="bar" hidden>
+    <label>업종
+      <select id="cat"></select>
+    </label>
+    <span id="sum" style="color:var(--muted);font-size:12.5px"></span>
+    <span style="flex:1"></span>
+    <button class="go" id="save">등록</button>
+  </div>
+  <pre id="log" hidden></pre>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script type="module">
+const $ = s => document.querySelector(s);
+let ads = [];
+const urls = [];
+
+/* 북마클릿이 창을 열고 이 메시지를 기다린다. 이미지 바이트를 클립보드로
+   나를 수 없어서(80장이면 수 MB다) 창끼리 직접 주고받는다. */
+const FROM = /^https:\/\/(www\.|web\.|m\.)?facebook\.com$/;
+window.addEventListener('message', (e) => {
+  // 보낸 곳이 광고 라이브러리인지 반드시 확인한다. 아무 창이나 이미지를 밀어 넣어
+  // 우리 계정으로 레퍼런스를 올리게 두면 안 된다.
+  // 같은 출처는 이미 무엇이든 할 수 있으므로 허용해도 잃을 게 없다. 로컬에서 흐름을 확인할 때 쓴다.
+  if (!FROM.test(e.origin) && e.origin !== location.origin) return;
+  const d = e.data;
+  if (!d || d.kind !== 'adcheck-ads' || !Array.isArray(d.items)) return;
+  ads = d.items;
+  render();
+});
+if (window.opener) window.opener.postMessage('adcheck-collect-ready', '*');
+
+async function getJSON(url, opt) {
+  const r = await fetch(url, opt);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+  return j;
+}
+
+fetch('/api/referenceCategories').then(r => r.json()).then((d) => {
+  const list = d.categories || [];
+  $('#cat').innerHTML = list.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}).catch(() => { $('#cat').innerHTML = '<option value="shopping">쇼핑</option>'; });
+
+function render() {
+  $('#hint').hidden = true;
+  $('#bar').hidden = false;
+  const byRatio = ads.reduce((a, x) => { a[x.ratio] = (a[x.ratio] || 0) + 1; return a; }, {});
+  const brands = [...new Set(ads.map(x => x.brand).filter(Boolean))];
+  $('#sum').textContent = `${ads.length}장 · ${brands.join(', ').slice(0, 60)} · `
+    + Object.entries(byRatio).map(([k, v]) => `${k} ${v}`).join(' · ');
+  $('#grid').innerHTML = '';
+  ads.forEach((x, i) => {
+    const u = URL.createObjectURL(new Blob([x.bytes], { type: x.mime }));
+    urls.push(u);
+    x.url = u;
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.innerHTML = `<img src="${u}" alt="">`
+      + `<b>${esc(x.brand || '')}</b>`
+      + `<small>${esc((x.copy || '').slice(0, 52))}</small>`
+      + `<span class="st" id="st${i}"></span>`;
+    $('#grid').appendChild(c);
+  });
+}
+const esc = s => String(s || '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+
+function toBase64(buf) {
+  const b = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+$('#save').onclick = async () => {
+  if (!ads.length) return;
+  $('#save').disabled = true;
+  $('#log').hidden = false;
+  const category = $('#cat').value;
+  let ok = 0; const fails = [];
+  const axesBuf = [];
+
+  for (let i = 0; i < ads.length; i++) {
+    const x = ads[i];
+    const st = $('#st' + i);
+    const b64 = toBase64(x.bytes);
+    try {
+      /* 축 태깅을 먼저 한다. 업로드부터 하면 태깅에 실패했을 때 태그 없는
+         소재가 보드에 남는다. 순서를 뒤집으면 실패가 깨끗하게 끝난다. */
+      st.textContent = '읽는 중'; st.className = 'st';
+      const a = await getJSON('/api/analyzeReferenceImage', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64: b64, mediaType: x.mime, brandName: x.brand || '' }),
+      });
+      st.textContent = '올리는 중';
+      const note = (x.copy || '').replace(/\s+/g, ' ').slice(0, 70) || a.note || '';
+      const up = await getJSON('/api/uploadReferenceImage', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category, brandName: x.brand || '광고주 미상', note,
+          type: a.type || undefined,
+          thumb: { base64: b64, mimeType: x.mime },
+          full: { base64: b64, mimeType: x.mime },
+        }),
+      });
+      if (a.axes && Object.keys(a.axes).length && up.item?.thumbUrl) {
+        axesBuf.push({ url: up.item.thumbUrl, axes: a.axes });
+      }
+      st.textContent = '등록됨'; st.className = 'st ok'; ok++;
+    } catch (e) {
+      st.textContent = String(e.message || e).slice(0, 22); st.className = 'st bad';
+      fails.push(`${x.brand} · ${String(e.message || e).slice(0, 40)}`);
+    }
+    $('#log').textContent = `등록 ${ok + fails.length} / ${ads.length}  (성공 ${ok} · 실패 ${fails.length})`;
+  }
+
+  /* 축은 한 번에 모아서 보낸다. 매니페스트는 읽고 고쳐 쓰는 구조라
+     나눠 보내면 뒤 저장이 앞 저장을 덮는다. 977장 태깅에서 겪었다. */
+  if (axesBuf.length) {
+    try {
+      await getJSON('/api/referenceAxes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: axesBuf }),
+      });
+      $('#log').textContent += `\n축 태그 ${axesBuf.length}건 저장`;
+    } catch (e) { $('#log').textContent += `\n축 태그 저장 실패: ${e.message}`; }
+  }
+  $('#log').textContent += `\n\n끝났습니다. 이미지 레퍼런스에서 확인하세요.`;
+  if (fails.length) $('#log').textContent += '\n\n실패\n' + fails.slice(0, 20).join('\n');
+  urls.forEach(URL.revokeObjectURL);
+};
+</script>
+</body>
+</html>

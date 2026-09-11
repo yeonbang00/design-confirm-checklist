@@ -217,6 +217,16 @@
     color:var(--ink-3); border-radius:7px; padding:5px 0; font:inherit; font-size:11px; cursor:pointer;}
   .ref-akin-btn:hover{border-color:var(--accent); color:var(--accent);}
 
+  .ads-bm-row{display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; margin-bottom:18px;}
+  .ads-bm{display:inline-flex; align-items:center; gap:8px; cursor:grab; text-decoration:none;
+    background:var(--charcoal); border:1px solid var(--charcoal-border); border-radius:9px;
+    padding:9px 14px; font-size:12.5px; font-weight:600; color:var(--ink);}
+  .ads-bm:hover{border-color:var(--accent); background:rgba(204,255,0,.07);}
+  .ads-bm:active{cursor:grabbing;}
+  .ads-bm svg{fill:var(--ink-4);}
+  .ads-bm:hover svg{fill:var(--accent);}
+  .ads-bm-hint{font-size:12px; color:var(--ink-4); line-height:1.6;}
+
   .brand-filter{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
   .filter-chip{font-size:12.5px; font-weight:600; color:var(--canvas-text-2); background:var(--charcoal); border:1px solid var(--charcoal-border); border-radius:20px; padding:6px 14px; cursor:pointer; font-family:inherit;}
   .filter-chip:hover{border-color:#a1a1a6;}
@@ -384,6 +394,16 @@
 
   <h1>이미지 레퍼런스</h1>
   <p class="sub">업종별·유형별로 경쟁사 이미지와 팀이 직접 제작한 소재를 함께 모아두는 공간입니다.<br>팀이 제작한 소재는 카드 우측 상단에 <strong>NHN AD</strong> 표시가 붙습니다.</p>
+
+  <div class="ads-bm-row">
+    <a class="ads-bm" id="adsBm" draggable="true">
+      <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true">
+        <circle cx="2" cy="2" r="1.1"/><circle cx="8" cy="2" r="1.1"/><circle cx="2" cy="7" r="1.1"/>
+        <circle cx="8" cy="7" r="1.1"/><circle cx="2" cy="12" r="1.1"/><circle cx="8" cy="12" r="1.1"/>
+      </svg>AdCheck 광고 담기</a>
+    <span class="ads-bm-hint">북마크 바에 끌어다 놓고, 메타 광고 라이브러리에서 눌러주세요.
+      영상과 중복을 걸러 고를 수 있게 펼쳐줍니다.</span>
+  </div>
 
   <div class="option-dropdown-row" id="mainFilterRow">
     <div class="option-dropdown-wrap">
@@ -650,6 +670,21 @@
     appealOptMenu.classList.toggle('open');
   });
   document.addEventListener('click', () => appealOptMenu.classList.remove('open'));
+
+  /* 북마클릿은 북마크 바에 저장되는 스크립트라 한 번 넣으면 안 바뀐다.
+     그래서 코드를 심지 않고 우리 서버의 파일을 그때그때 불러오게 한다.
+     상품 담기와 같은 방식이다. */
+  (function(){
+    const src = location.origin + '/assets/adcheck-ads.js';
+    document.getElementById('adsBm').href = 'javascript:' + encodeURIComponent(
+      "(function(){var s=document.createElement('script');s.src=" + JSON.stringify(src)
+      + "+'?v='+Date.now();s.onerror=function(){alert('광고 담기를 불러오지 못했습니다.')};"
+      + "document.body.appendChild(s)})()");
+    document.getElementById('adsBm').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('이 버튼을 북마크 바에 끌어다 놓으세요.\n그런 다음 메타 광고 라이브러리에서 그 북마크를 누르면 됩니다.');
+    });
+  })();
 
   let searchTimer = 0;
   refSearch.addEventListener('input', () => {

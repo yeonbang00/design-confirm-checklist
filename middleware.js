@@ -26,6 +26,10 @@ const ADMIN_PENDING_PATH = '/_gate/admin/pending';
 const ADMIN_DECIDE_PATH = '/_gate/admin/decide';
 const ADMIN_PAGE_PATH = '/admin.html';
 const GRAB_SCRIPT_PATH = '/assets/adcheck-grab.js';
+// 광고 라이브러리에서 부르는 북마클릿. 북마크바에 올린 스크립트라
+// 로그인 쿠키 없이 불러와진다. 상품 북마클릿과 같은 이유이고,
+// 두 파일 모두 비밀을 담지 않는다.
+const ADS_SCRIPT_PATH = '/assets/adcheck-ads.js';
 const USERS_BLOB_PATH = 'users.json';
 const USERS_URL = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/users.json';
 const PBKDF2_ITERATIONS = 210000;
@@ -247,7 +251,7 @@ export default async function middleware(request) {
   // 로그인 세션이 없는 상태로 오므로 이 파일만 열어둔다. 비밀값이 없고
   // 하는 일은 사용자가 보고 있는 페이지의 공개 정보를 읽는 것뿐이다.
   // (열어두지 않으면 북마클릿을 고칠 때마다 팀원 전원이 다시 설치해야 한다)
-  if (pathname === GRAB_SCRIPT_PATH) return next();
+  if (pathname === GRAB_SCRIPT_PATH || pathname === ADS_SCRIPT_PATH) return next();
 
   if (pathname === ADMIN_PENDING_PATH && method === 'POST') {
     const body = await request.json().catch(() => ({}));
