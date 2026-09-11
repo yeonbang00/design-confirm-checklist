@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AdCheck | 레퍼런스 축 태깅 검증</title>
+<link rel="icon" href="assets/favicon.png">
+<!-- 개발용 검증 도구. 축 스키마를 확정하기 전에 표본에 실제로 돌려보고
+     축이 갈리는지, 유사도가 말이 되는지 숫자로 본다.
+     layout-audit.html과 같은 성격이다. -->
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#0b0c0e;color:#edeef0;font:13px/1.6 Pretendard,-apple-system,sans-serif;padding:20px;letter-spacing:-.015em}
+h1{font-size:19px;margin:0 0 4px}
+p.sub{color:#8b9099;font-size:12.5px;margin:0 0 18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+button{font:inherit;font-weight:600;padding:9px 15px;border-radius:8px;border:1px solid #30343b;background:#14171c;color:#edeef0;cursor:pointer}
+button.go{background:#c3ff4d;color:#10120c;border-color:#c3ff4d}
+button:disabled{opacity:.45;cursor:not-allowed}
+input{font:inherit;width:62px;padding:8px 10px;border-radius:8px;border:1px solid #424751;background:#0f1216;color:#edeef0}
+#log{color:#afb5bf;font-size:12px;margin-bottom:14px;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:22px}
+th,td{padding:6px 8px;border-bottom:1px solid #23272e;text-align:left;vertical-align:top}
+th{color:#7e838c;font-weight:600;font-size:10.5px;white-space:nowrap}
+td img{width:54px;height:54px;object-fit:cover;border-radius:4px;display:block}
+.miss{color:#ffb454}
+pre{font:11px/1.7 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7ccd4;background:#101317;border:1px solid #23272e;border-radius:10px;padding:14px}
+.pair{display:flex;gap:8px;align-items:center;margin:6px 0}
+.pair img{width:64px;height:64px;object-fit:cover;border-radius:5px}
+.pair b{color:#c3ff4d}
+</style>
+</head>
+<body>
+<h1>레퍼런스 축 태깅 검증</h1>
+<p class="sub">표본을 뽑아 축 아홉 개를 붙이고, 축이 실제로 갈리는지와 유사도가 말이 되는지를 잰다.<br>
+배포본에서 열어야 한다. 로컬에는 /api가 없다.</p>
+<div class="row">
+  <label>표본 <input id="n" type="number" value="20" min="4" max="60"></label>
+  <button class="go" id="run">돌리기</button>
+  <button id="stop" disabled>멈추기</button>
+</div>
+<div id="log"></div>
+<div id="out"></div>
+
+<script type="module">
+import { AXES, AXIS_KEYS, similarity, whySimilar, rankSimilar } from './assets/reference-axes.mjs';
+
+const $ = s => document.querySelector(s);
+const log = t => { $('#log').textContent = t; };
+let abort = false;
+
+const CATS = ['beauty','shopping','telecom','fashion','finance','healthcare','electronics','food'];
+
+async function getJSON(url, opt) {
+  const r = await fetch(url, opt);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || r.status);
+  return d;
+}
+
+async function sample(n) {
+  const per = Math.max(2, Math.ceil(n / CATS.length));
+  const out = [];
+  for (const c of CATS) {
+    try {
+      const d = await getJSON('/api/referenceImages?category=' + c);
+      const items = (d.items || []).filter(x => x.thumbUrl);
+      // 업종 안에서 고르게 뽑는다. 앞에서 자르면 같은 브랜드만 걸린다.
+      const step = Math.max(1, Math.floor(items.length / per));
+      for (let i = 0; i < items.length && out.length < n; i += step) {
+        out.push({ ...items[i], category: c });
+      }
+    } catch (e) { /* 업종 하나가 비어도 계속 */ }
+    if (out.length >= n) break;
+  }
+  return out.slice(0, n);
+}
+
+async function tagAll(items) {
+  const done = [];
+  let i = 0;
+  const worker = async () => {
+    while (i < items.length && !abort) {
+      const idx = i++;
+      const it = items[idx];
+      try {
+        const d = await getJSON('/api/analyzeReferenceImage', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: it.thumbUrl, brandName: it.brandName || '' }),
+        });
+        done.push({ ...it, axes: d.axes || {}, newNote: d.note || '', newType: d.type || '' });
+      } catch (e) {
+        done.push({ ...it, axes: {}, error: String(e.message || e).slice(0, 40) });
+      }
+      log(`태깅 ${done.length} / ${items.length}`);
+    }
+  };
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  return done;
+}
+
+function render(rows) {
+  const ok = rows.filter(r => Object.keys(r.axes).length);
+  // 1) 표
+  let html = '<table><tr><th></th><th>브랜드</th><th>업종</th><th>기존 유형</th>'
+    + AXIS_KEYS.map(k => `<th>${AXES[k].ko}</th>`).join('') + '</tr>';
+  for (const r of rows) {
+    html += `<tr><td><img src="${r.thumbUrl}" loading="lazy"></td>`
+      + `<td>${r.brandName || ''}</td><td>${r.category}</td><td>${r.type || ''}</td>`
+      + AXIS_KEYS.map(k => {
+        const v = r.axes[k];
+        if (!v) return `<td class="miss">${r.error ? '오류' : '누락'}</td>`;
+        // 서버 사본(api/_referenceAxes.js)과 어긋나면 여기서 드러난다
+        const label = AXES[k].values[v];
+        return label ? `<td>${label}</td>` : `<td class="miss">모르는 값 ${v}</td>`;
+      }).join('')
+      + '</tr>';
+  }
+  html += '</table>';
+
+  // 2) 축이 갈리는지
+  const combo = new Set(ok.map(r => AXIS_KEYS.map(k => r.axes[k] || '-').join('|')));
+  const spread = AXIS_KEYS.map(k => {
+    const c = {};
+    ok.forEach(r => { if (r.axes[k]) c[r.axes[k]] = (c[r.axes[k]] || 0) + 1; });
+    const used = Object.keys(c).length, all = Object.keys(AXES[k].values).length;
+    const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
+    return `  ${AXES[k].ko.padEnd(7, '　')} 쓰인 값 ${used}/${all}` +
+      `  가장 많은 값 ${top ? AXES[k].values[top[0]] + ' ' + Math.round(top[1] / ok.length * 100) + '%' : '-'}`;
+  }).join('\n');
+
+  // 3) 유사도 분포
+  const sc = [];
+  for (let a = 0; a < ok.length; a++) for (let b = a + 1; b < ok.length; b++) sc.push(similarity(ok[a].axes, ok[b].axes).score);
+  sc.sort((x, y) => x - y);
+  const q = p => sc.length ? sc[Math.floor((sc.length - 1) * p)].toFixed(2) : '-';
+  const neigh = ok.map(r => rankSimilar(r, ok, 6).filter(x => x.score >= 0.5).length);
+  const canFill = neigh.filter(n => n >= 6).length;
+
+  html += `<pre>표본 ${rows.length}장 · 태깅 성공 ${ok.length} · 실패 ${rows.length - ok.length}
+
+[축이 갈리는가]
+  서로 다른 조합 ${combo.size} / ${ok.length}  (같으면 축이 모자란다)
+${spread}
+
+[유사도 분포]  쌍 ${sc.length}개
+  중앙값 ${q(0.5)}  상위 10% ${q(0.9)}  상위 1% ${q(0.99)}  최대 ${sc.length ? sc[sc.length - 1].toFixed(2) : '-'}
+  0.5 이상 이웃을 6개 채우는 소재 ${canFill} / ${ok.length}
+  이웃 수 중앙값 ${neigh.length ? [...neigh].sort((a, b) => a - b)[Math.floor(neigh.length / 2)] : '-'}</pre>`;
+
+  // 4) 가장 비슷한 쌍 눈으로 확인
+  const pairs = [];
+  for (let a = 0; a < ok.length; a++) for (let b = a + 1; b < ok.length; b++) {
+    const s = similarity(ok[a].axes, ok[b].axes);
+    pairs.push({ s, a: ok[a], b: ok[b] });
+  }
+  pairs.sort((x, y) => y.s.score - x.s.score);
+  html += '<h1 style="font-size:15px;margin:18px 0 8px">가장 비슷하다고 나온 쌍</h1>';
+  for (const p of pairs.slice(0, 8)) {
+    html += `<div class="pair"><img src="${p.a.thumbUrl}"><img src="${p.b.thumbUrl}">`
+      + `<div><b>${p.s.score.toFixed(2)}</b> · 겹친 축: ${whySimilar(p.s.shared) || '없음'}<br>`
+      + `<span style="color:#8b9099">${p.a.brandName} · ${p.b.brandName}</span></div></div>`;
+  }
+  $('#out').innerHTML = html;
+}
+
+$('#run').onclick = async () => {
+  abort = false; $('#run').disabled = true; $('#stop').disabled = false; $('#out').innerHTML = '';
+  try {
+    log('표본 뽑는 중…');
+    const items = await sample(Number($('#n').value) || 20);
+    if (!items.length) { log('레퍼런스를 가져오지 못했습니다. 배포본에서 열어주세요.'); return; }
+    log(`표본 ${items.length}장 · 태깅 시작`);
+    const rows = await tagAll(items);
+    log(`끝. 태깅 ${rows.filter(r => Object.keys(r.axes).length).length} / ${rows.length}`);
+    render(rows);
+  } catch (e) {
+    log('오류: ' + (e.message || e));
+  } finally { $('#run').disabled = false; $('#stop').disabled = true; }
+};
+$('#stop').onclick = () => { abort = true; log('멈추는 중…'); };
+</script>
+</body>
+</html>

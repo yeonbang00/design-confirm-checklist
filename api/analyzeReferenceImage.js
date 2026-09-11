@@ -17,6 +17,15 @@
 import { callOpenAI } from './_openaiClient.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 import { REFERENCE_CATEGORIES } from './_referenceLibrary.js';
+import { AXES, AXIS_KEYS, cleanAxes } from './_referenceAxes.js';
+
+/* 브랜드·업종·유형 셋만으로는 "비슷한 것"을 못 찾는다. 실측 — 업종x유형
+   조합이 117개뿐이라 화장품 혜택형 한 장에 109장이 걸리고, 978장 중
+   194장은 이웃이 여섯도 안 된다. 축 아홉 개를 같이 받는다. */
+const axisBlock = AXIS_KEYS.map((k) => {
+  const vals = Object.entries(AXES[k].values).map(([id, ko]) => `${id}(${ko})`).join(' ');
+  return `  ${k} · ${AXES[k].ko} · ${vals}`;
+}).join('\n');
 
 export const config = {
   api: {
@@ -46,8 +55,20 @@ function buildPrompt(brandName) {
 - category: 이 배너에 가장 가까운 업종 카테고리 하나를 아래 목록에서 정확히 그 영문 id 그대로 고르세요 (목록에 없는 값은 절대 쓰지 마세요): ${catList}
 ${needBrandGuess ? '- brandName: 이미지 속 로고나 텍스트를 보고 브랜드명을 추측해 한국어 또는 원문 그대로 적으세요. 전혀 알아볼 수 없으면 빈 문자열로 두세요.' : ''}
 
+- axes: 이 배너를 아래 아홉 축으로 설명하세요. **각 축마다 반드시 목록 안의 영문 id 하나만** 쓰세요.
+${axisBlock}
+
+  축을 고르는 기준입니다.
+  · device는 화면을 무엇으로 묶었는지입니다. 숫자 아래 색 띠가 깔렸으면 figure,
+    좌우로 갈렸으면 split, 사진 위에 글자만 얹혔으면 overlay, 흰 카드나 띠에 글자를
+    담았으면 card, 타이포가 화면을 지배하면 type, 여러 칸으로 나열했으면 grid,
+    인물이 화면을 채우고 글자가 비켜섰으면 hero입니다.
+  · chunks는 눈에 몇 덩어리로 읽히는지입니다. 줄 수가 아니라 덩어리 수입니다.
+  · figure는 할인율이나 가격 숫자가 얼마나 큰지입니다. 숫자가 없으면 none입니다.
+  · appeal은 무엇을 팔고 있는지, type은 어떻게 말하고 있는지입니다. 둘은 다릅니다.
+
 반드시 아래 JSON 스키마로만 응답하세요. 다른 텍스트는 포함하지 마세요:
-{"note":"...","type":"...","category":"..."${needBrandGuess ? ',"brandName":"..."' : ''}}`;
+{"note":"...","type":"...","category":"...","axes":{${AXIS_KEYS.map(k => `"${k}":"..."`).join(',')}}${needBrandGuess ? ',"brandName":"..."' : ''}}`;
 }
 
 export default async function handler(req, res) {
@@ -64,7 +85,23 @@ export default async function handler(req, res) {
   }
 
   const { base64, mediaType, brandName } = req.body || {};
-  if (!base64 || !mediaType) {
+  /* 이미 Blob에 올라가 있는 레퍼런스를 다시 태깅할 때는 URL만 넘긴다.
+     978장을 base64로 실어 나르면 요청이 터진다. 우리 Blob만 허용한다 —
+     임의 주소를 받으면 서버가 남의 내부망을 대신 찔러주는 꼴이 된다. */
+  const BLOB = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/';
+  let image = base64 && mediaType ? { base64, mediaType } : null;
+  if (!image && typeof req.body?.url === 'string' && req.body.url.startsWith(BLOB)) {
+    try {
+      const r = await fetch(req.body.url);
+      if (!r.ok) throw new Error('이미지를 가져오지 못했습니다.');
+      const buf = Buffer.from(await r.arrayBuffer());
+      image = { base64: buf.toString('base64'), mediaType: r.headers.get('content-type') || 'image/jpeg' };
+    } catch (e) {
+      res.status(502).json({ error: '레퍼런스 이미지를 가져오지 못했습니다.' });
+      return;
+    }
+  }
+  if (!image) {
     res.status(400).json({ error: '이미지 데이터가 없습니다.' });
     return;
   }
@@ -73,15 +110,19 @@ export default async function handler(req, res) {
     const parsed = await callOpenAI({
       apiKey,
       promptText: buildPrompt(brandName),
-      images: [{ base64, mediaType }],
-      maxOutputTokens: 500,
+      images: [image],
+      maxOutputTokens: 900,
       reasoningEffort: 'medium',
     });
     const note = typeof parsed.note === 'string' ? parsed.note.trim() : '';
     const type = Object.prototype.hasOwnProperty.call(TYPE_LABELS, parsed.type) ? parsed.type : '';
     const category = Object.prototype.hasOwnProperty.call(REFERENCE_CATEGORIES, parsed.category) ? parsed.category : '';
     const guessedBrandName = typeof parsed.brandName === 'string' ? parsed.brandName.trim() : '';
-    res.status(200).json({ note, type, category, brandName: brandName || guessedBrandName });
+    res.status(200).json({
+      note, type, category,
+      axes: cleanAxes(parsed.axes),
+      brandName: brandName || guessedBrandName,
+    });
   } catch (err) {
     const status = (err && err.status) || 500;
     res.status(status).json({ error: err && err.message ? err.message : '분석 중 알 수 없는 오류가 발생했습니다.' });
