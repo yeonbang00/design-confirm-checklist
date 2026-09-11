@@ -19,10 +19,11 @@ export const AXES = {
       discount: '할인·프로모션', newin: '신상·출시', material: '소재·품질',
       feature: '기능·성능', ease: '사용 편의', popular: '후기·인기',
       brand: '브랜드 가치', event: '이벤트·증정', price: '가격·구성',
+      worry: '고민·불안 해결',
     },
   },
   goal: {
-    ko: '목표', weight: 1,
+    ko: '목표', weight: 1, score: false,
     values: {
       sale: '제품 판매', awareness: '브랜드 인지', install: '앱 설치',
       signup: '가입·상담', visit: '매장 방문',
@@ -43,7 +44,7 @@ export const AXES = {
     },
   },
   distance: {
-    ko: '거리', weight: 1,
+    ko: '거리', weight: 1, score: false,
     values: {
       macro: '표면 매크로', close: '부분 확대', product: '제품 전체',
       around: '주변까지', wide: '넓은 공간',
@@ -63,6 +64,13 @@ export const AXES = {
       'warm-neutral': '웜뉴트럴', 'cool-neutral': '쿨뉴트럴', mono: '모노크롬',
       contrast: '고대비', pastel: '파스텔', saturated: '채도 높음',
       earth: '어스톤', metallic: '메탈릭',
+    },
+  },
+  subject: {
+    ko: '제품 노출', weight: 3,
+    values: {
+      none: '제품 없음', single: '단품 하나', multiple: '여러 개 나열',
+      inuse: '착용·사용 중', pack: '박스·구성품',
     },
   },
   chunks: {
@@ -91,16 +99,51 @@ export function cleanAxes(raw) {
   return out;
 }
 
-/* 겹친 축에 가중치를 매겨 점수를 낸다. 같은 장치와 같은 소구가 겹치는 것이
-   같은 색조가 겹치는 것보다 훨씬 비슷하다는 뜻이므로 가중치를 나눠 뒀다.
-   양쪽이 모두 가진 축만 분모에 넣는다. 태그가 덜 붙은 옛 소재가
-   그 이유만으로 안 비슷해 보이면 안 된다. */
-export function similarity(a, b) {
-  let hit = 0, total = 0, shared = [];
+/* 흔한 값이 겹치는 것은 정보가 아니다.
+   실측 — 표본 20장에서 '인물 없음' 85%, '목표 제품 판매' 75%, '거리 제품 전체' 70%.
+   이 축들이 늘 겹치니 아무 두 장이나 유사도 0.41이 깔렸다. 기본 점수가 깔리면
+   비슷한 것과 안 비슷한 것의 간격이 좁아진다.
+
+   그래서 겹친 값이 무리 안에서 얼마나 흔한지를 보고 점수를 깎는다. 85%가 가진
+   값이 겹치면 거의 안 쳐 주고, 10%만 가진 값이 겹치면 그대로 쳐 준다.
+   무리에서 그때그때 세기 때문에 미리 계산해 둘 것이 없고, 태그가 늘어나면
+   저절로 맞춰진다. */
+export function valueStats(pool) {
+  const n = pool.length || 1;
+  const freq = {};
   for (const key of AXIS_KEYS) {
+    freq[key] = {};
+    for (const it of pool) {
+      const v = it?.axes?.[key];
+      if (v) freq[key][v] = (freq[key][v] || 0) + 1;
+    }
+  }
+  return { n, freq };
+}
+
+/* 흔할수록 0에 가깝고 드물수록 1에 가깝다.
+   곡선을 네 가지 재봤다(표본 20장, 쌍 190개). 1-share는 너무 깎아서
+   눈으로 닮은 아토팜·BIODERMA가 3위로 밀렸다. sqrt가 중앙값을 0.33에서
+   0.21로 낮추면서 닮은 쌍 둘을 1·2위에 남기고, 중앙값과 최대의 간격도
+   0.56으로 가장 넓었다. */
+function rarity(stats, key, value) {
+  if (!stats) return 1;
+  const c = stats.freq?.[key]?.[value] || 1;
+  return Math.max(0.25, Math.sqrt(1 - c / stats.n));
+}
+
+export function similarity(a, b, stats = null) {
+  let hit = 0, total = 0;
+  const shared = [];
+  for (const key of AXIS_KEYS) {
+    if (AXES[key].score === false) continue;
     if (!a?.[key] || !b?.[key]) continue;
-    total += AXES[key].weight;
-    if (a[key] === b[key]) { hit += AXES[key].weight; shared.push(key); }
+    const w = AXES[key].weight;
+    total += w;
+    if (a[key] === b[key]) {
+      hit += w * rarity(stats, key, a[key]);
+      shared.push(key);
+    }
   }
   return { score: total ? hit / total : 0, shared, compared: total };
 }
@@ -112,9 +155,10 @@ export function whySimilar(shared) {
 }
 
 export function rankSimilar(target, pool, limit = 6) {
+  const stats = valueStats(pool);
   return pool
     .filter(x => x !== target)
-    .map(x => ({ item: x, ...similarity(target.axes, x.axes) }))
+    .map(x => ({ item: x, ...similarity(target.axes, x.axes, stats) }))
     .filter(x => x.compared >= 4 && x.score > 0)
     .sort((p, q) => q.score - p.score)
     .slice(0, limit);
