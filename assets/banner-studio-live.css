@@ -22,7 +22,23 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 .quick-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;line-height:1;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:19px;padding:0;display:flex;align-items:center;justify-content:center}
 .quick-clear:hover{background:#2a2f38;color:var(--ink)}
 .quick-bar .btn{padding:11px 22px;font-size:14px;min-height:44px;border-radius:9px}
-.quick-bm{color:var(--lime);cursor:grab;text-decoration:underline}
+/* 북마클릿은 끌어다 놓는 것이다. 밑줄 친 링크로 두면 누르는 것처럼 보여
+   아무도 끌지 않는다. 집어 올릴 수 있게 생긴 물건으로 만든다.
+   드래그는 href가 있는 <a>여야 되므로 태그는 그대로 두고 모양만 바꾼다. */
+.bm-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:14px}
+.quick-bm{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 14px 8px 11px;border-radius:8px;
+  border:1px solid #4a5340;background:#1b2016;color:var(--lime);
+  font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;
+  cursor:grab;user-select:none;
+  transition:border-color .16s ease,background .16s ease,transform .12s ease;
+}
+.quick-bm:hover{border-color:var(--lime);background:#222a19}
+.quick-bm:active{cursor:grabbing;transform:scale(.98)}
+.bm-grip{fill:#7f8a6f;flex:none}
+.quick-bm:hover .bm-grip{fill:var(--lime)}
+.bm-row .hint{margin:0}
 .quick-status{font-size:14px;color:#d8f9a0;line-height:1.6;white-space:pre-line}.quick-status:empty{display:none}
 
 .quick-result-head{display:flex;align-items:start;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:24px}.quick-result-head h2{font-size:22px}.quick-result-head .row{justify-content:flex-end}
