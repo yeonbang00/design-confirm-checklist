@@ -22,7 +22,7 @@
   //     표식을 스쳐 지나가 버린다. 손으로 내리면 33장이 216장이 됐다.
   // 5 — 광고주 이름의 "페이지는 …과(와) 함께합니다" 꼬리를 뗀다.
   // 6 — 게재 시작일을 2026-09-03 꼴로 넘긴다. 글자로 두면 기간으로 못 거른다.
-  var ADS_V = 6;
+  var ADS_V = 7;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
@@ -324,17 +324,22 @@
           w: x.w, h: x.h, ratio: x.ratio, hash: x.hash, mime: x.mime, bytes: x.bytes,
         };
       });
+      /* 지금 보고 있는 광고 라이브러리가 어느 페이지인지 같이 보낸다.
+         브랜드 목록에 페이지 ID마다 업종이 붙어 있어서 이것만 있으면
+         업종을 고를 필요가 없다. 이름으로 맞히는 것은 못 믿는다.
+         "LG HelloVision"이 목록의 "LG"에 걸려 통신이 가전이 됐다. */
+      var pageId = (location.search.match(/[?&]view_all_page_id=(\d+)/) || [])[1] || '';
       var win = window.open(COLLECT, 'adcheck-collect');
       if (!win) { toast('팝업이 막혔습니다. 이 사이트의 팝업을 허용해주세요.', 8000); return; }
       var sent = false;
       function handshake(e) {
         if (e.source !== win || e.data !== 'adcheck-collect-ready' || sent) return;
         sent = true;
-        win.postMessage({ kind: 'adcheck-ads', v: ADS_V, items: payload }, HOST);
+        win.postMessage({ kind: 'adcheck-ads', v: ADS_V, pageId: pageId, items: payload }, HOST);
         window.removeEventListener('message', handshake);
         urls.forEach(URL.revokeObjectURL);
         ov.remove();
-        toast(payload.length + '장을 보냈습니다. 새 탭에서 업종을 고르고 등록하세요.', 6000);
+        toast(payload.length + '장을 보냈습니다. 새 탭에서 등록하세요.', 6000);
       }
       window.addEventListener('message', handshake);
       setTimeout(function () {

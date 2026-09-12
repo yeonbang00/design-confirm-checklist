@@ -39,7 +39,8 @@ pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7
   </div>
 
   <div class="bar" id="bar" hidden>
-    <label>업종
+    <span id="catAuto" style="font-size:12.5px"></span>
+    <label id="catPick" hidden>업종
       <select id="cat"></select>
     </label>
     <span id="sum" style="color:var(--muted);font-size:12.5px"></span>
@@ -52,7 +53,7 @@ pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7
 
 <script type="module">
 const $ = s => document.querySelector(s);
-const ADS_V = 6;   // assets/adcheck-ads.js의 ADS_V와 맞출 것
+const ADS_V = 7;   // assets/adcheck-ads.js의 ADS_V와 맞출 것
 let ads = [];
 const urls = [];
 
@@ -67,6 +68,8 @@ window.addEventListener('message', (e) => {
   const d = e.data;
   if (!d || d.kind !== 'adcheck-ads' || !Array.isArray(d.items)) return;
   ads = d.items;
+  pageId = String(d.pageId || '');
+  resolveCats();
   $('#save').disabled = true;
   $('#save').textContent = '이미 담긴 것 확인 중…';
   markKnown().finally(() => {
@@ -124,10 +127,70 @@ async function getJSON(url, opt) {
   return j;
 }
 
+let catNames = {};
 fetch('/api/referenceCategories').then(r => r.json()).then((d) => {
   const list = d.categories || [];
-  $('#cat').innerHTML = list.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  list.forEach((c) => { catNames[c.id] = c.name; });
+  $('#cat').innerHTML = '<option value="">고르기</option>'
+    + list.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  resolveCats();
 }).catch(() => { $('#cat').innerHTML = '<option value="shopping">쇼핑</option>'; });
+
+/* 업종을 매번 고르는 것은 이미 아는 것을 다시 묻는 일이다. 브랜드 목록
+   357곳에 업종이 붙어 있고 그중 337곳은 페이지 ID까지 있다. 광고 라이브러리
+   주소의 view_all_page_id가 그대로 열쇠다.
+
+   이름으로 맞히는 것은 뒤에 둔다. 담아 둔 369장으로 재 보니 13곳 중 11곳이
+   걸리는데 그중 한 곳이 틀렸다. "LG HelloVision"이 목록의 "LG"에 걸려
+   통신이 가전이 됐다(정작 "LG헬로비전"은 통신으로 목록에 있다). 그래서
+   이름으로 찾은 것은 고른 값으로 덮어쓸 수 있게 두고, 아무것도 못 찾으면
+   그때만 묻는다. */
+let pageId = '';
+let META = null;
+import('./assets/meta-brands.mjs').then((m) => { META = m.META_BRANDS; resolveCats(); }).catch(() => {});
+
+const normName = (v) => String(v || '').normalize('NFC').toLowerCase()
+  .replace(/[\s\-_·.,()\[\]]+/g, '');
+
+function catOfName(name) {
+  if (!META) return null;
+  const k = normName(name);
+  if (!k) return null;
+  const exact = META.find((b) => normName(b.name) === k);
+  if (exact) return exact.cat;
+  // 짧은 이름이 긴 이름을 삼키지 않도록 가장 긴 것을 고른다.
+  let best = null;
+  META.forEach((b) => {
+    const n = normName(b.name);
+    if (!n || n.length < 2) return;
+    if (!(n === k || k.startsWith(n) || n.startsWith(k))) return;
+    if (!best || n.length > normName(best.name).length) best = b;
+  });
+  return best ? best.cat : null;
+}
+
+function resolveCats() {
+  if (!ads.length) return;
+  const byPage = META && pageId ? META.find((b) => b.pageId === pageId) : null;
+  ads.forEach((x) => {
+    const c = byPage ? byPage.cat : catOfName(x.brand);
+    // 브랜드 목록의 '기타'는 레퍼런스 업종에 없는 값이라 못 찾은 것으로 둔다.
+    x.cat = c && c !== 'etc' ? c : '';
+    x.catFrom = !x.cat ? '' : byPage ? '페이지' : '이름';
+  });
+  const missing = ads.filter((x) => !x.cat).length;
+  const kinds = [...new Set(ads.map((x) => x.cat).filter(Boolean))];
+  const auto = $('#catAuto');
+  if (!auto) return;
+  auto.textContent = kinds.length
+    ? '업종 ' + kinds.map((c) => catNames[c] || c).join(', ')
+      + (byPage ? ' (페이지에서)' : ' (광고주 이름에서)')
+      + (missing ? ` · 못 찾은 ${missing}장은 오른쪽에서 고르세요` : '')
+    : '업종을 못 찾았습니다. 오른쪽에서 골라주세요';
+  auto.style.color = missing ? '#ffb454' : 'var(--muted)';
+  $('#catPick').hidden = !missing;
+  if ($('#grid').children.length) render();
+}
 
 function render() {
   $('#hint').hidden = true;
@@ -139,6 +202,8 @@ function render() {
     + Object.entries(byRatio).map(([k, v]) => `${k} ${v}`).join(' · ')
     + (dup ? ` · 이미 담긴 것 ${dup}장은 체크가 꺼져 있습니다` : '');
   $('#grid').innerHTML = '';
+  // 다시 그릴 때마다 blob을 새로 만들면 앞의 것이 그대로 남는다
+  urls.splice(0).forEach(URL.revokeObjectURL);
   ads.forEach((x, i) => {
     const u = URL.createObjectURL(new Blob([x.bytes], { type: x.mime }));
     urls.push(u);
@@ -149,6 +214,8 @@ function render() {
       + `<label style="display:flex;gap:6px;align-items:center;margin-top:6px;font-size:11px;cursor:pointer">`
       + `<input type="checkbox" data-i="${i}"${x.known ? '' : ' checked'} style="width:15px;height:15px;accent-color:var(--lime)">`
       + `<b style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.brand || '')}</b></label>`
+      + (x.cat ? `<span class="st">${esc(catNames[x.cat] || x.cat)}</span>`
+          : '<span class="st bad">업종 못 찾음</span>')
       + (x.known ? '<span class="st bad">이미 담긴 소재</span>' : '')
       + `<small>${esc((x.copy || '').slice(0, 52))}</small>`
       + `<span class="st" id="st${i}"></span>`;
@@ -174,13 +241,21 @@ $('#save').onclick = async () => {
   if (!confirm(`${n}장을 등록합니다.\n한 장마다 AI가 한 번씩 읽으므로 그만큼 비용이 나갑니다.\n계속할까요?`)) return;
   $('#save').disabled = true;
   $('#log').hidden = false;
-  const category = $('#cat').value;
+  const fallback = $('#cat') ? $('#cat').value : '';
   let ok = 0; const fails = [];
   const axesBuf = [];
   const regBuf = [];   // 목록에 적는 것은 마지막에 한 번만. 나눠 적으면 서로 덮어쓴다.
 
   const take = [...document.querySelectorAll('#grid input:checked')].map(c => Number(c.dataset.i));
   if (!take.length) { $('#log').textContent = '고른 것이 없습니다.'; $('#save').disabled = false; return; }
+  /* 업종 없이 올리면 서버가 400으로 막는다. 한 장씩 올리는 중에 막히면
+     앞엣것만 올라가고 끊긴다. 시작 전에 세어 본다. */
+  const noCat = take.filter((i) => !(ads[i].cat || fallback));
+  if (noCat.length) {
+    $('#log').textContent = `업종을 못 찾은 ${noCat.length}장이 있습니다. 위에서 업종을 고르고 다시 눌러주세요.`;
+    $('#save').disabled = false;
+    return;
+  }
   for (const i of take) {
     const x = ads[i];
     const st = $('#st' + i);
@@ -198,7 +273,7 @@ $('#save').onclick = async () => {
       const up = await getJSON('/api/uploadReferenceImage', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          category, brandName: x.brand || '광고주 미상', note,
+          category: x.cat || fallback, brandName: x.brand || '광고주 미상', note,
           type: a.type || undefined,
           thumb: { base64: b64, mimeType: x.mime },
           full: { base64: b64, mimeType: x.mime },
