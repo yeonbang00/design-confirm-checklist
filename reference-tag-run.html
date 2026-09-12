@@ -62,6 +62,13 @@ const BACKUP = 'adcheck.refAxes.backup';
 let stopping = false, running = false;
 let all = [], done = new Set();
 
+/* 축을 몇 개 붙여야 하는지 어휘에서 직접 센다. 못 읽어 오면 세는 일만
+   못 하고 나머지는 그대로 돈다. */
+let AX = null;
+import('./assets/reference-axes.mjs')
+  .then((m) => { AX = m; if (all.length) loadState(); })
+  .catch(() => {});
+
 async function getJSON(url, opt) {
   const r = await fetch(url, opt);
   const d = await r.json().catch(() => ({}));
@@ -107,7 +114,10 @@ async function loadState() {
   /* 977장 중 13장이 소구를 못 받았다. 전부 정보·가이드형이라 목록에 값이
      없었던 것이다. 값을 더했으니 그것만 다시 채울 수 있어야 한다.
      전부 다시 돌리면 977번을 또 태우게 된다. */
-  const AXIS_COUNT = 12;
+  /* 축을 늘리면 이미 태깅된 것도 한 칸씩 모자라진다. 숫자를 손으로 적어 두면
+     늘릴 때마다 여기를 같이 고쳐야 하고, 잊으면 새 축이 영원히 안 붙는다.
+     축 어휘에서 직접 센다. */
+  const AXIS_COUNT = AX ? Object.keys(AX.AXES).length : 12;
   const thin = new Set(Object.entries(stored)
     .filter(([, v]) => Object.keys(v?.axes || {}).length < AXIS_COUNT)
     .map(([k]) => k));
