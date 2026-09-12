@@ -303,6 +303,7 @@
     background:rgba(255,255,255,.92); box-shadow:0 6px 16px -8px rgba(0,0,0,.9);}
   .dp-ui .cta.pinkish{background:rgba(255,255,255,.9);}
   .dp-ui .rail{position:absolute; display:flex; flex-direction:column; justify-content:space-between; align-items:center;}
+  .dp-ui .rail.dp-row{flex-direction:row; gap:10px; justify-content:flex-start;}
   .dp-ui .rail u{width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,.55); display:block;}
   .dp-ui .cap{position:absolute; left:5%; right:26%; display:flex; flex-direction:column; gap:4px;}
   .dp-ui .cap s{display:block; height:5px; border-radius:3px; background:rgba(255,255,255,.55);}
@@ -382,8 +383,9 @@
       <button type="button" class="dp-seg-btn" data-v="cover">화면 가득 · 최대 잘림</button>
     </div>
     <div class="dp-seg" id="dpPlace">
-      <button type="button" class="dp-seg-btn" data-v="story">스토리 광고</button>
-      <button type="button" class="dp-seg-btn active" data-v="reels">릴스 광고 · 실측</button>
+      <button type="button" class="dp-seg-btn active" data-v="reels">릴스 · 실측</button>
+      <button type="button" class="dp-seg-btn" data-v="feed">피드 · 실측</button>
+      <button type="button" class="dp-seg-btn" data-v="story">스토리</button>
     </div>
     <label class="dp-check"><input type="checkbox" id="dpSafe" checked> 표시 영역</label>
     <label class="dp-check"><input type="checkbox" id="dpUi" checked> 화면 UI</label>
@@ -603,6 +605,20 @@
       + '</div>';
   }
 
+  /* 피드는 릴스·스토리와 달리 소재 위에 아무것도 안 얹힌다. 프로필 줄이
+     위에, 더 알아보기·좋아요 줄·캡션이 아래에 따로 붙는다. 그래서 소재는
+     한 픽셀도 안 가린다. 락토핏·hy 광고 스크린샷 두 장에서 확인했다.
+     띠 두께는 눈대중이라 근사지만, 안 가린다는 것 자체가 요점이다. */
+  function feedUi(bt, bh) {
+    const top = bt, bot = bt + bh;
+    return '<div class="dp-ui">'
+      + `<div class="who" style="top:${(top - 5).toFixed(1)}%"><u></u><s></s></div>`
+      + `<div class="cta" style="top:${(bot + 1).toFixed(1)}%;height:4%;left:3%;right:3%"></div>`
+      + `<div class="rail dp-row" style="top:${(bot + 6.5).toFixed(1)}%;left:4%"><u></u><u></u><u></u><u></u></div>`
+      + `<div class="cap" style="top:${(bot + 11).toFixed(1)}%;left:4%;right:26%"><s></s><s></s></div>`
+      + '</div>';
+  }
+
   function cutFor(dev) {
     if (dev.cut === 'island') {
       return `<div class="dp-island" style="top:1.3%;width:31%;height:${pct(0.042 * (dev.w / dev.h) / 0.46)}"></div>`;
@@ -632,7 +648,9 @@
          위로 붙어 있었다(위 5.3% ~ 87.2%, 정가운데라면 9.1%부터여야 한다).
          상태 표시줄 아래에 얹히기 때문이다. 그래서 상자를 직접 잡는다. */
       const bh = Math.min(100, (ART.h * dev.w) / (ART.w * dev.h) * 100);
-      const bt = Math.min(5.3, Math.max(0, 100 - bh));
+      const bt = place === 'feed'
+        ? Math.max(0, (100 - bh) / 2)          // 피드는 위아래로 UI가 붙어 가운데에 놓인다
+        : Math.min(5.3, Math.max(0, 100 - bh));
       const artBox = fit === 'contain'
         ? `top:${bt.toFixed(2)}%;height:${bh.toFixed(2)}%`
         : 'top:0;height:100%';
@@ -644,7 +662,9 @@
         ? `<div class="dp-safe" style="top:${sTop.toFixed(2)}%;bottom:${sBot.toFixed(2)}%;`
           + `left:${pct(SAFE.side)};right:${pct(SAFE.side)}"></div>`
         : '';
-      const ui = $('#dpUi').checked ? uiFor(dev) : '';
+      const ui = !$('#dpUi').checked ? ''
+        : place === 'feed' ? feedUi(bt, bh)
+        : uiFor(dev);
       // 1px 남짓은 반올림 오차지 잘림이 아니다. 빨갛게 띄우면 늑대소년이 된다.
       const gone = fit === 'cover' && lost.x > 4;
       box.innerHTML =
@@ -680,10 +700,24 @@
 
     /* 표시 영역 값은 9:16 기준이다. 다른 비율을 올리면 잘림 계산은 맞지만
        표시 영역 선은 뜻이 달라진다. 말없이 그려 두면 잘못 믿는다. */
+    /* 팀은 메타 소재를 1080x1080과 1080x1920 두 벌로 만든다. 어느 쪽이
+       어느 자리로 가느냐에 따라 화면에서 차지하는 크기가 두 배 가까이
+       벌어진다. 실제로 가그린 광고가 릴스에 1:1로 나가 화면의 46%만
+       차지하는 것을 봤다. 그 차이를 숫자로 보여준다. */
+    const wide = DEVICES.find((d) => /다이내믹/.test(d.name)) || DEVICES[0];
+    const fill = (r) => (r * wide.w) / (wide.h) * 100;   // 그 비율 소재가 차지하는 화면 높이 %
+    const nowFill = fill(ART.h / ART.w);
+    const tallFill = fill(16 / 9);
+    const sizeNote = place !== 'feed' && nowFill < tallFill - 5
+      ? `<br>지금 소재는 화면의 <b>${nowFill.toFixed(0)}%</b>만 차지합니다. `
+        + `1080x1920으로 따로 만들면 <b class="warn">${tallFill.toFixed(0)}%</b>가 됩니다. `
+        + '같은 자리에 1:1을 넣으면 위아래가 검게 남습니다.'
+      : '';
+
     const off = Math.abs(ART.w / ART.h - 9 / 16) > 0.02;
     const warn = off
       ? `<b class="warn">올린 배너가 ${ART.w}x${ART.h}로 9:16이 아닙니다.</b> `
-        + '잘리는 양은 그대로 맞지만 표시 영역 선은 9:16 기준이라 이 비율에는 안 맞습니다.<br>'
+        + '표시 영역 선은 9:16 기준이라 이 비율에는 안 맞습니다.<br>'
       : '';
     $('#dpVerdict').innerHTML = warn + (fit === 'cover'
       ? `물리 화면을 끝까지 채운다면 <b>${worst.dev.name}</b>에서 좌우 <b class="warn">${worst.lost.x}px</b>`
@@ -693,8 +727,10 @@
         + '앞뒤가 안 맞으니 실제 표시 영역은 물리 화면보다 좁다고 보는 편이 타당합니다.'
       : '<b>실기기에서 확인한 방식입니다.</b> 배너가 화면 폭에 맞춰 통째로 들어가고 '
         + '위아래에 검은 띠가 생깁니다. 좌우로 잘리는 곳은 없습니다. '
-        + 'iPhone 17 Pro Max · 인스타그램 릴스 광고에서 원본과 스크린샷의 같은 요소 위치를 재어 확인했습니다. '
-        + '스토리와 안드로이드는 아직 확인 전입니다.');
+        + (place === 'feed'
+            ? ' 피드는 소재 위에 UI가 안 얹힙니다. 프로필 줄이 위에, 버튼과 좋아요 줄이 아래에 따로 붙습니다.'
+            : ' iPhone 17 Pro Max · 인스타그램 릴스 광고에서 원본과 스크린샷의 같은 요소 위치를 재어 확인했습니다.')
+        + ' 스토리와 안드로이드는 아직 확인 전입니다.') + sizeNote;
   }
 
   function show(f) {
