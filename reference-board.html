@@ -1499,7 +1499,15 @@
 
     if(!currentGrid) return;
     currentGrid.querySelectorAll('.rc-case-item').forEach(el => el.remove());
-    if(currentCategoryId === 'all' && currentTypeId === 'all' && rejectCasesData.length){
+    /* 거르지 않은 화면에서만 꽂는다. 반려사례는 .ref-item이 아니라 필터가
+       숨기지 못하는데, 조건이 업종과 유형만 보고 있어서 소구·기간·검색으로
+       걸러도 맨 앞에 그대로 남았다. 기간을 걸었는데 하기스가 첫 장으로
+       나오는 것은 거른 결과가 아니다. */
+    const 브랜드칩 = refContent.querySelector('.filter-chip.active');
+    const 안거름 = currentCategoryId === 'all' && currentTypeId === 'all'
+      && currentAppeal === 'all' && currentPeriod === 'all' && !searchText
+      && !(브랜드칩 && 브랜드칩.dataset.brand);
+    if(안거름 && rejectCasesData.length){
       // 그리드 끝에 덧붙이면 "업종 전체"에 이미 쌓인 수십~수백 장 아래로
       // 파묻혀서 사실상 안 보인다 — 맨 앞에 꽂아서 바로 눈에 띄게 한다.
       rejectCasesData.forEach(item => {

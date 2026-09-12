@@ -56,9 +56,13 @@ export default async function handler(req, res) {
     };
   });
 
+  /* 담아 온 것을 앞에 둔다. 뒤에 붙이면 큐레이션 977장 아래로 파묻혀서
+     방금 담은 소재를 보려고 끝까지 내려야 했다. 새로 담은 것부터 위로. */
+  const fresh = [...uploaded].sort((a, b) => String(b.uploadedAt || '').localeCompare(String(a.uploadedAt || '')));
+
   if (!category || category === 'all') {
     const items = Object.values(REFERENCE_CATEGORIES).flatMap((cat) => cat.items || []);
-    res.status(200).json({ items: withAxes([...items, ...uploaded]) });
+    res.status(200).json({ items: withAxes([...fresh, ...items]) });
     return;
   }
 
@@ -68,6 +72,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  const uploadedForCategory = uploaded.filter((u) => u.category === category);
-  res.status(200).json({ items: withAxes([...(cat.items || []), ...uploadedForCategory]) });
+  const uploadedForCategory = fresh.filter((u) => u.category === category);
+  res.status(200).json({ items: withAxes([...uploadedForCategory, ...(cat.items || [])]) });
 }
