@@ -371,8 +371,8 @@
 
   <div class="dp-bar" id="dpBar" hidden>
     <div class="dp-seg" id="dpFit">
-      <button type="button" class="dp-seg-btn active" data-v="cover">채우기</button>
-      <button type="button" class="dp-seg-btn" data-v="contain">원본 비율 유지</button>
+      <button type="button" class="dp-seg-btn active" data-v="cover">화면 가득 (최대 잘림)</button>
+      <button type="button" class="dp-seg-btn" data-v="contain">원본 비율 (잘림 없음)</button>
     </div>
     <div class="dp-seg" id="dpPlace">
       <button type="button" class="dp-seg-btn active" data-v="story">스토리 광고</button>
@@ -388,7 +388,7 @@
 
   <div class="dp-section" id="dpOriginWrap" hidden>
     <div class="dp-section-title">올린 배너</div>
-    <div class="dp-section-note">세로선 바깥은 채우기로 볼 때 가장 길쭉한 기종에서 잘려 나가는 자리입니다. 안쪽 실선은 표시 영역입니다.</div>
+    <div class="dp-section-note">세로선 바깥은 화면을 가득 채울 때 가장 길쭉한 기종에서 잘려 나가는 자리입니다. 잘림의 상한이지 예측이 아닙니다. 안쪽 실선은 표시 영역입니다.</div>
     <div class="dp-origin" id="dpOrigin"></div>
   </div>
 
@@ -403,7 +403,15 @@
       <div class="dp-fact">
         <b>화면 크기</b>
         <p>기종별 실제 화면 픽셀입니다. 요즘 주력 기종은 거의 19.5:9라 9:16보다 길쭉합니다.
-        1080x1920을 채우기로 넣으면 <em>위아래가 아니라 좌우가</em> 잘립니다.</p>
+        그래서 화면을 가득 채우려 들면 <em>위아래가 아니라 좌우가</em> 잘립니다.</p>
+      </div>
+      <div class="dp-fact">
+        <b>이 수치를 믿을 수 있는 만큼만</b>
+        <p>"화면 가득"은 배너가 물리 화면 전체를 채운다고 놓고 잰 값입니다.
+        그러면 좌우 18%가 잘리는데, 정작 메타는 좌우를 6%만 비우라고 합니다.
+        메타 말대로 지켜도 잘린다는 뜻이 되니 앞뒤가 안 맞습니다.
+        <em>실제 표시 영역이 물리 화면보다 좁다</em>고 보는 편이 타당하고,
+        그렇다면 진짜 잘림은 18%보다 훨씬 작습니다. 여기 숫자는 상한으로 보세요.</p>
       </div>
       <div class="dp-fact">
         <b>채우기와 검은 여백</b>
@@ -594,7 +602,7 @@
         + `<div class="dp-dev-meta">${dev.w} x ${dev.h}</div>`
         + (fit === 'cover'
             ? `<div class="dp-dev-lost ${gone ? 'bad' : 'ok'}">`
-              + (gone ? `좌우 ${lost.x}px 잘림 (폭의 ${(lost.x / ART.w * 100).toFixed(0)}%)` : '잘리지 않음')
+              + (gone ? `좌우 최대 ${lost.x}px (폭의 ${(lost.x / ART.w * 100).toFixed(0)}%)` : '잘리지 않음')
               + '</div>'
             : '<div class="dp-dev-lost ok">잘리지 않음 · 위아래 검은 여백</div>');
       grid.appendChild(box);
@@ -621,11 +629,13 @@
         + '잘리는 양은 그대로 맞지만 표시 영역 선은 9:16 기준이라 이 비율에는 안 맞습니다.<br>'
       : '';
     $('#dpVerdict').innerHTML = warn + (fit === 'cover'
-      ? `채우기로 보면 <b>${worst.dev.name}</b>에서 좌우 <b class="warn">${worst.lost.x}px</b>`
-        + `(폭의 ${(worst.lost.x / ART.w * 100).toFixed(0)}%)이 잘립니다. `
-        + '위아래는 한 픽셀도 안 잘립니다. 주력 기종이 9:16보다 길쭉해서 그렇습니다.'
+      ? `물리 화면을 끝까지 채운다면 <b>${worst.dev.name}</b>에서 좌우 <b class="warn">${worst.lost.x}px</b>`
+        + `(폭의 ${(worst.lost.x / ART.w * 100).toFixed(0)}%)이 잘립니다. 위아래는 한 픽셀도 안 잘립니다. `
+        + '<b>다만 이건 잘림의 상한이지 실제로 이만큼 잘린다는 뜻이 아닙니다.</b> '
+        + '메타는 좌우를 6%만 비우라고 하는데 이 계산은 18%라, 메타 안내대로 지켜도 잘린다는 말이 됩니다. '
+        + '앞뒤가 안 맞으니 실제 표시 영역은 물리 화면보다 좁다고 보는 편이 타당합니다.'
       : '원본 비율을 지키면 잘리는 곳은 없고 위아래에 검은 띠가 생깁니다. '
-        + '어느 쪽으로 나갈지는 매체가 정하므로 두 경우를 다 보고 판단하세요.');
+        + '메타가 말하는 두 갈래 중 이쪽입니다. 어느 쪽으로 나갈지는 매체가 정합니다.');
   }
 
   function show(f) {
