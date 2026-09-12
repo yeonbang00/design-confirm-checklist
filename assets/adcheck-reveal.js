@@ -28,6 +28,7 @@
   var DIST_LEFT_BOX = 64; // data-reveal="left"(큰 박스 단위) 좌→우 이동 거리(px) — 리스트 행보다 크게 움직여야 "부드러운 슬라이드"로 느껴진다
   var DIST_DOWN = 22;     // 위→아래 이동 거리(px)
   var TRANSITION = 'opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1)'; // 리스트 캐스케이드부터 박스 등장까지 전부 이 속도로 통일 — 요소 종류별로 제각각이라 "어떤 건 빠르고 어떤 건 느리다"는 피드백을 받음
+  var CASCADE_MAX = 1200; // 캐스케이드 전체가 이 시간(ms) 안에 끝난다 — 아래 fire() 참고
   var SEQ_STEP = 200;     // data-seq-reveal 페이지에서, 같은 순간 뷰포트에 들어온 섹션들 간 시간차(ms) — 큰 섹션 단위라 130ms로는 순차적으로 느껴지지 않는다는 피드백으로 늘림
 
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -58,12 +59,18 @@
     el.style.transform = 'none';
   }
 
+  /* 한 장당 STEP만큼 미루면 목록이 길 때 캐스케이드가 끝나지 않는다.
+     이미지 레퍼런스가 1,248장이 되자 마지막 장이 68초 뒤에 떴다. 기간으로
+     걸러 보면 남은 소재가 목록 뒤쪽에 몰려 있어 화면이 통째로 비어 보였다
+     (display는 block인데 opacity가 0인 상태를 실측). 목록이 길면 전체를
+     CASCADE_MAX 안에 밀어 넣는다. 짧은 목록은 지금 속도 그대로 둔다. */
   function fire(group) {
     var rows = group.querySelectorAll('[data-row]');
+    var span = rows.length * STEP > CASCADE_MAX ? CASCADE_MAX / rows.length : STEP;
     for (var i = 0; i < rows.length; i++) {
       (function (row, i) {
         if (row.dataset.dcShown) return;
-        setTimeout(function () { show(row); }, i * STEP);
+        setTimeout(function () { show(row); }, i * span);
       })(rows[i], i);
     }
   }
