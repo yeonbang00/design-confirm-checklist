@@ -123,7 +123,10 @@
   .upload-panel-close{position:absolute; top:6px; right:10px; background:none; border:none; color:var(--canvas-text-2); font-size:26px; line-height:1; cursor:pointer; padding:4px;}
   .upload-panel-close:hover{color:var(--canvas-text);}
   .upload-panel-body{display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;}
-  .upload-panel-thumb{width:160px; height:160px; object-fit:cover; border-radius:10px; background:var(--charcoal); flex-shrink:0;}
+  /* 올리기 전 미리보기까지 cover면 세로형이 가운데만 남는다. 338x600을
+     넣어 보니 높이의 44%가 잘려 위아래 띠가 통째로 안 보였다. 무엇을
+     올리는지 확인하는 자리에서 절반을 감출 수는 없다. */
+  .upload-panel-thumb{width:160px; height:160px; object-fit:contain; border-radius:10px; background:var(--charcoal); flex-shrink:0;}
   .upload-panel-fields{flex:1; min-width:220px;}
   .upload-field{margin-bottom:14px;}
   .upload-field label{display:block; font-size:12.5px; font-weight:600; color:var(--canvas-text-2); margin-bottom:6px;}
@@ -140,7 +143,7 @@
   .upload-batch-cancel:hover{color:var(--canvas-text);}
   .upload-batch-list{display:flex; flex-direction:column; gap:10px; max-height:520px; overflow-y:auto; margin-bottom:16px;}
   .ub-row{display:flex; gap:14px; align-items:flex-start; padding:12px; border-radius:12px; background:var(--charcoal); border:1px solid var(--charcoal-border);}
-  .ub-thumb{width:72px; height:72px; object-fit:cover; border-radius:8px; flex-shrink:0; background:var(--surface-2);}
+  .ub-thumb{width:72px; height:72px; object-fit:contain; border-radius:8px; flex-shrink:0; background:var(--surface-2);}
   .ub-fields{flex:1; min-width:0; display:flex; gap:10px; flex-wrap:wrap;}
   .ub-fields input[type=text], .ub-fields select{padding:9px 12px; border:1px solid var(--charcoal-border); border-radius:8px; font-size:12.5px; font-family:inherit; background:var(--surface-2); color:var(--canvas-text); box-sizing:border-box;}
   .ub-fields input[type=text]{flex:1; min-width:120px;}
