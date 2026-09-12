@@ -583,7 +583,7 @@
   const refContent = document.getElementById('refContent');
   let categoriesData = [];
   let currentCategoryId = null;
-  let currentGrid = null; // 반려사례를 덧붙일 수 있게 현재 그리드 엘리먼트를 기억해둔다
+  let currentGrid = null; // 예전에 꽂아 둔 반려사례 카드를 걷어내려고 기억해둔다
 
   function renderCategoryOptions(){
     categoryOptList.innerHTML = '';
@@ -1497,24 +1497,12 @@
     rejectExclusiveContent.style.display = 'none';
     rejectExclusiveContent.innerHTML = '';
 
-    if(!currentGrid) return;
-    currentGrid.querySelectorAll('.rc-case-item').forEach(el => el.remove());
-    /* 거르지 않은 화면에서만 꽂는다. 반려사례는 .ref-item이 아니라 필터가
-       숨기지 못하는데, 조건이 업종과 유형만 보고 있어서 소구·기간·검색으로
-       걸러도 맨 앞에 그대로 남았다. 기간을 걸었는데 하기스가 첫 장으로
-       나오는 것은 거른 결과가 아니다. */
-    const 브랜드칩 = refContent.querySelector('.filter-chip.active');
-    const 안거름 = currentCategoryId === 'all' && currentTypeId === 'all'
-      && currentAppeal === 'all' && currentPeriod === 'all' && !searchText
-      && !(브랜드칩 && 브랜드칩.dataset.brand);
-    if(안거름 && rejectCasesData.length){
-      // 그리드 끝에 덧붙이면 "업종 전체"에 이미 쌓인 수십~수백 장 아래로
-      // 파묻혀서 사실상 안 보인다 — 맨 앞에 꽂아서 바로 눈에 띄게 한다.
-      rejectCasesData.forEach(item => {
-        currentGrid.insertBefore(buildRejectCard(item, null), currentGrid.firstChild);
-      });
-      if(window.adcheckReveal) window.adcheckReveal();
-    }
+    /* 레퍼런스 그리드에는 섞지 않는다. 눈에 띄라고 맨 앞에 꽂아 뒀더니
+       반려사례 한 건이 레퍼런스 1,346장의 첫 장을 차지했다. 반려사례는
+       "어디서 반려됐나"라는 다른 축이라 업종·기간·소구로 거를 수도 없어서
+       필터를 걸 때마다 예외로 남았다. 툴바의 "항목별 반려사례"가 이미
+       들어가는 문이고, 항목을 고르면 위에서 단독으로 보여준다. */
+    if(currentGrid) currentGrid.querySelectorAll('.rc-case-item').forEach(el => el.remove());
   }
 
   // 헤더 하단 스크롤 진행 바
