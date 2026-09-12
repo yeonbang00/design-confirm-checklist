@@ -282,10 +282,17 @@
   /* 카메라 구멍 */
   .dp-island{position:absolute; left:50%; transform:translateX(-50%); background:#000; border-radius:999px;
     box-shadow:0 0 0 1px rgba(255,255,255,.14);}
+  .dp-notch{border-radius:0 0 12px 12px;}
   /* 표시 영역 */
-  .dp-safe{position:absolute; border:1px solid rgba(195,255,77,.85); border-radius:3px; pointer-events:none;}
-  .dp-safe::before{content:'표시 영역'; position:absolute; top:2px; left:3px; font:600 7px/1 var(--font-mono);
-    color:rgba(195,255,77,.9); letter-spacing:.02em;}
+  /* 밝은 배너 위에서 라임 1px 선이 사라졌다. 선 하나로는 어떤 색을 골라도
+     그 색에 가까운 배경에서 진다. 그래서 세 겹으로 둔다.
+     바깥 어두운 1px · 라임 1px · 안쪽 어두운 1px.
+     밝은 데선 어두운 겹이, 어두운 데선 라임이 받쳐 준다.
+     여기에 바깥을 살짝 덮어 영역 자체가 면으로 읽히게 한다. */
+  .dp-safe{position:absolute; border:1px solid rgba(195,255,77,.95); border-radius:3px; pointer-events:none;
+    box-shadow:0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.45), 0 0 0 9999px rgba(0,0,0,.26);}
+  .dp-safe::before{content:'표시 영역'; position:absolute; top:2px; left:3px; padding:1px 3px; border-radius:2px;
+    font:700 7px/1.35 var(--font-mono); color:#CCFF00; background:rgba(0,0,0,.62); letter-spacing:.02em;}
   /* 화면 UI 재현 */
   .dp-ui{position:absolute; inset:0; pointer-events:none;}
   .dp-ui .bars{position:absolute; left:5%; right:5%; display:flex; gap:2px;}
@@ -306,6 +313,7 @@
 
   .dp-dev-name{margin-top:11px; font-size:13px; font-weight:700; color:var(--ink);}
   .dp-dev-meta{margin-top:3px; font-size:11px; line-height:1.6; color:var(--ink-4); font-family:var(--font-mono);}
+  .dp-dev-models{margin-top:5px; font-size:10.5px; line-height:1.65; color:var(--ink-4);}
   .dp-dev-lost{margin-top:5px; font-size:11.5px; font-weight:700;}
   .dp-dev-lost.bad{color:#F22F6B;} .dp-dev-lost.ok{color:var(--accent);}
 
@@ -520,14 +528,28 @@
  * 위아래가 아니라 좌우가 잘린다. 폭의 18%, 갤럭시 Z 플립은 27%다.
  */
 (function () {
+  /* 아이폰 13 이후, 갤럭시 S21 이후를 다 넣으면 서른네 종이 되는데 카드를
+     서른네 장 깔 필요가 없다. 잘리는 양은 화면 비율 하나로만 정해지고,
+     아이폰 13~17은 전부 19.5:9라 잘림이 17.9~18.2%로 사실상 같다.
+     그래서 비율과 카메라 구멍 모양으로 묶어 일곱 장으로 줄이고, 각 카드에
+     어떤 기종이 들어가는지 적는다. w·h는 그 묶음에서 가장 심하게 잘리는 값이다. */
   const DEVICES = [
-    { name: 'iPhone 16 Pro',     w: 1206, h: 2622, cut: 'island', home: true },
-    { name: 'iPhone 16',         w: 1179, h: 2556, cut: 'island', home: true },
-    { name: 'iPhone 16 Pro Max', w: 1320, h: 2868, cut: 'island', home: true },
-    { name: 'iPhone SE 3',       w:  750, h: 1334, cut: 'none',   home: false },
-    { name: 'Galaxy S24',        w: 1080, h: 2340, cut: 'hole',   home: true },
-    { name: 'Galaxy S24 Ultra',  w: 1440, h: 3120, cut: 'hole',   home: true },
-    { name: 'Galaxy Z Flip 6',   w: 1080, h: 2640, cut: 'hole',   home: true },
+    { name: '아이폰 다이내믹 아일랜드', w: 1206, h: 2622, cut: 'island', home: true,
+      span: '17.9~18.2%',
+      models: 'iPhone 14 Pro · 14 Pro Max · 15 · 15 Plus · 15 Pro · 15 Pro Max · 16 · 16 Plus · 16 Pro · 16 Pro Max · 17 · 17 Pro · 17 Pro Max' },
+    { name: '아이폰 노치', w: 1080, h: 2340, cut: 'notch', home: true,
+      span: '17.9~18.0%',
+      models: 'iPhone 13 · 13 mini · 13 Pro · 13 Pro Max · 14 · 14 Plus · 16e' },
+    { name: '갤럭시 S22~S24', w: 1080, h: 2340, cut: 'hole', home: true,
+      models: 'S22 · S22+ · S23 · S23+ · S24 · S24+ · S24 Ultra' },
+    { name: '갤럭시 S22·S23 Ultra', w: 1440, h: 3088, cut: 'hole', home: true,
+      models: 'S22 Ultra · S23 Ultra' },
+    { name: '갤럭시 S21', w: 1080, h: 2400, cut: 'hole', home: true,
+      models: 'S21 · S21+ · S21 Ultra' },
+    { name: 'Galaxy Z Flip', w: 1080, h: 2640, cut: 'hole', home: true,
+      models: '펼친 화면 · Z Flip 3부터 같은 크기' },
+    { name: 'iPhone SE 3', w: 750, h: 1334, cut: 'none', home: false,
+      models: '화면이 16:9라 9:16에 가장 가깝다' },
   ];
   const SAFE = { top: 0.14, side: 0.06, bottom: 0.35 };
   const ART = { w: 1080, h: 1920 };
@@ -571,6 +593,10 @@
     if (dev.cut === 'island') {
       return `<div class="dp-island" style="top:1.3%;width:31%;height:${pct(0.042 * (dev.w / dev.h) / 0.46)}"></div>`;
     }
+    if (dev.cut === 'notch') {
+      // 노치는 위쪽 가운데에 걸린 넓적한 홈이다. 아일랜드보다 넓고 위에 붙어 있다.
+      return '<div class="dp-island dp-notch" style="top:0;width:48%;height:3.2%"></div>';
+    }
     if (dev.cut === 'hole') {
       const d = 4.2; // 화면 폭 대비
       return `<div class="dp-island" style="top:1.4%;width:${d}%;aspect-ratio:1"></div>`;
@@ -592,7 +618,8 @@
         ? `<div class="dp-safe" style="top:${pct(SAFE.top)};bottom:${pct(SAFE.bottom)};left:${pct(SAFE.side)};right:${pct(SAFE.side)}"></div>`
         : '';
       const ui = $('#dpUi').checked ? uiFor(dev) : '';
-      const gone = fit === 'cover' && lost.x > 0;
+      // 1px 남짓은 반올림 오차지 잘림이 아니다. 빨갛게 띄우면 늑대소년이 된다.
+      const gone = fit === 'cover' && lost.x > 4;
       box.innerHTML =
         `<div class="dp-screen" style="aspect-ratio:${dev.w}/${dev.h}">`
         + `<img class="${fit}" src="${url}" alt="">`
@@ -600,9 +627,12 @@
         + '</div>'
         + `<div class="dp-dev-name">${dev.name}</div>`
         + `<div class="dp-dev-meta">${dev.w} x ${dev.h}</div>`
+        + `<div class="dp-dev-models">${dev.models}</div>`
         + (fit === 'cover'
             ? `<div class="dp-dev-lost ${gone ? 'bad' : 'ok'}">`
-              + (gone ? `좌우 최대 ${lost.x}px (폭의 ${(lost.x / ART.w * 100).toFixed(0)}%)` : '잘리지 않음')
+              + (gone
+                  ? `좌우 최대 ${lost.x}px (폭의 ${dev.span || (lost.x / ART.w * 100).toFixed(0) + '%'})`
+                  : '잘리지 않음')
               + '</div>'
             : '<div class="dp-dev-lost ok">잘리지 않음 · 위아래 검은 여백</div>');
       grid.appendChild(box);
