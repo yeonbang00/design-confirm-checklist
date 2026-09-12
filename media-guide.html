@@ -255,16 +255,19 @@
   <div class="gnb-bar-inner">
     <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
     <nav class="gnb gnb-primary">
-      <a href="index.html" class="gnb-link">배너 분석</a>
-      <a href="banner-studio.html" class="gnb-link">배너 생성</a>
       <div class="gnb-dropdown">
-        <button type="button" class="gnb-link gnb-dropdown-toggle active">가이드</button>
+        <a href="index.html" class="gnb-link gnb-dropdown-toggle active">배너 분석</a>
         <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
           <a href="criteria-guide.html" class="gnb-dropdown-item">항목 가이드</a>
-          <a href="banner-generation-guide.html" class="gnb-dropdown-item">배너 생성 가이드</a>
-          <a href="guide.html" class="gnb-dropdown-item">브랜드 가이드</a>
           <a href="media-guide.html" class="gnb-dropdown-item active">매체 가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드 가이드</a>
           <a href="color-guide.html" class="gnb-dropdown-item">컬러 가이드</a>
+        </div></div>
+      </div>
+      <div class="gnb-dropdown">
+        <a href="banner-studio.html" class="gnb-link gnb-dropdown-toggle">배너 생성</a>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="banner-generation-guide.html" class="gnb-dropdown-item">배너 생성 가이드</a>
         </div></div>
       </div>
       <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
@@ -341,6 +344,9 @@
 
 <script>
   document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    // 링크형 토글(배너 분석·배너 생성)은 눌렀을 때 그 페이지로 간다.
+    // 메뉴는 마우스를 올려놓으면 CSS가 펴 준다.
+    if (btn.tagName === 'A') return;
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const menu = btn.nextElementSibling;
