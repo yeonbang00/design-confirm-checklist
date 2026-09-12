@@ -21,7 +21,8 @@
   // 4 — 바닥으로 뛰지 않고 한 화면씩 내린다. 크게 뛰면 다음 묶음을 부르는
   //     표식을 스쳐 지나가 버린다. 손으로 내리면 33장이 216장이 됐다.
   // 5 — 광고주 이름의 "페이지는 …과(와) 함께합니다" 꼬리를 뗀다.
-  var ADS_V = 5;
+  // 6 — 게재 시작일을 2026-09-03 꼴로 넘긴다. 글자로 두면 기간으로 못 거른다.
+  var ADS_V = 6;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
@@ -116,6 +117,14 @@
       .trim();
   }
 
+  /* "2026. 9. 3.에 게재 시작함" → "2026-09-03".
+     그대로 두면 글자라 기간으로 못 거른다. */
+  function isoDate(t) {
+    var m = String(t || '').match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
+    if (!m) return '';
+    return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  }
+
   function ratioName(w, h) {
     var r = w / h;
     if (r >= 0.95 && r <= 1.05) return '1:1';
@@ -179,7 +188,7 @@
     raw.push({
       id: (t.match(/ID: (\d+)/) || [])[1] || '',
       brand: bi > 0 ? cleanBrand(lines[bi - 1]) : '',
-      started: (t.match(/(\d{4}\. \d+\. \d+\.)/) || [])[1] || '',
+      started: isoDate((t.match(/(\d{4}\. \d+\. \d+\.)/) || [])[1]),
       copy: lines.slice(bi + 1).join(' ').replace(/\s+/g, ' ').slice(0, 400),
       cta: (t.match(/\n(지금 구매하기|Shop Now|더 알아보기|Learn More|자세히 알아보기|주문하기|신청하기|Sign Up|Install Now|지금 개통하기)/) || [])[1] || '',
       landing: (t.match(/\n([A-Z0-9.\-]+\.(?:CO\.KR|COM|KR|NET|IO))\n/) || [])[1] || '',

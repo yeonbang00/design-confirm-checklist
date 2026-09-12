@@ -52,7 +52,7 @@ pre{font:11.5px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#c7
 
 <script type="module">
 const $ = s => document.querySelector(s);
-const ADS_V = 5;   // assets/adcheck-ads.js의 ADS_V와 맞출 것
+const ADS_V = 6;   // assets/adcheck-ads.js의 ADS_V와 맞출 것
 let ads = [];
 const urls = [];
 
@@ -203,6 +203,12 @@ $('#save').onclick = async () => {
           thumb: { base64: b64, mimeType: x.mime },
           full: { base64: b64, mimeType: x.mime },
           hash: x.hash, defer: true,
+          /* 북마클릿이 뽑아 오는 것을 그대로 넘긴다. 지금까지 카피와 지문만
+             넘기고 나머지는 흘리고 있었다. 게재일이 없으면 최근 것만 보는
+             일이 안 되고, 원본 링크가 없으면 출처를 되짚을 수 없다. */
+          liveAt: x.started || '', libraryId: x.libraryId || '',
+          cta: x.cta || '', landing: x.landing || '', adUrl: x.adUrl || '',
+          ratio: x.ratio || '', w: x.w || 0, h: x.h || 0,
         }),
       });
       if (up.item?.thumbUrl) {

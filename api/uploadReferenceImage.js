@@ -65,7 +65,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { category, brandName, note, type, ownWork, thumb, full, defer, hash } = req.body || {};
+  const { category, brandName, note, type, ownWork, thumb, full, defer, hash,
+    liveAt, libraryId, cta, landing, adUrl, ratio, w, h } = req.body || {};
 
   if (!category || !REFERENCE_CATEGORIES[category]) {
     res.status(400).json({ error: '알 수 없는 업종 카테고리입니다.' });
@@ -107,6 +108,16 @@ export default async function handler(req, res) {
       /* 64비트 지문. 다음에 같은 브랜드를 다시 담을 때 이미 있는 것을 가려낸다.
          같은 소재도 광고마다 CDN 파일명이 달라 파일명으로는 못 잡는다. */
       hash: (typeof hash === 'string' && /^[01]{64}$/.test(hash)) ? hash : undefined,
+      /* 광고 라이브러리에서 담아 온 소재의 출처 정보. 게재일이 있어야
+         최근 것만 골라 볼 수 있고, 원본 링크가 있어야 되짚을 수 있다. */
+      liveAt: (typeof liveAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(liveAt)) ? liveAt : undefined,
+      libraryId: (typeof libraryId === 'string' && /^\d{6,25}$/.test(libraryId)) ? libraryId : undefined,
+      cta: cta ? String(cta).slice(0, 30) : undefined,
+      landing: landing ? String(landing).slice(0, 60) : undefined,
+      adUrl: (typeof adUrl === 'string' && /^https:\/\//.test(adUrl)) ? adUrl.slice(0, 400) : undefined,
+      ratio: ['1:1', '4:5', '9:16', 'wide'].includes(ratio) ? ratio : undefined,
+      w: Number.isFinite(Number(w)) && Number(w) > 0 ? Math.round(Number(w)) : undefined,
+      h: Number.isFinite(Number(h)) && Number(h) > 0 ? Math.round(Number(h)) : undefined,
       ownWork: ownWork ? true : undefined,
       uploadedAt: new Date().toISOString(),
     };

@@ -425,6 +425,12 @@
       </button>
       <div class="option-menu" id="appealOptMenu"><div id="appealOptList"></div></div>
     </div>
+    <div class="option-dropdown-wrap">
+      <button type="button" class="option-btn" id="periodOptBtn">
+        <span class="option-btn-value" id="periodOptValue">기간 전체</span><span class="opt-chevron">▼</span>
+      </button>
+      <div class="option-menu" id="periodOptMenu"><div id="periodOptList"></div></div>
+    </div>
     <div class="option-dropdown-wrap ref-search-wrap">
       <input type="search" id="refSearch" class="ref-search" placeholder="브랜드 또는 메모 검색" autocomplete="off">
     </div>
@@ -580,12 +586,12 @@
     };
     /* 전체에도 장수를 적는다. 업종별로는 적혀 있는데 전체만 없어서
        레퍼런스가 몇 장인지 알려면 열세 개를 더해야 했다.
-       담아 온 소재까지 세므로 늘어나는 것이 여기서 바로 보인다. */
+       숫자는 펼친 목록에만 둔다. 버튼은 유형 전체·소구 전체와 나란히
+       서는 자리라 하나만 숫자가 붙으면 셋이 어긋나 보인다. */
     const total = categoriesData.reduce((n, c) => n + (c.count || 0), 0);
     const totalKo = total.toLocaleString('ko-KR');
-    makeItem('all', '업종 전체 (' + totalKo + ')', '업종 전체 · ' + totalKo + '장');
-    categoriesData.forEach(c => makeItem(c.id, c.name + ' (' + c.count + ')',
-      c.name + ' · ' + c.count + '장'));
+    makeItem('all', '업종 전체 (' + totalKo + ')', '업종 전체');
+    categoriesData.forEach(c => makeItem(c.id, c.name + ' (' + c.count + ')', c.name));
   }
 
   categoryOptBtn.addEventListener('click', (e) => {
@@ -646,7 +652,49 @@
   const appealOptValue = document.getElementById('appealOptValue');
   const refSearch = document.getElementById('refSearch');
   let currentAppeal = 'all';
+  let currentPeriod = 'all';
   let searchText = '';
+
+  /* 기간은 광고가 실제로 나가기 시작한 날 기준이다. 담은 날이 아니다.
+     한 해 전에 나간 소재를 어제 담았다고 최신으로 볼 수는 없다.
+     게재일은 메타 광고 라이브러리에서 담아 온 소재만 갖고 있다. */
+  const periodOptBtn = document.getElementById('periodOptBtn');
+  const periodOptMenu = document.getElementById('periodOptMenu');
+  const periodOptList = document.getElementById('periodOptList');
+  const periodOptValue = document.getElementById('periodOptValue');
+  const PERIODS = [
+    ['all', '기간 전체', 0],
+    ['7', '최근 1주일', 7],
+    ['30', '최근 1개월', 30],
+    ['90', '최근 3개월', 90],
+    ['year', '올해', 0],
+  ];
+  PERIODS.forEach(([id, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ppm-item' + (id === currentPeriod ? ' active' : '');
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      currentPeriod = id;
+      periodOptValue.textContent = label;
+      periodOptList.querySelectorAll('.ppm-item').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      periodOptMenu.classList.remove('open');
+      updateItemVisibility();
+    });
+    periodOptList.appendChild(b);
+  });
+  periodOptBtn.addEventListener('click', (e) => { e.stopPropagation(); periodOptMenu.classList.toggle('open'); });
+  document.addEventListener('click', () => periodOptMenu.classList.remove('open'));
+
+  function inPeriod(liveAt) {
+    if (currentPeriod === 'all') return true;
+    if (!liveAt) return false;   // 게재일을 모르는 소재는 기간을 고르면 빠진다
+    if (currentPeriod === 'year') return liveAt.slice(0, 4) === String(new Date().getFullYear());
+    const days = Number(currentPeriod);
+    const cut = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    return liveAt >= cut;
+  }
   let AX = null;          // assets/reference-axes.mjs
   let allPool = null;     // 닮은 컷을 업종 너머에서 찾기 위한 977장 전체
 
@@ -724,7 +772,8 @@
       /* 검색할 텍스트가 브랜드명뿐이면 검색을 붙여도 쓸 게 없다.
          메모에 오퍼와 비주얼이 한 줄로 적혀 있어서 그쪽까지 본다. */
       const hitOk = !searchText || (el.dataset.search || '').includes(searchText);
-      const ok = brandOk && typeOk && appealOk && hitOk;
+      const dateOk = inPeriod(el.dataset.liveat || '');
+      const ok = brandOk && typeOk && appealOk && hitOk && dateOk;
       el.style.display = ok ? '' : 'none';
       if(ok) shown++;
     });
@@ -733,7 +782,11 @@
     if(!shown && refContent.querySelector('.ref-grid')){
       const d = document.createElement('div');
       d.className = 'gl-empty ref-filter-empty';
-      d.textContent = '조건에 맞는 레퍼런스가 없습니다.';
+      d.innerHTML = '조건에 맞는 레퍼런스가 없습니다.'
+        + (currentPeriod !== 'all'
+          ? '<br><span style="font-size:12px;color:var(--ink-4)">게재일은 메타 광고 라이브러리에서 담아 온 소재만 갖고 있습니다. '
+            + '2026-09-12 이전에 담은 것은 게재일이 없어 기간으로 거르면 빠집니다.</span>'
+          : '');
       refContent.appendChild(d);
     }
     syncRejectCases();
@@ -857,6 +910,7 @@
           wrap.dataset.brand = item.brandName || '';
           wrap.dataset.type = item.type || '';
           wrap.dataset.appeal = (item.axes && item.axes.appeal) || '';
+          wrap.dataset.liveat = item.liveAt || '';
           wrap.dataset.search = ((item.brandName || '') + ' ' + (item.note || ''))
             .normalize('NFC').toLowerCase();
           const thumbBtn = document.createElement('button');
@@ -906,9 +960,6 @@
     .then(data => {
       categoriesData = data.categories || [];
       renderCategoryOptions();
-      // 처음 열었을 때도 전체 장수가 보여야 한다. 눌러야 나오면 늦다.
-      const total = categoriesData.reduce((n, c) => n + (c.count || 0), 0);
-      categoryOptValue.textContent = '업종 전체 · ' + total.toLocaleString('ko-KR') + '장';
       loadCategoryImages('all', '전체');
       renderUploadCategoryOptions();
       if(currentCategoryId && currentCategoryId !== 'all') setUploadCategory(currentCategoryId);
