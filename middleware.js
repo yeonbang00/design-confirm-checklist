@@ -30,6 +30,12 @@ const GRAB_SCRIPT_PATH = '/assets/adcheck-grab.js';
 // 로그인 쿠키 없이 불러와진다. 상품 북마클릿과 같은 이유이고,
 // 두 파일 모두 비밀을 담지 않는다.
 const ADS_SCRIPT_PATH = '/assets/adcheck-ads.js';
+// 아직 팀에 열지 않은 페이지. 로그인한 사람이어도 관리자 비밀번호를 한 번 더
+// 받아야 열린다. 화면에서 링크만 감추는 것은 막는 게 아니다. 주소를 치면 열리고
+// HTML만 봐도 어디 있는지 드러난다. 그래서 서버에서 막는다.
+const DRAFT_PATHS = new Set(['/device-preview.html', '/device-preview']);
+const DRAFT_COOKIE = 'adcheck_draft';
+const DRAFT_UNLOCK_PATH = '/_gate/draft';
 const USERS_BLOB_PATH = 'users.json';
 const USERS_URL = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/users.json';
 const PBKDF2_ITERATIONS = 210000;
@@ -229,6 +235,61 @@ function gateHtml({ nextPath, tab, loginError, signupError, signupNotice }) {
 </html>`;
 }
 
+async function draftToken() {
+  return sha256Hex((process.env.ADMIN_PASSWORD || '') + ':adcheck-draft');
+}
+
+async function draftAllowed(cookies) {
+  if (!process.env.ADMIN_PASSWORD) return false;
+  return cookies[DRAFT_COOKIE] === (await draftToken());
+}
+
+function draftHtml({ nextPath, error }) {
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 업데이트중</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{--bg:#0B0C0E;--surface:#14171C;--surface-2:#0F1216;--line:rgba(255,255,255,.11);
+    --ink:#EDEEF0;--ink-3:#7E838C;--ink-4:#6B707A;--accent:#CCFF00;--accent-ink:#0B0C0E;--reject:#C2687A;}
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);
+    color:var(--ink);font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;-webkit-font-smoothing:antialiased;}
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:36px 32px;width:340px;
+    box-shadow:0 24px 60px -20px rgba(0,0,0,.7);}
+  h1{font-size:19px;font-weight:700;margin:0 0 8px;letter-spacing:-.02em;}
+  p.hint{font-size:12.5px;color:var(--ink-3);margin:0 0 18px;line-height:1.7;}
+  input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;
+    margin-bottom:10px;font-family:inherit;background:var(--surface-2);color:var(--ink);}
+  input::placeholder{color:var(--ink-4);}
+  input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  button{width:100%;padding:12px;border:none;border-radius:10px;background:var(--accent);color:var(--accent-ink);
+    font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;}
+  button:hover{opacity:.9;}
+  .err{color:var(--reject);font-size:12.5px;margin:0 0 12px;line-height:1.6;}
+  a.back{display:block;margin-top:16px;font-size:12.5px;color:var(--ink-4);text-decoration:none;text-align:center;}
+  a.back:hover{color:var(--ink);}
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>업데이트중</h1>
+    <p class="hint">아직 팀에 열지 않은 페이지입니다.<br>관리자 비밀번호를 입력하면 볼 수 있습니다.</p>
+    <form method="POST" action="${DRAFT_UNLOCK_PATH}">
+      <input type="hidden" name="next" value="${escapeHtml(nextPath)}">
+      <input type="password" name="password" placeholder="관리자 비밀번호" autocomplete="current-password" autofocus>
+      ${error ? `<div class="err">${escapeHtml(error)}</div>` : ''}
+      <button type="submit">열기</button>
+    </form>
+    <a class="back" href="/">돌아가기</a>
+  </div>
+</body>
+</html>`;
+}
+
 function htmlResponse(html, status) {
   return new Response(html, { status, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
@@ -289,6 +350,25 @@ export default async function middleware(request) {
     }
     await saveUsers(data);
     return jsonResponse({ ok: true }, 200);
+  }
+
+  if (pathname === DRAFT_UNLOCK_PATH && method === 'POST') {
+    const form = await request.formData();
+    const password = String(form.get('password') || '');
+    const nextPath = safeNextPath(String(form.get('next') || '/'));
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      return htmlResponse(draftHtml({ nextPath, error: '서버에 ADMIN_PASSWORD가 설정되어 있지 않습니다.' }), 500);
+    }
+    if (password !== adminPassword) {
+      return htmlResponse(draftHtml({ nextPath, error: '관리자 비밀번호가 올바르지 않습니다.' }), 401);
+    }
+    const res = new Response(null, { status: 302, headers: { Location: nextPath } });
+    res.headers.append(
+      'Set-Cookie',
+      `${DRAFT_COOKIE}=${await draftToken()}; Path=/; Max-Age=604800; HttpOnly; Secure; SameSite=Lax`
+    );
+    return res;
   }
 
   if (pathname === LOGIN_PATH && method === 'POST') {
@@ -377,7 +457,12 @@ export default async function middleware(request) {
   const cookies = parseCookies(request.headers.get('cookie'));
   const data = await getUsers();
   const user = await verifySession(cookies[COOKIE_NAME], data);
-  if (user) return next();
+  if (user) {
+    if (DRAFT_PATHS.has(pathname) && !(await draftAllowed(cookies))) {
+      return htmlResponse(draftHtml({ nextPath: pathname + url.search }), 401);
+    }
+    return next();
+  }
 
   // Session re-verifies against the CURRENT user list on every request (see
   // verifySession's comment) — but that means a transient Blob hiccup makes
@@ -389,6 +474,9 @@ export default async function middleware(request) {
   // narrow outage window, which is an acceptable trade for not kicking the
   // whole team out over a passing network blip.
   if (data.fetchFailed && cookies[COOKIE_NAME] && cookies[COOKIE_NAME].indexOf('.') !== -1) {
+    if (DRAFT_PATHS.has(pathname) && !(await draftAllowed(cookies))) {
+      return htmlResponse(draftHtml({ nextPath: pathname + url.search }), 401);
+    }
     return next();
   }
 
