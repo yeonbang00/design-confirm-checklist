@@ -578,8 +578,14 @@
       });
       categoryOptList.appendChild(btn);
     };
-    makeItem('all', '업종 전체', '업종 전체');
-    categoriesData.forEach(c => makeItem(c.id, c.name + ' (' + c.count + ')', c.name));
+    /* 전체에도 장수를 적는다. 업종별로는 적혀 있는데 전체만 없어서
+       레퍼런스가 몇 장인지 알려면 열세 개를 더해야 했다.
+       담아 온 소재까지 세므로 늘어나는 것이 여기서 바로 보인다. */
+    const total = categoriesData.reduce((n, c) => n + (c.count || 0), 0);
+    const totalKo = total.toLocaleString('ko-KR');
+    makeItem('all', '업종 전체 (' + totalKo + ')', '업종 전체 · ' + totalKo + '장');
+    categoriesData.forEach(c => makeItem(c.id, c.name + ' (' + c.count + ')',
+      c.name + ' · ' + c.count + '장'));
   }
 
   categoryOptBtn.addEventListener('click', (e) => {
@@ -900,6 +906,9 @@
     .then(data => {
       categoriesData = data.categories || [];
       renderCategoryOptions();
+      // 처음 열었을 때도 전체 장수가 보여야 한다. 눌러야 나오면 늦다.
+      const total = categoriesData.reduce((n, c) => n + (c.count || 0), 0);
+      categoryOptValue.textContent = '업종 전체 · ' + total.toLocaleString('ko-KR') + '장';
       loadCategoryImages('all', '전체');
       renderUploadCategoryOptions();
       if(currentCategoryId && currentCategoryId !== 'all') setUploadCategory(currentCategoryId);
