@@ -242,7 +242,10 @@
   .akin-card{min-width:0;}
   .akin-card button{display:block; width:100%; padding:0; border:0; background:none; cursor:pointer;
     border-radius:11px; overflow:hidden;}
-  .akin-card img{display:block; width:100%; aspect-ratio:1; object-fit:cover;
+  /* 그리드 썸네일과 같이 contain으로 둔다. cover면 세로형이 가운데만 남아
+     잘리는데, 닮았는지 보러 온 자리에서 구도를 잘라 보여줄 수는 없다. */
+  .akin-card img{display:block; width:100%; aspect-ratio:1; object-fit:contain;
+    background:rgba(255,255,255,.045);
     transition:transform .3s cubic-bezier(.2,.8,.2,1);}
   .akin-card button:hover img{transform:scale(1.04);}
   .akin-score{display:block; margin-top:8px; font:700 12px/1.4 var(--font-mono); color:var(--accent);}

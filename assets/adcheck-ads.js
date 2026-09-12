@@ -22,7 +22,9 @@
   //     표식을 스쳐 지나가 버린다. 손으로 내리면 33장이 216장이 됐다.
   // 5 — 광고주 이름의 "페이지는 …과(와) 함께합니다" 꼬리를 뗀다.
   // 6 — 게재 시작일을 2026-09-03 꼴로 넘긴다. 글자로 두면 기간으로 못 거른다.
-  var ADS_V = 7;
+  // 7 — 보고 있는 페이지 ID를 같이 넘긴다. 수집 페이지가 업종을 알아서 정한다.
+  // 8 — 세로형(9:16)을 기본으로 켠다. 이미지 광고 79장 중 38장이 9:16이었다.
+  var ADS_V = 8;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
@@ -99,8 +101,10 @@
 
   /* 영상 판별. 110장을 훑었을 때 신호 넷이 같이 움직였고 어긋난 카드가 1장이었다.
      그중 svg 개수는 빼고 확실한 셋만 쓴다. 신호 하나가 헛짚으면 멀쩡한 이미지를
-     통째로 버리는데, 반대로 영상이 하나 새어 들어와도 9:16이라 기본 선택에서
-     빠지고 사람이 한 번 더 보고 고른다. 놓치는 쪽이 더 싸다. */
+     통째로 버린다.
+     예전에는 영상이 새어 들어와도 9:16이라 기본 선택에서 빠졌는데, 이제 세로형을
+     기본으로 켜므로 그 그물이 없다. 새어 들어온 영상은 첫 프레임이 담긴다.
+     고르개에서 눈으로 걸러야 한다. */
   function isVideo(c) {
     return c.querySelectorAll('video').length > 0
       || /\d:\d\d \/ \d:\d\d/.test(c.innerText)
@@ -241,8 +245,11 @@
     var brands = [];
     list.forEach(function (x) { if (x.brand && brands.indexOf(x.brand) < 0) brands.push(x.brand); });
     var chosen = {};
-    // 세로형과 중복은 기본으로 꺼 둔다. 1:1과 4:5만 배너 조판 힌트로 쓸 수 있다.
-    list.forEach(function (x) { chosen[x.i] = !x.dup && x.ratio !== '9:16' && x.ratio !== 'wide'; });
+    /* 세로형도 기본으로 켠다. 네 곳(쿠팡이츠·올리브영·무신사·LG전자)의 이미지
+       광고 79장을 세어 보니 9:16이 38장으로 가장 큰 덩어리였다. 1:1은 19장뿐이다.
+       쿠팡이츠는 26장 중 21장이 9:16이라, 꺼 두면 다섯 장만 담긴다.
+       가로형만 끈다. 배너 조판에 쓸 데가 없다. */
+    list.forEach(function (x) { chosen[x.i] = !x.dup && x.ratio !== 'wide'; });
 
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(8,9,11,.96);'
