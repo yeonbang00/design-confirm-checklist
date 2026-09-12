@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko" data-seq-reveal>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdCheck | 기기별 적용컷</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0C0E;
+    --surface: #14171C;
+    --surface-2: #0F1216;
+    --surface-3: #15181D;
+    --line: rgba(255,255,255,.11);
+    --line-soft: rgba(255,255,255,.07);
+    --ink: #EDEEF0;
+    --ink-2: #A2A7B0;
+    --ink-3: #7E838C;
+    --ink-4: #6B707A;
+    --accent: #C3FF4D;
+    --accent-strong: #B8E600;
+    --accent-ink: #0B0C0E;
+    --card: #14171C;
+    --card-border: rgba(255,255,255,.11);
+    --text: #EDEEF0;
+    --text-2: #A2A7B0;
+    --text-3: #7E838C;
+    --canvas-text: #EDEEF0;
+    --canvas-text-2: #A2A7B0;
+    --charcoal: #15181D;
+    --charcoal-border: rgba(255,255,255,.11);
+    --num-bg: rgba(204,255,0,.1);
+    --num-text: #CCFF00;
+    --pass: #00A371;
+    --needsfix: #F7A900;
+    --reject: #F22F6B;
+    --na: #6B707A;
+    --danger: #C2687A;
+    --ok: #A8CFBC;
+    --font-display: 'Sora','Pretendard',sans-serif;
+    --font-mono: 'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  /* 첫 페인트 전부터 숨겨서 반짝임(FOUC) 방지 — adcheck-reveal.js가 이후 트랜지션을 붙인다.
+     자바스크립트가 죽어도 콘텐츠가 영영 안 보이는 사고가 없도록 noscript로 되돌린다. */
+  html.js [data-row],html.js [data-reveal]{opacity:0;}
+
+  html{scrollbar-gutter:stable;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; word-break:keep-all; overflow-x:hidden;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--accent); color:var(--accent-ink);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  button,input,select,textarea{font-family:inherit;}
+  @keyframes pulse{0%,100%{opacity:.35;}50%{opacity:1;}}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
+
+  .grain{position:fixed; inset:0; z-index:600; pointer-events:none; background-image:url(assets/grain.svg); background-size:180px 180px; opacity:.09; mix-blend-mode:overlay;}
+
+  .page{max-width:1180px; margin:0 auto; padding:120px 40px 100px;}
+
+  .gnb-bar{position:fixed; top:0; left:0; right:0; z-index:200; padding:14px 40px 0; background:linear-gradient(180deg,#0B0C0E 74%,rgba(11,12,14,.86)); backdrop-filter:blur(10px);}
+  .gnb-bar-inner{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; max-width:1520px; margin:0 auto; gap:20px;}
+  .gnb-logo{display:flex; align-items:center; justify-self:start; text-decoration:none;}
+  .gnb-logo-icon{height:40px; width:auto; display:block;}
+  .gnb-logo-text{display:none;}
+  .gnb{display:flex; align-items:center;}
+  .gnb-primary{gap:2px; justify-self:center; padding:6px; border-radius:999px; background:rgba(18,21,25,.9); backdrop-filter:blur(18px) saturate(1.2); border:1px solid rgba(255,255,255,.1); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px -26px rgba(0,0,0,.95);}
+  .gnb-secondary{gap:2px; justify-self:end;}
+  .gnb-primary .gnb-link{font-size:13px; font-weight:500; color:var(--ink-2); padding:9px 15px; border-radius:999px; text-decoration:none; letter-spacing:-.015em; white-space:nowrap; border:none; background:none; cursor:pointer; transition:background .25s ease,color .25s ease,box-shadow .25s ease;}
+  .gnb-primary .gnb-link:hover{color:var(--ink); box-shadow:inset 0 0 0 1px rgba(204,255,0,.55);}
+  .gnb-primary .gnb-link.active{background:#EDEEF0; color:#0B0C0E; font-weight:700;}
+  .gnb-primary .gnb-link.active:hover{box-shadow:none;}
+  .gnb-secondary .gnb-link{font-size:12.5px; font-weight:500; color:var(--ink-3); padding:9px 12px; text-decoration:none; white-space:nowrap; transition:color .25s ease;}
+  .gnb-secondary .gnb-link:hover{color:var(--ink);}
+  .gnb-secondary .gnb-link.active{color:#EDEEF0;}
+  .gnb-dropdown{position:relative;}
+  .gnb-dropdown-toggle{display:flex; align-items:center; gap:5px; font-family:inherit;}
+  .gnb-dropdown-toggle::after{content:'\25BC'; font-size:8px; opacity:.55;}
+  .gnb-dropdown-menu{position:absolute; top:100%; left:50%; transform:translateX(-50%); padding-top:12px; display:none; z-index:40;}
+  .gnb-dropdown-menu-inner{padding:8px; border-radius:16px; background:rgba(20,23,28,.98); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.14); box-shadow:0 26px 54px -20px rgba(0,0,0,.95); min-width:158px; display:flex; flex-direction:column; gap:2px;}
+  .gnb-dropdown:hover .gnb-dropdown-menu, .gnb-dropdown:focus-within .gnb-dropdown-menu, .gnb-dropdown-menu.open{display:block;}
+  .gnb-dropdown-item{display:block; width:100%; text-align:left; font-size:12.5px; font-weight:500; color:var(--ink-2); padding:10px 12px; border-radius:9px; white-space:nowrap; text-decoration:none; transition:background .2s ease,color .2s ease;}
+  .gnb-dropdown-item:hover{color:var(--ink); background:rgba(255,255,255,.07);}
+  .gnb-dropdown-item.active{color:var(--accent); background:rgba(204,255,0,.1);}
+
+  .scroll-progress{max-width:1520px; margin:14px auto 0; height:1px; background:rgba(255,255,255,.07); border-radius:1px; overflow:hidden;}
+  .scroll-progress-bar{height:1px; width:0%; background:linear-gradient(90deg,var(--accent),var(--ink));}
+
+
+
+  /* ---------- 푸터 로고 ---------- */
+  .page-footer{text-align:center; font:400 11.5px/1.9 'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif; letter-spacing:normal; color:var(--ink-4); padding-top:60px; margin-top:80px; border-top:1px solid var(--line-soft);}
+  .footer-logo{display:block; height:36px; width:auto; margin:0 auto 18px; opacity:.5;}
+
+  .page-eyebrow{font:500 11px/1 var(--font-mono); letter-spacing:.2em; color:var(--ink-3); margin-bottom:22px;}
+  .page-eyebrow b{color:var(--accent); font-weight:500;}
+  h1{font-family:var(--font-display); font-size:clamp(36px,4.6vw,68px); font-weight:800; letter-spacing:-.055em; line-height:1; margin:0; color:var(--ink);}
+  .sub{margin:24px 0 44px; max-width:78ch; font-size:16.5px; font-weight:300; line-height:1.85; color:var(--ink-2);}
+
+
+  .section-block{margin-bottom:44px;}
+  .section-heading{font-size:16px; font-weight:700; margin:0 0 6px; color:var(--canvas-text);}
+  .section-note{font-size:13px; color:var(--text-3); margin:0 0 18px; line-height:1.7;}
+
+
+  .palette-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
+  .palette-card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:16px; overflow:hidden;}
+  .palette-swatch{display:flex; height:64px;}
+  .palette-swatch span{flex:1;}
+  .palette-body{padding:14px 16px;}
+  .palette-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
+  .palette-hex{font-size:11.5px; color:var(--text-3); font-variant-numeric:tabular-nums; margin-bottom:6px;}
+  .palette-desc{font-size:12.5px; color:var(--text-2); line-height:1.6;}
+
+  .gradient-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;}
+  .gradient-card{border-radius:16px; overflow:hidden; box-shadow:none; border:1px solid rgba(255,255,255,.11);}
+  .gradient-swatch{height:80px;}
+  .gradient-body{padding:14px 16px; background:var(--card);}
+  .gradient-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
+  .gradient-hex{font-size:11.5px; color:var(--text-3); font-variant-numeric:tabular-nums; margin-bottom:6px;}
+  .gradient-desc{font-size:12.5px; color:var(--text-2); line-height:1.6;}
+
+  .theory-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px;}
+  .theory-card{background:var(--card); box-shadow:none; border:1px solid rgba(255,255,255,.11); border-radius:16px; padding:16px 18px;}
+  .theory-title{font-size:13.5px; font-weight:700; margin-bottom:4px;}
+  .theory-desc{font-size:12px; color:var(--text-3); line-height:1.65; margin-bottom:12px;}
+  .theory-swatches{display:flex; gap:6px;}
+  .theory-swatch{flex:1; height:44px; border-radius:8px;}
+
+  .psych-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; background:var(--card);}
+  .psych-table th, .psych-table td{border:1px solid var(--card-border); padding:9px 12px; text-align:left; vertical-align:top;}
+  .psych-table th{background:var(--card); font-weight:700; color:var(--text-2); font-size:12px;}
+  .psych-table td{color:var(--text-2);}
+  .psych-chip{display:inline-block; width:14px; height:14px; border-radius:4px; margin-right:6px; vertical-align:middle;}
+
+  @media (max-width:640px){
+    .page{padding:28px 18px 70px;}
+    .gnb-bar-inner{display:flex; flex-wrap:wrap; gap:16px;}
+    .gnb{gap:12px;}
+  }
+
+  /* ================= 인터랙션 디벨롭 (2026-08) — index.html 과 공유 =================
+     아래 블록과 문서 끝의 대응 스크립트만 걷어내면 이전 상태로 돌아갑니다. */
+  /* ---- 히어로 진입 모션 (index.html 과 동일한 감각) ---- */
+  @keyframes pageFadeUp{from{opacity:0; transform:translateY(22px);}to{opacity:1; transform:none;}}
+  .page-eyebrow{animation:pageFadeUp .7s cubic-bezier(.16,1,.3,1) .04s both;}
+  .page > h1, h1{animation:pageFadeUp .8s cubic-bezier(.16,1,.3,1) .12s both;}
+  .page > .sub, .sub{animation:pageFadeUp .85s cubic-bezier(.16,1,.3,1) .22s both;}
+  @media (prefers-reduced-motion:reduce){
+    .page-eyebrow, .page > h1, h1, .page > .sub, .sub{animation:none; opacity:1; transform:none;}
+  }
+
+
+  /* ---- 플로팅 라운드 GNB ---- */
+  .gnb-bar{
+    top:14px; padding:0 40px; background:none; backdrop-filter:none;
+    transition:top .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease, transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .gnb-bar-inner{
+    padding:8px 10px 8px 18px; border-radius:999px;
+    background:rgba(16,19,23,.5); backdrop-filter:blur(20px) saturate(1.4);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 18px 44px -26px rgba(0,0,0,.9);
+    transition:background-color .45s ease, border-color .45s ease, box-shadow .45s ease;
+  }
+  .gnb-logo-icon{height:30px;}
+  .gnb-primary{background:none; border:none; box-shadow:none; backdrop-filter:none; padding:0; gap:6px;}
+
+  /* 메뉴 항목: 테두리 없이 초록만 */
+  .gnb-primary .gnb-link{border:none; box-shadow:none; transition:color .25s ease, background-color .3s ease;}
+  .gnb-primary .gnb-link:hover{color:#CCFF00; background:rgba(204,255,0,.10); box-shadow:none;}
+  .gnb-primary .gnb-link.active,
+  .gnb-primary .gnb-link.active:hover{background:#CCFF00; color:#0B0C0E; box-shadow:none;}
+
+  /* 스크롤 진행선은 화면 최상단으로 */
+  .scroll-progress{
+    position:fixed; top:0; left:0; right:0; z-index:210;
+    max-width:none; margin:0; height:2px; background:none; border-radius:0;
+  }
+  .scroll-progress-bar{height:2px;}
+
+  /* ---- 드롭다운: 부드럽게 열리기 ---- */
+  .gnb-dropdown-menu{
+    display:block; opacity:0; visibility:hidden;
+    transform:translateX(-50%) translateY(-7px) scale(.97); transform-origin:top center;
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1), visibility 0s .3s;
+  }
+  .gnb-dropdown:hover .gnb-dropdown-menu,
+  .gnb-dropdown:focus-within .gnb-dropdown-menu,
+  .gnb-dropdown-menu.open{
+    display:block; opacity:1; visibility:visible;
+    transform:translateX(-50%) translateY(0) scale(1);
+    transition:opacity .26s cubic-bezier(.2,.8,.2,1), transform .34s cubic-bezier(.16,1,.3,1), visibility 0s;
+  }
+  .gnb-dropdown-toggle::after{transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s ease;}
+  .gnb-dropdown:hover .gnb-dropdown-toggle::after{transform:rotate(180deg); opacity:.9;}
+  .gnb-dropdown-item{transition:background-color .2s ease, color .2s ease, transform .28s cubic-bezier(.2,.8,.2,1);}
+  .gnb-dropdown:hover .gnb-dropdown-item{animation:ddItem .38s cubic-bezier(.16,1,.3,1) both;}
+  .gnb-dropdown-item:nth-child(2){animation-delay:.04s;}
+  .gnb-dropdown-item:nth-child(3){animation-delay:.08s;}
+  .gnb-dropdown-item:nth-child(4){animation-delay:.12s;}
+  .gnb-dropdown-item:hover{transform:translateX(3px);}
+  @keyframes ddItem{from{opacity:0; transform:translateY(-6px);}to{opacity:1; transform:none;}}
+
+  /* ---- 푸터: 한 화면 가득, 내용은 위 / 저작권은 바닥 ---- */
+  /* .page의 padding-bottom(100px)이 풀블리드 푸터 뒤에도 그대로 남아있어서,
+     스크롤이 푸터 끝에서 딱 안 멈추고 빈 공간만큼 더 내려가는 문제가 있었다 —
+     .page-footer가 .page의 마지막 자식이라 부모 padding을 그대로 물려받음. */
+  .page{padding-bottom:0;}
+  .page-footer{
+    position:relative;
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start;
+    margin:0; padding:96px 40px 40px; border-top:none;
+    background:#0B0C0E;
+  }
+  /* 다크 페이지라 별도 배경 블리드 없이 컨테이너만 넓힌다 (가로 스크롤 방지) */
+  .page-footer{width:100vw; margin-left:calc(50% - 50vw);}
+  .footer-logo{height:38px; margin:0 0 16px; opacity:.42;}
+  .footer-copy{margin-top:auto; padding-top:60px; opacity:.6;}
+
+  @media (max-width:760px){
+    .gnb-bar{padding:0 14px;}
+    .gnb-bar-inner{padding:7px 9px 7px 14px;}
+    .page-footer{padding:64px 18px;}
+    .footer-logo{height:30px;}
+  }
+
+  /* ── 기기별 적용컷 ───────────────────────────────────────── */
+  .dp-drop{border:1.5px dashed var(--line); border-radius:16px; padding:44px 24px; text-align:center;
+    cursor:pointer; background:var(--surface-2); transition:border-color .2s ease, background .2s ease; margin-bottom:22px;}
+  .dp-drop:hover, .dp-drop.over{border-color:var(--accent); background:rgba(195,255,77,.05);}
+  .dp-drop-title{font-size:15px; font-weight:700; color:var(--ink);}
+  .dp-drop-sub{margin-top:7px; font-size:12.5px; color:var(--ink-4);}
+
+  .dp-bar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px;}
+  .dp-seg{display:inline-flex; background:var(--surface-3); border:1px solid var(--line); border-radius:10px; padding:3px;}
+  .dp-seg-btn{border:0; background:none; color:var(--ink-3); font:inherit; font-size:12.5px; font-weight:600;
+    padding:7px 13px; border-radius:8px; cursor:pointer; transition:background .18s ease, color .18s ease;}
+  .dp-seg-btn.active{background:var(--accent); color:var(--accent-ink);}
+  .dp-check{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:var(--ink-2); cursor:pointer;}
+  .dp-check input{width:15px; height:15px; accent-color:var(--accent); cursor:pointer;}
+  .dp-reset{border:1px solid var(--line); background:none; color:var(--ink-3); font:inherit; font-size:12.5px;
+    font-weight:600; padding:8px 14px; border-radius:9px; cursor:pointer;}
+  .dp-reset:hover{border-color:var(--accent); color:var(--ink);}
+
+  .dp-verdict{background:var(--surface-2); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:12px; padding:15px 18px; font-size:13.5px; line-height:1.75; color:var(--ink-2); margin-bottom:30px;}
+  .dp-verdict b{color:var(--ink);}
+  .dp-verdict .warn{color:#ffb454;}
+
+  .dp-section{margin-bottom:38px;}
+  .dp-section-title{font-size:15px; font-weight:800; color:var(--ink); margin-bottom:6px;}
+  .dp-section-note{font-size:12.5px; line-height:1.7; color:var(--ink-4); margin-bottom:16px;}
+
+  .dp-origin{position:relative; width:100%; max-width:270px; border-radius:12px;
+    overflow:hidden; background:#000; border:1px solid var(--line);}
+  .dp-origin img{width:100%; height:100%; object-fit:contain; display:block;}
+  .dp-cut{position:absolute; top:0; bottom:0; width:1px; background:rgba(242,47,107,.9);}
+  .dp-cut::after{content:''; position:absolute; top:0; bottom:0; width:60px; background:rgba(242,47,107,.14);}
+  .dp-cut.l::after{left:-60px;} .dp-cut.r::after{right:-60px;}
+
+  .dp-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:26px 20px;}
+  .dp-dev{min-width:0;}
+  .dp-screen{position:relative; width:100%; border-radius:16px; overflow:hidden; background:#000;
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 40px -22px rgba(0,0,0,.9);}
+  .dp-screen img{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .dp-screen img.cover{object-fit:cover;}
+  .dp-screen img.contain{object-fit:contain;}
+
+  /* 카메라 구멍 */
+  .dp-island{position:absolute; left:50%; transform:translateX(-50%); background:#000; border-radius:999px;
+    box-shadow:0 0 0 1px rgba(255,255,255,.14);}
+  /* 표시 영역 */
+  .dp-safe{position:absolute; border:1px solid rgba(195,255,77,.85); border-radius:3px; pointer-events:none;}
+  .dp-safe::before{content:'표시 영역'; position:absolute; top:2px; left:3px; font:600 7px/1 var(--font-mono);
+    color:rgba(195,255,77,.9); letter-spacing:.02em;}
+  /* 화면 UI 재현 */
+  .dp-ui{position:absolute; inset:0; pointer-events:none;}
+  .dp-ui .bars{position:absolute; left:5%; right:5%; display:flex; gap:2px;}
+  .dp-ui .bars i{flex:1; height:2px; border-radius:2px; background:rgba(255,255,255,.45);}
+  .dp-ui .bars i:first-child{background:#fff;}
+  .dp-ui .who{position:absolute; left:5%; display:flex; align-items:center; gap:5px;}
+  .dp-ui .who u{width:14px; height:14px; border-radius:50%; background:rgba(255,255,255,.75); display:block;}
+  .dp-ui .who s{display:block; height:5px; width:52px; border-radius:3px; background:rgba(255,255,255,.6);}
+  .dp-ui .cta{position:absolute; left:12%; right:12%; height:22px; border-radius:7px;
+    background:rgba(255,255,255,.92); box-shadow:0 6px 16px -8px rgba(0,0,0,.9);}
+  .dp-ui .rail{position:absolute; right:4%; display:flex; flex-direction:column; gap:9px; align-items:center;}
+  .dp-ui .rail u{width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,.55); display:block;}
+  .dp-ui .cap{position:absolute; left:5%; right:26%; display:flex; flex-direction:column; gap:4px;}
+  .dp-ui .cap s{display:block; height:5px; border-radius:3px; background:rgba(255,255,255,.55);}
+  .dp-ui .cap s:last-child{width:60%;}
+  .dp-ui .home{position:absolute; left:50%; transform:translateX(-50%); width:34%; height:3px;
+    border-radius:3px; background:rgba(255,255,255,.6);}
+
+  .dp-dev-name{margin-top:11px; font-size:13px; font-weight:700; color:var(--ink);}
+  .dp-dev-meta{margin-top:3px; font-size:11px; line-height:1.6; color:var(--ink-4); font-family:var(--font-mono);}
+  .dp-dev-lost{margin-top:5px; font-size:11.5px; font-weight:700;}
+  .dp-dev-lost.bad{color:#F22F6B;} .dp-dev-lost.ok{color:var(--accent);}
+
+  .dp-facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px;}
+  .dp-fact{background:var(--surface-2); border:1px solid var(--line-soft); border-radius:12px; padding:15px 17px;}
+  .dp-fact b{display:block; font-size:12.5px; font-weight:800; color:var(--ink); margin-bottom:6px;}
+  .dp-fact p{margin:0; font-size:12px; line-height:1.8; color:var(--ink-3);}
+  .dp-fact em{font-style:normal; color:var(--accent);}
+</style>
+<link rel="stylesheet" href="assets/adcheck-footer.css?v=4">
+</head>
+<body>
+<script>document.documentElement.classList.add('js');</script>
+
+<div class="grain"></div>
+
+<div class="gnb-bar">
+  <div class="gnb-bar-inner">
+    <a href="index.html" class="gnb-logo"><img src="assets/logo-wordmark.png" alt="AdCheck" class="gnb-logo-icon"><span class="gnb-logo-text">AdCheck</span></a>
+    <nav class="gnb gnb-primary">
+      <a href="index.html" class="gnb-link">배너 분석</a>
+      <a href="banner-studio.html" class="gnb-link">배너 생성</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle active">가이드</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
+          <a href="banner-generation-guide.html" class="gnb-dropdown-item">배너 생성 가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
+          <a href="device-preview.html" class="gnb-dropdown-item active">기기별 적용컷</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+        </div></div>
+      </div>
+      <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
+      <div class="gnb-dropdown">
+        <button type="button" class="gnb-link gnb-dropdown-toggle">폰트</button>
+        <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
+          <a href="font-pairing.html" class="gnb-dropdown-item">폰트 페어링</a>
+          <a href="font-game.html" class="gnb-dropdown-item">폰트 오락실</a>
+        </div></div>
+      </div>
+      <a href="reference-board.html" class="gnb-link">이미지 레퍼런스</a>
+      </nav>
+      <nav class="gnb gnb-secondary">
+        <a href="history.html" class="gnb-link">히스토리</a>
+      <a href="roadmap.html" class="gnb-link">로드맵</a>
+    </nav>
+  </div>
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollProgress"></div></div>
+</div>
+
+<div class="page">
+
+  <div class="page-eyebrow"><b>&#10022;</b>&nbsp;DEVICE PREVIEW</div>
+  <h1>기기별 적용컷</h1>
+  <p class="sub">1080x1920 세로 배너 한 장을 올리면 기종마다 실제로 어떻게 잘리고 어디가 가려지는지 한 번에 봅니다.<br>실물 폰에 올려 보거나 캡처를 받아 오는 수고를 대신합니다.</p>
+
+  <div class="dp-drop" id="dpDrop">
+    <input type="file" id="dpFile" accept="image/*" hidden>
+    <div class="dp-drop-title">배너를 끌어다 놓거나 클릭해서 올려주세요</div>
+    <div class="dp-drop-sub">권장 1080x1920 (9:16) · 올린 이미지는 이 브라우저 안에만 있고 서버로 보내지 않습니다</div>
+  </div>
+
+  <div class="dp-bar" id="dpBar" hidden>
+    <div class="dp-seg" id="dpFit">
+      <button type="button" class="dp-seg-btn active" data-v="cover">채우기</button>
+      <button type="button" class="dp-seg-btn" data-v="contain">원본 비율 유지</button>
+    </div>
+    <div class="dp-seg" id="dpPlace">
+      <button type="button" class="dp-seg-btn active" data-v="story">스토리 광고</button>
+      <button type="button" class="dp-seg-btn" data-v="reels">릴스 광고</button>
+    </div>
+    <label class="dp-check"><input type="checkbox" id="dpSafe" checked> 표시 영역</label>
+    <label class="dp-check"><input type="checkbox" id="dpUi" checked> 화면 UI</label>
+    <span style="flex:1"></span>
+    <button type="button" class="dp-reset" id="dpReset">다른 배너</button>
+  </div>
+
+  <div class="dp-verdict" id="dpVerdict" hidden></div>
+
+  <div class="dp-section" id="dpOriginWrap" hidden>
+    <div class="dp-section-title">올린 배너</div>
+    <div class="dp-section-note">세로선 바깥은 채우기로 볼 때 가장 길쭉한 기종에서 잘려 나가는 자리입니다. 안쪽 실선은 표시 영역입니다.</div>
+    <div class="dp-origin" id="dpOrigin"></div>
+  </div>
+
+  <div class="dp-section" id="dpGridWrap" hidden>
+    <div class="dp-section-title">기종별</div>
+    <div class="dp-grid" id="dpGrid"></div>
+  </div>
+
+  <div class="dp-section" id="dpFacts" hidden>
+    <div class="dp-section-title">이 화면이 무엇을 근거로 그리는지</div>
+    <div class="dp-facts">
+      <div class="dp-fact">
+        <b>화면 크기</b>
+        <p>기종별 실제 화면 픽셀입니다. 요즘 주력 기종은 거의 19.5:9라 9:16보다 길쭉합니다.
+        1080x1920을 채우기로 넣으면 <em>위아래가 아니라 좌우가</em> 잘립니다.</p>
+      </div>
+      <div class="dp-fact">
+        <b>채우기와 검은 여백</b>
+        <p>메타 공식 문서에 그대로 적혀 있습니다. 화면이 9:16보다 긴 기기에서는 화면을 채우려고
+        확대하거나(표시 영역 바깥이 잘릴 수 있음), 원본 비율을 지키고 남는 곳을 검은색으로 채웁니다.
+        둘 다 일어나므로 두 경우를 다 봅니다.</p>
+      </div>
+      <div class="dp-fact">
+        <b>표시 영역</b>
+        <p>메타는 상하좌우 가장자리를 비우라고만 하고 픽셀은 공개하지 않습니다.
+        여기서는 업계에서 통용되는 위 14% · 좌우 6% · 아래 35%를 씁니다.
+        릴스에 고지 사항을 넣는다면 메타가 아래 40%를 비우라고 따로 말합니다.</p>
+      </div>
+      <div class="dp-fact">
+        <b>카메라 구멍과 UI</b>
+        <p>다이내믹 아일랜드와 펀치홀의 크기·위치, 그리고 프로필 줄·진행 바·CTA 버튼은
+        비율로 재현한 것입니다. 픽셀 단위로 같지는 않습니다. 어디가 가려지는지 감을 잡는 용도로 보세요.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <div class="page-footer show" data-reveal>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logo-wordmark.png" alt="AdCheck" class="footer-logo">
+        <p class="footer-note">최종 컨펌 여부는 리뷰어가 직접 확인하고 조정해주세요.<br>
+        이 결과는 법적 효력이 없으며, 이로 인해 발생하는 문제에 대해 어떠한 책임도 지지 않습니다.</p>
+      </div>
+        <div class="footer-col">
+          <span class="footer-col-title">배너</span>
+          <a href="index.html">배너 분석</a>
+          <a href="banner-studio.html">배너 생성</a>
+          <a href="brief-helper.html">기획안 헬퍼</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-title">가이드</span>
+          <a href="criteria-guide.html">항목 가이드</a>
+          <a href="banner-generation-guide.html">배너 생성 가이드</a>
+          <a href="guide.html">브랜드 가이드</a>
+          <a href="media-guide.html">매체 가이드</a>
+          <a href="device-preview.html">기기별 적용컷</a>
+          <a href="color-guide.html" class="is-current">컬러 가이드</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-title">폰트</span>
+          <a href="font-pairing.html">폰트 페어링</a>
+          <a href="font-game.html">폰트 오락실</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-title">자료</span>
+          <a href="reference-board.html">이미지 레퍼런스</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-title">운영</span>
+          <a href="history.html">히스토리</a>
+          <a href="roadmap.html">로드맵</a>
+        </div>
+    </div>
+    <div class="footer-copy">&copy; 2026 NHNAD. All rights reserved.</div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.gnb-dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => { if(m !== menu) m.classList.remove('open'); });
+      menu.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') document.querySelectorAll('.gnb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  });
+
+  // 헤더 하단 스크롤 진행 바
+  (function(){
+    const bar = document.getElementById('scrollProgress');
+    if(!bar) return;
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+<script>
+/* 기기별 적용컷.
+ *
+ * 왜 만들었나 — 세로 배너가 기종마다 어떻게 잘리는지 보려고 실물 폰에 올리거나
+ * 캡처를 받아 오고 있었다.
+ *
+ * 무엇이 실측이고 무엇이 근사인지 —
+ *  · 화면 픽셀은 제조사 제원 그대로다. 계산(잘리는 양)은 여기서 나온다.
+ *  · 채우기와 검은 여백 두 갈래는 메타 공식 문서에 적힌 동작이다.
+ *  · 표시 영역 14/6/35%는 메타가 픽셀을 공개하지 않아 업계 통용값을 쓴다.
+ *  · 카메라 구멍과 UI 위치는 비율로 재현한 근사다.
+ *
+ * 놀라운 점 하나 — 주력 기종이 죄다 9:16보다 길쭉해서(19.5:9) 채우기로 보면
+ * 위아래가 아니라 좌우가 잘린다. 폭의 18%, 갤럭시 Z 플립은 27%다.
+ */
+(function () {
+  const DEVICES = [
+    { name: 'iPhone 16 Pro',     w: 1206, h: 2622, cut: 'island', home: true },
+    { name: 'iPhone 16',         w: 1179, h: 2556, cut: 'island', home: true },
+    { name: 'iPhone 16 Pro Max', w: 1320, h: 2868, cut: 'island', home: true },
+    { name: 'iPhone SE 3',       w:  750, h: 1334, cut: 'none',   home: false },
+    { name: 'Galaxy S24',        w: 1080, h: 2340, cut: 'hole',   home: true },
+    { name: 'Galaxy S24 Ultra',  w: 1440, h: 3120, cut: 'hole',   home: true },
+    { name: 'Galaxy Z Flip 6',   w: 1080, h: 2640, cut: 'hole',   home: true },
+  ];
+  const SAFE = { top: 0.14, side: 0.06, bottom: 0.35 };
+  const ART = { w: 1080, h: 1920 };
+
+  const $ = (s) => document.querySelector(s);
+  const drop = $('#dpDrop'), file = $('#dpFile');
+  let url = null, fit = 'cover', place = 'story';
+
+  /* 이 배너를 이 화면에 채우기로 넣으면 원본 기준 몇 px이 잘리는가.
+     cover는 짧은 쪽을 맞추고 긴 쪽을 넘치게 둔다. 넘친 만큼이 잘린다. */
+  function lostOf(dev, art) {
+    const sc = Math.max(dev.w / art.w, dev.h / art.h);
+    return {
+      x: Math.round(Math.max(0, art.w - dev.w / sc)),
+      y: Math.round(Math.max(0, art.h - dev.h / sc)),
+    };
+  }
+
+  function pct(n) { return (n * 100).toFixed(3) + '%'; }
+
+  function uiFor(dev) {
+    // 화면 높이 대비 비율. 기기마다 상태 표시줄 높이가 달라 노치 유무로만 나눈다.
+    const topPad = dev.cut === 'none' ? 0.025 : 0.055;
+    if (place === 'story') {
+      return '<div class="dp-ui">'
+        + `<div class="bars" style="top:${pct(topPad)}"><i></i><i></i><i></i><i></i></div>`
+        + `<div class="who" style="top:${pct(topPad + 0.018)}"><u></u><s></s></div>`
+        + `<div class="cta" style="bottom:${pct(dev.home ? 0.055 : 0.035)}"></div>`
+        + (dev.home ? '<div class="home" style="bottom:1%"></div>' : '')
+        + '</div>';
+    }
+    return '<div class="dp-ui">'
+      + `<div class="rail" style="bottom:${pct(dev.home ? 0.19 : 0.17)}"><u></u><u></u><u></u><u></u></div>`
+      + `<div class="cap" style="bottom:${pct(dev.home ? 0.115 : 0.095)}"><s></s><s></s></div>`
+      + `<div class="cta" style="bottom:${pct(dev.home ? 0.055 : 0.035)}"></div>`
+      + (dev.home ? '<div class="home" style="bottom:1%"></div>' : '')
+      + '</div>';
+  }
+
+  function cutFor(dev) {
+    if (dev.cut === 'island') {
+      return `<div class="dp-island" style="top:1.3%;width:31%;height:${pct(0.042 * (dev.w / dev.h) / 0.46)}"></div>`;
+    }
+    if (dev.cut === 'hole') {
+      const d = 4.2; // 화면 폭 대비
+      return `<div class="dp-island" style="top:1.4%;width:${d}%;aspect-ratio:1"></div>`;
+    }
+    return '';
+  }
+
+  function render() {
+    if (!url) return;
+    const grid = $('#dpGrid');
+    grid.innerHTML = '';
+    let worst = null;
+    DEVICES.forEach((dev) => {
+      const lost = lostOf(dev, ART);
+      if (!worst || lost.x > worst.lost.x) worst = { dev, lost };
+      const box = document.createElement('div');
+      box.className = 'dp-dev';
+      const safe = $('#dpSafe').checked
+        ? `<div class="dp-safe" style="top:${pct(SAFE.top)};bottom:${pct(SAFE.bottom)};left:${pct(SAFE.side)};right:${pct(SAFE.side)}"></div>`
+        : '';
+      const ui = $('#dpUi').checked ? uiFor(dev) : '';
+      const gone = fit === 'cover' && lost.x > 0;
+      box.innerHTML =
+        `<div class="dp-screen" style="aspect-ratio:${dev.w}/${dev.h}">`
+        + `<img class="${fit}" src="${url}" alt="">`
+        + cutFor(dev) + safe + ui
+        + '</div>'
+        + `<div class="dp-dev-name">${dev.name}</div>`
+        + `<div class="dp-dev-meta">${dev.w} x ${dev.h}</div>`
+        + (fit === 'cover'
+            ? `<div class="dp-dev-lost ${gone ? 'bad' : 'ok'}">`
+              + (gone ? `좌우 ${lost.x}px 잘림 (폭의 ${(lost.x / ART.w * 100).toFixed(0)}%)` : '잘리지 않음')
+              + '</div>'
+            : '<div class="dp-dev-lost ok">잘리지 않음 · 위아래 검은 여백</div>');
+      grid.appendChild(box);
+    });
+
+    // 올린 배너 위에 가장 심한 잘림선을 긋는다
+    const o = $('#dpOrigin');
+    const half = worst.lost.x / 2 / ART.w;
+    o.style.aspectRatio = ART.w + '/' + ART.h;
+    o.innerHTML = `<img src="${url}" alt="">`
+      + (fit === 'cover' && worst.lost.x > 0
+          ? `<div class="dp-cut l" style="left:${pct(half)}"></div>`
+            + `<div class="dp-cut r" style="right:${pct(half)}"></div>`
+          : '')
+      + ($('#dpSafe').checked
+          ? `<div class="dp-safe" style="top:${pct(SAFE.top)};bottom:${pct(SAFE.bottom)};left:${pct(SAFE.side)};right:${pct(SAFE.side)}"></div>`
+          : '');
+
+    /* 표시 영역 값은 9:16 기준이다. 다른 비율을 올리면 잘림 계산은 맞지만
+       표시 영역 선은 뜻이 달라진다. 말없이 그려 두면 잘못 믿는다. */
+    const off = Math.abs(ART.w / ART.h - 9 / 16) > 0.02;
+    const warn = off
+      ? `<b class="warn">올린 배너가 ${ART.w}x${ART.h}로 9:16이 아닙니다.</b> `
+        + '잘리는 양은 그대로 맞지만 표시 영역 선은 9:16 기준이라 이 비율에는 안 맞습니다.<br>'
+      : '';
+    $('#dpVerdict').innerHTML = warn + (fit === 'cover'
+      ? `채우기로 보면 <b>${worst.dev.name}</b>에서 좌우 <b class="warn">${worst.lost.x}px</b>`
+        + `(폭의 ${(worst.lost.x / ART.w * 100).toFixed(0)}%)이 잘립니다. `
+        + '위아래는 한 픽셀도 안 잘립니다. 주력 기종이 9:16보다 길쭉해서 그렇습니다.'
+      : '원본 비율을 지키면 잘리는 곳은 없고 위아래에 검은 띠가 생깁니다. '
+        + '어느 쪽으로 나갈지는 매체가 정하므로 두 경우를 다 보고 판단하세요.');
+  }
+
+  function show(f) {
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(f);
+    const probe = new Image();
+    probe.onload = () => {
+      ART.w = probe.naturalWidth; ART.h = probe.naturalHeight;
+      drop.hidden = true;
+      ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap', '#dpFacts']
+        .forEach((s) => { $(s).hidden = false; });
+      render();
+    };
+    probe.src = url;
+  }
+
+  drop.addEventListener('click', () => file.click());
+  file.addEventListener('change', () => { if (file.files[0]) show(file.files[0]); });
+  ['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => {
+    ev.preventDefault(); drop.classList.add('over');
+  }));
+  ['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, () => drop.classList.remove('over')));
+  drop.addEventListener('drop', (ev) => {
+    ev.preventDefault();
+    const f = [...(ev.dataTransfer.files || [])].find((x) => x.type.startsWith('image/'));
+    if (f) show(f);
+  });
+
+  $('#dpFit').addEventListener('click', (e) => {
+    const b = e.target.closest('.dp-seg-btn'); if (!b) return;
+    fit = b.dataset.v;
+    $('#dpFit').querySelectorAll('.dp-seg-btn').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active'); render();
+  });
+  $('#dpPlace').addEventListener('click', (e) => {
+    const b = e.target.closest('.dp-seg-btn'); if (!b) return;
+    place = b.dataset.v;
+    $('#dpPlace').querySelectorAll('.dp-seg-btn').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active'); render();
+  });
+  $('#dpSafe').addEventListener('change', render);
+  $('#dpUi').addEventListener('change', render);
+  $('#dpReset').addEventListener('click', () => {
+    if (url) { URL.revokeObjectURL(url); url = null; }
+    file.value = '';
+    drop.hidden = false;
+    ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap', '#dpFacts']
+      .forEach((s) => { $(s).hidden = true; });
+  });
+})();
+</script>
+
+<script src="assets/adcheck-reveal.js?v=10"></script>
+
+<script src="assets/adcheck-footer.js?v=4"></script>
+</body>
+</html>
