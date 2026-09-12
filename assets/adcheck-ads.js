@@ -20,7 +20,8 @@
   // 3 — 스크롤을 끝까지 내린다. 여덟 번 고정이라 410건짜리 브랜드를 다 못 담았다.
   // 4 — 바닥으로 뛰지 않고 한 화면씩 내린다. 크게 뛰면 다음 묶음을 부르는
   //     표식을 스쳐 지나가 버린다. 손으로 내리면 33장이 216장이 됐다.
-  var ADS_V = 4;
+  // 5 — 광고주 이름의 "페이지는 …과(와) 함께합니다" 꼬리를 뗀다.
+  var ADS_V = 5;
   var HOST = 'https://2026-adcheck.vercel.app';
   var COLLECT = HOST + '/reference-collect.html';
 
@@ -105,6 +106,16 @@
       || !!c.querySelector('[aria-label*="재생"],[aria-label*="Play"]');
   }
 
+  /* 메타는 공동 브랜드 광고의 광고주 이름을 "한섬 페이지는 h.y8en과(와)
+     함께합니다"처럼 늘여 적는다. 그대로 담으면 브랜드 칩이 한섬과 따로
+     생기고, 닮은 컷의 같은 브랜드 제외도 서로를 못 알아본다. 꼬리를 뗀다. */
+  function cleanBrand(name) {
+    return String(name || '')
+      .replace(/\s*페이지는\s[\s\S]*?함께합니다\s*$/, '')
+      .replace(/\s+is with\s.*$/i, '')
+      .trim();
+  }
+
   function ratioName(w, h) {
     var r = w / h;
     if (r >= 0.95 && r <= 1.05) return '1:1';
@@ -167,7 +178,7 @@
     })[0];
     raw.push({
       id: (t.match(/ID: (\d+)/) || [])[1] || '',
-      brand: bi > 0 ? lines[bi - 1] : '',
+      brand: bi > 0 ? cleanBrand(lines[bi - 1]) : '',
       started: (t.match(/(\d{4}\. \d+\. \d+\.)/) || [])[1] || '',
       copy: lines.slice(bi + 1).join(' ').replace(/\s+/g, ' ').slice(0, 400),
       cta: (t.match(/\n(지금 구매하기|Shop Now|더 알아보기|Learn More|자세히 알아보기|주문하기|신청하기|Sign Up|Install Now|지금 개통하기)/) || [])[1] || '',
