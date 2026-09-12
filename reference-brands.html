@@ -18,7 +18,11 @@ input,select{font:inherit;padding:9px 12px;border-radius:9px;background:var(--pa
 input:focus,select:focus{outline:none;border-color:var(--lime)}
 #q{flex:1;min-width:220px}
 .count{color:var(--mid);font-size:12.5px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.sec{margin-bottom:22px}
+.sec h2{display:flex;align-items:baseline;gap:9px;font-size:14px;font-weight:700;margin:0 0 9px;
+  padding-bottom:7px;border-bottom:1px solid var(--line)}
+.sec h2 span{font-size:11.5px;font-weight:500;color:var(--dim)}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .b{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--panel);
    border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--ink);min-width:0}
 .b:hover{border-color:var(--lime)}
@@ -44,6 +48,7 @@ input:focus,select:focus{outline:none;border-color:var(--lime)}
 
   <div class="bar">
     <input id="q" type="search" placeholder="브랜드 검색" autocomplete="off">
+    <select id="c"></select>
     <select id="f">
       <option value="all">전체</option>
       <option value="exact">정확히 잡히는 것만</option>
@@ -52,11 +57,11 @@ input:focus,select:focus{outline:none;border-color:var(--lime)}
     </select>
     <span class="count" id="count"></span>
   </div>
-  <div class="grid" id="grid"></div>
+  <div id="grid"></div>
 </div>
 
 <script type="module">
-import { META_BRANDS, adLibraryUrl } from './assets/meta-brands.mjs';
+import { META_BRANDS, CAT_KO, adLibraryUrl } from './assets/meta-brands.mjs';
 const $ = s => document.querySelector(s);
 const norm = s => String(s || '').normalize('NFC').toLowerCase().replace(/[\s·\-_.]/g, '');
 let done = new Set();
@@ -81,22 +86,46 @@ fetch('/api/referenceImages?category=all')
 function render() {
   const q = norm($('#q').value);
   const f = $('#f').value;
+  const cat = $('#c').value;
   const rows = META_BRANDS.filter((b) => {
     if (q && !norm(b.name).includes(q)) return false;
+    if (cat !== 'all' && b.cat !== cat) return false;
     if (f === 'exact' && !b.pageId) return false;
     if (f === 'todo' && done.has(b.name)) return false;
     if (f === 'done' && !done.has(b.name)) return false;
     return true;
   });
   $('#count').textContent = `${rows.length}곳 · 전체 ${META_BRANDS.length}곳 중 담은 곳 ${done.size}`;
-  $('#grid').innerHTML = rows.map((b) => {
+
+  /* 업종별로 묶어서 보여준다. 357곳이 한 덩어리로 깔려 있으면 어디부터
+     손대야 할지 안 보인다. 업종별로 몇 곳을 담았는지도 같이 적는다. */
+  const order = Object.keys(CAT_KO);
+  const bucket = new Map();
+  rows.forEach((b) => {
+    if (!bucket.has(b.cat)) bucket.set(b.cat, []);
+    bucket.get(b.cat).push(b);
+  });
+  const card = (b) => {
     const tag = done.has(b.name) ? '<span class="tag done">담음</span>'
       : b.pageId ? '<span class="tag exact">정확</span>'
       : '<span class="tag loose">검색</span>';
     return `<a class="b" href="${adLibraryUrl(b)}" target="_blank" rel="noopener">`
       + `<strong>${b.name.replace(/</g, '&lt;')}</strong>${tag}</a>`;
-  }).join('');
+  };
+  $('#grid').innerHTML = order.filter(k => bucket.has(k)).map((k) => {
+    const list = bucket.get(k);
+    const got = list.filter(b => done.has(b.name)).length;
+    return `<section class="sec"><h2>${CAT_KO[k]}`
+      + `<span>${list.length}곳${got ? ` · 담음 ${got}` : ''}</span></h2>`
+      + `<div class="row">${list.map(card).join('')}</div></section>`;
+  }).join('') || '<p class="sub">해당하는 브랜드가 없습니다.</p>';
 }
+$('#c').innerHTML = '<option value="all">업종 전체</option>'
+  + Object.entries(CAT_KO).map(([id, ko]) => {
+    const n = META_BRANDS.filter(b => b.cat === id).length;
+    return n ? `<option value="${id}">${ko} (${n})</option>` : '';
+  }).join('');
+$('#c').addEventListener('change', render);
 $('#q').addEventListener('input', render);
 $('#f').addEventListener('change', render);
 render();
