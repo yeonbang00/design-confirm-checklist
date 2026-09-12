@@ -284,13 +284,11 @@
     box-shadow:0 0 0 1px rgba(255,255,255,.14);}
   .dp-notch{border-radius:0 0 12px 12px;}
   /* 표시 영역 */
-  /* 밝은 배너 위에서 라임 1px 선이 사라졌다. 선 하나로는 어떤 색을 골라도
-     그 색에 가까운 배경에서 진다. 그래서 세 겹으로 둔다.
-     바깥 어두운 1px · 라임 1px · 안쪽 어두운 1px.
-     밝은 데선 어두운 겹이, 어두운 데선 라임이 받쳐 준다.
-     여기에 바깥을 살짝 덮어 영역 자체가 면으로 읽히게 한다. */
+  /* 밝은 배너 위에서 라임 1px 선이 사라졌다. 처음엔 선 양옆에 어두운 겹을
+     덧댔는데, 바깥을 덮고 나니 경계는 밝기 차이로 이미 읽힌다.
+     어두운 겹은 선만 탁하게 만들어서 뺐다. 라임 한 줄이면 된다. */
   .dp-safe{position:absolute; border:1px solid rgba(195,255,77,.95); border-radius:3px; pointer-events:none;
-    box-shadow:0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.45), 0 0 0 9999px rgba(0,0,0,.26);}
+    box-shadow:0 0 0 9999px rgba(0,0,0,.26);}
   .dp-safe::before{content:'표시 영역'; position:absolute; top:2px; left:3px; padding:1px 3px; border-radius:2px;
     font:700 7px/1.35 var(--font-mono); color:#CCFF00; background:rgba(0,0,0,.62); letter-spacing:.02em;}
   /* 화면 UI 재현 */
