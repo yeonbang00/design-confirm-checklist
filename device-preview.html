@@ -275,9 +275,9 @@
   .dp-dev{min-width:0;}
   .dp-screen{position:relative; width:100%; border-radius:16px; overflow:hidden; background:#000;
     border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 40px -22px rgba(0,0,0,.9);}
-  .dp-screen img{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .dp-screen img{position:absolute; left:0; right:0; width:100%; display:block;}
   .dp-screen img.cover{object-fit:cover;}
-  .dp-screen img.contain{object-fit:contain;}
+  .dp-screen img.contain{object-fit:fill;}
 
   /* 카메라 구멍 */
   .dp-island{position:absolute; left:50%; transform:translateX(-50%); background:#000; border-radius:999px;
@@ -303,7 +303,8 @@
   .dp-ui .who s{display:block; height:5px; width:52px; border-radius:3px; background:rgba(255,255,255,.6);}
   .dp-ui .cta{position:absolute; left:12%; right:12%; height:22px; border-radius:7px;
     background:rgba(255,255,255,.92); box-shadow:0 6px 16px -8px rgba(0,0,0,.9);}
-  .dp-ui .rail{position:absolute; right:4%; display:flex; flex-direction:column; gap:9px; align-items:center;}
+  .dp-ui .cta.pinkish{background:rgba(255,255,255,.9);}
+  .dp-ui .rail{position:absolute; display:flex; flex-direction:column; justify-content:space-between; align-items:center;}
   .dp-ui .rail u{width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,.55); display:block;}
   .dp-ui .cap{position:absolute; left:5%; right:26%; display:flex; flex-direction:column; gap:4px;}
   .dp-ui .cap s{display:block; height:5px; border-radius:3px; background:rgba(255,255,255,.55);}
@@ -379,12 +380,12 @@
 
   <div class="dp-bar" id="dpBar" hidden>
     <div class="dp-seg" id="dpFit">
-      <button type="button" class="dp-seg-btn active" data-v="cover">화면 가득 (최대 잘림)</button>
-      <button type="button" class="dp-seg-btn" data-v="contain">원본 비율 (잘림 없음)</button>
+      <button type="button" class="dp-seg-btn active" data-v="contain">원본 비율 · 실측</button>
+      <button type="button" class="dp-seg-btn" data-v="cover">화면 가득 · 최대 잘림</button>
     </div>
     <div class="dp-seg" id="dpPlace">
-      <button type="button" class="dp-seg-btn active" data-v="story">스토리 광고</button>
-      <button type="button" class="dp-seg-btn" data-v="reels">릴스 광고</button>
+      <button type="button" class="dp-seg-btn" data-v="story">스토리 광고</button>
+      <button type="button" class="dp-seg-btn active" data-v="reels">릴스 광고 · 실측</button>
     </div>
     <label class="dp-check"><input type="checkbox" id="dpSafe" checked> 표시 영역</label>
     <label class="dp-check"><input type="checkbox" id="dpUi" checked> 화면 UI</label>
@@ -414,12 +415,17 @@
         그래서 화면을 가득 채우려 들면 <em>위아래가 아니라 좌우가</em> 잘립니다.</p>
       </div>
       <div class="dp-fact">
-        <b>이 수치를 믿을 수 있는 만큼만</b>
-        <p>"화면 가득"은 배너가 물리 화면 전체를 채운다고 놓고 잰 값입니다.
-        그러면 좌우 18%가 잘리는데, 정작 메타는 좌우를 6%만 비우라고 합니다.
-        메타 말대로 지켜도 잘린다는 뜻이 되니 앞뒤가 안 맞습니다.
-        <em>실제 표시 영역이 물리 화면보다 좁다</em>고 보는 편이 타당하고,
-        그렇다면 진짜 잘림은 18%보다 훨씬 작습니다. 여기 숫자는 상한으로 보세요.</p>
+        <b>실기기에서 확인한 것</b>
+        <p>iPhone 17 Pro Max에 실제로 나간 인스타그램 릴스 광고를 원본과 나란히 재 봤습니다.
+        원본에서 폭의 19.0%~82.4% 자리에 있던 말풍선이 화면에서도 19.0%~82.2%에 있었습니다.
+        <em>좌우로 잘린 것이 없습니다.</em> 배너가 폭에 맞춰 통째로 들어가고 위아래가 검은 띠였습니다.
+        "화면 가득"의 18%는 일어나지 않았습니다. 상한으로만 남겨 둡니다.</p>
+      </div>
+      <div class="dp-fact">
+        <b>아직 확인 못 한 것</b>
+        <p>확인한 건 아이폰 한 대의 릴스 광고 한 건입니다.
+        스토리 광고, 안드로이드, 그리고 메타가 문서에서 말한 "확대해서 채우는" 경우가
+        언제 일어나는지는 아직 모릅니다. 그 경우를 보려면 "화면 가득"으로 바꿔 보세요.</p>
       </div>
       <div class="dp-fact">
         <b>채우기와 검은 여백</b>
@@ -435,8 +441,11 @@
       </div>
       <div class="dp-fact">
         <b>카메라 구멍과 UI</b>
-        <p>다이내믹 아일랜드와 펀치홀의 크기·위치, 그리고 프로필 줄·진행 바·CTA 버튼은
-        비율로 재현한 것입니다. 픽셀 단위로 같지는 않습니다. 어디가 가려지는지 감을 잡는 용도로 보세요.</p>
+        <p>릴스 UI는 실기기 스크린샷에서 잰 값입니다. 배너를 100으로 놓았을 때
+        더 알아보기 버튼이 세로 82~88%, 프로필 줄 91~95%, 캡션 96~98%,
+        우측 아이콘 열이 65~89%에 앉습니다. <em>배너 위쪽은 안 가립니다.</em>
+        검은 띠 위에 상태 표시줄이 있기 때문입니다.
+        스토리 UI와 카메라 구멍 모양은 아직 비율로 재현한 근사입니다.</p>
       </div>
     </div>
   </div>
@@ -556,7 +565,7 @@
 
   const $ = (s) => document.querySelector(s);
   const drop = $('#dpDrop'), file = $('#dpFile');
-  let url = null, fit = 'cover', place = 'story';
+  let url = null, fit = 'contain', place = 'reels';
 
   /* 이 배너를 이 화면에 채우기로 넣으면 원본 기준 몇 px이 잘리는가.
      cover는 짧은 쪽을 맞추고 긴 쪽을 넘치게 둔다. 넘친 만큼이 잘린다. */
@@ -581,11 +590,18 @@
         + (dev.home ? '<div class="home" style="bottom:1%"></div>' : '')
         + '</div>';
     }
+    /* 릴스는 실기기 스크린샷에서 잰 값이다(iPhone 17 Pro Max · 인스타그램).
+       배너 자체를 100으로 놓았을 때 더 알아보기 버튼이 세로 82~88%,
+       프로필 줄 91~95%, 캡션 96~98%, 우측 아이콘 열이 65~89%에
+       가로 중심 93%로 앉는다. 다만 UI는 배너가 아니라 화면 아래에 붙으므로
+       화면 기준으로 다시 재어 넣는다. 아래에서 더 알아보기 22.7~27.4%,
+       프로필 줄 16.8~20.3%, 캡션 14.3~15.8%, 아이콘 열 21.8~41.6%.
+       배너 위쪽은 검은 띠 위에 상태 표시줄이 있어 안 가린다. */
     return '<div class="dp-ui">'
-      + `<div class="rail" style="bottom:${pct(dev.home ? 0.19 : 0.17)}"><u></u><u></u><u></u><u></u></div>`
-      + `<div class="cap" style="bottom:${pct(dev.home ? 0.115 : 0.095)}"><s></s><s></s></div>`
-      + `<div class="cta" style="bottom:${pct(dev.home ? 0.055 : 0.035)}"></div>`
-      + (dev.home ? '<div class="home" style="bottom:1%"></div>' : '')
+      + '<div class="rail" style="bottom:21.8%;height:19.8%;right:3%"><u></u><u></u><u></u><u></u></div>'
+      + '<div class="cap" style="bottom:14.3%;left:3%;right:26%"><s></s></div>'
+      + '<div class="who" style="bottom:16.8%"><u></u><s></s></div>'
+      + '<div class="cta" style="bottom:22.7%;height:4.7%;left:3%;right:15%"></div>'
       + '</div>';
   }
 
@@ -614,15 +630,28 @@
       if (!worst || lost.x > worst.lost.x) worst = { dev, lost };
       const box = document.createElement('div');
       box.className = 'dp-dev';
+      /* 실기기에서 배너는 화면 폭에 맞춰 들어가고 세로 가운데가 아니라
+         위로 붙어 있었다(위 5.3% ~ 87.2%, 정가운데라면 9.1%부터여야 한다).
+         상태 표시줄 아래에 얹히기 때문이다. 그래서 상자를 직접 잡는다. */
+      const bh = Math.min(100, (ART.h * dev.w) / (ART.w * dev.h) * 100);
+      const bt = Math.min(5.3, Math.max(0, 100 - bh));
+      const artBox = fit === 'contain'
+        ? `top:${bt.toFixed(2)}%;height:${bh.toFixed(2)}%`
+        : 'top:0;height:100%';
+      /* 표시 영역은 배너에 대한 비율이다. 배너가 화면보다 짧으면
+         화면 기준으로 그릴 수 없다. 배너 상자 안으로 접어 넣는다. */
+      const sTop = fit === 'contain' ? bt + bh * SAFE.top : SAFE.top * 100;
+      const sBot = fit === 'contain' ? 100 - (bt + bh * (1 - SAFE.bottom)) : SAFE.bottom * 100;
       const safe = $('#dpSafe').checked
-        ? `<div class="dp-safe" style="top:${pct(SAFE.top)};bottom:${pct(SAFE.bottom)};left:${pct(SAFE.side)};right:${pct(SAFE.side)}"></div>`
+        ? `<div class="dp-safe" style="top:${sTop.toFixed(2)}%;bottom:${sBot.toFixed(2)}%;`
+          + `left:${pct(SAFE.side)};right:${pct(SAFE.side)}"></div>`
         : '';
       const ui = $('#dpUi').checked ? uiFor(dev) : '';
       // 1px 남짓은 반올림 오차지 잘림이 아니다. 빨갛게 띄우면 늑대소년이 된다.
       const gone = fit === 'cover' && lost.x > 4;
       box.innerHTML =
         `<div class="dp-screen" style="aspect-ratio:${dev.w}/${dev.h}">`
-        + `<img class="${fit}" src="${url}" alt="">`
+        + `<img class="${fit}" style="${artBox}" src="${url}" alt="">`
         + cutFor(dev) + safe + ui
         + '</div>'
         + `<div class="dp-dev-name">${dev.name}</div>`
@@ -664,8 +693,10 @@
         + '<b>다만 이건 잘림의 상한이지 실제로 이만큼 잘린다는 뜻이 아닙니다.</b> '
         + '메타는 좌우를 6%만 비우라고 하는데 이 계산은 18%라, 메타 안내대로 지켜도 잘린다는 말이 됩니다. '
         + '앞뒤가 안 맞으니 실제 표시 영역은 물리 화면보다 좁다고 보는 편이 타당합니다.'
-      : '원본 비율을 지키면 잘리는 곳은 없고 위아래에 검은 띠가 생깁니다. '
-        + '메타가 말하는 두 갈래 중 이쪽입니다. 어느 쪽으로 나갈지는 매체가 정합니다.');
+      : '<b>실기기에서 확인한 방식입니다.</b> 배너가 화면 폭에 맞춰 통째로 들어가고 '
+        + '위아래에 검은 띠가 생깁니다. 좌우로 잘리는 곳은 없습니다. '
+        + 'iPhone 17 Pro Max · 인스타그램 릴스 광고에서 원본과 스크린샷의 같은 요소 위치를 재어 확인했습니다. '
+        + '스토리와 안드로이드는 아직 확인 전입니다.');
   }
 
   function show(f) {
