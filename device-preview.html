@@ -317,11 +317,6 @@
   .dp-dev-lost{margin-top:5px; font-size:11.5px; font-weight:700;}
   .dp-dev-lost.bad{color:#F22F6B;} .dp-dev-lost.ok{color:var(--accent);}
 
-  .dp-facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px;}
-  .dp-fact{background:var(--surface-2); border:1px solid var(--line-soft); border-radius:12px; padding:15px 17px;}
-  .dp-fact b{display:block; font-size:12.5px; font-weight:800; color:var(--ink); margin-bottom:6px;}
-  .dp-fact p{margin:0; font-size:12px; line-height:1.8; color:var(--ink-3);}
-  .dp-fact em{font-style:normal; color:var(--accent);}
 </style>
 <link rel="stylesheet" href="assets/adcheck-footer.css?v=4">
 </head>
@@ -406,49 +401,6 @@
     <div class="dp-grid" id="dpGrid"></div>
   </div>
 
-  <div class="dp-section" id="dpFacts" hidden>
-    <div class="dp-section-title">이 화면이 무엇을 근거로 그리는지</div>
-    <div class="dp-facts">
-      <div class="dp-fact">
-        <b>화면 크기</b>
-        <p>기종별 실제 화면 픽셀입니다. 요즘 주력 기종은 거의 19.5:9라 9:16보다 길쭉합니다.
-        그래서 화면을 가득 채우려 들면 <em>위아래가 아니라 좌우가</em> 잘립니다.</p>
-      </div>
-      <div class="dp-fact">
-        <b>실기기에서 확인한 것</b>
-        <p>iPhone 17 Pro Max에 실제로 나간 인스타그램 릴스 광고를 원본과 나란히 재 봤습니다.
-        원본에서 폭의 19.0%~82.4% 자리에 있던 말풍선이 화면에서도 19.0%~82.2%에 있었습니다.
-        <em>좌우로 잘린 것이 없습니다.</em> 배너가 폭에 맞춰 통째로 들어가고 위아래가 검은 띠였습니다.
-        "화면 가득"의 18%는 일어나지 않았습니다. 상한으로만 남겨 둡니다.</p>
-      </div>
-      <div class="dp-fact">
-        <b>아직 확인 못 한 것</b>
-        <p>확인한 건 아이폰 한 대의 릴스 광고 한 건입니다.
-        스토리 광고, 안드로이드, 그리고 메타가 문서에서 말한 "확대해서 채우는" 경우가
-        언제 일어나는지는 아직 모릅니다. 그 경우를 보려면 "화면 가득"으로 바꿔 보세요.</p>
-      </div>
-      <div class="dp-fact">
-        <b>채우기와 검은 여백</b>
-        <p>메타 공식 문서에 그대로 적혀 있습니다. 화면이 9:16보다 긴 기기에서는 화면을 채우려고
-        확대하거나(표시 영역 바깥이 잘릴 수 있음), 원본 비율을 지키고 남는 곳을 검은색으로 채웁니다.
-        둘 다 일어나므로 두 경우를 다 봅니다.</p>
-      </div>
-      <div class="dp-fact">
-        <b>표시 영역</b>
-        <p>메타는 상하좌우 가장자리를 비우라고만 하고 픽셀은 공개하지 않습니다.
-        여기서는 업계에서 통용되는 위 14% · 좌우 6% · 아래 35%를 씁니다.
-        릴스에 고지 사항을 넣는다면 메타가 아래 40%를 비우라고 따로 말합니다.</p>
-      </div>
-      <div class="dp-fact">
-        <b>카메라 구멍과 UI</b>
-        <p>릴스 UI는 실기기 스크린샷에서 잰 값입니다. 배너를 100으로 놓았을 때
-        더 알아보기 버튼이 세로 82~88%, 프로필 줄 91~95%, 캡션 96~98%,
-        우측 아이콘 열이 65~89%에 앉습니다. <em>배너 위쪽은 안 가립니다.</em>
-        검은 띠 위에 상태 표시줄이 있기 때문입니다.
-        스토리 UI와 카메라 구멍 모양은 아직 비율로 재현한 근사입니다.</p>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -549,16 +501,16 @@
     { name: '아이폰 노치', w: 1080, h: 2340, cut: 'notch', home: true,
       span: '17.9~18.0%',
       models: 'iPhone 13 · 13 mini · 13 Pro · 13 Pro Max · 14 · 14 Plus · 16e' },
+    { name: 'iPhone SE 3', w: 750, h: 1334, cut: 'none', home: false,
+      models: '화면이 16:9라 9:16에 가장 가깝다' },
+    { name: '갤럭시 S21', w: 1080, h: 2400, cut: 'hole', home: true,
+      models: 'S21 · S21+ · S21 Ultra' },
     { name: '갤럭시 S22~S24', w: 1080, h: 2340, cut: 'hole', home: true,
       models: 'S22 · S22+ · S23 · S23+ · S24 · S24+ · S24 Ultra' },
     { name: '갤럭시 S22·S23 Ultra', w: 1440, h: 3088, cut: 'hole', home: true,
       models: 'S22 Ultra · S23 Ultra' },
-    { name: '갤럭시 S21', w: 1080, h: 2400, cut: 'hole', home: true,
-      models: 'S21 · S21+ · S21 Ultra' },
     { name: 'Galaxy Z Flip', w: 1080, h: 2640, cut: 'hole', home: true,
       models: '펼친 화면 · Z Flip 3부터 같은 크기' },
-    { name: 'iPhone SE 3', w: 750, h: 1334, cut: 'none', home: false,
-      models: '화면이 16:9라 9:16에 가장 가깝다' },
   ];
   const SAFE = { top: 0.14, side: 0.06, bottom: 0.35 };
   const ART = { w: 1080, h: 1920 };
@@ -740,7 +692,7 @@
     probe.onload = () => {
       ART.w = probe.naturalWidth; ART.h = probe.naturalHeight;
       drop.hidden = true;
-      ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap', '#dpFacts']
+      ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap']
         .forEach((s) => { $(s).hidden = false; });
       render();
     };
@@ -777,7 +729,7 @@
     if (url) { URL.revokeObjectURL(url); url = null; }
     file.value = '';
     drop.hidden = false;
-    ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap', '#dpFacts']
+    ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap']
       .forEach((s) => { $(s).hidden = true; });
   });
 })();
