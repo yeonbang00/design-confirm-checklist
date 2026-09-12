@@ -301,7 +301,10 @@
   .dp-ui .who s{display:block; height:5px; width:52px; border-radius:3px; background:rgba(255,255,255,.6);}
   .dp-ui .cta{position:absolute; left:12%; right:12%; height:22px; border-radius:7px;
     background:rgba(255,255,255,.92); box-shadow:0 6px 16px -8px rgba(0,0,0,.9);}
-  .dp-ui .cta.pinkish{background:rgba(255,255,255,.9);}
+  /* 스토리 CTA는 바가 아니라 가운데 놓인 알약이다 */
+  .dp-ui .cta.pill{border-radius:999px; background:rgba(255,255,255,.82);}
+  /* 답장 칸은 검은 띠 위에 앉아 소재를 안 가린다. 속이 빈 테두리로 그린다. */
+  .dp-ui .reply{position:absolute; border:1px solid rgba(255,255,255,.42); border-radius:999px;}
   .dp-ui .rail{position:absolute; display:flex; flex-direction:column; justify-content:space-between; align-items:center;}
   .dp-ui .rail.dp-row{flex-direction:row; gap:10px; justify-content:flex-start;}
   .dp-ui .rail u{width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,.55); display:block;}
@@ -380,7 +383,7 @@
     <div class="dp-seg" id="dpPlace">
       <button type="button" class="dp-seg-btn active" data-v="reels">릴스 · 실측</button>
       <button type="button" class="dp-seg-btn" data-v="feed">피드 · 실측</button>
-      <button type="button" class="dp-seg-btn" data-v="story">스토리</button>
+      <button type="button" class="dp-seg-btn" data-v="story">스토리 · 실측</button>
     </div>
     <label class="dp-check"><input type="checkbox" id="dpSafe" checked> 표시 영역</label>
     <label class="dp-check"><input type="checkbox" id="dpUi" checked> 화면 UI</label>
@@ -534,14 +537,23 @@
   function uiFor(dev) {
     // 화면 높이 대비 비율. 기기마다 상태 표시줄 높이가 달라 노치 유무로만 나눈다.
     const topPad = dev.cut === 'none' ? 0.025 : 0.055;
+    /* 스토리도 실기기 스크린샷에서 쟀다(iPhone 17 Pro Max · 인스타그램 · kt와 KB 광고).
+       소재가 차지하는 자리는 릴스와 사실상 같다. 위 5.9% ~ 87.4%로 폭에 맞춰
+       들어가고 위아래가 검은 띠다(릴스는 5.3% ~ 87.2%).
+       다른 것은 UI다. 오른쪽 아이콘 열이 없고, CTA가 화면을 가로지르는 바가
+       아니라 가운데 놓인 알약이다. 답장 칸은 소재 밖 검은 띠 위에 앉아서
+       소재를 안 가린다. 소재를 덮는 것은 위의 프로필 줄(소재의 3.5~6.9%)과
+       아래의 CTA(84.3~89.2%)뿐이라, 메타가 권하는 위 14%·아래 35%보다
+       실제로 덮이는 면적이 훨씬 작다. */
     if (place === 'story') {
       return '<div class="dp-ui">'
-        + `<div class="bars" style="top:${pct(topPad)}"><i></i><i></i><i></i><i></i></div>`
-        + `<div class="who" style="top:${pct(topPad + 0.018)}"><u></u><s></s></div>`
-        + `<div class="cta" style="bottom:${pct(dev.home ? 0.055 : 0.035)}"></div>`
-        + (dev.home ? '<div class="home" style="bottom:1%"></div>' : '')
+        + '<div class="bars" style="top:6.7%"><i></i><i></i><i></i><i></i></div>'
+        + '<div class="who" style="top:8.8%"><u></u><s></s></div>'
+        + '<div class="cta pill" style="bottom:21.3%;height:4%;left:27%;right:26%"></div>'
+        + '<div class="reply" style="bottom:5.8%;height:4%;left:3%;right:28%"></div>'
         + '</div>';
     }
+
     /* 릴스는 실기기 스크린샷에서 잰 값이다(iPhone 17 Pro Max · 인스타그램).
        배너 자체를 100으로 놓았을 때 더 알아보기 버튼이 세로 82~88%,
        프로필 줄 91~95%, 캡션 96~98%, 우측 아이콘 열이 65~89%에
