@@ -8,7 +8,7 @@
 
 export const AXES = {
   appeal: {
-    ko: '소구', weight: 3,
+    ko: '소구', weight: 1,
     values: {
       discount: '할인·프로모션', newin: '신상·출시', material: '소재·품질',
       feature: '기능·성능', ease: '사용 편의', popular: '후기·인기',
@@ -24,28 +24,28 @@ export const AXES = {
     },
   },
   device: {
-    ko: '시각 장치', weight: 4,
+    ko: '시각 장치', weight: 5,
     values: {
       figure: '숫자 하이라이트', split: '좌우 면분할', overlay: '사진 위 글자',
       card: '카드·띠', type: '타이포 지배', grid: '격자 나열', hero: '인물 전면',
     },
   },
   person: {
-    ko: '인물', weight: 2,
+    ko: '인물', weight: 3,
     values: {
       none: '없음', hands: '손·신체 일부', one: '모델 1인',
       many: '여러 명', character: '캐릭터·3D',
     },
   },
   distance: {
-    ko: '거리', weight: 1,
+    ko: '거리', weight: 3,
     values: {
       macro: '표면 매크로', close: '부분 확대', product: '제품 전체',
       around: '주변까지', wide: '넓은 공간',
     },
   },
   background: {
-    ko: '배경', weight: 1,
+    ko: '배경', weight: 4,
     values: {
       solid: '단색', gradient: '그라데이션', block: '색면 분할',
       studio: '스튜디오', texture: '질감 면', place: '실제 공간',
@@ -53,7 +53,7 @@ export const AXES = {
     },
   },
   palette: {
-    ko: '색조', weight: 1,
+    ko: '색조', weight: 3,
     values: {
       'warm-neutral': '웜뉴트럴', 'cool-neutral': '쿨뉴트럴', mono: '모노크롬',
       contrast: '고대비', pastel: '파스텔', saturated: '채도 높음',
@@ -64,7 +64,7 @@ export const AXES = {
      상위 쌍이 전부 핑크 계열이었는데 색조 축으로는 파스텔과 채도 높음으로
      갈렸다. 눈에 가장 먼저 들어오는 것을 축에서 빠뜨리고 있었다. */
   hue: {
-    ko: '주조색', weight: 2,
+    ko: '주조색', weight: 5,
     values: {
       neutral: '무채·화이트', black: '블랙', red: '레드', pink: '핑크',
       orange: '오렌지', yellow: '옐로', green: '그린', blue: '블루',
@@ -82,7 +82,7 @@ export const AXES = {
     },
   },
   subject: {
-    ko: '제품 노출', weight: 3,
+    ko: '제품 노출', weight: 4,
     values: {
       none: '제품 없음', single: '단품 하나', multiple: '여러 개 나열',
       inuse: '착용·사용 중', pack: '박스·구성품',

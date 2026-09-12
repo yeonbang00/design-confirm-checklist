@@ -12,9 +12,32 @@
  * 여기가 단일 출처다. 서버 프롬프트도 화면 필터도 유사도 계산도 이 파일을 읽는다.
  */
 
+/* 가중치를 다시 잡았다(2026-09-12).
+ *
+ * 이 화면은 디자이너가 본다. 무엇을 파는 광고인지보다 구도·모양·색감이
+ * 먼저다. 그런데 표본 120장의 상위 6이웃 720쌍을 세어 보니 정반대였다.
+ *
+ *   소구 80.6% 일치   ← 내용인데 제일 잘 맞고
+ *   주조색 56.9%      ← 색은 절반만 맞고
+ *   색조 55.4%
+ *   배경 44.4%        ← 제일 안 맞는다
+ *
+ * 반쯤은 색이 다른데 "비슷하다"고 말하고 있었다. 눈으로 보면 안 닮은
+ * 것이 걸리는 이유가 이거다.
+ *
+ * 그래서 색과 배경을 올리고 소구를 내렸다. 같은 표본으로 다시 재면
+ *
+ *   주조색 56.9% → 81.7%   색조 55.4% → 76.4%   배경 44.4% → 71.5%
+ *   시각 장치 92.5% → 84.0%  (여전히 가장 높다)
+ *   소구 80.6% → 43.3%
+ *
+ * 색을 더 세게 준 안(주조색 7)도 재 봤는데 주조색이 90%까지 오르는 대신
+ * 시각 장치가 77.9%로 내려갔다. 구도를 잃으면서 색만 맞추는 것은 손해라
+ * 중간을 골랐다.
+ */
 export const AXES = {
   appeal: {
-    ko: '소구', weight: 3,
+    ko: '소구', weight: 1,
     values: {
       discount: '할인·프로모션', newin: '신상·출시', material: '소재·품질',
       feature: '기능·성능', ease: '사용 편의', popular: '후기·인기',
@@ -30,28 +53,28 @@ export const AXES = {
     },
   },
   device: {
-    ko: '시각 장치', weight: 4,
+    ko: '시각 장치', weight: 5,
     values: {
       figure: '숫자 하이라이트', split: '좌우 면분할', overlay: '사진 위 글자',
       card: '카드·띠', type: '타이포 지배', grid: '격자 나열', hero: '인물 전면',
     },
   },
   person: {
-    ko: '인물', weight: 2,
+    ko: '인물', weight: 3,
     values: {
       none: '없음', hands: '손·신체 일부', one: '모델 1인',
       many: '여러 명', character: '캐릭터·3D',
     },
   },
   distance: {
-    ko: '거리', weight: 1,
+    ko: '거리', weight: 3,
     values: {
       macro: '표면 매크로', close: '부분 확대', product: '제품 전체',
       around: '주변까지', wide: '넓은 공간',
     },
   },
   background: {
-    ko: '배경', weight: 1,
+    ko: '배경', weight: 4,
     values: {
       solid: '단색', gradient: '그라데이션', block: '색면 분할',
       studio: '스튜디오', texture: '질감 면', place: '실제 공간',
@@ -59,7 +82,7 @@ export const AXES = {
     },
   },
   palette: {
-    ko: '색조', weight: 1,
+    ko: '색조', weight: 3,
     values: {
       'warm-neutral': '웜뉴트럴', 'cool-neutral': '쿨뉴트럴', mono: '모노크롬',
       contrast: '고대비', pastel: '파스텔', saturated: '채도 높음',
@@ -70,7 +93,7 @@ export const AXES = {
      상위 쌍이 전부 핑크 계열이었는데 색조 축으로는 파스텔과 채도 높음으로
      갈렸다. 눈에 가장 먼저 들어오는 것을 축에서 빠뜨리고 있었다. */
   hue: {
-    ko: '주조색', weight: 2,
+    ko: '주조색', weight: 5,
     values: {
       neutral: '무채·화이트', black: '블랙', red: '레드', pink: '핑크',
       orange: '오렌지', yellow: '옐로', green: '그린', blue: '블루',
@@ -88,7 +111,7 @@ export const AXES = {
     },
   },
   subject: {
-    ko: '제품 노출', weight: 3,
+    ko: '제품 노출', weight: 4,
     values: {
       none: '제품 없음', single: '단품 하나', multiple: '여러 개 나열',
       inuse: '착용·사용 중', pack: '박스·구성품',
@@ -196,11 +219,21 @@ const sameBrand = (a, b) => {
      0.50  180/200
    0.40으로 올린다. 전원이 여섯 칸을 채우면서 상위 10%에 해당하는 선이라
    "비슷하다"는 말이 그만큼 무거워진다. */
-export const SIMILAR_MIN = 0.4;
+/* 가중치를 바꾸니 점수 분포가 통째로 올라갔다. 표본 200장의 상위 6이웃이
+   중앙값 0.66, 최저 0.46이다. 옛 문턱 0.40은 이제 거의 다 통과시켜서
+   거르는 일을 못 한다. 여섯 칸을 채우는 소재를 세어 보고 다시 잡는다.
+     0.40  200/200
+     0.45  200/200
+     0.50  195/200
+     0.55  175/200
+     0.60  121/200
+   0.50으로 올린다. 다섯 장은 여섯 칸을 못 채우지만, 못 채우는 편이
+   안 닮은 것을 채워 넣는 것보다 낫다. */
+export const SIMILAR_MIN = 0.5;
 
 export function rankSimilar(target, pool, limit = 6, min = SIMILAR_MIN) {
   const stats = valueStats(pool);
-  /* 같은 소재를 두 번 받아 오면 객체가 달라 자기 자신이 자기 닮은 컷에 뜬다.
+  /* 같은 소재를 두 번 받아 오면 객체가 달라 자기 자신이 자기 비슷한 배너에 뜬다.
      화면은 업종별로 한 번, 전체로 한 번 받으므로 실제로 일어난다. */
   const self = target?.thumbUrl || '';
   return pool

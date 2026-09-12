@@ -219,9 +219,9 @@
   .ref-search:hover{border-color:rgba(204,255,0,.5);}
   .ref-search:focus{outline:none; border-color:var(--accent);}
 
-  /* 닮은 컷 창.
-     처음에는 격자 위에 띠로 얹었는데, 원본과 닮은 컷을 나란히 못 봐서
-     비교가 안 됐다. 원본을 왼쪽에 크게 두고 오른쪽에 닮은 컷을 편다. */
+  /* 비슷한 배너 창.
+     처음에는 격자 위에 띠로 얹었는데, 원본과 비슷한 배너를 나란히 못 봐서
+     비교가 안 됐다. 원본을 왼쪽에 크게 두고 오른쪽에 비슷한 배너를 편다. */
   .akin-back{position:fixed; inset:0; z-index:300; background:rgba(6,7,9,.86);
     backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px;}
   .akin-box{width:min(1180px,100%); max-height:88vh; background:var(--surface); border:1px solid var(--line);
@@ -409,11 +409,11 @@
       <div class="gnb-dropdown">
         <button type="button" class="gnb-link gnb-dropdown-toggle">가이드</button>
         <div class="gnb-dropdown-menu"><div class="gnb-dropdown-menu-inner">
-          <a href="criteria-guide.html" class="gnb-dropdown-item">항목가이드</a>
+          <a href="criteria-guide.html" class="gnb-dropdown-item">항목 가이드</a>
           <a href="banner-generation-guide.html" class="gnb-dropdown-item">배너 생성 가이드</a>
-          <a href="guide.html" class="gnb-dropdown-item">브랜드가이드</a>
-          <a href="media-guide.html" class="gnb-dropdown-item">매체가이드</a>
-          <a href="color-guide.html" class="gnb-dropdown-item">컬러가이드</a>
+          <a href="guide.html" class="gnb-dropdown-item">브랜드 가이드</a>
+          <a href="media-guide.html" class="gnb-dropdown-item">매체 가이드</a>
+          <a href="color-guide.html" class="gnb-dropdown-item">컬러 가이드</a>
         </div></div>
       </div>
       <a href="brief-helper.html" class="gnb-link">기획안 헬퍼</a>
@@ -664,7 +664,7 @@
   let currentTypeId = 'all';
   let currentAppeal = 'all';
 
-  /* 유형과 소구를 한 칸에 넣는다. 소구는 닮은 컷 축을 만들면서 딸려 온
+  /* 유형과 소구를 한 칸에 넣는다. 소구는 비슷한 배너 축을 만들면서 딸려 온
      것인데 필터 칸을 따로 차지하고 있었다. 1,318장을 교차해 보면 두 축이
      같지는 않지만(Cramer V 0.29) 가장 큰 값끼리는 겹친다. 혜택직관형 502장
      중 304장이 할인·프로모션이고, 이벤트·응모형 123장 중 81장이 이벤트·증정이다.
@@ -712,7 +712,7 @@
   });
   document.addEventListener('click', () => typeOptMenu.classList.remove('open'));
 
-  /* ── 검색 · 기간 · 닮은 컷 ───────────────────────────────── */
+  /* ── 검색 · 기간 · 비슷한 배너 ───────────────────────────────── */
   const refSearch = document.getElementById('refSearch');
   let currentPeriod = 'all';
   let searchText = '';
@@ -757,7 +757,7 @@
     const cut = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
     return liveAt >= cut;
   }
-  let allPool = null;     // 닮은 컷을 업종 너머에서 찾기 위한 977장 전체
+  let allPool = null;     // 비슷한 배너를 업종 너머에서 찾기 위한 977장 전체
 
   /* 축 어휘를 받아 오면 유형 메뉴 아래쪽 묶음이 생긴다. 못 받아 오면
      "어떻게 짰나" 묶음만 남고 나머지는 그대로 돈다. */
@@ -833,7 +833,7 @@
     syncRejectCases();
   }
 
-  /* 닮은 컷은 업종 안에서만 찾으면 뜻이 없다. 실측에서 가장 잘 묶인 쌍이
+  /* 비슷한 배너는 업종 안에서만 찾으면 뜻이 없다. 실측에서 가장 잘 묶인 쌍이
      화장품과 보험, 뷰티와 통신처럼 업종을 넘는 것들이었다. 그래서 전체 977장을
      한 번 받아 두고 거기서 찾는다. 한 번만 받고 다시 쓴다. */
   async function pool(){
@@ -858,13 +858,13 @@
     akinBack = document.createElement('div');
     akinBack.className = 'akin-back';
     akinBack.innerHTML = '<div class="akin-box">'
-      + '<div class="akin-top"><div><h3>닮은 컷</h3>'
+      + '<div class="akin-top"><div><h3>비슷한 배너</h3>'
       + '<p>숫자가 클수록 구성이 가깝습니다. 0.4 위면 전체에서 상위 10% 안이고, '
       + '0.6을 넘으면 눈에도 닮아 보입니다. 겹친 축을 함께 적었습니다.</p></div>'
       + '<button type="button" class="akin-x">닫기</button></div>'
       + '<div class="akin-body">'
       + '<div class="akin-src"></div>'
-      + '<div class="akin-list"><div class="akin-empty">닮은 컷을 찾는 중…</div></div>'
+      + '<div class="akin-list"><div class="akin-empty">비슷한 배너를 찾는 중…</div></div>'
       + '</div></div>';
     document.body.appendChild(akinBack);
     document.body.style.overflow = 'hidden';
@@ -889,7 +889,7 @@
       (item.brandName || '') + (item.note ? ' · ' + item.note : '')));
 
     const list = akinBack.querySelector('.akin-list');
-    list.innerHTML = '<div class="akin-empty">닮은 컷을 찾는 중…</div>';
+    list.innerHTML = '<div class="akin-empty">비슷한 배너를 찾는 중…</div>';
     pool().then((all) => {
       if(!akinBack) return;
       if(!AX) throw new Error('축 모듈이 아직 준비되지 않았습니다');
@@ -1001,12 +1001,12 @@
             capDiv.innerHTML = capHtml;
             wrap.appendChild(capDiv);
           }
-          // 축이 붙은 소재만 닮은 컷을 찾을 수 있다
+          // 축이 붙은 소재만 비슷한 배너를 찾을 수 있다
           if(item.axes && Object.keys(item.axes).length){
             const akinBtn = document.createElement('button');
             akinBtn.type = 'button';
             akinBtn.className = 'ref-akin-btn';
-            akinBtn.textContent = '닮은 컷';
+            akinBtn.textContent = '비슷한 배너';
             akinBtn.addEventListener('click', () => showAkin(item));
             wrap.appendChild(akinBtn);
           }
