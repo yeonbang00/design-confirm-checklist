@@ -18,6 +18,13 @@ const MAX_REFS = 3;
 const ANGLES = new Set(['front', 'three-quarter', 'side', 'back', 'top-down']);
 const SHOT_DISTANCES = new Set(['close', 'medium', 'wide']);
 const ROLES = new Set(['main', 'model', 'packshot', 'flat', 'detail', 'unusable']);
+/* 이 목록이 없어서 분류가 늘 마지막 줄에서 죽었다(CATEGORIES is not defined).
+   열한 커밋 동안 사진 분류가 한 번도 성공하지 못했고, 그 바람에 역할·컷 후보·
+   조판 힌트·누끼 판정이 전부 빈 채로 배너를 만들고 있었다. 오류를 삼키고
+   "건너뛰었습니다"라고만 적었기 때문에 아무도 몰랐다.
+   프롬프트가 부르는 이름과 같아야 한다. */
+const CATEGORIES = new Set(['fashion-top', 'fashion-outer', 'fashion-bottom', 'shoes', 'bag',
+  'accessory', 'beauty', 'food', 'kitchen', 'home', 'electronics', 'kids', 'sports', 'pet', 'other']);
 
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
 
