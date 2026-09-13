@@ -330,7 +330,7 @@ for(const entry of saved)if(!entry.variant.photos)entry.variant.photos=structure
 setProduct(product);renderSaved();renderLibrary();updateStepNav();
 
 // Automatic entry flow. The existing editor and saved drafts are reused after results.
-let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, photoNotice='', grabSourceKind='link', grabStale=false;
+let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, lastCopyError='', photoNotice='', grabSourceKind='link', grabStale=false;
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
 renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
@@ -399,6 +399,54 @@ async function autoCopies(run){
 /* 시안 6종을 서로 다른 컷으로 만들려면 가진 사진이 각각 무엇인지 알아야 한다.
    비율만으로는 모델컷과 단품컷이 구분되지 않아서, 사진을 실제로 보고 역할을
    붙인다. 실패해도 진행한다 — createPlan이 비율로 짐작해 여섯 종을 채운다. */
+/* 스크랩이 모은 주소를 그대로 믿고 있었다. 진짜 이미지인지, 배너에 쓸 만한
+   크기인지 확인하지 않아서 깨진 주소가 그대로 빈 카드가 됐다.
+   겸사겸사 크기도 잰다. 비율로 역할을 짐작하는 코드가 p.w·p.h를 보는데
+   아무도 재지 않아 늘 0이었다. 분류가 실패하면 "비율로 나눕니다"라고
+   적어 놓고 실제로는 나누지 않고 있었다. */
+const MIN_SIDE=200;
+function probePhotos(list){
+ return Promise.all(list.map(p=>new Promise(done=>{
+  let settled=false;
+  const finish=v=>{if(!settled){settled=true;done(v)}};
+  const im=new Image();
+  im.referrerPolicy='no-referrer';
+  im.onload=()=>finish(im.naturalWidth>=MIN_SIDE&&im.naturalHeight>=MIN_SIDE
+    ?{...p,w:im.naturalWidth,h:im.naturalHeight}:null);
+  im.onerror=()=>finish(null);
+  setTimeout(()=>finish(null),9000);
+  im.src=p.url;
+ }))).then(a=>a.filter(Boolean));
+}
+/* 몰이 같은 이미지를 크기만 바꿔 여러 번 내건다. 홈플러스는 한 사진을
+   ?w=320 과 ?w=750 으로 두 번 내놓는다. 주소가 달라 다른 사진으로 세어지고,
+   열두 장 한도를 같은 그림으로 채워 정작 다른 컷이 밀려난다.
+   물음표를 뗀 주소가 같으면 큰 쪽만 남긴다. */
+function dropSmallTwins(list){
+  const best=new Map();
+  for(const p of list){
+    const k=String(p.url).split('?')[0];
+    const cur=best.get(k);
+    if(!cur||(p.w||0)*(p.h||0)>(cur.w||0)*(cur.h||0)) best.set(k,p);
+  }
+  return list.filter(p=>best.get(String(p.url).split('?')[0])===p);
+}
+async function measurePhotos(){
+ const before=product.photos.length;
+ let ok=await probePhotos(product.photos);
+ if(!ok.length) return '사진을 한 장도 열지 못했습니다';
+ const dead=before-ok.length;
+ ok=dropSmallTwins(ok);
+ const twins=before-dead-ok.length;
+ if(ok.length!==before){
+  product.photos=ok;
+  PHOTOS.splice(0,PHOTOS.length,...product.photos);
+ }
+ const note=[dead?`못 여는 사진 ${dead}장 제외`:'', twins?`같은 사진 작은 판 ${twins}장 제외`:'']
+   .filter(Boolean).join(' · ');
+ return note;
+}
+
 async function classifyPhotos(run){
  if(!product.photos.length)return;
  // 몰이 준 대표 이미지가 썸네일인 경우가 있다. 신세계는 275px짜리를 준다.
@@ -464,7 +512,11 @@ async function classifyPhotos(run){
    :'링크만으로는 상세 페이지 사진을 못 봅니다. 아래 북마클릿으로 담으면 원본을 여러 장 씁니다. ')
    +`지금은 사진 ${product.photos.length}장뿐이라 여섯 중 다섯 장이 생성물입니다. · `+photoNotice;
  }
- }catch(e){photoNotice=(sizeNote?sizeNote+' · ':'')+'사진 분류를 건너뛰었습니다. 비율로 나눕니다.';}
+ }catch(e){
+  /* 왜 실패했는지 안 남기면 매번 처음부터 파야 한다. 실제로 한 번 그랬다. */
+  photoNotice=(sizeNote?sizeNote+' · ':'')
+   +'사진 분류에 실패해 비율로 나눕니다 ('+String(e&&e.message||e).slice(0,80)+')';
+ }
 }
 
 /* 조판에 색을 박아 두면 남의 브랜드 색이 상품 위에 얹힌다. 대표컷에서
@@ -624,7 +676,26 @@ async function generateImage(plan,run,q){
  renderBoard();fillEditor();tuneScrim(variants.indexOf(variant));
 }
 async function retryImage(id,q){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun,q)}finally{setBusy(false);finishMessage()}}
-function finishMessage(){autoMessage((photoNotice?photoNotice+' · ':'')+(autoCopyFailed?'카피 생성에 실패해 카피까지 그리는 시안은 만들지 못했습니다. 카피만 다시 시도할 수 있습니다.':failedImages.size?`6종 중 이미지 ${failedImages.size}개가 실패했습니다. 해당 카드에서 다시 생성할 수 있습니다.`:'시안 6종이 완성됐습니다. 마음에 드는 시안을 선택해 수정·저장하세요.'));$('#autoRetryCopy').hidden=!autoCopyFailed}
+/* 실패 이유를 화면에 적는다. 전에는 "실패했습니다"만 적어서 무엇이 왜
+   죽었는지 알 길이 없었다. 한 판에 사진 분류·카피·이미지가 모두 죽은
+   적이 있는데, 세 곳 다 이유를 삼켜서 매번 처음부터 파야 했다. */
+function imageErrors(){
+  const seen=[];
+  variants.forEach(v=>{if(v.imageError&&!seen.includes(v.imageError))seen.push(v.imageError)});
+  return seen.slice(0,2).join(' / ');
+}
+function finishMessage(){
+  const why=[];
+  if(autoCopyFailed&&lastCopyError)why.push('카피: '+lastCopyError);
+  const ie=imageErrors();
+  if(ie)why.push('이미지: '+ie);
+  autoMessage((photoNotice?photoNotice+' · ':'')
+    +(autoCopyFailed?'카피 생성에 실패해 카피까지 그리는 시안은 만들지 못했습니다. 카피만 다시 시도할 수 있습니다.'
+      :failedImages.size?`6종 중 이미지 ${failedImages.size}개가 실패했습니다. 해당 카드에서 다시 생성할 수 있습니다.`
+      :'시안 6종이 완성됐습니다. 마음에 드는 시안을 선택해 수정·저장하세요.')
+    +(why.length?'  —  '+why.join(' · '):''));
+  $('#autoRetryCopy').hidden=!autoCopyFailed;
+}
 async function startAutomatic(raw,fromGrab=false,useCurrent=false){
  if(autoBusy)return;if(!useCurrent&&!raw.trim()){autoMessage('상품 링크를 넣어주세요.');$('#quickInput').focus();return}
  const run=++autoRun;setBusy(true);autoMessage('상품 정보를 분석하는 중…');
@@ -637,7 +708,11 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   }
   syncFacts();if(!product.productName||!product.photos.length)throw Error('상품명과 사진이 필요합니다. 상품 정보를 직접 입력해주세요.');
   $('#factCheck').checked=true;mode='original';
-  autoMessage('상품 사진을 살펴보는 중…');photoNotice='';await classifyPhotos(run);if(run!==autoRun)return;
+  autoMessage('상품 사진을 살펴보는 중…');photoNotice='';
+  // 분류에 못 여는 주소를 보내면 그 한 장 때문에 분류 전체가 실패할 수 있다.
+  const probeNote=await measurePhotos();if(run!==autoRun)return;
+  await classifyPhotos(run);if(run!==autoRun)return;
+  if(probeNote)photoNotice=probeNote+(photoNotice?' · '+photoNotice:'');
   // 로고 지우기와 누끼는 여기서 시작만 걸어 둔다. 계획·카드·카피와 겹쳐 돈다.
   const pixelWork=startPixelWork(run);
   autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
@@ -663,7 +738,10 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   };
   variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
-  const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;$('#autoCopyError').textContent=e.message});
+  /* 실패 이유를 한 군데에만 적어 두면 못 본다. 카드 옆 문구와 상태줄 양쪽에 남긴다. */
+  lastCopyError='';
+  const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;lastCopyError=String(e&&e.message||e).slice(0,90);
+    const box=$('#autoCopyError');if(box)box.textContent=lastCopyError;});
   // 사진만 만드는 컷은 바로 시작한다. 카피까지 그리는 컷은 문구가 나와야
   // 그릴 수 있으므로 카피를 기다린다. 둘을 한 줄에 세우면 전부 늦어진다.
   const layerQueue=autoPlan.filter(p=>p.method==='newscene'&&p.render!=='baked');
