@@ -102,6 +102,12 @@ function updateStepNav(){const names=['상품 확인','제작 방식',isPlan()?'
 /* 표시에 쓸 주소. 누끼 > 로고 지운 판 > 원본 순으로 고른다.
    누끼는 제품만 살아 있는 판이라 색면 조판에서 확 달라진다. */
 const srcOf=p=>(p&&(p.cleanUrl||p.url))||'';
+/* 서브 카피와 강조 숫자가 같은 값일 때가 있다. 카피 생성이 실패해 둘 다
+   가격으로 채워지면 그렇다. 그대로 두면 같은 "215,000원"이 두 번 그려지고
+   조판에 따라 서로 겹친다. 강조 숫자 쪽이 조판이 자리를 잡아 둔 주인공이라
+   서브를 뺀다. */
+const dupOffer=(v)=>['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)
+  && !!v.offer && String(v.offer).trim()===String(v.sub||'').trim();
 const artSrc=(p,layout)=>(p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(layout))?p.cutUrl:srcOf(p);
 function art(v){const photos=v.photos||PHOTOS,
  /* 원본 보기를 켜면 생성 전 사진으로 되돌린다. 카피까지 그린 컷은 글자가
@@ -112,13 +118,42 @@ function art(v){const photos=v.photos||PHOTOS,
     HTML 카피만 숨기는 게 아니라 생성 전 원본 사진으로 되돌려야 말이 된다.
     그래서 original일 때는 baked 표시를 떼고 원본 사진을 보여준다. */
  const asOriginal=!!v.original;
- return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy">${v.eyebrow?`<span class="eyebrow">${esc(v.eyebrow)}</span>`:''}<span class="headline">${esc(v.main)}</span><span class="subline">${esc(v.sub)}</span>${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}${v.footnote?`<span class="footnote">${esc(v.footnote)}</span>`:''}</div></div>`}
+ return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy">${v.eyebrow?`<span class="eyebrow">${esc(v.eyebrow)}</span>`:''}<span class="headline">${esc(v.main)}</span>${dupOffer(v)?'':`<span class="subline">${esc(v.sub)}</span>`}${['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}${v.footnote?`<span class="footnote">${esc(v.footnote)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
  $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
  $$('[data-dlimg]').forEach(b=>b.onclick=e=>{e.stopPropagation();downloadImage(Number(b.dataset.dlimg))});
  $$('[data-card]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.card);renderBoard();fillEditor();if(innerWidth<781){$('#editTitle').focus({preventScroll:true});$('.editor').scrollIntoView({behavior:'instant',block:'start'})}else $(`[data-card="${selected}"]`).focus({preventScroll:true})});
+ fitAll();
 }
+/* 긴 상품명이 들어오면 조판이 깨진다. 열아홉 조판에
+   "(더현대하이단독)에센셜 탄력케어 세트 (탄력3종)"을 넣어 재 보니 badge는
+   헤드라인이 숫자와 버튼 위로 올라타고 type-diagonal은 숫자와 각주가 틀
+   밖으로 나갔다. 글자 크기는 위계를 세우려고 조판마다 올려 둔 값이라
+   일률로 내릴 수 없다. 넘치는 카드에서만 한 단씩 줄인다.
+   실측 — badge 75%, type-diagonal 90%에서 멈추고 나머지 열일곱은 안 건드린다. */
+function fitCopy(art){
+  const copy=art.querySelector('.copy'); if(!copy) return;
+  const els=[...copy.querySelectorAll('.eyebrow,.headline,.subline,.offer-value,.cta,.footnote')];
+  if(!els.length) return;
+  els.forEach(e=>{e.style.fontSize=''});
+  const base=els.map(e=>parseFloat(getComputedStyle(e).fontSize));
+  const over=(a,b)=>{const r1=a.getBoundingClientRect(),r2=b.getBoundingClientRect();
+    const w=Math.min(r1.right,r2.right)-Math.max(r1.left,r2.left);
+    const h=Math.min(r1.bottom,r2.bottom)-Math.max(r1.top,r2.top);
+    return (w>1&&h>1)?w*h:0};
+  const ok=()=>{const ar=art.getBoundingClientRect();
+    for(const e of els){const r=e.getBoundingClientRect();
+      if(r.width&&(r.left<ar.left-1||r.right>ar.right+1||r.top<ar.top-1||r.bottom>ar.bottom+1))return false}
+    for(let i=0;i<els.length;i++)for(let j=i+1;j<els.length;j++)if(over(els[i],els[j])>60)return false;
+    return true};
+  let k=1;
+  while(!ok()&&k>0.55){k-=0.05;els.forEach((e,i)=>{e.style.fontSize=(base[i]*k).toFixed(2)+'px'})}
+}
+function fitAll(){$$('#board .art').forEach(fitCopy)}
+let fitTimer=0;
+addEventListener('resize',()=>{clearTimeout(fitTimer);fitTimer=setTimeout(fitAll,120)});
+
 function copyFits(i){const card=$(`[data-card="${i}"]`);if(!card)return true;const a=card.querySelector('.art').getBoundingClientRect(),copy=card.querySelector('.copy'),r=copy.getBoundingClientRect();if(!r.width&&!r.height)return true;return r.left>=a.left-1&&r.right<=a.right+1&&r.top>=a.top-1&&r.bottom<=a.bottom+1&&copy.scrollWidth<=copy.clientWidth+1&&copy.scrollHeight<=copy.clientHeight+1}
 function updateFit(){$('#fitWarning').hidden=copyFits(selected)}
 $('#layout').innerHTML=Object.entries(LAYOUTS).map(([k,label])=>`<option value="${k}">${label}</option>`).join('');
@@ -578,7 +613,16 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   if(run!==autoRun)return;
   await Promise.all([
    ...drain(layerQueue),
-   copyTask.then(()=>autoCopyFailed?null:Promise.all(drain(bakedQueue))),
+   /* 카피가 실패하면 카피까지 그리는 시안은 아예 시작하지 않는다. 그런데
+      그 카드는 처음 값인 '이미지 생성 중'을 그대로 달고 남아 영영 도는 것처럼
+      보였다. 시작도 안 했다는 것을 카드에 적는다. */
+   copyTask.then(()=>{
+    if(!autoCopyFailed) return Promise.all(drain(bakedQueue));
+    bakedQueue.forEach(pl=>{const v=variants.find(x=>x.id===pl.id);
+      if(v) v.autoStatus='카피 생성에 실패해 만들지 못했습니다. 카피만 다시 생성을 눌러주세요.'});
+    renderBoard();
+    return null;
+   }),
   ]);
   renderBoard();fillEditor();finishMessage();
  }catch(e){autoMessage(e.message);if(!useCurrent&&!fromGrab)$('#quickGrab').focus()}finally{setBusy(false)}
