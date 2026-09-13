@@ -276,34 +276,33 @@ export function createPlan(product, random = Math.random) {
   /* 자리마다 어떤 사진이 들어갈지는 아래에서 정해지는데 조판은 그 전에
      정해진다. 대표컷이 누끼일 때 꽉 채우는 조판이 걸리면 손쓸 방법이 없다.
      대표컷 한 장만 미리 보고, 누끼면 꽉 채우는 조판을 후보에서 뺀다. */
-  const heroPlain = !!(photos[0] && photos[0].plainBg);
   const ALL_LAYOUTS = Object.values(EMPHASIS).flat();
-  const allowed = l => !heroPlain || !FULLBLEED.includes(l);
-  const layouts = emphasisPlan.map(em => {
-    const inGroup = EMPHASIS[em];
-    const hinted = shuffle(hints.filter(l => inGroup.includes(l)), random);
-    /* 누끼면 강조 묶음 여섯 중 셋이 빠진다. 남은 셋으로만 서너 자리를 채우면
-       strip 85%, framed 77%가 되어 매번 같은 판이 나온다. 묶음을 먼저 쓰는
-       규칙을 이때만 푼다. 누끼에 쓸 수 있는 조판은 어느 묶음에 있든 다
-       제 배경을 갖고 있어서 강조 방향을 크게 해치지 않는다. */
-    const spread = heroPlain
-      ? shuffle(ALL_LAYOUTS.filter(l => allowed(l) && !inGroup.includes(l)), random)
-      : [];
-    const free = l => allowed(l) && !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1)
+  /* 조판을 자리가 정해진 뒤에 고른다. 예전에는 여기서 index 순서대로 뽑고
+     자리는 아래에서 따로 섞었다. 그래서 애써 만든 생성 장면이 사진을 반으로
+     자르는 판에 들어가곤 했다. 실측 — 생성컷이 꽉 채우는 조판을 받는 비율이
+     36%였다. 열 장 중 여섯 장이 판에 끼워졌다는 뜻이다. */
+  function chooseLayout(em, only) {
+    const pool = only && only.length ? only : ALL_LAYOUTS;
+    const inGroup = EMPHASIS[em].filter(l => pool.includes(l));
+    const free = l => !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1)
       && !(silhouetteOf(l) && usedSilhouette.has(silhouetteOf(l)));
     const fresh = l => (deviceCount[deviceOf(l)] || 0) < limitOf(deviceOf(l));
-    const ranked = heroPlain
-      ? [...hinted, ...shuffle([...inGroup.filter(allowed), ...spread], random)].filter(free)
-      : [...hinted, ...shuffle(inGroup, random)].filter(free);
-    // 장치가 두 번을 넘지 않는 것 먼저, 없으면 강조 묶음 안에서, 그래도 없으면 전체에서
+    /* 강조 묶음을 먼저 쓰되, 후보가 좁혀진 자리에서는 묶음만 고집하면 남은
+       두셋이 독점한다. 실측 — 누끼 대표컷에서 묶음만 쓰니 strip 85%,
+       framed 77%가 됐다. 좁혀진 자리는 후보 전체에서 고른다. */
+    const narrowed = pool.length < ALL_LAYOUTS.length;
+    const hinted = shuffle(hints.filter(l => pool.includes(l)), random);
+    const body = narrowed
+      ? shuffle(pool.slice(), random)
+      : [...shuffle(inGroup, random), ...shuffle(pool.filter(l => !inGroup.includes(l)), random)];
+    const ranked = [...hinted, ...body].filter(free);
     const pick = ranked.find(fresh) || ranked[0]
-      || shuffle(Object.values(EMPHASIS).flat(), random).filter(free).find(fresh)
-      || shuffle(Object.values(EMPHASIS).flat(), random).find(free) || 'header';
+      || shuffle(ALL_LAYOUTS.slice(), random).find(l => !usedLayout.has(l)) || 'header';
     usedLayout.add(pick);
     if (silhouetteOf(pick)) usedSilhouette.add(silhouetteOf(pick));
     deviceCount[deviceOf(pick)] = (deviceCount[deviceOf(pick)] || 0) + 1;
     return pick;
-  });
+  }
 
   /* '사람이 있다'와 '모델이 있다'는 다르다. 화장품 상세페이지의 손 컷을
      사람으로 읽었더니 모델이 공원을 걷는 컷이 나왔다. 전신·얼굴이 나오는
@@ -418,11 +417,40 @@ export function createPlan(product, random = Math.random) {
   }
   while (slots.length > 6) slots.pop();
 
+  /* 생성컷을 둘에서 셋 사이로 맞춘다. 업종 표와 대체 순서를 따라가다 보면
+     사진이 적은 상품에서 넷까지 올라간다(실측 — 사진 석 장짜리로 재니 뷰티·
+     가전·패션이 4.0장). 넷이면 기다리는 시간과 비용이 그만큼 늘고 원본으로
+     보여줄 수 있는 것까지 그림으로 대체한다. */
+  const isMade = x => x.kind !== 'plain';
+  const madeCount = () => slots.filter(isMade).length;
+  while (madeCount() > 3) {
+    const i = slots.findIndex(isMade);
+    const back = ['detail', 'main', 'model', 'cutout']
+      .map(w => plainSlot(w, seen[w] || 0)).find(Boolean);
+    if (!back) break;
+    seen[back.want] = (seen[back.want] || 0) + 1;
+    slots[i] = back;
+  }
+  while (madeCount() < 2) {
+    const add = ['mockup', 'scene', 'macro', 'editorial'].map(w => genSlot(w)).find(Boolean);
+    if (!add) break;
+    const i = slots.findIndex(x => !isMade(x));
+    if (i < 0) break;
+    slots[i] = add;
+  }
+
   /* 설득 앵글을 자리마다 붙인다. 강조 방향과 맞는 것을 먼저 쓰고, 자료가
      없는 유형은 후보에 올리지 않는다. 후기가 없는데 후기형을 만들 수 없다. */
   const angles = pickAngles(emphasisPlan, angleContext(product, photos), random);
 
-  return shuffle(slots, random).map((slot, i) => {
+  /* 생성 자리는 카피 세 줄만 얹는다. 다만 그중 한 장은 카피까지 그림에 그린다.
+     CSS로는 못 만드는 표현(스티커 레터링, 손글씨, 세트 안의 글자)이 거기서만
+     나온다. 그 한 장은 글자가 픽셀에 박히므로 세 줄 규칙에서 뺀다.
+     어느 자리가 될지는 매번 다르되 한 장을 넘지 않는다. */
+  const ordered = shuffle(slots, random);
+  const madeIdx = ordered.map((x, i) => (x.kind !== 'plain' ? i : -1)).filter(i => i >= 0);
+  const bakedIdx = madeIdx.find(i => bakedAt.has(i));
+  return ordered.map((slot, i) => {
     /* 그대로 쓰는 자리는 위에서 이미 사진을 골라 뒀다. 여기서 다시 고르면
        같은 사진이 두 자리에 들어간다. 정해진 것이 있으면 그대로 쓴다. */
     const photo = Number.isInteger(slot.photo) && slot.photo >= 0
@@ -431,6 +459,17 @@ export function createPlan(product, random = Math.random) {
     const src = photos[photo] || {};
     const known = 'hasPerson' in src;
     const person = !!src.hasPerson;
+    /* 생성 장면은 화면을 가득 채우고 카피는 세 줄만 얹는다. 애써 만든 장면을
+       반으로 잘라 판에 끼우면 만든 값이 없다. 누끼 자리는 반대로 제 배경을
+       갖는 판이어야 한다. 나머지는 강조 묶음이 정하던 대로. */
+    const made = slot.kind !== 'plain';
+    /* 대표컷이 누끼여도 생성 장면은 제 배경을 갖고 나온다. 누끼를 못 까는
+       것과 생성컷을 못 까는 것은 다른 문제다. 자리가 쓰는 사진으로 판단한다. */
+    const plainShot = !made
+      && (slot.want === 'cutout' || !!(photos[photo] && photos[photo].plainBg));
+    const layout = made ? chooseLayout(emphasisPlan[i], FULLBLEED)
+      : plainShot ? chooseLayout(emphasisPlan[i], ALL_LAYOUTS.filter(l => !FULLBLEED.includes(l)))
+      : chooseLayout(emphasisPlan[i]);
     return {
       id: i,
       recipe: slot.kind === 'set' ? 'styling-set' : slot.kind === 'plain' ? 'plain' : slot.kind,
@@ -438,7 +477,7 @@ export function createPlan(product, random = Math.random) {
       method: slot.kind === 'plain' ? 'original' : 'newscene',
       label: slot.label,
       desc: slot.desc,
-      layout: layouts[i],
+      layout: layout,
       type: angles[i].id,
       angle: { id: angles[i].id, ko: angles[i].ko, how: angles[i].how, badge: angles[i].badge },
       photo,
@@ -455,7 +494,13 @@ export function createPlan(product, random = Math.random) {
       emphasis: emphasisPlan[i],
       axes: slot.axes || null,
       // 그대로 쓰는 컷은 생성 자체를 안 하므로 baked가 될 수 없다
-      render: slot.kind !== 'plain' && bakedAt.has(i) ? 'baked' : 'layer',
+      /* 카피 세 줄만 그리는 자리. 눈썹·강조 숫자·각주를 안 붙인다. */
+      /* 생성 자리는 카피 세 줄만 얹는다. 다만 한 장은 카피까지 그림에 그린다.
+         CSS로는 못 만드는 표현(스티커 레터링, 손글씨, 세트 안의 글자)이
+         거기서만 나온다. 그 한 장은 글자가 픽셀에 박히므로 세 줄 규칙에서 뺀다. */
+      minimalCopy: made && i !== bakedIdx,
+      // 세 줄만 그리는 자리는 그림에 글자를 박지 않는다. 고칠 수 있어야 한다.
+      render: i === bakedIdx ? 'baked' : 'layer',
       typeStyle: typeOrder[i % typeOrder.length],
       madeByAi: slot.kind === 'made',
     };
