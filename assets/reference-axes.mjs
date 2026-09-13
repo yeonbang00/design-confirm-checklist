@@ -75,7 +75,7 @@ export const AXES = {
     },
   },
   palette: {
-    ko: '색조', weight: 3,
+    ko: '색조', weight: 4,
     values: {
       'warm-neutral': '웜뉴트럴', 'cool-neutral': '쿨뉴트럴', mono: '모노크롬',
       contrast: '고대비', pastel: '파스텔', saturated: '채도 높음',
@@ -86,7 +86,7 @@ export const AXES = {
      상위 쌍이 전부 핑크 계열이었는데 색조 축으로는 파스텔과 채도 높음으로
      갈렸다. 눈에 가장 먼저 들어오는 것을 축에서 빠뜨리고 있었다. */
   hue: {
-    ko: '주조색', weight: 5,
+    ko: '주조색', weight: 7,
     values: {
       neutral: '무채·화이트', black: '블랙', red: '레드', pink: '핑크',
       orange: '오렌지', yellow: '옐로', green: '그린', blue: '블루',
@@ -136,7 +136,7 @@ export const AXES = {
     },
   },
   space: {
-    ko: '여백', weight: 3,
+    ko: '여백', weight: 2,
     values: { tight: '꽉 참', balanced: '보통', airy: '여백 많음' },
   },
   /* 글자의 성격. 빠진 것 중 가장 컸다. 명조로 짠 화보 배너와 굵은 고딕으로
@@ -165,11 +165,11 @@ export const AXES = {
     },
   },
   angle: {
-    ko: '카메라 각도', weight: 2,
+    ko: '카메라 각도', weight: 1,
     values: { front: '정면', 'three-quarter': '45도', side: '측면', 'top-down': '부감', low: '로우앵글' },
   },
   light: {
-    ko: '빛', weight: 2,
+    ko: '빛', weight: 1,
     values: {
       soft: '부드러운', hard: '딱딱한 그림자', back: '역광', window: '창가',
       golden: '황금시간', studio: '스튜디오', neon: '색조명',
@@ -267,17 +267,16 @@ const sameBrand = (a, b) => {
      0.50  180/200
    0.40으로 올린다. 전원이 여섯 칸을 채우면서 상위 10%에 해당하는 선이라
    "비슷하다"는 말이 그만큼 무거워진다. */
-/* 가중치를 바꾸니 점수 분포가 통째로 올라갔다. 표본 200장의 상위 6이웃이
-   중앙값 0.66, 최저 0.46이다. 옛 문턱 0.40은 이제 거의 다 통과시켜서
-   거르는 일을 못 한다. 여섯 칸을 채우는 소재를 세어 보고 다시 잡는다.
-     0.40  200/200
-     0.45  200/200
-     0.50  195/200
-     0.55  175/200
-     0.60  121/200
-   0.50으로 올린다. 다섯 장은 여섯 칸을 못 채우지만, 못 채우는 편이
-   안 닮은 것을 채워 넣는 것보다 낫다. */
-export const SIMILAR_MIN = 0.5;
+/* 축이 열여덟이 되면서 점수 분포가 내려갔다. 축이 많아질수록 어긋날 자리도
+   많아진다. 표본 150장으로 다시 재니 여섯째 이웃의 중앙값 0.55, 최저 0.46이다.
+   문턱별로 여섯 칸을 채우는 소재를 세어 다시 잡는다.
+     0.40  150/150
+     0.45  150/150
+     0.50  130/150
+     0.55   79/150
+   0.45로 내린다. 전원이 여섯 칸을 채우면서 중앙값보다 한참 아래라
+   "비슷하다"는 말이 헐거워지지 않는다. */
+export const SIMILAR_MIN = 0.45;
 
 export function rankSimilar(target, pool, limit = 6, min = SIMILAR_MIN) {
   const stats = valueStats(pool);
