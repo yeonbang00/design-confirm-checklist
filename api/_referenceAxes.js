@@ -16,13 +16,6 @@ export const AXES = {
       worry: '고민·불안 해결', guide: '정보·가이드',
     },
   },
-  goal: {
-    ko: '목표', weight: 1, score: false,
-    values: {
-      sale: '제품 판매', awareness: '브랜드 인지', install: '앱 설치',
-      signup: '가입·상담', visit: '매장 방문',
-    },
-  },
   device: {
     ko: '시각 장치', weight: 5,
     values: {
@@ -116,6 +109,42 @@ export const AXES = {
   space: {
     ko: '여백', weight: 3,
     values: { tight: '꽉 참', balanced: '보통', airy: '여백 많음' },
+  },
+  /* 글자의 성격. 빠진 것 중 가장 컸다. 명조로 짠 화보 배너와 굵은 고딕으로
+     짠 할인 배너는 배치가 같아도 전혀 달라 보인다. */
+  letter: {
+    ko: '타이포', weight: 4,
+    values: {
+      'gothic-bold': '굵은 고딕', 'gothic': '보통 고딕', serif: '명조',
+      hand: '손글씨·필기', condensed: '장평 좁은', latin: '영문 위주',
+    },
+  },
+  /* 그림 자체가 무엇인가. 배경 축은 뒤가 무엇인지만 말한다.
+     3D로 만든 낙하산 광고와 실사 촬영 광고는 배경이 같아도 다른 물건이다. */
+  render: {
+    ko: '그림 종류', weight: 4,
+    values: { photo: '실사 사진', illust: '일러스트', cg: '3D·CG', composite: '합성' },
+  },
+  /* 아래 셋은 컷 후보 어휘(api/productPhotos.js)와 같은 값을 쓴다. 같은 말을
+     쓰면 레퍼런스에서 읽은 값이 그대로 생성 지시가 된다. 김치를 그릇에
+     담으라는 지시가 mount에서 나온다. */
+  mount: {
+    ko: '놓인 자리', weight: 2,
+    values: {
+      none: '없음', table: '테이블', plinth: '단상', shelf: '선반', held: '손에 들림',
+      water: '물·액체', hanger: '옷걸이', floor: '바닥', location: '실제 공간',
+    },
+  },
+  angle: {
+    ko: '카메라 각도', weight: 2,
+    values: { front: '정면', 'three-quarter': '45도', side: '측면', 'top-down': '부감', low: '로우앵글' },
+  },
+  light: {
+    ko: '빛', weight: 2,
+    values: {
+      soft: '부드러운', hard: '딱딱한 그림자', back: '역광', window: '창가',
+      golden: '황금시간', studio: '스튜디오', neon: '색조명',
+    },
   },
 };
 

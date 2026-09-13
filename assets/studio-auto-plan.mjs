@@ -162,6 +162,13 @@ export const deviceOf = layout =>
    꽉 채워야 산다. 사진 종류를 보고 조판을 고른다. */
 export const FULLBLEED = ['top-center', 'top-left', 'bottom-right', 'boxed', 'corner', 'badge'];
 
+/* 사진을 세 장 쓰는 조판. 패션 레퍼런스 327장 중 10%가 격자였다(다른 업종은
+   1%). 열 배 차이라 패션과 쇼핑에서만 연다. 사진이 세 장 없으면 못 만든다.
+   칸끼리 비슷하면 판을 나눈 뜻이 없어서 각도나 거리가 다른 것끼리 고른다. */
+export const MULTI = ['trio', 'mosaic', 'hero-stack'];
+const MULTI_CATEGORIES = new Set(['fashion-top', 'fashion-outer', 'fashion-bottom',
+  'shoes', 'bag', 'accessory', 'kids', 'sports', 'other', 'pet']);
+
 export const SILHOUETTE = { arch: ['framed', 'arch'] };
 const silhouetteOf = layout =>
   Object.keys(SILHOUETTE).find(k => SILHOUETTE[k].includes(layout)) || null;
@@ -450,6 +457,30 @@ export function createPlan(product, random = Math.random) {
   const ordered = shuffle(slots, random);
   const madeIdx = ordered.map((x, i) => (x.kind !== 'plain' ? i : -1)).filter(i => i >= 0);
   const bakedIdx = madeIdx.find(i => bakedAt.has(i));
+
+  /* 사진 세 장을 쓰는 자리를 한 장까지 연다. 원본을 그대로 쓰는 자리 중에서
+     고른다. 생성 자리는 화면을 꽉 채우기로 이미 정해져 있다. */
+  const usable = photos.map((p, i) => (p.role !== 'unusable' ? i : -1)).filter(i => i >= 0);
+  const canMulti = MULTI_CATEGORIES.has(product.category) && usable.length >= 3;
+  const multiIdx = canMulti
+    ? ordered.findIndex((x, i) => x.kind === 'plain' && i !== bakedIdx)
+    : -1;
+  const multiLayout = multiIdx >= 0 ? shuffle(MULTI.slice(), random)[0] : '';
+  /* 세 칸에 비슷한 컷만 넣으면 판을 나눈 뜻이 없다. 각도와 거리가 다른
+     것끼리 고르고, 그래도 모자라면 남은 것으로 채운다. */
+  const multiSet = (() => {
+    if (multiIdx < 0) return null;
+    const key = i => (photos[i].shotAngle || '') + '/' + (photos[i].shotDistance || '');
+    const out = [];
+    const seenKey = new Set();
+    for (const i of shuffle(usable.slice(), random)) {
+      if (seenKey.has(key(i))) continue;
+      seenKey.add(key(i)); out.push(i);
+      if (out.length >= 3) break;
+    }
+    for (const i of usable) { if (out.length >= 3) break; if (!out.includes(i)) out.push(i); }
+    return out.length >= 3 ? out.slice(0, 3) : null;
+  })();
   return ordered.map((slot, i) => {
     /* 그대로 쓰는 자리는 위에서 이미 사진을 골라 뒀다. 여기서 다시 고르면
        같은 사진이 두 자리에 들어간다. 정해진 것이 있으면 그대로 쓴다. */
@@ -467,7 +498,8 @@ export function createPlan(product, random = Math.random) {
        것과 생성컷을 못 까는 것은 다른 문제다. 자리가 쓰는 사진으로 판단한다. */
     const plainShot = !made
       && (slot.want === 'cutout' || !!(photos[photo] && photos[photo].plainBg));
-    const layout = made ? chooseLayout(emphasisPlan[i], FULLBLEED)
+    const layout = (i === multiIdx && multiSet) ? multiLayout
+      : made ? chooseLayout(emphasisPlan[i], FULLBLEED)
       : plainShot ? chooseLayout(emphasisPlan[i], ALL_LAYOUTS.filter(l => !FULLBLEED.includes(l)))
       : chooseLayout(emphasisPlan[i]);
     return {
@@ -481,6 +513,7 @@ export function createPlan(product, random = Math.random) {
       type: angles[i].id,
       angle: { id: angles[i].id, ko: angles[i].ko, how: angles[i].how, badge: angles[i].badge },
       photo,
+      photoSet: i === multiIdx && multiSet ? multiSet : null,
       photoRole: src.role,
       // 장면이 '사람 없음'을 못 박은 컷은 사람 여부를 몰라도 물건만 꺼내면 된다.
       // 사람이 나와도 되는 컷만, 모를 때 어느 쪽으로도 안 기우는 값으로 미룬다.

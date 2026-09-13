@@ -15,6 +15,8 @@ import { rejectIfNotSameOrigin } from './_originCheck.js';
 
 const MAX_PHOTOS = 6;
 const MAX_REFS = 3;
+const ANGLES = new Set(['front', 'three-quarter', 'side', 'back', 'top-down']);
+const SHOT_DISTANCES = new Set(['close', 'medium', 'wide']);
 const ROLES = new Set(['main', 'model', 'packshot', 'flat', 'detail', 'unusable']);
 
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
@@ -40,6 +42,12 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 - itemCount: 이 사진에 제품이 몇 개 보이는지 숫자. 기획세트 나열컷이면 그 개수.
 - isHero: 이 사진이 **제품 하나만** 크게 보여주는 컷이면 true. 여러 개가 나열돼
   있으면 false. 배너에서 주인공으로 쓸 수 있는지를 가른다.
+- shotAngle: 어느 쪽에서 찍었는지. front(정면) three-quarter(45도) side(측면)
+  back(후면) top-down(위에서 내려다봄) 중 하나. 모르면 "front".
+- shotDistance: 얼마나 당겨 찍었는지. close(부분 확대) medium(상품 전체가 꽉 참)
+  wide(주변까지 보임) 중 하나. 모르면 "medium".
+  이 둘은 사진 여러 장을 한 판에 나란히 놓을 때 씁니다. 비슷한 컷만 세 장
+  고르면 격자가 밋밋해지므로 서로 다른 것끼리 고르는 데 쓰입니다.
 - plainBg: 배경이 비어 있는 누끼컷이면 true. 흰 바탕이나 단색 바탕에 제품만
   덩그러니 놓인, 쇼핑몰이 흔히 올리는 그 컷입니다. 그림자도 소품도 공간감도
   없습니다. 반대로 음식을 차려 찍은 컷, 모델이 야외에서 입은 컷, 스튜디오에서
@@ -175,6 +183,7 @@ facts는 최대 8개이고, 각 항목은:
   arch(아치 사진·숫자 강조) badge(전면 사진·우측 정렬 스택·검정 배지)
   type-diagonal(대형 컬러 타이포 대각선) framed(중앙 정렬·헤어라인·아치)
   duo-panel(좌 연출컷+큰 숫자·우 정보판) price(큰 가격·상단 좌측)
+  trio(사진 3장 가로 나란히·아래 타이틀) mosaic(2열 격자) hero-stack(좌 인물·우 세로 스택)
 
 - layoutHints: 고른 조판 이름 3개
 - refNote: 레퍼런스에서 읽은 이 업종의 구성 특징 한국어 한 문장
@@ -183,7 +192,7 @@ facts는 최대 8개이고, 각 항목은:
 레퍼런스의 문구나 브랜드명은 절대 가져오지 마세요. 구성만 봅니다.
 
 JSON만 출력하세요:
-{"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","itemCount":1,"isHero":true,"plainBg":false,"isGift":false,"note":""}],
+{"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","itemCount":1,"isHero":true,"shotAngle":"front","shotDistance":"medium","plainBg":false,"isGift":false,"note":""}],
  "category":"fashion-top","usp":"...","toneKo":"정갈한",
  "facts":[{"text":"피부톤 균일도 11.44% 개선","source":"인체적용시험 · (주)마리디엠 피부과학연구소 · 2025.04.14~04.18","kind":"clinical"}],
  "layoutHints":["boxed","offer","badge"],"refNote":"...",
@@ -323,6 +332,10 @@ export default async function handler(req, res) {
         /* 배경이 빈 누끼컷인지. 조판을 고를 때 쓴다. 누끼를 화면 가득 깔면
            흰 바탕만 커지고 제품은 그대로라 배너가 안 된다. */
         plainBg: !!row.plainBg,
+        /* 격자 조판에 세 장을 나란히 놓을 때 서로 다른 컷을 고르는 데 쓴다.
+           비슷한 포즈만 세 장이면 판을 나눈 뜻이 없다. */
+        shotAngle: ANGLES.has(row?.shotAngle) ? row.shotAngle : 'front',
+        shotDistance: SHOT_DISTANCES.has(row?.shotDistance) ? row.shotDistance : 'medium',
         /* 기획세트 나열컷을 주인공으로 쓰면 증정품까지 다 같은 크기로 늘어서서
            무엇을 파는지 안 읽힌다. 제품 하나만 크게 나온 컷을 따로 가린다. */
         itemCount: Number.isFinite(Number(row.itemCount)) ? Math.max(1, Math.round(Number(row.itemCount))) : 1,

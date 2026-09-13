@@ -38,7 +38,10 @@ const MODES={
  outfit:{name:'모델 착장 교체',summary:'모델·포즈를 유지하고 지정한 옷을 바꿉니다.',image:PHOTOS[0].url,caption:'블루핏 모델 원본 · 교체 전 예시'},
  newscene:{name:'새로운 장면',summary:'같은 상품으로 새로운 배경과 분위기를 찾습니다.',image:PHOTOS[3].url,caption:'이전에 생성한 블루핏 AI 예시'}
 };
-const LAYOUTS={header:'헤더 + 상품',offer:'큰 가격·혜택',split:'좌측 카피·우측 사진','split-right':'좌측 사진·우측 카피',duo:'사진 2장 비교',band:'하단 정보 띠',price:'큰 가격 · 상단 좌측','top-center':'상단 중앙','top-left':'상단 좌측','bottom-right':'하단 우측',boxed:'사진 위 카피 카드',strip:'상하 띠 · 가운데 사진',numeral:'초대형 숫자',corner:'전면 사진 · 구석 카피',arch:'아치 사진 · 숫자 강조',badge:'전면 사진 · 우측 배지','type-diagonal':'대형 타이포 대각선',framed:'중앙 정렬 · 아치 프레임','duo-panel':'좌 연출컷 · 우 정보판'};
+/* 사진 여러 장을 한 판에 놓는 조판. 패션 레퍼런스 327장 중 10%가 격자였다
+   (다른 업종은 1%). 지금까지는 사진을 두 장까지만 받아서 못 만들었다. */
+const MULTI_PHOTO={trio:3, mosaic:3, 'hero-stack':3};
+const LAYOUTS={trio:'사진 3장 나란히',mosaic:'2열 격자',['hero-stack']:'인물 + 우측 스택',header:'헤더 + 상품',offer:'큰 가격·혜택',split:'좌측 카피·우측 사진','split-right':'좌측 사진·우측 카피',duo:'사진 2장 비교',band:'하단 정보 띠',price:'큰 가격 · 상단 좌측','top-center':'상단 중앙','top-left':'상단 좌측','bottom-right':'하단 우측',boxed:'사진 위 카피 카드',strip:'상하 띠 · 가운데 사진',numeral:'초대형 숫자',corner:'전면 사진 · 구석 카피',arch:'아치 사진 · 숫자 강조',badge:'전면 사진 · 우측 배지','type-diagonal':'대형 타이포 대각선',framed:'중앙 정렬 · 아치 프레임','duo-panel':'좌 연출컷 · 우 정보판'};
 let step=0,selected=0,photo=0,mode='original',variants=[],choice=new Set([0,1,2,3,4,5]);
 let saved=[],recipes=[],previousWorkspace=null,copyRound=0,timer,modeDrafts={};
 function notify(text){$('#toast').textContent=text;$('#toast').hidden=false;clearTimeout(timer);timer=setTimeout(()=>$('#toast').hidden=true,4000)}
@@ -109,6 +112,17 @@ const srcOf=p=>(p&&(p.cleanUrl||p.url))||'';
 const dupOffer=(v)=>['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)
   && !!v.offer && String(v.offer).trim()===String(v.sub||'').trim();
 const artSrc=(p,layout)=>(p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(layout))?p.cutUrl:srcOf(p);
+/* 격자·스택 조판은 사진을 세 장 쓴다. 계획이 골라 둔 photoSet을 쓰고,
+   없으면 지금 사진 뒤에서부터 채운다. 세 장을 못 채우면 있는 만큼만 그린다. */
+function extraShots(v,photos,first){
+  const need=MULTI_PHOTO[v.layout]; if(!need) return '';
+  const idx=Array.isArray(v.photoSet)&&v.photoSet.length>=need
+    ? v.photoSet.slice(0,need)
+    : (()=>{const pool=photos.map((_,i)=>i).filter(i=>photos[i]&&photos[i].url!==first.url);
+        return [photos.indexOf(first),...pool].slice(0,need);})();
+  return idx.slice(1).map((i,n)=>{const q=photos[i]||first;
+    return `<img class="shot shot-${n+2}" src="${esc(srcOf(q))}" alt="${esc(q.label||'')}" loading="lazy">`;}).join('');
+}
 function art(v){const photos=v.photos||PHOTOS,
  /* 원본 보기를 켜면 생성 전 사진으로 되돌린다. 카피까지 그린 컷은 글자가
     그림에 박혀 있어서 HTML 카피만 숨겨서는 원본이 되지 않는다. */
@@ -118,7 +132,7 @@ function art(v){const photos=v.photos||PHOTOS,
     HTML 카피만 숨기는 게 아니라 생성 전 원본 사진으로 되돌려야 말이 된다.
     그래서 original일 때는 baked 표시를 떼고 원본 사진을 보여준다. */
  const asOriginal=!!v.original;
- return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy">${v.minimalCopy?'':(v.eyebrow?`<span class="eyebrow">${esc(v.eyebrow)}</span>`:'')}${v.minimalCopy&&v.sub?`<span class="subline lead">${esc(v.sub)}</span>`:''}<span class="headline">${esc(v.main)}</span>${(v.minimalCopy||dupOffer(v))?'':`<span class="subline">${esc(v.sub)}</span>`}${!v.minimalCopy&&['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${!v.minimalCopy&&v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}${!v.minimalCopy&&v.footnote?`<span class="footnote">${esc(v.footnote)}</span>`:''}</div></div>`}
+ return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}${extraShots(v,photos,p)}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy">${v.minimalCopy?'':(v.eyebrow?`<span class="eyebrow">${esc(v.eyebrow)}</span>`:'')}${v.minimalCopy&&v.sub?`<span class="subline lead">${esc(v.sub)}</span>`:''}<span class="headline">${esc(v.main)}</span>${(v.minimalCopy||dupOffer(v))?'':`<span class="subline">${esc(v.sub)}</span>`}${!v.minimalCopy&&['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${!v.minimalCopy&&v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}${!v.minimalCopy&&v.footnote?`<span class="footnote">${esc(v.footnote)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
  $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
@@ -647,7 +661,7 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
     const f=facts.length?facts[factAt++%facts.length]:'';
     return {sub:f||slots.QUANTITY||'', offer:slots.PRICE||'', cta:'상품 자세히 보기'};
   };
-  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
+  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;$('#autoCopyError').textContent=e.message});
   // 사진만 만드는 컷은 바로 시작한다. 카피까지 그리는 컷은 문구가 나와야
