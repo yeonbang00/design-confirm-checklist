@@ -75,6 +75,30 @@ const KEEPS = {
     + 'Do not add a person.',
 };
 
+/* 무엇을 바꿔도 되고 무엇은 못 바꾸는지 갈라 둔다.
+ *
+ * 사용자 지적 — "식품은 마음대로 포장을 하면 안돼. 포장지도 제품의 일부분인데
+ * 그게 다른 포장이면 사기잖아. 가능한 원본을 유지한 채로 촬영 구도를 다르게
+ * 하거나 놓이는 테이블이나 장소가 바뀌어야 하는 거지. 대부분 다른 것도
+ * 마찬가지야."
+ *
+ * KEEPS는 "모양·색·라벨을 지켜라"까지만 말했다. 그 말로는 트레이에 든 고기를
+ * 접시에 옮겨 담는 것을 막지 못한다. 옮겨 담아도 고기의 모양과 색은 그대로이기
+ * 때문이다. 실제로 SETS.food가 "the food is arranged as it would be served"라고
+ * 지시하고 있었다 — 포장을 벗기라는 말과 같다.
+ *
+ * 그래서 '상태'를 따로 못 박는다. 바꿔도 되는 것은 놓인 자리·카메라·빛·배경
+ * 넷뿐이다. */
+const SAME_STATE =
+  'The product must appear in EXACTLY THE STATE it is in the reference. Its packaging is '
+  + 'part of the product: same wrapper, same tray, same bottle, same box, same seal, same '
+  + 'printed label. If it is sealed in the reference, it stays sealed. Do not unwrap it, '
+  + 'open it, decant it, re-plate it, portion it out, pour it into another vessel, garnish '
+  + 'it, cook it, or move it into a bowl, plate, glass or container that is not in the '
+  + 'reference. Do not redesign, restyle or beautify the packaging. '
+  + 'ONLY FOUR THINGS MAY CHANGE: where the product is placed, the camera angle and '
+  + 'distance, the light, and the background.';
+
 const CUT_TIES =
   'NOTHING from the reference photograph\'s location or setting may appear — none of its '
   + 'background, no part of its street, room, signage, furniture or props. Discard its pose and '
@@ -150,11 +174,11 @@ const TYPE_STYLES_FALLBACK = 'a heavy geometric sans-serif';
 
 function buildPrompt({ scene, keep, imagePrompt, productName }) {
   // 예전 호출부는 imagePrompt 한 덩어리만 보낸다. 그대로 받아 준다.
-  if (!scene) return `${imagePrompt} ${KEEPS.product} ${ROOM} ${NO_TEXT}`;
+  if (!scene) return `${imagePrompt} ${KEEPS.product} ${SAME_STATE} ${ROOM} ${NO_TEXT}`;
   const keeper = (KEEPS[keep] || KEEPS.product)
     .replace('{PRODUCT}', productName ? `the ${productName}` : 'the product');
   return `Generate a completely new photograph. THE NEW SCENE: ${scene} `
-    + `${CUT_TIES} ${keeper} ${imagePrompt ? imagePrompt + ' ' : ''}${ROOM} ${NO_TEXT}`;
+    + `${CUT_TIES} ${keeper} ${SAME_STATE} ${imagePrompt ? imagePrompt + ' ' : ''}${ROOM} ${NO_TEXT}`;
 }
 
 async function fetchSource(imageUrl) {

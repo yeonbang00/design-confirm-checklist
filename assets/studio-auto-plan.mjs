@@ -49,7 +49,12 @@ const SET_BASE = 'Soft daylight from the left with a gentle contact shadow. '
   + 'THE PROP MUST BE IN SCALE WITH THE PRODUCT: fill most of the frame with the product '
   + 'itself, and choose a prop no more than about twice the size of the product. A small jar '
   + 'or tube never sits on a full-size chair or table seen whole; move the camera in until '
-  + 'the product dominates. ' + SET_READ;
+  + 'the product dominates. '
+  /* 소품과 자리를 바꾸라는 지시가 '내용물을 꺼내라'로 읽히는 일이 있었다.
+     바꿔도 되는 것은 받침·카메라·빛뿐이라고 못 박는다. */
+  + 'The product keeps its own packaging exactly as it comes: do not unwrap it, open '
+  + 'it, decant it or move its contents into another container. Only the prop it sits '
+  + 'on, the camera and the light change. ' + SET_READ;
 export const SETS = {
   'fashion-top': 'a single wooden chair with a woven rattan back on a smooth pale floor; the garment is laid flat and open across the seat, front facing the camera, sleeves arranged down the sides and one cuff falling over the front edge. ' + SET_BASE,
   'fashion-outer': 'a single wooden chair with a woven rattan back on a smooth pale floor; the outerwear is laid open across the seat, front facing the camera so the collar, zip or buttons and the hem all read, sleeves arranged down the sides. ' + SET_BASE,
@@ -58,7 +63,10 @@ export const SETS = {
   bag: 'a low pale wooden stool; the bag stands upright and square to the camera so its full outline, handle and closure read, with the strap laid out beside it. ' + SET_BASE,
   accessory: 'a small pale stone tray on a linen cloth; the item lies open at the centre, seen from directly above so its whole shape reads. ' + SET_BASE,
   beauty: 'a pale stone shelf with a single dried stem lying beside it; the item stands upright and square to the camera, label facing forward, full bottle outline visible. ' + SET_BASE,
-  food: 'a pale wooden serving board on a linen cloth; the food is arranged as it would be served, seen at a high three-quarter angle so both the portion and the surface read. ' + SET_BASE,
+  /* '차려 낸 것처럼 담아라'가 포장을 벗기라는 지시가 된다. 트레이에 든 목심을
+     접시에 옮겨 담으면 소비자가 받는 물건과 다른 사진이 된다. 그릇을 주지 말고
+     받침만 준다. */
+  food: 'a pale wooden board on a linen cloth; the product is set down on the board just as it comes, seen at a high three-quarter angle so both its top face and its depth read. Do not open it, unwrap it or move it onto a plate. ' + SET_BASE,
   kitchen: 'a pale stone counter with a folded linen cloth beside it; the item stands on the counter in three-quarter view so its full profile and handle read. ' + SET_BASE,
   home: 'a low pale wooden side table beside a plain upholstered chair; the item sits square on the table with its whole outline clear of the background. ' + SET_BASE,
   electronics: 'a low pale plinth on a smooth concrete floor; the item stands on the plinth at a three-quarter angle, front face and side both visible. ' + SET_BASE,
