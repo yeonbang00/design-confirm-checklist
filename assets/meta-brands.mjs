@@ -366,7 +366,35 @@ export const META_BRANDS = [
   {"name": "유진그룹", "pageId": "916015278543221", "cat": "etc"},
   {"name": "코오롱", "pageId": "506944582663849", "cat": "etc"},
   {"name": "현대엘리베이터", "pageId": "1964751973745960", "cat": "realestate"},
-  {"name": "현대L&C", "pageId": "649843792134614", "cat": "realestate"}
+  {"name": "현대L&C", "pageId": "649843792134614", "cat": "realestate"},
+
+  /* 이미지 레퍼런스에 쌓여 있는데 담을 브랜드 목록에는 없던 곳들.
+     레퍼런스 172개 브랜드와 목록을 맞대어 골랐다. 페이지 ID는 광고
+     라이브러리에서 광고주 이름으로 찾아 하나씩 열어 확인했다. 이름만
+     비슷해서 걸린 것(COACH가 Efficient Coach로 잡히는 식)은 ID를 안 붙였다.
+     ID가 없으면 이름 검색으로 내려가고 남의 광고가 섞인다.
+     락토핏은 페이지가 종근당건강이다. */
+  {"name": "아토팜 Atopalm", "pageId": "1921852518081952", "cat": "beauty"},
+  {"name": "제이숲", "pageId": "582923038537310", "cat": "beauty"},
+  {"name": "리얼베리어 Real Barrier", "pageId": "239567532781107", "cat": "beauty"},
+  {"name": "더마비 DermaB", "pageId": "423196151105694", "cat": "beauty"},
+  {"name": "티엘스", "cat": "beauty"},
+  {"name": "르네테 RENeTE", "cat": "beauty"},
+  {"name": "오프린트미", "pageId": "808560542651870", "cat": "shopping"},
+  {"name": "Snaps", "pageId": "103544785863585", "cat": "shopping"},
+  {"name": "하기스 - Huggies Korea", "pageId": "102121972738941", "cat": "shopping"},
+  {"name": "NOL", "pageId": "137935526287945", "cat": "travel"},
+  {"name": "주식회사 작심랩", "pageId": "107463359017669", "cat": "food"},
+  {"name": "그린비아", "cat": "food"},
+  {"name": "드시모네", "cat": "food"},
+  {"name": "오트몬드", "cat": "food"},
+  {"name": "닥스 DAKS", "pageId": "150173611522450", "cat": "fashion"},
+  {"name": "COACH", "cat": "fashion"},
+  {"name": "락토핏", "pageId": "111739697316672", "cat": "healthcare"},
+  {"name": "와플랫체크", "cat": "healthcare"},
+  {"name": "스파크플러스 SPARKPLUS", "pageId": "1092505837489591", "cat": "realestate"},
+  {"name": "Sharkhome.kr", "pageId": "1029979443535475", "cat": "electronics"},
+  {"name": "Dyson", "pageId": "1421467458098122", "cat": "electronics"},
 ];
 
 /* 업종은 우리 레퍼런스 업종(api/_referenceLibrary.js)과 같은 값을 쓴다.

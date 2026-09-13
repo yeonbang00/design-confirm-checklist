@@ -66,7 +66,7 @@ const $ = s => document.querySelector(s);
 const norm = s => String(s || '').normalize('NFC').toLowerCase().replace(/[\s·\-_.]/g, '');
 let done = new Set();
 
-/* 이미 담은 브랜드는 딱지를 달아 둔다. 357개를 훑으면서 어디까지 했는지
+/* 이미 담은 브랜드는 딱지를 달아 둔다. 378개를 훑으면서 어디까지 했는지
    기억하는 건 사람이 할 일이 아니다. 이름이 정확히 같지 않아도(쿠쿠 / 쿠쿠-cuckoo)
    서로를 품으면 같은 브랜드로 본다. */
 fetch('/api/referenceImages?category=all')
