@@ -246,9 +246,17 @@ export function whySimilar(shared) {
   return shared.map(k => AXES[k].ko).join(' · ');
 }
 
-/* 같은 브랜드 두 장이 닮은 것은 당연해서 레퍼런스로 쓸모가 없다.
-   실측 — 표본 40장에서 1위가 LG유플러스 두 장(0.72)이었다.
-   유사 광고가 답해야 하는 질문은 "다른 브랜드는 이 구성을 어떻게 풀었나"다. */
+/* 같은 브랜드를 통째로 빼고 있었다. 그 전제가 틀렸다.
+   템플릿은 브랜드가 만든다. SSF SHOP이 상품마다 같은 틀을 쓰니 같은 틀의
+   예시가 SSF SHOP에 몰려 있는 것이 당연하다. 템플릿을 찾겠다면서 브랜드를
+   빼면 정답을 먼저 버린다.
+   실측 — SSF SHOP 블랙야크 배너로 찾을 때 같은 틀인 빈폴키즈가 2위(0.54)인데
+   같은 브랜드라 화면에는 한 장도 안 나왔다. 마리끌레르도 같은 틀 두 장이
+   같은 이유로 빠졌다.
+   그렇다고 다 열면 여섯 칸이 한 브랜드로 찬다. 두 장까지만 넣는다.
+   가장 닮은 두 장으로 틀을 확인하고, 나머지 넷은 다른 브랜드가 그 틀을
+   어떻게 풀었는지 보여준다. */
+const SAME_BRAND_MAX = 2;
 const sameBrand = (a, b) => {
   // 한글 완성형과 자모 분리형은 눈에 같고 문자열로 다르다. 맞춰 놓고 비교한다.
   const norm = v => String(v || '').normalize('NFC').trim().toLowerCase();
@@ -283,10 +291,21 @@ export function rankSimilar(target, pool, limit = 6, min = SIMILAR_MIN) {
   /* 같은 소재를 두 번 받아 오면 객체가 달라 자기 자신이 자기 비슷한 배너에 뜬다.
      화면은 업종별로 한 번, 전체로 한 번 받으므로 실제로 일어난다. */
   const self = target?.thumbUrl || '';
-  return pool
-    .filter(x => x !== target && !(self && x?.thumbUrl === self) && !sameBrand(x, target))
+  const ranked = pool
+    .filter(x => x !== target && !(self && x?.thumbUrl === self))
     .map(x => ({ item: x, ...similarity(target.axes, x.axes, stats) }))
     .filter(x => x.compared >= 4 && x.score >= min)
-    .sort((p, q) => q.score - p.score)
-    .slice(0, limit);
+    .sort((p, q) => q.score - p.score);
+  // 같은 브랜드는 점수 순으로 두 장까지만 통과시킨다.
+  const out = [];
+  let same = 0;
+  for (const row of ranked) {
+    if (out.length >= limit) break;
+    if (sameBrand(row.item, target)) {
+      if (same >= SAME_BRAND_MAX) continue;
+      same += 1;
+    }
+    out.push(row);
+  }
+  return out;
 }
