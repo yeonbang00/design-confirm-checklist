@@ -78,26 +78,30 @@ const KEEPS = {
 /* 무엇을 바꿔도 되고 무엇은 못 바꾸는지 갈라 둔다.
  *
  * 사용자 지적 — "식품은 마음대로 포장을 하면 안돼. 포장지도 제품의 일부분인데
- * 그게 다른 포장이면 사기잖아. 가능한 원본을 유지한 채로 촬영 구도를 다르게
- * 하거나 놓이는 테이블이나 장소가 바뀌어야 하는 거지. 대부분 다른 것도
- * 마찬가지야."
+ * 그게 다른 포장이면 사기잖아." 그리고 그 뒤에 범위를 좁혀 줬다 — "식품을 다른
+ * 그릇에 그대로 옮기거나 카메라 각도를 바꾸는 건 상관없지 않아? 원본이랑
+ * 그대로면 각도가 바뀌어도 그대로인 거잖아."
  *
- * KEEPS는 "모양·색·라벨을 지켜라"까지만 말했다. 그 말로는 트레이에 든 고기를
- * 접시에 옮겨 담는 것을 막지 못한다. 옮겨 담아도 고기의 모양과 색은 그대로이기
- * 때문이다. 실제로 SETS.food가 "the food is arranged as it would be served"라고
- * 지시하고 있었다 — 포장을 벗기라는 말과 같다.
+ * 그래서 금지선은 '옮기는 것'이 아니라 '지어내는 것'이다.
+ *   담긴 것이 원본과 같은가 — 이것만 지키면 된다.
+ *   접시를 바꾸든 각도를 바꾸든 담긴 고기가 그 고기면 같은 물건이다.
+ *   반대로 없던 봉지를 그려 넣거나 라벨을 새로 디자인하면, 조리하거나 고명을
+ *   얹어 없던 것을 더하면, 소비자가 받는 물건과 다른 광고가 된다.
  *
- * 그래서 '상태'를 따로 못 박는다. 바꿔도 되는 것은 놓인 자리·카메라·빛·배경
- * 넷뿐이다. */
+ * 처음엔 "밀봉된 채로 두라, 옮기지 마라"까지 잠갔다가 되돌렸다. 그러면 식품
+ * 컷이 트레이째 놓인 사진 하나로 고정된다. 막아야 할 것보다 넓게 막은 것이다. */
 const SAME_STATE =
-  'The product must appear in EXACTLY THE STATE it is in the reference. Its packaging is '
-  + 'part of the product: same wrapper, same tray, same bottle, same box, same seal, same '
-  + 'printed label. If it is sealed in the reference, it stays sealed. Do not unwrap it, '
-  + 'open it, decant it, re-plate it, portion it out, pour it into another vessel, garnish '
-  + 'it, cook it, or move it into a bowl, plate, glass or container that is not in the '
-  + 'reference. Do not redesign, restyle or beautify the packaging. '
-  + 'ONLY FOUR THINGS MAY CHANGE: where the product is placed, the camera angle and '
-  + 'distance, the light, and the background.';
+  'WHAT IS SHOWN MUST BE THE SAME PRODUCT AS IN THE REFERENCE: the same item, the same '
+  + 'colour and texture, the same amount and the same number of pieces. Do not cook it, '
+  + 'garnish it, add ingredients, side dishes or extra items that are not in the reference, '
+  + 'and do not swap it for a different-looking version of the same thing. '
+  + 'ITS PACKAGING MUST NEVER BE INVENTED: if a wrapper, tray, bottle, box or label appears '
+  + 'anywhere in the picture, it must be the one from the reference — same shape, same '
+  + 'colour, same printed lettering. Never design a new pack, a new label or new packaging '
+  + 'typography, and never beautify the existing one. '
+  + 'YOU MAY FREELY CHANGE: where the product is placed — including setting it out on a '
+  + 'different plate, bowl, board, tray or surface, as long as what sits there is unchanged '
+  + '— and the camera angle and distance, the light and the background.';
 
 const CUT_TIES =
   'NOTHING from the reference photograph\'s location or setting may appear — none of its '
