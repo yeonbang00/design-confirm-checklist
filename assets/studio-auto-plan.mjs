@@ -153,6 +153,15 @@ export const deviceOf = layout =>
    장치 제한에 같이 걸리지 않는다. 실측 — 600회를 돌리니 68% 회차에 아치가
    한 장 이상, 16%는 두 장 들어갔다. 조판이 고정된 것처럼 보이는 이유다.
    장치와 별개로 실루엣이 같은 것끼리 한 번까지만 쓴다. */
+/* 사진을 화면 가득 까는 조판과 제 배경을 갖는 조판. 열아홉 조판의 이미지가
+   틀을 얼마나 덮는지 재서 갈랐다.
+     꽉 참   top-center·top-left·bottom-right·boxed·corner·badge (97% 이상)
+     배경 남음 나머지 열셋 (27~76%)
+   대표컷이 배경 없는 누끼면 꽉 채우는 조판을 쓸 수 없다. 흰 바탕만 커지고
+   제품은 그대로라 배너가 안 된다. 음식 차린 컷이나 모델 야외컷은 반대로
+   꽉 채워야 산다. 사진 종류를 보고 조판을 고른다. */
+export const FULLBLEED = ['top-center', 'top-left', 'bottom-right', 'boxed', 'corner', 'badge'];
+
 export const SILHOUETTE = { arch: ['framed', 'arch'] };
 const silhouetteOf = layout =>
   Object.keys(SILHOUETTE).find(k => SILHOUETTE[k].includes(layout)) || null;
@@ -264,13 +273,28 @@ export function createPlan(product, random = Math.random) {
      묶음 안에 그 조판이 있으면 먼저 쓴다. 내가 짐작한 값보다 실제로 집행된
      배너에서 읽은 값이 낫다. 없으면 원래대로 무작위로 뽑는다. */
   const hints = Array.isArray(product.layoutHints) ? product.layoutHints : [];
+  /* 자리마다 어떤 사진이 들어갈지는 아래에서 정해지는데 조판은 그 전에
+     정해진다. 대표컷이 누끼일 때 꽉 채우는 조판이 걸리면 손쓸 방법이 없다.
+     대표컷 한 장만 미리 보고, 누끼면 꽉 채우는 조판을 후보에서 뺀다. */
+  const heroPlain = !!(photos[0] && photos[0].plainBg);
+  const ALL_LAYOUTS = Object.values(EMPHASIS).flat();
+  const allowed = l => !heroPlain || !FULLBLEED.includes(l);
   const layouts = emphasisPlan.map(em => {
     const inGroup = EMPHASIS[em];
     const hinted = shuffle(hints.filter(l => inGroup.includes(l)), random);
-    const free = l => !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1)
+    /* 누끼면 강조 묶음 여섯 중 셋이 빠진다. 남은 셋으로만 서너 자리를 채우면
+       strip 85%, framed 77%가 되어 매번 같은 판이 나온다. 묶음을 먼저 쓰는
+       규칙을 이때만 푼다. 누끼에 쓸 수 있는 조판은 어느 묶음에 있든 다
+       제 배경을 갖고 있어서 강조 방향을 크게 해치지 않는다. */
+    const spread = heroPlain
+      ? shuffle(ALL_LAYOUTS.filter(l => allowed(l) && !inGroup.includes(l)), random)
+      : [];
+    const free = l => allowed(l) && !usedLayout.has(l) && (l !== 'duo-panel' || photos.length > 1)
       && !(silhouetteOf(l) && usedSilhouette.has(silhouetteOf(l)));
     const fresh = l => (deviceCount[deviceOf(l)] || 0) < limitOf(deviceOf(l));
-    const ranked = [...hinted, ...shuffle(inGroup, random)].filter(free);
+    const ranked = heroPlain
+      ? [...hinted, ...shuffle([...inGroup.filter(allowed), ...spread], random)].filter(free)
+      : [...hinted, ...shuffle(inGroup, random)].filter(free);
     // 장치가 두 번을 넘지 않는 것 먼저, 없으면 강조 묶음 안에서, 그래도 없으면 전체에서
     const pick = ranked.find(fresh) || ranked[0]
       || shuffle(Object.values(EMPHASIS).flat(), random).filter(free).find(fresh)

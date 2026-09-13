@@ -40,6 +40,11 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 - itemCount: 이 사진에 제품이 몇 개 보이는지 숫자. 기획세트 나열컷이면 그 개수.
 - isHero: 이 사진이 **제품 하나만** 크게 보여주는 컷이면 true. 여러 개가 나열돼
   있으면 false. 배너에서 주인공으로 쓸 수 있는지를 가른다.
+- plainBg: 배경이 비어 있는 누끼컷이면 true. 흰 바탕이나 단색 바탕에 제품만
+  덩그러니 놓인, 쇼핑몰이 흔히 올리는 그 컷입니다. 그림자도 소품도 공간감도
+  없습니다. 반대로 음식을 차려 찍은 컷, 모델이 야외에서 입은 컷, 스튜디오에서
+  조명과 그림자를 잡은 연출컷은 false입니다. 배너에서 사진을 화면 가득 깔 수
+  있는지를 가릅니다. 애매하면 false로 두세요.
 - isGift: 이 사진이 **증정품·사은품**만 찍은 컷이면 true. 본품이면 false.
   상품명에 "증정" "추가" "사은품"이 있거나 본품보다 작게 취급되는 것.
 - note: 이 사진을 배너에 쓸 때 주의할 점 한 문장. 없으면 ""
@@ -178,7 +183,7 @@ facts는 최대 8개이고, 각 항목은:
 레퍼런스의 문구나 브랜드명은 절대 가져오지 마세요. 구성만 봅니다.
 
 JSON만 출력하세요:
-{"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","itemCount":1,"isHero":true,"isGift":false,"note":""}],
+{"photos":[{"index":0,"role":"main","hasPerson":true,"personKind":"body","colorway":"검정","burnedText":"","itemCount":1,"isHero":true,"plainBg":false,"isGift":false,"note":""}],
  "category":"fashion-top","usp":"...","toneKo":"정갈한",
  "facts":[{"text":"피부톤 균일도 11.44% 개선","source":"인체적용시험 · (주)마리디엠 피부과학연구소 · 2025.04.14~04.18","kind":"clinical"}],
  "layoutHints":["boxed","offer","badge"],"refNote":"...",
@@ -315,6 +320,9 @@ export default async function handler(req, res) {
         url,
         role: i === 0 ? 'main' : role,
         hasPerson: !!row.hasPerson,
+        /* 배경이 빈 누끼컷인지. 조판을 고를 때 쓴다. 누끼를 화면 가득 깔면
+           흰 바탕만 커지고 제품은 그대로라 배너가 안 된다. */
+        plainBg: !!row.plainBg,
         /* 기획세트 나열컷을 주인공으로 쓰면 증정품까지 다 같은 크기로 늘어서서
            무엇을 파는지 안 읽힌다. 제품 하나만 크게 나온 컷을 따로 가린다. */
         itemCount: Number.isFinite(Number(row.itemCount)) ? Math.max(1, Math.round(Number(row.itemCount))) : 1,
