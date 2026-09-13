@@ -340,10 +340,39 @@ function grabIsOld(data){
  return !it||!Array.isArray(it.images)||!Array.isArray(it.imageMeta);
 }
 const shuffleRefs=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x};
+/* 상품 업종과 레퍼런스 업종은 어휘가 다르다. 컷 후보는 열다섯 가지로
+   나누고(fashion-top·shoes·bag…) 레퍼런스는 열세 가지로 나눈다(fashion·
+   beauty·food…). 이 표가 둘을 잇는다.
+
+   전에는 상품명에 패션 낱말이 있는지만 봤다. 그래서 열세 업종 중 열둘은
+   레퍼런스를 한 장도 안 봤다. 1,474장을 모아 두고 패션에서만 꺼내 쓴 셈이다.
+   업종은 사진 분석이 이미 돌려주고 있었는데 쓰지 않고 있었다. */
+const REF_CATEGORY = {
+  'fashion-top': 'fashion', 'fashion-outer': 'fashion', 'fashion-bottom': 'fashion',
+  shoes: 'fashion', bag: 'fashion', accessory: 'fashion', kids: 'fashion', sports: 'fashion',
+  beauty: 'beauty',
+  food: 'food', kitchen: 'food',
+  home: 'electronics', electronics: 'electronics',
+  pet: 'shopping', other: 'shopping',
+};
+/* 분석 전이거나 분석이 실패하면 업종이 없다. 그때만 상품명으로 짐작한다.
+   짐작이 틀리면 안 맞는 레퍼런스를 보게 되지만, 한 장도 안 보는 것보다는 낫다. */
+const GUESS_CATEGORY = [
+  [/티셔츠|가디건|니트|팬츠|스커트|셔츠|코트|자켓|재킷|원피스|의류|신발|운동화|가방|패션/, 'fashion'],
+  [/크림|세럼|토너|앰플|클렌징|마스크팩|선크림|화장품|스킨|로션/, 'beauty'],
+  [/김치|과자|음료|커피|즙|세트|정육|반찬|식품|간식/, 'food'],
+  [/노트북|모니터|이어폰|청소기|공기청정|가전|충전|스마트/, 'electronics'],
+];
+
 async function autoReferences(p){
- const name=p.productName;const category=/티셔츠|의류|가디건|니트|팬츠|스커트|블루핏|셔츠|코트|신발|패션/.test(name)?'fashion':null;
- if(!category)return [];
- try{const data=await getJSON('/api/referenceImages?category='+category);return (data.items||[]).filter(x=>safeUrl(x.thumbUrl)).map(x=>({...x,brand:x.brandName||x.brand||'레퍼런스',category,source:'AdCheck 이미지 레퍼런스'}))}catch{return []}
+ const mapped = REF_CATEGORY[p.category];
+ const guessed = mapped ? null : (GUESS_CATEGORY.find(([re]) => re.test(p.productName || '')) || [])[1];
+ const category = mapped || guessed;
+ if(!category) return [];
+ try{
+  const data = await getJSON('/api/referenceImages?category=' + encodeURIComponent(category));
+  return (data.items||[]).filter(x=>safeUrl(x.thumbUrl)).map(x=>({...x, brand:x.brandName||''}));
+ }catch(e){ return []; }
 }
 async function autoCopies(run){
  const refs=await autoReferences(product);if(run!==autoRun)return;
@@ -599,7 +628,26 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   const pixelWork=startPixelWork(run);
   autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
   const slots=factSlots(product);
-  variants=autoPlan.map(p=>({id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기',offer:slots.BENEFIT||slots.PRICE||'',benefitCondition:slots.BENEFIT?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}));
+  /* 카피가 오기 전과 카피 생성이 실패했을 때 쓰는 값이다. 전에는 여섯 장이
+     전부 상품명과 가격으로 똑같아졌다. 조판도 카피 지시도 자리마다 갈라 놓고
+     정작 실패하면 다 같은 글이 들어가니 여섯 장이 한 장처럼 보였다.
+     지어내지 않고 가진 사실만으로 자리마다 다르게 떨어뜨린다.
+       혜택 자리  가격과 구성을 서브에, 강조 숫자도 그대로
+       제품 자리  상세에서 읽은 사실을 한 줄씩 돌려 쓴다
+       무드 자리  숫자를 아예 안 넣는다. 브랜드 판은 그래야 브랜드 판이다 */
+  const facts=(product.facts||[]).map(f=>String(f&&f.text||'').trim()).filter(Boolean);
+  let factAt=0;
+  const seed=p=>{
+    const em=p.emphasis||'product';
+    if(em==='offer') return {
+      sub:[slots.QUANTITY,slots.PRICE].filter(Boolean).join(' · '),
+      offer:slots.BENEFIT||slots.PRICE||'',
+      cta:slots.BENEFIT?'혜택 조건 보기':'상품 자세히 보기'};
+    if(em==='story') return {sub:'', offer:'', cta:'상품 자세히 보기'};
+    const f=facts.length?facts[factAt++%facts.length]:'';
+    return {sub:f||slots.QUANTITY||'', offer:slots.PRICE||'', cta:'상품 자세히 보기'};
+  };
+  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;$('#autoCopyError').textContent=e.message});
   // 사진만 만드는 컷은 바로 시작한다. 카피까지 그리는 컷은 문구가 나와야
