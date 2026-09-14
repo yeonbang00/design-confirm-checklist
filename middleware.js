@@ -33,7 +33,31 @@ const ADS_SCRIPT_PATH = '/assets/adcheck-ads.js';
 // 아직 팀에 열지 않은 페이지. 로그인한 사람이어도 관리자 비밀번호를 한 번 더
 // 받아야 열린다. 화면에서 링크만 감추는 것은 막는 게 아니다. 주소를 치면 열리고
 // HTML만 봐도 어디 있는지 드러난다. 그래서 서버에서 막는다.
-const DRAFT_PATHS = new Set(['/device-preview.html', '/device-preview']);
+const DRAFT_PATHS = new Set([
+  '/device-preview.html', '/device-preview',
+  '/banner-studio.html', '/banner-studio',
+]);
+// 이미 열어 둔 스튜디오에서도 관리자 확인 없이 생성을 계속할 수 없게 한다.
+const DRAFT_APIS = new Set([
+  '/api/productScrape', '/api/productPhotos', '/api/imageText',
+  '/api/bannerCopy', '/api/bannerImage',
+]);
+function draftPath(pathname) {
+  try { return decodeURIComponent(pathname).replace(/\/+$/, '') || '/'; }
+  catch { return pathname; }
+}
+function isDraftApi(pathname) {
+  return DRAFT_APIS.has(draftPath(pathname).replace(/\.js$/, ''));
+}
+function isDraftPath(pathname) {
+  return DRAFT_PATHS.has(draftPath(pathname)) || isDraftApi(pathname);
+}
+function draftDeniedResponse(pathname, nextPath) {
+  if (isDraftApi(pathname)) {
+    return jsonResponse({ error: '업데이트중인 기능입니다. 배너 생성 페이지에서 관리자 비밀번호를 입력해주세요.', code: 'DRAFT_ACCESS_REQUIRED' }, 403);
+  }
+  return htmlResponse(draftHtml({ nextPath }), 401);
+}
 const DRAFT_COOKIE = 'adcheck_draft';
 const DRAFT_UNLOCK_PATH = '/_gate/draft';
 const USERS_BLOB_PATH = 'users.json';
@@ -458,8 +482,8 @@ export default async function middleware(request) {
   const data = await getUsers();
   const user = await verifySession(cookies[COOKIE_NAME], data);
   if (user) {
-    if (DRAFT_PATHS.has(pathname) && !(await draftAllowed(cookies))) {
-      return htmlResponse(draftHtml({ nextPath: pathname + url.search }), 401);
+    if (isDraftPath(pathname) && !(await draftAllowed(cookies))) {
+      return draftDeniedResponse(pathname, pathname + url.search);
     }
     return next();
   }
@@ -474,8 +498,8 @@ export default async function middleware(request) {
   // narrow outage window, which is an acceptable trade for not kicking the
   // whole team out over a passing network blip.
   if (data.fetchFailed && cookies[COOKIE_NAME] && cookies[COOKIE_NAME].indexOf('.') !== -1) {
-    if (DRAFT_PATHS.has(pathname) && !(await draftAllowed(cookies))) {
-      return htmlResponse(draftHtml({ nextPath: pathname + url.search }), 401);
+    if (isDraftPath(pathname) && !(await draftAllowed(cookies))) {
+      return draftDeniedResponse(pathname, pathname + url.search);
     }
     return next();
   }
