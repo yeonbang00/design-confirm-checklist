@@ -16,8 +16,10 @@ const PERCENT = /\d+(?:\.\d+)?\s*%/g;
 const norm = t => String(t || '').replace(/\s+/g, '');
 
 export function findClaims(text) {
-  const flat = norm(text);
-  return [...new Set([...(flat.match(MONEY) || []), ...(flat.match(PERCENT) || [])])];
+  // Preserve boundaries between OCR regions: a label's "5.07" beside "41%"
+  // must not turn into an invented "5.0741%" claim.
+  const flat = String(text || '');
+  return [...new Set([...(flat.match(MONEY) || []), ...(flat.match(PERCENT) || [])].map(norm))];
 }
 
 /* 확인된 값 목록과 대조한다. 목록에 없는 금액·퍼센트가 그림에 있으면

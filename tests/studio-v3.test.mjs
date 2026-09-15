@@ -46,6 +46,7 @@ assert.deepEqual(detailTileBounds(1000,1000),[]);
 assert.deepEqual(containRect(1000,2000,[0,0,600,600]),[150,0,300,600]);
 assert.deepEqual(unverifiedClaims('11.44% 35,000원',['11.44% 개선','35,000원']),[]);
 assert.deepEqual(unverifiedClaims('11.4%',['11.44%']),['11.4%']);
+assert.deepEqual(unverifiedClaims('5.07 41% 35,000 원',['41%','35,000원']),[]);
 assert.ok(renderedCopyIssues({read:'혜택 35,000원',claims:[]},{cta:'혜택 확인하기'}).length);
 assert.ok(renderedCopyIssues({read:'35,000원 35,000원 상품 확인하기',claims:[]},{headline:'35,000원',cta:'상품 확인하기'}).includes('같은 가격 중복'));
 assert.deepEqual(renderedCopyIssues({read:'35,000원 상품 확인하기',claims:[]},{headline:'35,000원',cta:'상품 확인하기'}),[]);
