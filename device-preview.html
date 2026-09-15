@@ -264,13 +264,6 @@
   .dp-section-title{font-size:15px; font-weight:800; color:var(--ink); margin-bottom:6px;}
   .dp-section-note{font-size:12.5px; line-height:1.7; color:var(--ink-4); margin-bottom:16px;}
 
-  .dp-origin{position:relative; width:100%; max-width:270px; border-radius:12px;
-    overflow:hidden; background:#000; border:1px solid var(--line);}
-  .dp-origin img{width:100%; height:100%; object-fit:contain; display:block;}
-  .dp-cut{position:absolute; top:0; bottom:0; width:1px; background:rgba(242,47,107,.9);}
-  .dp-cut::after{content:''; position:absolute; top:0; bottom:0; width:60px; background:rgba(242,47,107,.14);}
-  .dp-cut.l::after{left:-60px;} .dp-cut.r::after{right:-60px;}
-
   .dp-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:26px 20px;}
   .dp-brand{font-size:12px; font-weight:800; letter-spacing:.04em; color:var(--ink-3);
     margin:0 0 12px; padding-bottom:8px; border-bottom:1px solid var(--line-soft);}
@@ -400,12 +393,6 @@
   </div>
 
   <div class="dp-verdict" id="dpVerdict" hidden></div>
-
-  <div class="dp-section" id="dpOriginWrap" hidden>
-    <div class="dp-section-title">올린 배너</div>
-    <div class="dp-section-note">세로선 바깥은 화면을 가득 채울 때 가장 길쭉한 기종에서 잘려 나가는 자리입니다. 잘림의 상한이지 예측이 아닙니다. 안쪽 실선은 표시 영역입니다.</div>
-    <div class="dp-origin" id="dpOrigin"></div>
-  </div>
 
   <div class="dp-section" id="dpGridWrap" hidden>
     <div class="dp-section-title">기종별</div>
@@ -681,19 +668,6 @@
       grid.appendChild(box);
     });
 
-    // 올린 배너 위에 가장 심한 잘림선을 긋는다
-    const o = $('#dpOrigin');
-    const half = worst.lost.x / 2 / ART.w;
-    o.style.aspectRatio = ART.w + '/' + ART.h;
-    o.innerHTML = `<img src="${url}" alt="">`
-      + (fit === 'cover' && worst.lost.x > 0
-          ? `<div class="dp-cut l" style="left:${pct(half)}"></div>`
-            + `<div class="dp-cut r" style="right:${pct(half)}"></div>`
-          : '')
-      + ($('#dpSafe').checked
-          ? `<div class="dp-safe" style="top:${pct(SAFE.top)};bottom:${pct(SAFE.bottom)};left:${pct(SAFE.side)};right:${pct(SAFE.side)}"></div>`
-          : '');
-
     /* 표시 영역 값은 9:16 기준이다. 다른 비율을 올리면 잘림 계산은 맞지만
        표시 영역 선은 뜻이 달라진다. 말없이 그려 두면 잘못 믿는다. */
     /* 팀은 메타 소재를 1080x1080과 1080x1920 두 벌로 만든다. 어느 쪽이
@@ -736,7 +710,7 @@
     probe.onload = () => {
       ART.w = probe.naturalWidth; ART.h = probe.naturalHeight;
       drop.hidden = true;
-      ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap']
+      ['#dpBar', '#dpVerdict', '#dpGridWrap']
         .forEach((s) => { $(s).hidden = false; });
       render();
     };
@@ -773,7 +747,7 @@
     if (url) { URL.revokeObjectURL(url); url = null; }
     file.value = '';
     drop.hidden = false;
-    ['#dpBar', '#dpVerdict', '#dpOriginWrap', '#dpGridWrap']
+    ['#dpBar', '#dpVerdict', '#dpGridWrap']
       .forEach((s) => { $(s).hidden = true; });
   });
 })();
