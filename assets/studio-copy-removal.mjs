@@ -7,7 +7,7 @@ export function attachCopyRemoval(card, photo, {request, source, download}) {
   summary.textContent = '이미지 안의 광고 글자 제거';
   details.append(summary);
   const note = document.createElement('p');
-  note.textContent = '화면에 얹힌 카피는 기존 이미지 다운로드에 포함되지 않습니다. 사진 자체에 글자가 있을 때만 실행하세요. OpenAI API 비용이 발생합니다.';
+  note.textContent = '완성 배너의 광고 글자를 지운 이미지가 필요할 때 실행하세요. 원본은 보관되며 OpenAI API 비용이 발생합니다.';
   const status = document.createElement('p'); status.setAttribute('role', 'status');
   const action = document.createElement('button'); action.type='button'; action.className='btn'; action.textContent='광고 글자 제거 실행';
   const compare = document.createElement('div'); compare.hidden=true;

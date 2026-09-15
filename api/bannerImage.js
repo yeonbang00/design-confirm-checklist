@@ -160,6 +160,17 @@ function textBlock({ headline, subline, offer, brand, cta, style, eyebrow, footn
 const TYPE_STYLES_FALLBACK = 'a heavy geometric sans-serif';
 
 
+function completeBannerPrompt(body){
+ const text=body.text||{};
+ const copy=Object.fromEntries(['headline','subline','offer','brand','cta','footnote'].map(k=>[k,String(text[k]||'').slice(0,180)]));
+ return 'Create ONE finished professional Korean advertising banner. Design photography, typography, graphic devices and negative space TOGETHER, not a photograph with a generic text overlay. '
+ + 'ART DIRECTION: '+String(body.artDirection||'').slice(0,1600)
+ + ' SCENE: '+String(body.scene||'Use the supplied product photographs to compose an editorial advertisement.').slice(0,1200)
+ + ' The attached images are product references, not layouts to copy. Preserve the actual product shape, fine texture, neckline, sleeves, color and printed product labels. Do not invent additional products or change raw food into cooked food. '
+ + 'EXACT ADVERTISING COPY JSON: '+JSON.stringify(copy)
+ + ' Render only these advertising words, with accurate Hangul. Do not invent words, prices, discounts or claims. Keep the title short and large, supporting information sparse. No duplicate price or repeated sentence. Typography must be clearly readable on a mobile feed; never overlap faces or essential product details. This is a designer concept, not an app screenshot. No UI controls or explanatory captions.';
+}
+
 const REMOVE_AD_COPY = 'Edit the provided banner in place. Remove advertising overlay text, headlines, promotional numbers, prices, CTA lettering and floating brand/store logos, including their outlines and text shadows. Reconstruct the background behind them seamlessly. Preserve product positions, sizes, shapes, materials, people, decorative objects, lighting and contact shadows. Preserve ALL wording and logos physically printed on the actual products or packaging. If giant promotional numbers sit behind a product, remove the numbers while preserving the product boundary. Keep non-text design elements, colored footer strips, blank buttons, frames and decorations. Do not add new text or objects, crop, rearrange, or redesign. Return the same composition with advertising typography removed. This is background restoration, not a new photograph.';
 
 function buildPrompt({ scene, keep, imagePrompt, productName }) {
@@ -193,14 +204,16 @@ export default async function handler(req, res) {
   const { imageUrl, base64, mediaType, imagePrompt, scene, keep, size, text, operation } = req.body || {};
   const removing = operation === 'remove-ad-copy';
   if (removing && !imageUrl && !base64) { res.status(400).json({ error: '글자를 제거할 원본 이미지가 필요합니다.' }); return; }
-  const wantsText = operation === 'design-copy' && text && typeof text === 'object' && (text.headline || text.offer);
+  const complete = operation === 'complete-banner';
+  const wantsText = (operation === 'design-copy' || complete) && text && typeof text === 'object' && (text.headline || text.offer);
+  if (complete && !wantsText) { res.status(400).json({error:'완성 배너의 확정 카피가 필요합니다.'}); return; }
   if (text && !wantsText) { res.status(400).json({ error: '디자인형 카피 요청을 확인해주세요.' }); return; }
   if (wantsText && !imageUrl && !base64) { res.status(400).json({ error: '카피를 얹을 이미지가 필요합니다.' }); return; }
   if (!removing && !wantsText && !imagePrompt && !scene) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
   const outSize = ALLOWED_SIZES.has(size) ? size : '1024x1024';
   const outQuality = ALLOWED_QUALITY.has(req.body?.quality) ? req.body.quality : 'medium';
   const cut = (v, n) => (typeof v === 'string' ? v.slice(0, n) : '');
-  const prompt = removing ? REMOVE_AD_COPY : wantsText ? textBlock(Object.fromEntries(['headline','subline','offer','brand','cta','style','eyebrow','footnote'].map(k=>[k,cut(text[k],k==='style'?300:180)]))) : buildPrompt({
+  const prompt = removing ? REMOVE_AD_COPY : wantsText ? (complete ? completeBannerPrompt(req.body) : textBlock(Object.fromEntries(['headline','subline','offer','brand','cta','style','eyebrow','footnote'].map(k=>[k,cut(text[k],k==='style'?300:180)])))) : buildPrompt({
     scene: cut(scene, 900),
     keep: typeof keep === 'string' ? keep : '',
     imagePrompt: cut(imagePrompt, 500),
@@ -218,6 +231,13 @@ export default async function handler(req, res) {
       const form = new FormData();
       form.append('model', IMAGE_MODEL);
       form.append('image', new Blob([buf], { type }), 'source.png');
+      // Complete designs may need several actual color/pose references.
+      if(complete)for(const ref of (Array.isArray(req.body.references)?req.body.references:[]).slice(0,3)){
+        let extra;
+        if(ref.base64)extra={buf:Buffer.from(ref.base64,'base64'),type:ref.mediaType||'image/jpeg'};
+        else if(ref.imageUrl)extra=await fetchSource(ref.imageUrl);
+        if(extra)form.append('image',new Blob([extra.buf],{type:extra.type}),'reference.png');
+      }
       form.append('prompt', prompt);
       form.append('size', outSize);
       form.append('quality', outQuality);
