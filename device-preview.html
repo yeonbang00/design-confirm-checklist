@@ -278,6 +278,9 @@
   .dp-dev{min-width:0;}
   .dp-screen{position:relative; width:100%; border-radius:16px; overflow:hidden; background:#000;
     border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 40px -22px rgba(0,0,0,.9);}
+  .dp-screen.dp-feed{overflow-y:auto; overscroll-behavior:contain;}
+  .dp-feed-content{position:relative; width:100%;}
+  .dp-feed-scroll-hint{font-size:11px; color:var(--ink-3); margin-top:6px;}
   .dp-screen img{position:absolute; left:0; right:0; width:100%; display:block;}
   .dp-screen img.cover{object-fit:cover;}
   .dp-screen img.contain{object-fit:fill;}
@@ -653,11 +656,18 @@
         : uiFor(dev);
       // 1px 남짓은 반올림 오차지 잘림이 아니다. 빨갛게 띄우면 늑대소년이 된다.
       const gone = fit === 'cover' && lost.x > 4;
+      const feedScroll=place==='feed' && $('#dpUi').checked;
+      // Keep the original scale; the feed continues below the viewport.
+      const feedBottom=fit==='contain'?bt+bh:100;
+      const feedOverflow=feedScroll?Math.max(0,feedBottom+17-100):0;
       box.innerHTML =
-        `<div class="dp-screen" style="aspect-ratio:${dev.w}/${dev.h}">`
+        `<div class="dp-screen${feedScroll?' dp-feed':''}" ${feedScroll?'tabindex="0" role="region" aria-label="'+dev.name+' 피드 미리보기, 내부 스크롤 가능"':''} style="aspect-ratio:${dev.w}/${dev.h}">`
+        + (feedScroll?`<div class="dp-feed-content" style="aspect-ratio:${dev.w}/${dev.h};margin-bottom:${(feedOverflow*dev.h/dev.w).toFixed(2)}%">`:'')
         + `<img class="${fit}" style="${artBox}" src="${url}" alt="">`
         + cutFor(dev) + safe + ui
+        + (feedScroll?'</div>':'')
         + '</div>'
+        + (feedOverflow>0?'<div class="dp-feed-scroll-hint">화면 안에서 스크롤하면 하단 UI까지 볼 수 있습니다.</div>':'')
         + `<div class="dp-dev-name">${dev.name}</div>`
         + `<div class="dp-dev-meta">${dev.w} x ${dev.h}</div>`
         + `<div class="dp-dev-models">${dev.models}</div>`
