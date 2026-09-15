@@ -12,7 +12,7 @@ export function normalizePhotoRegions(rows) {
     if(out.some(r=>r.box.every((v,i)=>Math.abs(v-box[i])<0.015)))continue;
     const personKind=['none','hands','body'].includes(row.personKind)?row.personKind:'unknown';
     if(row.role==='model'&&personKind!=='body')continue;
-    out.push({box,role:row.role,personKind,hasPerson:personKind==='body'||personKind==='hands',
+    out.push({box,assetKind:['texture','product','detail','lifestyle'].includes(row.assetKind)?row.assetKind:'detail',role:row.role,personKind,hasPerson:personKind==='body'||personKind==='hands',
       colorway:String(row.colorway||'').slice(0,20),plainBg:row.plainBg===true,
       shotAngle:String(row.shotAngle||'front').slice(0,20),shotDistance:String(row.shotDistance||'medium').slice(0,20),
       itemCount:Number.isInteger(row.itemCount)&&row.itemCount>0?row.itemCount:1,
@@ -44,9 +44,9 @@ export async function extractPhotoRegions(photos,getJSON,isCurrent=()=>true) {
   for(const photo of photos) {
     if(!isCurrent())return {photos,extracted:0,failures:[],cancelled:true};
     const regions=photo.regions||[];
-    if(!regions.length||photo.sourceRegion||extracted>=12){output.push(photo);continue;}
+    if(!regions.length||(photo.sourceRegion&&!photo.detailTile)||extracted>=12){output.push(photo);continue;}
     try {
-      const data=await getJSON('/api/imageText',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:photo.url,ocr:false})});
+      const data=photo.cleanBase64?{base64:photo.cleanBase64,mediaType:photo.cleanType}:await getJSON('/api/imageText',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:photo.url,ocr:false})});
       if(!isCurrent())return {photos,extracted:0,failures:[],cancelled:true};
       if(!data.base64||!/^image\//.test(data.mediaType||''))throw Error('상세사진 데이터 없음');
       const img=await loadImage(`data:${data.mediaType};base64,${data.base64}`);
@@ -58,7 +58,7 @@ export async function extractPhotoRegions(photos,getJSON,isCurrent=()=>true) {
         const canvas=document.createElement('canvas');canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);
         canvas.getContext('2d').drawImage(img,x,y,w,h,0,0,canvas.width,canvas.height);
         const cleanUrl=canvas.toDataURL('image/jpeg',0.92);
-        children.push({...region,matchesTarget:photo.matchesTarget,assetKind:photo.assetKind,url:photo.url,sourceUrl:photo.url,sourceRegion:region.box,sourcePixels:bounds,
+        children.push({...region,matchesTarget:photo.matchesTarget,assetKind:region.assetKind==='detail'&&photo.assetKind==='texture'?'texture':region.assetKind,provenance:photo.provenance,url:photo.url,sourceUrl:photo.sourceUrl||photo.url,detailTile:photo.detailTile,tilePixels:photo.sourcePixels,sourceRegion:region.box,sourcePixels:bounds,
           w:canvas.width,h:canvas.height,kind:'original',burnedText:'',cleanUrl,
           cleanBase64:cleanUrl.split(',')[1],cleanType:'image/jpeg',
           label:[region.colorway,'상세 추출컷',children.length+1].filter(Boolean).join(' ')});

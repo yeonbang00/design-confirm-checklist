@@ -5,40 +5,25 @@ export function safeUrl(value) {
 export function productQuantity(raw={}) {
   const explicit=Number(raw.quantity);
   if(Number.isInteger(explicit)&&explicit>0)return explicit;
-  const matches=[...String(raw.productName||'').matchAll(/(?:^|[^0-9])([1-9][0-9]?)종(?=$|[^가-힣0-9])/g)];
+  const matches=[...String(raw.productName||'').matchAll(/(?:^|[^0-9])([1-9][0-9]?)(종|개)(?=$|[^가-힣0-9])/g)];
   return matches.length===1?Number(matches[0][1]):null;
 }
 export function normalizeProduct(raw={}, source='') {
   const number=v=>{const n=Number(String(v??'').replace(/[,원\s]/g,''));return Number.isFinite(n)&&n>0?n:null};
   const urls=[raw.mainImage,...(Array.isArray(raw.images)?raw.images:[])].map(safeUrl).filter(Boolean);
-  // 북마클릿이 보낸 크기 정보. 분류가 실패해도 이것만으로 상세컷을 가른다.
   const meta=new Map((Array.isArray(raw.imageMeta)?raw.imageMeta:[]).map(m=>[safeUrl(m?.url),m]).filter(([u])=>u));
-  return {productName:String(raw.productName||'').trim().slice(0,80),brand:String(raw.brand||'').slice(0,40),salePrice:number(raw.salePrice),quantity:productQuantity(raw),description:String(raw.description||'').slice(0,600),sourceUrl:safeUrl(source||raw.sourceUrl),photos:[...new Set(urls)].slice(0,16).map((url,i)=>{const m=meta.get(url)||{};return {url,label:`상품 원본 ${i+1}`,kind:'original',w:Number(m.w)||0,h:Number(m.h)||0,role:i===0?'main':(m.tall?'detail':'')}}),benefitRate:null,benefitCondition:'',benefitKind:'정률',benefitConfirmed:false};
+  const sourceUrl=safeUrl(source||raw.sourceUrl);
+  const sections=(Array.isArray(raw.pageSections)?raw.pageSections:[]).slice(0,40).map((x,i)=>({id:String(x.id||'section-'+i).slice(0,60),kind:String(x.kind||'detail').slice(0,24),text:String(x.text||'').slice(0,3000),source:sourceUrl})).filter(x=>x.text.trim());
+  const benefitConfirmed=raw.benefitConfirmed===true&&!!String(raw.benefitCondition||'').trim();
+  return {productName:String(raw.productName||'').trim().slice(0,80),brand:String(raw.brand||'').slice(0,40),salePrice:number(raw.salePrice),originalPrice:number(raw.originalPrice),discountRate:number(raw.discountRate),discountSource:raw.discountSource||'unverified',quantity:productQuantity(raw),quantityUnit:raw.quantityUnit==='개'||/\d+개(?:$|[^가-힣])/.test(raw.productName||'')?'개':'종',description:String(raw.description||'').slice(0,12000),pageSections:sections,collectionStatus:raw.collectionStatus||{},sourceUrl,
+    photos:[...new Set(urls)].slice(0,24).map((url,i)=>{const m=meta.get(url)||{};return {url,label:`상품 원본 ${i+1}`,kind:'original',provenance:i===0?'main':'detail',w:Number(m.w)||0,h:Number(m.h)||0,role:i===0?'main':(m.tall?'detail':'')}}),
+    benefitRate:benefitConfirmed?number(raw.benefitRate):null,benefitCondition:benefitConfirmed?String(raw.benefitCondition).slice(0,300):'',benefitKind:raw.benefitKind==='최대'?'최대':'정률',benefitConfirmed};
 }
 export function factSlots(p) {
   const slots={};
   if(Number.isFinite(p.salePrice)&&p.salePrice>0)slots.PRICE=p.salePrice.toLocaleString('ko-KR')+'원';
-  if(Number.isInteger(p.quantity)&&p.quantity>0)slots.QUANTITY=p.quantity+'종';
+  if(Number.isInteger(p.quantity)&&p.quantity>0)slots.QUANTITY=p.quantity+(p.quantityUnit==='개'?'개':'종');
   if(p.benefitConfirmed&&p.benefitRate>0&&p.benefitRate<=100&&p.benefitCondition?.trim())slots.BENEFIT=(p.benefitKind==='최대'?'최대 ':'')+p.benefitRate+'% 혜택';
   return slots;
 }
-export function resolveCopy(row,p) {
-  const slots=factSlots(p), out={};
-  for(const key of ['main','sub','cta','concept']) {
-    let text=row?.[key];
-    if(typeof text!=='string'||text.length>(key==='concept'?180:100))throw Error('카피 형식 또는 길이가 맞지 않습니다. 다시 생성해주세요.');
-    const remaining=text.replace(/\{\{(PRICE|QUANTITY|BENEFIT)\}\}/g,'');
-    if(/[0-9０-９%％]|무료|쿠폰|첫\s*구매|최저|최고|보장|한정|마감|배송|증정|캐시백/.test(remaining))throw Error('확인되지 않은 숫자나 혜택이 포함되어 적용하지 않았습니다. 다시 생성해주세요.');
-    text=text.replace(/\{\{(\w+)\}\}/g,(_,k)=>{if(!slots[k])throw Error('확인하지 않은 수치가 포함되어 적용하지 않았습니다.');return slots[k]});
-    if(/[{}]/.test(text)||!text.trim())throw Error('카피가 비어 있거나 형식이 맞지 않습니다.');
-    // Tokens already include units; models occasionally append the unit again.
-    text=text.replace(/(\d+)종\s*(?:가지|종)/g,'$1종').replace(/원\s*원/g,'원').replace(/% 혜택\s*혜택/g,'% 혜택');
-    // 줄표와 슬래시로 이은 문장은 사람이 쓴 카피로 안 읽힌다. 프롬프트로 막지만
-    // 새어 나오는 경우가 있어 여기서 한 번 더 끊는다.
-    text=text.replace(/\s*[—–]\s*/g,', ').replace(/(\S)\s*\/\s*(\S)/g,'$1, $2').replace(/,\s*,/g,',');
-    out[key]=text.trim();
-  }
-  // Conditions belong to code, so they cannot be dropped by generated copy.
-  if(Object.values(out).some(s=>s.includes(slots.BENEFIT))&&slots.BENEFIT)out.sub=p.benefitCondition;
-  return out;
-}
+export {resolveCopy} from './studio-copy-validation.mjs';

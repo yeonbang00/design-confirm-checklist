@@ -13,7 +13,7 @@ export function normalizePhotoRegions(rows) {
     if(out.some(r=>r.box.every((v,i)=>Math.abs(v-box[i])<0.015)))continue;
     const personKind=['none','hands','body'].includes(row.personKind)?row.personKind:'unknown';
     if(row.role==='model'&&personKind!=='body')continue;
-    out.push({box,role:row.role,personKind,hasPerson:personKind==='body'||personKind==='hands',
+    out.push({box,assetKind:['texture','product','detail','lifestyle'].includes(row.assetKind)?row.assetKind:'detail',role:row.role,personKind,hasPerson:personKind==='body'||personKind==='hands',
       colorway:String(row.colorway||'').slice(0,20),plainBg:row.plainBg===true,
       shotAngle:String(row.shotAngle||'front').slice(0,20),shotDistance:String(row.shotDistance||'medium').slice(0,20),
       itemCount:Number.isInteger(row.itemCount)&&row.itemCount>0?row.itemCount:1,

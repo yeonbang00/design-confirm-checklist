@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 let src=fs.readFileSync(new URL('../api/productPhotos.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace('const apiKey = process.env.OPENAI_API_KEY;',"const apiKey='test';");
 src=src.slice(0,src.indexOf('async function fetchImage(url)'))+'const fetchImage=async()=>({base64:"dGVzdA==",mediaType:"image/png"});\n'+src.slice(src.indexOf('export default async function handler'));
-src='const normalizePhotoRegions=()=>[];const rejectIfNotSameOrigin=()=>false;const OPENAI_MODEL="mock";const callOpenAI=async o=>{globalThis.identityPrompt=o.promptText;return globalThis.identityResponse};\n'+src;
+src='const verifiedPageEvidence=()=>({facts:[],offers:[]});const normalizePhotoRegions=()=>[];const rejectIfNotSameOrigin=()=>false;const OPENAI_MODEL="mock";const callOpenAI=async o=>{globalThis.identityPrompt=o.promptText;return globalThis.identityResponse};\n'+src;
 const {default:handler}=await import('data:text/javascript;base64,'+Buffer.from(src).toString('base64'));
 async function run(body){let result,code;await handler({method:'POST',body},{status(c){code=c;return this},json(x){result=x;return this}});return {code,result};}
 globalThis.identityResponse={category:'beauty',photos:[{index:0,matchesTarget:true,role:'main'},{index:1,matchesTarget:false,role:'packshot'},{index:2,role:'detail'}]};

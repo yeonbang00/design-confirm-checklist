@@ -56,6 +56,7 @@
       productName: p.name || null, brand: brand || null,
       salePrice: sale, originalPrice: (orig && sale && orig > sale) ? orig : null,
       discountRate: (orig && sale && orig > sale) ? Math.round((orig - sale) / orig * 100) : null,
+      discountSource: "calculated",
       description: p.description || null, mainImage: imgs[0] || null, images: imgs,
     };
   }
@@ -67,7 +68,7 @@
      같은 상품의 더 큰 판형이 있으면 그걸 쓴다. */
   function loadedImages() {
     return Array.prototype.slice.call(document.images)
-      .filter(function (i) { return i.naturalWidth >= 240 && i.currentSrc; })
+      .filter(function (i) { return i.naturalWidth >= 240 && i.currentSrc && !/^@/.test(i.alt||'') && !i.closest('[class*="review" i],[class*="recommend" i],[class*="related" i]'); })
       .map(function (i) {
         // 상세 영역 안에 있는지 본다. 상세컷은 배너에서 다른 종류의 소재라
         // 대표컷과 섞지 않고 따로 표시한다.
@@ -99,6 +100,10 @@
     + 'background:#12151A;color:#EDEEF0;font:600 13px/1.5 -apple-system,sans-serif;'
     + 'padding:12px 18px;border-radius:10px;border:1px solid #C3FF4D';
   document.body.appendChild(busy);
+  var expanded = 0;
+  Array.prototype.slice.call(document.querySelectorAll('button,[role="button"]')).forEach(function(button){
+    if(/^(상세정보|상품정보|상세설명)\s*펼쳐보기$/.test(button.textContent.trim()) && button.getClientRects().length){button.click();expanded++;}
+  });
   await sweep();
   busy.remove();
 
@@ -173,7 +178,7 @@
       seen[root] = 1; picked.push(q);
     });
 
-    it.meta = [{ url: it.mainImage, w: 0, h: 0, tall: false }].concat(picked.slice(0, 9));
+    it.meta = [{ url: it.mainImage, w: 0, h: 0, tall: false }].concat(picked.slice(0, 23));
     it.images = it.meta.map(function (q) { return q.url; });
     it.imageCount = it.images.length;
     items = [it];
@@ -196,6 +201,21 @@
     }];
   }
 
+  // Preserve visible product-page sections. These are unverified evidence candidates,
+  // not a blanket authorization to reuse cart totals, recommendations or member offers.
+  var sections = [];
+  if (items.length === 1) {
+    var root = document.querySelector('main,[role="main"],#content,#container') || document.body;
+    var lines = String(root.innerText || '').split(/\n+/).map(function(x){return x.trim();}).filter(Boolean);
+    var buffer = '', previousLine = '';
+    // Keep repeated prices next to their own option/condition; global dedup loses context.
+    lines.forEach(function(line){
+      if(line===previousLine || sections.length>=40)return; previousLine=line;
+      if(buffer.length+line.length>2800){sections.push({id:'page-'+sections.length,kind:'visible',text:buffer});buffer='';}
+      buffer += (buffer?'\n':'')+line.slice(0,2800);
+    });
+    if(buffer&&sections.length<40)sections.push({id:'page-'+sections.length,kind:'visible',text:buffer});
+  }
   // 붙여넣을 것이라 작아야 한다. 128개 딜이면 41KB까지 나온다.
   // 고를 만큼만 남기고, 배너에 안 쓰는 필드는 턴다.
   var total = items.length;
@@ -203,15 +223,17 @@
     return {
       productName: it.productName, brand: it.brand,
       salePrice: it.salePrice, originalPrice: it.originalPrice,
-      discountRate: it.discountRate, mainImage: it.mainImage,
+      discountRate: it.discountRate, discountSource: it.discountSource || "unverified", mainImage: it.mainImage,
       // 상품이 여러 개인 딜 페이지에서도 각 상품의 컷을 담는다. 예전에는
       // 클립보드가 커진다고 단일 상품일 때만 담았는데, 그러면 딜에서 상품을
       // 고른 뒤 원본을 쓸 방법이 없어진다. 개수를 줄여 담는다.
-      images: (it.images || []).slice(0, total === 1 ? 10 : 3),
+      images: (it.images || []).slice(0, total === 1 ? 24 : 3),
       // 크기와 세로 여부를 함께 보낸다. 분류가 실패해도 이 값만으로
       // 상세컷을 골라낼 수 있어 시안 종류가 무너지지 않는다.
-      imageMeta: (it.meta || []).slice(0, total === 1 ? 10 : 3),
-      description: (it.description || '').slice(0, 120) || null,
+      imageMeta: (it.meta || []).slice(0, total === 1 ? 24 : 3),
+      description: (it.description || '').slice(0, 12000) || null,
+      pageSections: total===1?sections:[],
+      collectionStatus:{visibleText:sections.length?'collected':'missing',detailExpansion:expanded?'expanded':'no-expand-control',imageText:'requires-analysis',truncated:sections.length>=40},
     };
   });
   var payload = {
@@ -219,7 +241,7 @@
        그걸 모르고 옛 코드가 돌면 대표컷 한 장만 담기고도 아무 표시가 없다.
        실제로 그 일이 있었다 — images와 imageMeta가 통째로 빠진 payload가 왔다.
        화면이 이 값을 보고 오래된 북마클릿이라고 알려 준다. */
-    _v: 4,
+    _v: 5,
     _adcheck: 'product', sourceUrl: location.href, strategy: strategy,
     category: category, itemCount: total, truncated: total > slim.length, items: slim,
   };

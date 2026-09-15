@@ -1,5 +1,9 @@
+import {tileDetailPhotos} from './studio-detail-tiles.mjs';
+import {prepareSourcePanels,restoreSourcePanels} from './studio-source-panels.mjs';
+import {createV3Plan,matchPlanReferences} from './studio-v3-plan.mjs';
+import {evidenceSections,completeCopy} from './studio-evidence.mjs';
 import {artDirect,recentDesigns,rememberDesign} from './studio-art-direction.mjs';
-import {checkBakedText} from './studio-text-check.mjs';
+import {checkBakedText,renderedCopyIssues} from './studio-text-check.mjs';
 import {exportBanner,saveBlob} from './studio-export.mjs';
 import {attachCopyRemoval} from './studio-copy-removal.mjs';
 import {extractPhotoRegions} from './studio-photo-regions.mjs';
@@ -262,7 +266,7 @@ let importedItems=[], importedSource='', revision=0, copyBusy=false, referenceRe
 function setProduct(next){
  product=structuredClone(next);SOURCE=product.sourceUrl||'';
  PHOTOS.splice(0,PHOTOS.length,...product.photos);
- if(SOURCE.includes('/1002447881'))PHOTOS.push(...SAMPLE_PHOTOS.slice(2));
+
  photo=0;variants=[];choice=new Set([0,1,2,3,4,5]);selected=0;modeDrafts={};mode='original';revision++;
  for(const m of ['scene','outfit'])planState[m].productPhoto=0;
  MODES.original.image=product.photos[0]?.url||'';MODES.original.caption='선택한 상품 원본';MODES.outfit.image=MODES.original.image;MODES.outfit.caption='선택한 모델·상품 원본';
@@ -296,7 +300,7 @@ function acceptImport(data){
    ?{...x,images:[...(Array.isArray(x.images)?x.images:[]),...harvested]}
    :x, importedSource)).filter(x=>x.productName&&x.photos.length);
  if(!importedItems.length)throw Error('상품명과 사진을 가져오지 못했습니다. 직접 입력하거나 상품 담기를 다시 실행해주세요.');
- $('#importChoice').innerHTML=importedItems.map((p,i)=>`<option value="${i}">${esc(p.productName)}</option>`).join('');$('#importChoiceField').hidden=importedItems.length<2;setProduct(importedItems[0]);$('#importStatus').textContent=`${importedItems.length}개 상품을 가져왔습니다. 사진 ${importedItems[0].photos.length}장`+(harvested.length?` (상세 페이지 포함)`:'')+`. 가격·구성·사진을 확인해주세요. 할인 조건은 직접 확인 후 입력하세요.`;
+ $('#importChoice').innerHTML=importedItems.map((p,i)=>`<option value="${i}">${esc(p.productName)}</option>`).join('');$('#importChoiceField').hidden=importedItems.length<2;setProduct(importedItems[0]);$('#importStatus').textContent=`${importedItems.length}개 상품을 가져왔습니다. 사진 ${importedItems[0].photos.length}장`+(harvested.length?` (상세 페이지 포함)`:'')+`. 상세 설명과 판매 조건도 함께 확인합니다.`;
 }
 $('#importChoice').onchange=()=>setProduct(importedItems[Number($('#importChoice').value)]);
 $('#importUrl').onclick=async()=>{const url=safeUrl($('#productUrl').value);if(!url){$('#importStatus').textContent='올바른 http 또는 https 상품 링크를 입력해주세요.';return}const request=++importRequest,startedRevision=revision;$('#importUrl').disabled=true;$('#importStatus').textContent='상품 정보를 가져오는 중…';try{const data=await getJSON('/api/productScrape?url='+encodeURIComponent(url));if(request!==importRequest||startedRevision!==revision){$('#importStatus').textContent='가져오는 동안 상품이 변경되어 이전 응답을 적용하지 않았습니다.';return}acceptImport(data)}catch(e){$('#importStatus').textContent=e.message+' 북마클릿 또는 직접 입력으로 계속할 수 있습니다.';$('#grabHelp').open=true}finally{$('#importUrl').disabled=false}};
@@ -359,7 +363,7 @@ function looksLikeProduct(data){return data&&data._adcheck==='product'&&Array.is
    대표컷 한 장만 오는데, 화면에는 아무 표시가 없어 원인을 알 수 없다.
    실제로 그 일이 있었다. 버전과 필드 유무로 알아본다. */
 const GRAB_VERSION=3;   // 이 아래는 images/imageMeta 자체가 없어 못 쓴다
-const GRAB_BEST=4;      // 후기·추천상품을 걸러내는 점수 규칙이 들어간 판
+const GRAB_BEST=5;      // 후기·추천상품을 걸러내는 점수 규칙이 들어간 판
 function grabIsOld(data){
  if(!data)return false;
  if(Number(data._v)>=GRAB_VERSION)return false;
@@ -400,11 +404,11 @@ async function autoReferences(p){
  try{
   const data = await getJSON('/api/referenceImages?category=' + encodeURIComponent(category));
   return (data.items||[]).filter(x=>safeUrl(x.thumbUrl)).map(x=>({...x, brand:x.brandName||''}));
- }catch(e){ return []; }
+ }catch(e){ throw Error('이미지 레퍼런스를 불러오지 못했습니다. '+e.message); }
 }
 async function autoCopies(run){
- const refs=await autoReferences(product);if(run!==autoRun)return;
- const references=autoPlan.map(p=>{const candidates=refs.filter(r=>r.type===p.type);const ref=candidates[Math.floor(Math.random()*candidates.length)];return ref?{...ref,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'표현 방식과 카피 구조를 참고합니다.'}:{type:p.type,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'상품 사실 안에서 표현합니다.'}});
+ const refs=[];if(run!==autoRun)return;
+ const references=autoPlan.map(p=>({...p.reference,type:p.type,typeLabel:REF_TYPES[p.type],designObservation:p.designObservation||null}));
  const {photos:photoBytes,sourcePhotos:sourceBytes,...copyProduct}=product;
  const data=await getJSON('/api/bannerCopy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'studio',autoPlan:true,product:copyProduct,layouts:autoPlan.map(p=>p.layout),references,plans:autoPlan,facts:product.facts||[]})});
  if(run!==autoRun)return;
@@ -469,23 +473,24 @@ async function classifyPhotos(run){
  const bigger=await upgradePhotos(product.photos);
  if(run!==autoRun)return;
  if(bigger){PHOTOS.splice(0,PHOTOS.length,...product.photos);renderPhotos?.()}
+ product.photos=await tileDetailPhotos(product.photos,getJSON,()=>run===autoRun);
+ if(run!==autoRun)return;
+ PHOTOS.splice(0,PHOTOS.length,...product.photos);
  const sizeNote=bigger?`사진 ${bigger}장을 원본 크기로 교체`:'';
  /* API의 6장 한도 안에서 대표컷부터 마지막 상세컷까지 고르게 본다. */
- const urls=[...new Set(product.photos.map(p=>p.url))].slice(0,16);
+ const urls=[...new Set(product.photos.map(p=>p.url))].slice(0,24);
  /* 우리 이미지 레퍼런스에 이 업종 배너가 쌓여 있다. 지금까지는 캡션만 카피
     생성에 쓰고 이미지는 아무 데도 안 넣었다. 실제로 어떻게 구성했는지는
     그림을 봐야 알 수 있다. 몇 장 함께 보내 조판을 고르게 한다. */
- const refs=await autoReferences(product);
- if(run!==autoRun)return;
- const referenceUrls=shuffleRefs(refs).slice(0,3).map(r=>safeUrl(r.fullUrl||r.thumbUrl)).filter(Boolean);
+ const referenceUrls=[];
  try{
   const batches=[];
   for(let offset=1;offset<urls.length||offset===1;offset+=5){
    const batch=[urls[0],...urls.slice(offset,offset+5)];
-   batches.push(await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:batch,referenceUrls:offset===1?referenceUrls:[],productName:product.productName,brand:product.brand})}));
+   batches.push(await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:batch,tiles:product.photos.filter(p=>batch.includes(p.url)&&p.detailTile).map(p=>({url:p.url,base64:p.cleanBase64,mediaType:p.cleanType})),referenceUrls:offset===1?referenceUrls:[],productName:product.productName,brand:product.brand,sourceUrl:product.sourceUrl,pageSections:offset===1?evidenceSections(product):[]})}));
    if(run!==autoRun)return;
   }
-  const data={...batches[0],photos:[...new Map(batches.flatMap(b=>b.photos||[]).map(p=>[p.url,p])).values()],facts:[...new Map(batches.flatMap(b=>b.facts||[]).map(f=>[f.text,f])).values()]};
+  const data={...batches[0],photos:[...new Map(batches.flatMap(b=>b.photos||[]).map(p=>[p.url,p])).values()],facts:[...new Map(batches.flatMap((b,batch)=>(b.facts||[]).map((f,i)=>({...f,id:'image-batch-'+batch+'-'+i}))).map(f=>[f.text,f])).values()]};
   if(run!==autoRun)return;
   // 장면도 함께 받는다. 상품마다 달라야 하는 부분이라 코드에 박아 둘 수 없다.
   product.category=data.category||'other';product.cuts=Array.isArray(data.cuts)?data.cuts:[];
@@ -494,7 +499,7 @@ async function classifyPhotos(run){
   product.usp=data.usp||'';product.tone=data.toneKo||'';
   /* 상세 페이지 이미지에 인쇄된 임상 수치·성분·후기·인증을 읽어 온다.
      이 목록이 카피가 숫자를 쓸 수 있는 유일한 화이트리스트다. */
-  product.facts=Array.isArray(data.facts)?data.facts:[];
+  product.facts=[...(data.pageFacts||[]),...(Array.isArray(data.facts)?data.facts:[])];product.offers=data.offers||[];
   product.layoutHints=Array.isArray(data.layoutHints)?data.layoutHints:[];product.refNote=data.refNote||'';
   const byUrl=new Map((data.photos||[]).map(x=>[x.url,x]));
   product.photos.forEach((p,i)=>{const x=byUrl.get(p.url);if(!x){p.role='unusable';p.matchesTarget=false;return;}
@@ -505,7 +510,7 @@ async function classifyPhotos(run){
      상세컷 열 장이 전부 '역할 없음'이 되어 원본 자리에 못 들어간다. */
   product.photos.forEach((p,i)=>{if(p.role)return;
    const r=p.w&&p.h?p.h/p.w:0;p.role=r>=1.7?'detail':(i===0?'main':'detail')});
-  const usable=product.photos.filter(p=>p.role!=='unusable'&&p.matchesTarget===true);
+  const usable=product.photos.filter(p=>(p.role!=='unusable'||p.regions?.length)&&p.matchesTarget===true);
   if(!usable.length)throw Error('이 상품과 일치하는 사진을 확인하지 못했습니다. 상품 사진을 다시 담아주세요.');
   const dropped=product.photos.length-usable.length;
   // PHOTOS는 setProduct에서 product.photos를 그대로 복사해 둔 목록이고,
@@ -513,7 +518,7 @@ async function classifyPhotos(run){
   // 어긋나 엉뚱한 사진이 뜬다. 두 목록을 함께 맞춘다.
   if(usable.length&&dropped)product.photos=usable;
   PHOTOS.splice(0,PHOTOS.length,...product.photos);
-  if(SOURCE.includes('/1002447881'))PHOTOS.push(...SAMPLE_PHOTOS.slice(2));
+
   photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 확보 · ${product.photos.filter(p=>byUrl.has(p.url)).length}장 분석`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다')
    +(referenceUrls.length?` · 레퍼런스 배너 ${referenceUrls.length}장 참고`:'')
@@ -668,10 +673,12 @@ async function generateImage(plan,run,q){
  const references=[];
  if(plan.completeBanner)for(const i of (plan.photoSet||[]).filter(i=>i!==plan.photo).slice(0,3))references.push(await generationSource(product.photos[i]));
  const slots=factSlots(product);
- const complete=plan.completeBanner?{operation:'complete-banner',artDirection:plan.artDirection,references,text:{headline:variant.main,subline:variant.sub||'',offer:plan.emphasis==='offer'?slots.PRICE:'',brand:product.brand,cta:'',footnote:variant.footnote||''}}:{};
- const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...await generationSource(src),...complete,scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:plan.imagePrompt||`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ const prepared=plan.sourceMode==='preserve'?await prepareSourcePanels(plan,product,getJSON):null;
+ const complete=plan.completeBanner?{operation:'complete-banner',artDirection:prepared?prepared.instruction+' '+plan.artDirection:plan.artDirection,references:prepared?[]:references,text:completeCopy(variant,plan,product)}:{};
+ const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...prepared?{base64:prepared.base64,mediaType:prepared.mediaType}:await generationSource(src),...complete,scene:prepared?prepared.instruction:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:plan.imagePrompt||`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
  if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
- let finalUrl=shot.imageUrl;
+ let finalUrl=prepared?await restoreSourcePanels(shot.imageUrl,prepared,getJSON):shot.imageUrl;
+ if(run!==autoRun)return;
  if(product.category==='beauty'){
   const anchor=product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture'&&p.role==='main')||product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture');
   if(!anchor)throw Error('상품 포장을 비교할 원본이 없습니다.');
@@ -681,16 +688,20 @@ async function generateImage(plan,run,q){
  }
 
 
- const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
- variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
+ let verifiedText=null;
+ if(plan.completeBanner){
+  const copy=completeCopy(variant,plan,product);
+  verifiedText=await checkBakedText(finalUrl,Object.values(copy),getJSON);
+  if(run!==autoRun)return;
+  const issues=renderedCopyIssues(verifiedText,copy);
+  if(issues.length)throw Error('완성 배너 확인: '+issues.join(' · '));
+ }
+ const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe,...(prepared?{cleanUrl:finalUrl,cleanBase64:finalUrl.split(',')[1],cleanType:'image/png',sourcePreserved:true}: {})})-1;
+ variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:'v3',recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
  const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
  variant.quality=q||quality;
  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+`AI 생성 · ${qLabel} · 상품 일치 확인 필요`;
- if(plan.completeBanner){
-  const check=await checkBakedText(finalUrl,[slots.PRICE,slots.BENEFIT,...(product.facts||[]).map(x=>x.text)],getJSON);
-  variant.textClaims=check?.claims||null;
-  variant.autoStatus=!check?'완성 배너 · 숫자 확인 못 함':check.claims.length?'확인되지 않은 숫자: '+check.claims.join(', '):'완성 배너 · 숫자 대조 완료 · 상품 확인 필요';
- }
+ if(plan.completeBanner){variant.textClaims=verifiedText.claims;variant.autoStatus='완성 배너 · 문구·숫자 대조 완료';}
  renderBoard();
 
  }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
@@ -749,11 +760,20 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
    if(extracted.failures.length)photoNotice+=` · ${extracted.failures.length}장은 추출하지 못해 원본 유지`;
   }
   // 로고 지우기와 누끼는 여기서 시작만 걸어 둔다. 계획·카드·카피와 겹쳐 돈다.
-  autoPlan=artDirect(createPlan(product),product,{recent:recentDesigns(product,{getItem:key=>localStorage.getItem(key)})});
-  if(/^(fashion-|beauty$)/.test(product.category||'')&&autoPlan[0]?.plannerVersion!=='creative-v1')throw Error('사진 분석은 완료했지만 서로 다른 시안을 구성할 자료가 부족합니다. 상품 정보를 보완한 뒤 다시 생성해주세요.');
+  autoPlan=createV3Plan(product,{recent:recentDesigns(product,{getItem:key=>localStorage.getItem(key)})});
+  if(autoPlan.length!==6)throw Error('동일 상품 자료로 구성 가능한 시안이 부족합니다. 상세 자료를 확인해주세요.');
+  const refs=await autoReferences(product);if(run!==autoRun)return;
+  autoPlan=matchPlanReferences(autoPlan,refs,product);
+  const entries=[...new Set(autoPlan.map(p=>p.reference?.thumbUrl).filter(Boolean))].map(url=>({url}));
+  if(entries.length){
+    autoMessage('시안별 레퍼런스의 구도와 타이포를 확인하는 중…');
+    const data=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'referenceBriefs',entries})});
+    if(run!==autoRun)return;
+    autoPlan=autoPlan.map(p=>{const b=data.briefs?.find(x=>x.url===p.reference?.thumbUrl);return {...p,designObservation:b||null,artDirection:p.artDirection+(b?' Reference structure/style only: '+JSON.stringify(b):'')};});
+  }
   const pixelWork=startPixelWork(run);
   failedImages.clear();autoCopyFailed=false;
-  photoNotice+=autoPlan[0]?.plannerVersion==='creative-v1'?' · 사진·메시지 통합 기획':' · 기본 기획(통합 기획 후보 부족 또는 미지원 업종)';
+  photoNotice+=autoPlan[0]?.plannerVersion==='v3'?' · 사진·메시지 통합 기획':' · 기본 기획(통합 기획 후보 부족 또는 미지원 업종)';
   const slots=factSlots(product);
   /* 카피가 오기 전과 카피 생성이 실패했을 때 쓰는 값이다. 전에는 여섯 장이
      전부 상품명과 가격으로 똑같아졌다. 조판도 카피 지시도 자리마다 갈라 놓고
@@ -779,10 +799,10 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   /* 실패 이유를 한 군데에만 적어 두면 못 본다. 카드 옆 문구와 상태줄 양쪽에 남긴다. */
   lastCopyError='';
   const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;lastCopyError=String(e&&e.message||e).slice(0,90);
-    const box=$('#autoCopyError');if(box)box.textContent=lastCopyError;});
+    const box=$('#autoCopyError');if(box)box.textContent=lastCopyError;$('#autoRetryCopy').hidden=false;});
   await Promise.all([pixelWork,copyTask]);
   if(run!==autoRun)return;
-  if(autoCopyFailed)throw Error('카피 기획을 완료하지 못했습니다. 카피 다시 시도 후 배너를 생성해주세요.');
+  if(autoCopyFailed){variants.forEach(v=>{v.autoStatus='카피 확인 대기';});renderBoard();throw Error('카피 기획을 완료하지 못했습니다. 카피 다시 시도 후 배너를 생성해주세요.');}
   autoMessage('카피와 사진을 함께 디자인해 완성 배너 6종을 만드는 중…');
   const imageQueue=[...autoPlan];
   await Promise.all(Array.from({length:2},async()=>{while(imageQueue.length&&run===autoRun)await generateImage(imageQueue.shift(),run)}));

@@ -16,7 +16,7 @@
 import { runOcr } from './_clovaOcr.js';
 import { rejectIfNotSameOrigin } from './_originCheck.js';
 
-export const config = { api: { bodyParser: { sizeLimit: '2mb' } } };
+export const config = { api: { bodyParser: { sizeLimit: '8mb' } } };
 
 function boxOf(field) {
   const v = field?.boundingPoly?.vertices;
@@ -35,9 +35,14 @@ export default async function handler(req, res) {
   const url = typeof req.body?.url === 'string' ? req.body.url : '';
   // 누끼와 딤 계산은 글자를 읽을 필요가 없다. OCR은 호출당 돈이 든다.
   const skipOcr = req.body?.ocr === false;
-  if (!/^https?:\/\//.test(url)) { res.status(400).json({ error: '사진 주소가 필요합니다.' }); return; }
+  if (!req.body?.base64 && !/^https?:\/\//.test(url)) { res.status(400).json({ error: '사진 주소가 필요합니다.' }); return; }
 
   try {
+    let buf,mediaType;
+    if(req.body?.base64){
+      if(typeof req.body.base64!=='string'||req.body.base64.length>8000000||!/^image\/(png|jpeg)$/.test(req.body.mediaType||''))return res.status(400).json({error:'이미지 형식을 확인해주세요.'});
+      buf=Buffer.from(req.body.base64,'base64');mediaType=req.body.mediaType;
+    }else{
     const r = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 '
@@ -45,11 +50,13 @@ export default async function handler(req, res) {
       },
     });
     if (!r.ok) { res.status(502).json({ error: '원본 사진을 받지 못했습니다.' }); return; }
-    const mediaType = (r.headers.get('content-type') || 'image/jpeg').split(';')[0];
-    const buf = Buffer.from(await r.arrayBuffer());
+    mediaType = (r.headers.get('content-type') || 'image/jpeg').split(';')[0];
+    buf = Buffer.from(await r.arrayBuffer());
     if (buf.length > 6 * 1024 * 1024) { res.status(413).json({ error: '사진이 너무 큽니다.' }); return; }
-    const base64 = buf.toString('base64');
 
+
+    }
+    const base64=buf.toString('base64');
     if (skipOcr) { res.status(200).json({ base64, mediaType, boxes: [], ocr: false }); return; }
     const fields = await runOcr(base64, mediaType);
     const boxes = (fields || []).map(boxOf).filter(Boolean);

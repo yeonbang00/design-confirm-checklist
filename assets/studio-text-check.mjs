@@ -11,7 +11,7 @@
  */
 
 const MONEY = /[\d][\d,]{2,}\s*원/g;
-const PERCENT = /\d{1,3}\s*%/g;
+const PERCENT = /\d+(?:\.\d+)?\s*%/g;
 
 const norm = t => String(t || '').replace(/\s+/g, '');
 
@@ -39,12 +39,23 @@ export async function checkBakedText(url, verified, getJSON) {
   try {
     const data = await getJSON('/api/imageText', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify(url.startsWith('data:')?{base64:url.split(',')[1],mediaType:url.slice(5,url.indexOf(';'))}:{url}),
     });
     if (!data || !data.ocr || !Array.isArray(data.boxes)) return null;
     const text = data.boxes.map(b => b.text).join(' ');
-    return { claims: unverifiedClaims(text, verified), read: text.slice(0, 300) };
+    return { claims: unverifiedClaims(text, verified), read: text.slice(0, 6000) };
   } catch {
     return null;
   }
+}
+
+export function renderedCopyIssues(check,copy){
+ if(!check)return ['광고 문구를 확인하지 못했습니다'];
+ const compact=s=>String(s||'').replace(/[^가-힣A-Za-z0-9%]/g,'').toLowerCase();
+ const read=compact(check.read),issues=[];
+ if(check.claims.length)issues.push('확인되지 않은 수치: '+check.claims.join(', '));
+ if(copy.cta&&!read.includes(compact(copy.cta)))issues.push('CTA 문구 누락 또는 오탈자');
+ const prices=findClaims([copy.headline,copy.subline,copy.offer].join(' ')).filter(x=>x.endsWith('원'));
+ for(const price of prices)if(read.split(compact(price)).length>2)issues.push('같은 가격 중복');
+ return issues;
 }

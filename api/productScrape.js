@@ -91,6 +91,7 @@ function fromProduct(p) {
     originalPrice: orig && sale && orig > sale ? orig : null,
     discountAmount: orig && sale && orig > sale ? orig - sale : null,
     discountRate: orig && sale && orig > sale ? Math.round((orig - sale) / orig * 100) : null,
+    discountSource: "calculated",
     description: p.description || null,
     mainImage: imgs[0] || null,
     images: imgs,
@@ -289,6 +290,7 @@ export default async function handler(req, res) {
         originalPrice: orig && sale && orig > sale ? orig : null,
         discountAmount: orig && sale && orig > sale ? orig - sale : null,
         discountRate: orig && sale && orig > sale ? Math.round((orig - sale) / orig * 100) : null,
+    discountSource: "calculated",
         description: null, mainImage: ogImage || imgs[0] || null, images: imgs,
         rating: null, reviewCount: null, inStock: true,
       }];
@@ -310,6 +312,11 @@ export default async function handler(req, res) {
   // 것보다 원본 사진을 고르는 쪽이 빠르고(대기 없음) 제품이 왜곡되지 않는다.
   out.harvested = harvestImages(html, target.href, out.items);
 
+  if(out.items.length===1){
+    const text=html.replace(/<(script|style|nav|footer)\b[^>]*>[\s\S]*?<\/\1>/gi,' ').replace(/<[^>]+>/g,'\n').replace(/&nbsp;|&#160;/g,' ').replace(/&amp;/g,'&').replace(/[ \t]+/g,' ').split(/\n+/).map(x=>x.trim()).filter(Boolean).join('\n');
+    out.items[0].pageSections=Array.from({length:Math.min(40,Math.ceil(text.length/2800))},(_,i)=>({id:'html-'+i,kind:'html',text:text.slice(i*2800,(i+1)*2800)}));
+    out.items[0].collectionStatus={html:'collected',dynamicDetail:'not-confirmed',imageText:'requires-analysis',truncated:text.length>112000};
+  }
   out.itemCount = out.items.length;
   res.status(200).json(out);
 }
