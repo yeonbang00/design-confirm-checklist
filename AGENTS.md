@@ -75,6 +75,8 @@ new Function(src.replace(/^\s*import .*$/gm,'').replace(/^export default /m,'x='
 **API 키는 서버에만.** 브라우저 코드에 키가 닿으면 안 된다.
 `api/*.js` 안에서 `process.env`로만 읽는다. `.env.local`은 절대 커밋하지 않는다.
 
+**서버 ESM 선언을 유지한다.** `package.json`의 `"type": "module"`이 없으면 Vercel이 API를 CommonJS로 변환해 공통 `.mjs` 로딩에서 `ERR_REQUIRE_ESM`으로 종료된다. 최신 로컬 Node가 자동 추론해 통과해도 배포에서는 실패할 수 있다. `tests/server-module-loading.test.mjs`는 import를 제거하지 않고 실제 API 의존성을 읽는다. 배포 성공 표시와 별도로 운영 API 실행도 확인한다.
+
 **커밋 메시지는 한국어로, 무엇을 고쳤는지가 아니라 왜 그랬는지를 쓴다.**
 증상 → 원인 → 고친 방법 순서. 측정한 숫자가 있으면 넣는다.
 기존 커밋들을 보면 형식을 알 수 있다.
