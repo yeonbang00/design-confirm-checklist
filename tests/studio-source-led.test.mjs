@@ -41,8 +41,8 @@ assert.equal(sourceBank({photos:[photo('a'),photo('a')]}).length,1);
 assert.notEqual(sourceKey(photo('a',{sourceRegion:[0,0,.5,1]})),sourceKey(photo('a',{sourceRegion:[.5,0,.5,1]})));
 
 const raw={category:'food',productName:'생고기 500g',salePrice:12000,photos:[photo('raw',{role:'main',personKind:'none',foodState:'raw',assetKind:'product'}),photo('cooked',{role:'packshot',personKind:'none',foodState:'cooked',actualPreparedMeal:true,assetKind:'product'})]};
-assert.ok(sourceBank(raw).every(x=>x.p.foodState!=='cooked'));
-assert.ok(createV3Plan(raw,{random}).every(p=>p.photoSet.every(i=>i!==1)));
+assert.ok(sourceBank(raw).some(x=>x.p.foodState==='cooked'),'confirmed serving photo is usable beyond meal kits');
+assert.ok(createV3Plan(raw,{random}).every(p=>p.photoSet[0]===1),'actual serving photograph is preferred over uncooked ingredient');
 assert.ok(sourceBank({...raw,productName:'불고기 밀키트'}).some(x=>x.p.actualPreparedMeal));
 const beauty={category:'beauty',productName:'익스트림 로션 150ml 2개',salePrice:35000,photos:[photo('lotion',{role:'main',personKind:'none',plainBg:true,assetKind:'product'}),photo('texture',{role:'detail',personKind:'none',assetKind:'texture',sourceRegion:[0,0,1,1]}),photo('wrong',{matchesTarget:false,role:'packshot',personKind:'none'})]};
 for(let i=0;i<50;i++){

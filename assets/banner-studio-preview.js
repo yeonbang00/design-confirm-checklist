@@ -1,3 +1,4 @@
+import {foodVerificationRequest,protectFoodLabel} from './studio-food-policy.mjs';
 import {tileDetailPhotos} from './studio-detail-tiles.mjs';
 import {generationRequest} from './studio-generation-contract.mjs';
 import {mergeVisualTones,VISUAL_CONTRACT_VERSION} from './studio-visual-contract.mjs';
@@ -575,7 +576,7 @@ function startPixelWork(run){
    남의 워드마크가 박히고, AI에 넣어도 그 로고가 결과물까지 따라온다.
    분류가 글자를 본 사진만 검사한다 — 없는 사진까지 OCR을 돌릴 이유가 없다. */
 async function scrubLogos(run){
- const targets=product.photos.filter(p=>p.burnedText&&!p.cleanUrl).slice(0,4);
+ const targets=product.photos.filter(p=>p.burnedText&&!p.cleanUrl&&!protectFoodLabel(product.category,p)).slice(0,4);
  if(!targets.length)return;
  // 한 장씩 기다리면 네 장에 네 배가 걸린다. 서로 상관없는 일이라 한꺼번에 보낸다.
  const results=await Promise.all(targets.map(async p=>{
@@ -676,7 +677,11 @@ async function generateImage(plan,run,q){
  if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
  const finalUrl=shot.imageUrl;
  if(run!==autoRun)return;
- if(product.category==='beauty'){
+ if(product.category==='food'){
+  const identity=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(foodVerificationRequest(request,finalUrl))});
+  if(run!==autoRun)return;
+  if(identity.matches!==true)throw Error('식품·포장 불일치: '+(identity.reason||'원본 음식·포장과 다른 결과입니다.'));
+ }else if(product.category==='beauty'){
   const anchor=product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture'&&p.role==='main')||product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture');
   if(!anchor)throw Error('상품 포장을 비교할 원본이 없습니다.');
   const identity=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'verifyProduct',sourceUrl:anchor.url,resultUrl:finalUrl,productName:product.productName,brand:product.brand})});
@@ -694,7 +699,7 @@ async function generateImage(plan,run,q){
   if(issues.length)throw Error('완성 배너 확인: '+issues.join(' · '));
  }
  const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
- variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:'v3.1',contract:VISUAL_CONTRACT_VERSION,brandCopyVersion:request.brandCopyVersion,visualTone:plan.visualTone,copyMode:plan.copyMode,knowledge:{copy:variant.knowledge,image:shot.knowledge},offerPolicy:variant.offerPolicy,referenceSnapshot:product.referenceSnapshot,recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
+ variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:plan.plannerVersion||'v3.1',foodPolicy:request.foodPolicy,contract:VISUAL_CONTRACT_VERSION,brandCopyVersion:request.brandCopyVersion,visualTone:plan.visualTone,copyMode:plan.copyMode,knowledge:{copy:variant.knowledge,image:shot.knowledge},offerPolicy:variant.offerPolicy,referenceSnapshot:product.referenceSnapshot,recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
  const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
  variant.quality=q||quality;
  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+`AI 생성 · ${qLabel} · 상품 일치 확인 필요`;

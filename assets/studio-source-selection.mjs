@@ -1,3 +1,4 @@
+import {usableFoodSource} from './studio-food-policy.mjs';
 // Source identity includes crop coordinates; two crops from one detail page are
 // distinct assets, but the same crop under another URL must not earn diversity.
 export function sourceKey(p){return JSON.stringify([String(p.sourceUrl||p.url||'').split('?')[0],p.tilePixels||null,p.sourceRegion||null]);}
@@ -5,11 +6,10 @@ export const isWearer=p=>p.personKind==='body'||p.role==='model';
 export const isObject=p=>p.personKind==='none'&&p.assetKind!=='texture'&&p.assetKind!=='info'&&p.role!=='unusable'&&!((p.assetKind==='detail'||p.role==='detail')&&p.shotDistance==='close');
 export const isFeature=p=>p.assetKind==='texture'||(!isWearer(p)&&(p.assetKind==='detail'||p.role==='detail')&&p.shotDistance==='close');
 export function sourceBank(product){
- const rawTarget=product.category==='food'&&((product.photos||[]).find(p=>p.provenance==='main'||p.role==='main')?.foodState==='raw')&&!/밀키트|meal\s*kit/i.test(product.productName||'');
  const seen=new Set();
  return (product.photos||[]).map((p,i)=>({p,i})).filter(({p})=>{
    const key=sourceKey(p);
-   if(seen.has(key)||p.matchesTarget!==true||p.role==='unusable'||p.isGift||p.assetKind==='info'||(!p.sourceRegion&&p.role==='detail'&&p.w&&p.h&&p.h/p.w>1.85)||rawTarget&&p.foodState==='cooked')return false;
+   if(seen.has(key)||p.matchesTarget!==true||p.role==='unusable'||p.isGift||p.assetKind==='info'||(!p.sourceRegion&&p.role==='detail'&&p.w&&p.h&&p.h/p.w>1.85)||product.category==='food'&&!usableFoodSource(p))return false;
    seen.add(key);return true;
  });
 }

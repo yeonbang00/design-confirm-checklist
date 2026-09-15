@@ -1,3 +1,4 @@
+import {createFoodPlan} from './studio-food-plan.mjs';
 import {advertisingProduct} from './studio-offer-policy.mjs';
 import {AXES} from './reference-axes.mjs';
 import {visualTone,primaryOffers} from './studio-visual-contract.mjs';
@@ -40,6 +41,7 @@ export function createV3Plan(product,{random=Math.random,recent=[]}={}){
  product=advertisingProduct(product);
  const bank=sourceBank(product);if(!bank.length)return [];
  const fashion=/^fashion/.test(product.category),tone=visualTone(product.visualTone,product.tone);
+ if(product.category==='food')return createFoodPlan(product,bank,tone,{random,recent});
  const wearers=bank.filter(x=>isWearer(x.p)),objects=bank.filter(x=>isObject(x.p)),features=bank.filter(x=>isFeature(x.p));
  const photos=bank.filter(x=>!isFeature(x.p)),photoPool=photos.length?photos:bank;
  const lifestyle=photoPool.filter(x=>!x.p.plainBg),texture=features.filter(x=>x.p.assetKind==='texture');

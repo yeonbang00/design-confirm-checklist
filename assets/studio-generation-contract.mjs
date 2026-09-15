@@ -1,3 +1,4 @@
+import {foodContract,foodInstructions,usableFoodSource} from './studio-food-policy.mjs';
 import {BRAND_COPY_INSTRUCTION,BRAND_COPY_VERSION} from './studio-brand-identity.mjs';
 import {completeCopy} from './studio-evidence.mjs';
 import {visualInstructions,VISUAL_CONTRACT_VERSION} from './studio-visual-contract.mjs';
@@ -7,10 +8,12 @@ import {visualInstructions,VISUAL_CONTRACT_VERSION} from './studio-visual-contra
 export async function generationRequest(plan,product,variant,readSource,quality='medium'){
  const ids=[...new Set(plan.photoSet?.length?plan.photoSet:[plan.photo])].slice(0,4);
  if(!ids.length||ids.some(i=>!product.photos[i]||product.photos[i].matchesTarget!==true))throw Error('시안에 배정한 실제 상품 사진을 확인해주세요.');
+ if(product.category==='food'&&ids.some(i=>!usableFoodSource(product.photos[i])))throw Error('식품의 실제 완성 음식·원물·포장 사진을 확인해주세요. 조리 과정과 안내 이미지는 사용할 수 없습니다.');
  const sources=await Promise.all(ids.map(i=>readSource(product.photos[i])));
  return {...sources[0],operation:'complete-banner',references:sources.slice(1),
   styleReference:plan.reference?{imageUrl:plan.reference.fullUrl||plan.reference.thumbUrl}:null,
-  sourceDescriptions:ids.map(i=>({role:product.photos[i].role,color:product.photos[i].colorway,pose:product.photos[i].pose,foodState:product.photos[i].foodState})),
+  category:product.category,foodPolicy:product.category==='food'?foodContract(ids.map(i=>product.photos[i])):null,
+  sourceDescriptions:ids.map(i=>({role:product.photos[i].role,color:product.photos[i].colorway,pose:product.photos[i].pose,foodState:product.photos[i].foodState,foodUse:product.photos[i].foodUse,actualPreparedMeal:product.photos[i].actualPreparedMeal,packageVisible:product.photos[i].packageVisible})),
   visualPlan:{sourceMode:plan.sourceMode,visualTone:plan.visualTone,copyMode:plan.copyMode,designObservation:plan.designObservation},
   contractVersion:VISUAL_CONTRACT_VERSION,brandCopyVersion:BRAND_COPY_VERSION,artDirection:plan.artDirection,scene:plan.scene,
   productName:product.productName,text:completeCopy(variant,plan,product),size:'1024x1024',quality};
@@ -25,5 +28,5 @@ export function completeBannerPrompt(body){
   +` The FIRST ${count} attached images are the ONLY actual target product sources, in selected order. Use all selected sources when multiple poses/colourways/details were supplied; never repeat the first model instead. Preserve exact garment cut, neckline, sleeves, pattern, colours, package shape, printed labels and actual texture. No invented items, colours, ingredients or efficacy; raw food stays raw. `
   +(body.styleReference?'The LAST attached image is a DESIGN REFERENCE ONLY. Study its actual text block positions, line grouping, relative glyph sizes, photo-to-copy proportions, whitespace, typography treatment and CTA shape/size. Transfer that design language to OUR copy and OUR product images. Never copy its product, models, scenery subjects, logo, advertising words, discounts, seals or prices. If it conflicts with target mood or available assets, adapt the structure instead of copying content. ':'')
   +'EXACT ADVERTISING COPY JSON: '+JSON.stringify(copy)+'. Render only these advertising words, accurate Hangul and each price once. Include the supplied CTA legibly in the chosen reference-appropriate treatment. No extra advertising words, floating logos, seals or watermark. No app/editor controls. '
-  +visualInstructions(body.visualPlan||{})+' '+BRAND_COPY_INSTRUCTION;
+  +visualInstructions(body.visualPlan||{})+' '+BRAND_COPY_INSTRUCTION+foodInstructions(body.category==='food'?foodContract(body.sourceDescriptions||[]):null);
 }

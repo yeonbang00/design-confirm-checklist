@@ -16,6 +16,7 @@ export function normalizePhotoRegions(rows) {
       colorway:String(row.colorway||'').slice(0,20),plainBg:row.plainBg===true,
       pose:String(row.pose||'').slice(0,100),light:String(row.light||'').slice(0,100),note:String(row.note||'').slice(0,160),
       foodState:['raw','cooked','packaged'].includes(row.foodState)?row.foodState:'unknown',actualPreparedMeal:row.actualPreparedMeal===true,
+      foodUse:['served','raw','package','process','info'].includes(row.foodUse)?row.foodUse:'unknown',packageVisible:row.packageVisible===true,
       shotAngle:String(row.shotAngle||'front').slice(0,20),shotDistance:String(row.shotDistance||'medium').slice(0,20),
       itemCount:Number.isInteger(row.itemCount)&&row.itemCount>0?row.itemCount:1,
       isHero:row.isHero===true,isGift:row.isGift===true});
