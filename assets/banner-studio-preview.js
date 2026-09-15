@@ -1,4 +1,4 @@
-import {artDirect} from './studio-art-direction.mjs';
+import {artDirect,recentDesigns,rememberDesign} from './studio-art-direction.mjs';
 import {checkBakedText} from './studio-text-check.mjs';
 import {exportBanner,saveBlob} from './studio-export.mjs';
 import {attachCopyRemoval} from './studio-copy-removal.mjs';
@@ -667,7 +667,7 @@ async function generateImage(plan,run,q){
  let finalUrl=shot.imageUrl;
 
  const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
- variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
+ variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
  const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
  variant.quality=q||quality;
  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+`AI 생성 · ${qLabel} · 상품 일치 확인 필요`;
@@ -733,7 +733,7 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
    if(extracted.failures.length)photoNotice+=` · ${extracted.failures.length}장은 추출하지 못해 원본 유지`;
   }
   // 로고 지우기와 누끼는 여기서 시작만 걸어 둔다. 계획·카드·카피와 겹쳐 돈다.
-  autoPlan=artDirect(createPlan(product),product);
+  autoPlan=artDirect(createPlan(product),product,{recent:recentDesigns(product,{getItem:key=>localStorage.getItem(key)})});
   if(/^(fashion-|beauty$)/.test(product.category||'')&&autoPlan[0]?.plannerVersion!=='creative-v1')throw Error('사진 분석은 완료했지만 서로 다른 시안을 구성할 자료가 부족합니다. 상품 정보를 보완한 뒤 다시 생성해주세요.');
   const pixelWork=startPixelWork(run);
   failedImages.clear();autoCopyFailed=false;
@@ -758,7 +758,7 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
     const f=facts.length?facts[factAt++%facts.length]:'';
     return {sub:f||slots.QUANTITY||'', offer:slots.PRICE||'', cta:'상품 자세히 보기'};
   };
-  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,imageReady:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
+  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.designLabel||p.label),designId:p.designId,designFamily:p.designFamily,fontFamily:p.fontFamily,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,imageReady:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   /* 실패 이유를 한 군데에만 적어 두면 못 본다. 카드 옆 문구와 상태줄 양쪽에 남긴다. */
   lastCopyError='';
