@@ -352,14 +352,14 @@ export default async function handler(req, res) {
       : '\n\n[이번에 보내는 이미지 순서] 전부 상품 사진입니다. 레퍼런스 배너는 없습니다.';
 
     const data = await callOpenAI({
-      apiKey, promptText: PROMPT + order, images: [...images, ...refImages],
+      apiKey, promptText: PROMPT + order + `\nphotos에는 상품 사진 ${images.length}장만 빠짐없이 넣으세요. index는 0부터 ${images.length-1}까지 정확히 한 번씩입니다. 레퍼런스 배너는 photos에 넣지 마세요.`, images: [...images, ...refImages],
       maxOutputTokens: 7000, reasoningEffort: 'low',
     });
 
     const rows = Array.isArray(data?.photos) ? data.photos : [];
-    if (rows.length !== kept.length) throw Object.assign(new Error('사진 분석 결과가 누락됐습니다. 다시 생성해주세요.'), {status:502});
+    if (kept.some((_,i)=>!rows.some(row=>Number(row?.index)===i))) throw Object.assign(new Error('사진 분석 결과가 누락됐습니다. 다시 생성해주세요.'), {status:502});
     const photos = kept.map((url, i) => {
-      const row = rows.find(r => Number(r?.index) === i) || rows[i] || {};
+      const row = rows.find(r => Number(r?.index) === i);
       const role = ROLES.has(row.role) ? row.role : (i === 0 ? 'main' : 'packshot');
       return {
         url,
