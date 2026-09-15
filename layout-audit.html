@@ -17,6 +17,10 @@
 .art.duo .cta{margin-top:2%;font-size:2.6cqw;padding:1.4cqw 2.5cqw}
 .art.duo.original>img{top:0;left:0;width:50%;height:100%;object-fit:contain}.art.duo.original>img.second-photo{left:50%}
 @media(max-width:780px){.step-nav-inner{padding:12px 18px;gap:8px}.step-position{max-width:150px;font-size:11px}.step-nav .btn{padding:10px 12px}.editor{max-height:none}}
+/* 생성된 카피 위에 화면 글자를 중복해서 얹지 않는다. */
+.art.baked>.brand,.art.baked>.copy,.art.baked>.second-photo,.art.baked>.shot{display:none}
+.art.baked::before,.art.baked::after{display:none}
+.art.baked>img:first-child{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:none;border-radius:0}
 </style>
 <link rel="stylesheet" href="/assets/banner-studio-preview.css?a=6">
 <link rel="stylesheet" href="/assets/banner-studio-live.css?a=8">

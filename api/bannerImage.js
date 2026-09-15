@@ -133,6 +133,33 @@ const ROOM = 'Compose the frame so that roughly one third of the image is calm, 
   + 'Do not let any part of it touch or run past an edge. If a person is in the shot, do not '
   + 'cut them at the knees, wrists or the top of the head.';
 
+function textBlock({ headline, subline, offer, brand, cta, style, eyebrow, footnote }) {
+  const lines = [
+    'Keep this photograph exactly as it is. Change nothing in the picture itself.',
+    'Add Korean advertising typography on top of it, and nothing else.',
+    'Reproduce every character exactly as given. Do not translate, rephrase, shorten or '
+    + 'add any word, number or symbol that is not listed here.',
+  ];
+  if (brand) lines.push(`Brand mark, small, top area: "${brand}"`);
+  // 레퍼런스 배너에서 반복되는 알약 라벨. 헤드라인 바로 위에 붙어야 한 덩어리로 읽힌다.
+  if (eyebrow) lines.push('Small pill-shaped label directly above the headline, solid '
+    + `filled shape with the text in the opposite colour: "${eyebrow}"`);
+  if (headline) lines.push(`Headline, the largest text on the image: "${headline}"`);
+  if (offer) lines.push(`Offer figure, set very large next to or under the headline: "${offer}"`);
+  if (subline) lines.push(`Sub line, small, under the headline: "${subline}"`);
+  if (cta) lines.push(`Call to action, small, in a button or a bar: "${cta}"`);
+  // 숫자의 근거. 실제 광고는 이 한 줄이 있어서 광고로 보인다.
+  if (footnote) lines.push('Footnote, the smallest text, along the bottom edge, muted: '
+    + `"${footnote}"`);
+  lines.push(`Set the headline in ${style || TYPE_STYLES_FALLBACK}.`);
+  lines.push('Korean Hangul syllable blocks must be formed correctly and be perfectly '
+    + 'legible at a glance. Keep the text clear of the product so nothing important is '
+    + 'covered. No other text anywhere in the image.');
+  return lines.join(' ');
+}
+const TYPE_STYLES_FALLBACK = 'a heavy geometric sans-serif';
+
+
 const REMOVE_AD_COPY = 'Edit the provided banner in place. Remove advertising overlay text, headlines, promotional numbers, prices, CTA lettering and floating brand/store logos, including their outlines and text shadows. Reconstruct the background behind them seamlessly. Preserve product positions, sizes, shapes, materials, people, decorative objects, lighting and contact shadows. Preserve ALL wording and logos physically printed on the actual products or packaging. If giant promotional numbers sit behind a product, remove the numbers while preserving the product boundary. Keep non-text design elements, colored footer strips, blank buttons, frames and decorations. Do not add new text or objects, crop, rearrange, or redesign. Return the same composition with advertising typography removed. This is background restoration, not a new photograph.';
 
 function buildPrompt({ scene, keep, imagePrompt, productName }) {
@@ -166,12 +193,14 @@ export default async function handler(req, res) {
   const { imageUrl, base64, mediaType, imagePrompt, scene, keep, size, text, operation } = req.body || {};
   const removing = operation === 'remove-ad-copy';
   if (removing && !imageUrl && !base64) { res.status(400).json({ error: '글자를 제거할 원본 이미지가 필요합니다.' }); return; }
-  if (text) { res.status(400).json({ error: '광고 카피는 이미지에 생성하지 않습니다. 장면만 요청해주세요.' }); return; }
-  if (!removing && !imagePrompt && !scene) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
+  const wantsText = operation === 'design-copy' && text && typeof text === 'object' && (text.headline || text.offer);
+  if (text && !wantsText) { res.status(400).json({ error: '디자인형 카피 요청을 확인해주세요.' }); return; }
+  if (wantsText && !imageUrl && !base64) { res.status(400).json({ error: '카피를 얹을 이미지가 필요합니다.' }); return; }
+  if (!removing && !wantsText && !imagePrompt && !scene) { res.status(400).json({ error: '이미지 프롬프트가 필요합니다.' }); return; }
   const outSize = ALLOWED_SIZES.has(size) ? size : '1024x1024';
   const outQuality = ALLOWED_QUALITY.has(req.body?.quality) ? req.body.quality : 'medium';
   const cut = (v, n) => (typeof v === 'string' ? v.slice(0, n) : '');
-  const prompt = removing ? REMOVE_AD_COPY : buildPrompt({
+  const prompt = removing ? REMOVE_AD_COPY : wantsText ? textBlock(Object.fromEntries(['headline','subline','offer','brand','cta','style','eyebrow','footnote'].map(k=>[k,cut(text[k],k==='style'?300:180)]))) : buildPrompt({
     scene: cut(scene, 900),
     keep: typeof keep === 'string' ? keep : '',
     imagePrompt: cut(imagePrompt, 500),
