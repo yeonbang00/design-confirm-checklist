@@ -27,5 +27,16 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/analyze.js": {
+      "includeFiles": "criteria-guide.html"
+    },
+    "api/bannerCopy.js": {
+      "includeFiles": "criteria-guide.html"
+    },
+    "api/bannerImage.js": {
+      "includeFiles": "criteria-guide.html"
+    }
+  }
 }

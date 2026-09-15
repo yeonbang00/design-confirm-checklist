@@ -203,3 +203,10 @@ crop·person·light·mood를 따로 돌려주고, `createPlan`이 같은 mount�
 **아직 실제 서버에서 한 번도 실행되지 않은 코드가 있다.** 로그인 게이트 때문에
 개발자가 배포본을 열지 못해서다. 아래는 로컬 정적 서버와 OpenAI 직접 호출까지만
 확인됐다 — `/api/productPhotos`와 `/api/imageText`는 배포본에서 첫 실행이다.
+
+
+## 생성·분석 공통 기준 업데이트
+
+공개 항목 기준은 `criteria-guide.html` → `api/_designKnowledge.js`를 통해 분석/카피/완성 이미지에 함께 전달한다. 새 기준을 분석 프롬프트에만 넣지 말고 공개 가이드에도 반영한다. 기존 17개 항목의 의미와 판정 예외는 유지한다. 가이드 구조를 바꾸면 `tests/studio-knowledge.test.mjs`도 실행한다. Vercel 함수에 가이드 파일을 포함하는 설정을 유지한다.
+
+기본 광고 카피는 카드 결제 혜택을 쓰지 않는다. 정책은 `assets/studio-offer-policy.mjs` 한 곳에서 관리한다. 원문 수집 데이터 자체는 지우지 않는다. 새 이미지/태그는 매 생성 시 다시 검색하며 제작 기록에 가이드와 레퍼런스 버전을 남긴다.

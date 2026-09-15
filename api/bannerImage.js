@@ -1,3 +1,4 @@
+import {getDesignKnowledge} from './_designKnowledge.js';
 // POST /api/bannerImage
 // Body: { imageUrl?: string, base64?: string, mediaType?: string,
 //         scene?: string, keep?: 'person'|'item'|'product',
@@ -214,7 +215,7 @@ export default async function handler(req, res) {
   const outSize = ALLOWED_SIZES.has(size) ? size : '1024x1024';
   const outQuality = ALLOWED_QUALITY.has(req.body?.quality) ? req.body.quality : 'medium';
   const cut = (v, n) => (typeof v === 'string' ? v.slice(0, n) : '');
-  const prompt = removing ? REMOVE_AD_COPY : wantsText ? (complete ? completeBannerPrompt(req.body) : textBlock(Object.fromEntries(['headline','subline','offer','brand','cta','style','eyebrow','footnote'].map(k=>[k,cut(text[k],k==='style'?300:180)])))) : buildPrompt({
+  let prompt = removing ? REMOVE_AD_COPY : wantsText ? (complete ? completeBannerPrompt(req.body) : textBlock(Object.fromEntries(['headline','subline','offer','brand','cta','style','eyebrow','footnote'].map(k=>[k,cut(text[k],k==='style'?300:180)])))) : buildPrompt({
     scene: cut(scene, 900),
     keep: typeof keep === 'string' ? keep : '',
     imagePrompt: cut(imagePrompt, 500),
@@ -222,6 +223,8 @@ export default async function handler(req, res) {
   });
 
   try {
+    const knowledge=complete?getDesignKnowledge('image'):null;
+    if(knowledge)prompt+='\n'+knowledge.prompt;
     let apiRes;
     if (imageUrl || base64) {
       // 원본이 있으면 edits — 제품을 유지한 채 배경만 바꾼다
@@ -263,7 +266,7 @@ export default async function handler(req, res) {
 
     const key = `banner-concepts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.png`;
     const url = await put(key, Buffer.from(b64, 'base64'), 'image/png');   // 문자열 URL을 돌려준다
-    res.status(200).json({ imageUrl: url, size: outSize, quality: outQuality });
+    res.status(200).json({ imageUrl: url, size: outSize, quality: outQuality, knowledge:knowledge?.metadata||null });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message || '이미지 생성에 실패했습니다.' });
   }

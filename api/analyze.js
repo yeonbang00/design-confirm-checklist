@@ -1,3 +1,4 @@
+import {getDesignKnowledge} from './_designKnowledge.js';
 // POST /api/analyze
 // Body: { base64: string, mediaType: string, advertiserId?: string, mediaGuideIds?: string[], imageWidth?: number, imageHeight?: number, briefImages?: [{base64, mediaType}], fileSizeBytes?: number }
 // Returns: { items: [...], summary: string, comparison: {...} | null, briefAlignment: {...} | null, briefError?: string }
@@ -702,8 +703,11 @@ export default async function handler(req, res) {
   const repeatPatternIns = (repeatPattern && repeatPattern.x && repeatPattern.y) ? repeatPatternInstruction(repeatPattern) : '';
   const spacingIns = (Array.isArray(spacingFacts) && spacingFacts.length) ? spacingInstruction(spacingFacts) : '';
 
+  let knowledge;
+  try{knowledge=getDesignKnowledge('analysis');}
+  catch(error){res.status(503).json({error:error.message});return;}
   const promptText =
-    BASE_PROMPT +
+    BASE_PROMPT + knowledge.prompt +
     (hasSize ? imageSizeInstruction(imageWidth, imageHeight, fileSizeBytes) : '') +
     (hasComparison ? comparisonInstruction(advertiser.name) : NO_COMPARISON_INSTRUCTION) +
     (hasGuideline ? brandGuidelineInstruction(advertiser.name, brandGuidelineText) : '') +
@@ -759,6 +763,7 @@ export default async function handler(req, res) {
     // 어떤 모델의 판정인지 분석 로그에 남기기 위해 함께 내려보낸다 — 모델을
     // 바꿨을 때 판정 분포가 어떻게 달라졌는지 나중에 대조하려면 이게 있어야 한다.
     parsed.model = OPENAI_MODEL;
+    parsed.knowledge = knowledge.metadata;
     res.status(200).json(parsed);
   } catch (err) {
     const status = (err && err.status) || 500;

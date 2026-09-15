@@ -9,9 +9,9 @@ const raw={offers:[{sectionId:'offer',quote:'이 상품 삼성카드 5% 할인 (
 const e=verifiedPageEvidence(raw,p.pageSections,p.sourceUrl);assert.equal(e.offers.length,1);
 assert.equal(verifiedPageEvidence({offers:[{...raw.offers[0],text:'누구나 50% 할인'}]},p.pageSections,p.sourceUrl).offers.length,0);
 assert.equal(verifiedPageEvidence({offers:[{...raw.offers[0],matchesTarget:false}]},p.pageSections,p.sourceUrl).offers.length,0);
-p.offers=e.offers;
+p.offers=[{id:'general',verified:true,text:'30% 할인',quote:'9월 17일까지 30% 할인',condition:'9월 17일까지',source:p.sourceUrl}];
 const row={main:'{{OFFER_0}}',sub:'로션 구성 살펴보기',cta:'혜택 확인하기',concept:'구매 조건 강조',fact:-1};
-const copy=resolveCopy(row,p);assert.equal(copy.main,'삼성카드 5% 할인');assert.match(copy.conditions,/5만원 이상/);
+const copy=resolveCopy(row,p);assert.equal(copy.main,'30% 할인');assert.match(copy.conditions,/9월 17일까지/);
 assert.throws(()=>resolveCopy({...row,main:'누구나 50% 할인'},p));
 const fact={id:'clinical',text:'피부톤 11.44% 개선',source:'해당 상품 시험'};
 assert.throws(()=>resolveCopy({...row,main:'피부톤 11% 개선',fact:0},p,[fact]));

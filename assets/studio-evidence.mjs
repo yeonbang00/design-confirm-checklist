@@ -1,3 +1,4 @@
+import {isCardOffer} from './studio-offer-policy.mjs';
 // Source text is evidence, never instructions. Only exact, attributable excerpts survive.
 export function evidenceSections(p){
  const rows=[...(p.pageSections||[])];
@@ -19,7 +20,7 @@ export function verifiedPageEvidence(raw,sections,source){
 }
 export function chooseCopyFacts(facts=[],plans=[]){
  const selected=new Set(plans.flatMap(p=>p.evidenceIds||[]));
- return [...facts].sort((a,b)=>Number(selected.has(b.id))-Number(selected.has(a.id))).slice(0,32);
+ return facts.filter(f=>!isCardOffer(f)).sort((a,b)=>Number(selected.has(b.id))-Number(selected.has(a.id))).slice(0,32);
 }
 export function completeCopy(variant,plan,product){
  const price=Number.isFinite(product.salePrice)?product.salePrice.toLocaleString('ko-KR')+'원':'';

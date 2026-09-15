@@ -16,6 +16,7 @@
 import { REFERENCE_CATEGORIES } from './_referenceLibrary.js';
 import { getUploadedReferenceImages } from './_referenceUploadsStore.js';
 import { getReferenceAxes, axesKey } from './_referenceAxesStore.js';
+import {referenceSnapshot} from './_referenceSnapshot.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -24,6 +25,8 @@ export default async function handler(req, res) {
   }
 
   const { category, fields } = req.query || {};
+  res.setHeader('Cache-Control','no-store');
+  const respond=items=>res.status(200).json({items,snapshot:referenceSnapshot(items,category)});
 
   /* 지문만 필요할 때가 있다(광고 담기에서 이미 있는 소재를 가려낼 때).
      소재 전체를 내려보내면 400KB인데 지문만 모으면 몇 KB다. */
@@ -33,10 +36,9 @@ export default async function handler(req, res) {
     res.status(200).json({ hashes, total: uploaded.length, withHash: hashes.length });
     return;
   }
-  const [uploaded, axes] = await Promise.all([
-    getUploadedReferenceImages(),
-    getReferenceAxes(),
-  ]);
+  let uploaded,axes;
+  try{[uploaded,axes]=await Promise.all([getUploadedReferenceImages({strict:true}),getReferenceAxes({strict:true})]);}
+  catch(error){res.status(503).json({error:'최신 이미지·태그를 읽지 못했습니다. 잠시 후 다시 시도해주세요.'});return;}
   /* 큐레이션된 978장은 소스 파일에 박혀 있어 런타임에 못 고친다.
      축 태그만 Blob 매니페스트에 따로 두고 여기서 붙여 내려보낸다. */
   /* 한글은 같은 글자를 두 가지로 적을 수 있다. macOS에서 모은 파일이라
@@ -62,7 +64,7 @@ export default async function handler(req, res) {
 
   if (!category || category === 'all') {
     const items = Object.values(REFERENCE_CATEGORIES).flatMap((cat) => cat.items || []);
-    res.status(200).json({ items: withAxes([...fresh, ...items]) });
+    respond(withAxes([...fresh, ...items]));
     return;
   }
 
@@ -73,5 +75,5 @@ export default async function handler(req, res) {
   }
 
   const uploadedForCategory = fresh.filter((u) => u.category === category);
-  res.status(200).json({ items: withAxes([...uploadedForCategory, ...(cat.items || [])]) });
+  respond(withAxes([...uploadedForCategory, ...(cat.items || [])]));
 }

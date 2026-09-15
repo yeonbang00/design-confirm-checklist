@@ -1,4 +1,5 @@
 import {factSlots} from './studio-data.mjs';
+import {advertisingProduct,isCardOffer} from './studio-offer-policy.mjs';
 /* 사진에서 읽은 사실에 들어 있는 숫자만 화이트리스트로 연다.
    확인되지 않은 숫자를 막는 규칙은 그대로 두고, 근거가 있는 숫자만 통과시킨다.
    "11.44%"는 되고 "11%"는 안 된다. 반올림도 우리가 하지 않는다. */
@@ -7,6 +8,7 @@ const tight=s=>String(s??'').replace(/\s+/g,'');
 export function factNumbers(fact){return fact?[...new Set((String(fact.text||'').match(NUM)||[]).map(tight))].sort((a,b)=>b.length-a.length):[]}
 
 export function resolveCopy(row,p,facts=[]) {
+  p=advertisingProduct(p);
   const slots={...factSlots(p)}, out={};
   const offers=(p.offers||[]).filter(o=>o.verified===true&&o.text&&o.quote&&o.source);
   offers.slice(0,12).forEach((o,i)=>{slots['OFFER_'+i]=(o.condition?o.text.replace(o.condition,''):o.text).trim().replace(/\s+/g,' ');});
@@ -14,6 +16,7 @@ export function resolveCopy(row,p,facts=[]) {
   const list=Array.isArray(facts)?facts:[];
   const idx=Number.isInteger(row?.fact)&&row.fact>=0&&row.fact<list.length?row.fact:-1;
   const fact=idx>=0?list[idx]:null;
+  if(fact&&isCardOffer(fact))throw Error('카드 결제 혜택은 기본 광고 카피에서 제외합니다.');
   const allowed=factNumbers(fact);
   for(const key of ['main','sub','cta','concept','eyebrow']) {
     let text=row?.[key];
@@ -24,6 +27,7 @@ export function resolveCopy(row,p,facts=[]) {
     // Internal design rationale is never rendered as advertising copy.
     // Keep consumer fields strict; do not reject rationale mentioning a CTA or delivery panel.
     if(key==='concept'){out.concept=text.trim();continue;}
+    if(isCardOffer(text))throw Error('카드 결제 혜택은 기본 광고 카피에서 제외합니다.');
     let probe=tight(text.replace(/\{\{(PRICE|QUANTITY|BENEFIT|OFFER_\d+)\}\}/g,''));
     probe=probe.replace(NUM,n=>allowed.includes(tight(n))?'':n);
     if(/[0-9０-９%％]|무료|첫\s*구매|최저|최고|보장|한정|마감|배송|증정|캐시백|쿠폰/.test(probe))throw Error(key+'에 확인되지 않은 숫자/혜택 표현이 있습니다: '+probe.slice(0,100));

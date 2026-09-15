@@ -13,13 +13,15 @@ import { put } from './_blobPut.js';
 const BLOB_PUBLIC_BASE = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com';
 const UPLOADS_URL = `${BLOB_PUBLIC_BASE}/reference-uploads.json`;
 
-export async function getUploadedReferenceImages() {
+export async function getUploadedReferenceImages({strict=false}={}) {
   try {
     const resp = await fetch(UPLOADS_URL, { cache: 'no-store' });
-    if (!resp.ok) return [];
+    if (!resp.ok) {if(strict)throw Error('레퍼런스 업로드 목록 응답 오류');return [];}
     const data = await resp.json();
+    if(strict&&!Array.isArray(data.items))throw Error('레퍼런스 업로드 목록 형식 오류');
     return Array.isArray(data.items) ? data.items : [];
   } catch (e) {
+    if(strict)throw e;
     return [];
   }
 }

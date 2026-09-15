@@ -26,13 +26,15 @@ export function axesKey(url) {
   return tail && tail.length >= 8 ? tail : stem.slice(-40);
 }
 
-export async function getReferenceAxes() {
+export async function getReferenceAxes({strict=false}={}) {
   try {
     const resp = await fetch(AXES_URL, { cache: 'no-store' });
-    if (!resp.ok) return {};
+    if (!resp.ok) {if(strict)throw Error('레퍼런스 축 목록 응답 오류');return {};}
     const data = await resp.json();
+    if(strict&&(!data?.items||typeof data.items!=='object'||Array.isArray(data.items)))throw Error('레퍼런스 축 목록 형식 오류');
     return data && typeof data.items === 'object' && data.items ? data.items : {};
   } catch (e) {
+    if(strict)throw e;
     return {};
   }
 }

@@ -402,7 +402,8 @@ async function autoReferences(p){
  const category = mapped || guessed;
  if(!category) return [];
  try{
-  const data = await getJSON('/api/referenceImages?category=' + encodeURIComponent(category));
+  const data = await getJSON('/api/referenceImages?category=' + encodeURIComponent(category),{cache:'no-store'});
+  p.referenceSnapshot=data.snapshot||null;
   return (data.items||[]).filter(x=>safeUrl(x.thumbUrl)).map(x=>({...x, brand:x.brandName||''}));
  }catch(e){ throw Error('이미지 레퍼런스를 불러오지 못했습니다. '+e.message); }
 }
@@ -413,7 +414,7 @@ async function autoCopies(run){
  const data=await getJSON('/api/bannerCopy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'studio',autoPlan:true,product:copyProduct,layouts:autoPlan.map(p=>p.layout),references,plans:autoPlan,facts:product.facts||[]})});
  if(run!==autoRun)return;
  if(!Array.isArray(data.copies)||data.copies.length!==6)throw Error('카피가 6개 돌아오지 않았습니다. 카피만 다시 시도해주세요.');
- variants.forEach((v,i)=>Object.assign(v,data.copies[i],{reference:references[i],copyModel:data.model,copyEdited:false}));autoCopyFailed=false;renderBoard();fillEditor();
+ variants.forEach((v,i)=>Object.assign(v,data.copies[i],{reference:references[i],copyModel:data.model,knowledge:data.knowledge,offerPolicy:data.offerPolicy,copyEdited:false}));autoCopyFailed=false;renderBoard();fillEditor();
 }
 /* 시안 6종을 서로 다른 컷으로 만들려면 가진 사진이 각각 무엇인지 알아야 한다.
    비율만으로는 모델컷과 단품컷이 구분되지 않아서, 사진을 실제로 보고 역할을
@@ -697,7 +698,7 @@ async function generateImage(plan,run,q){
   if(issues.length)throw Error('완성 배너 확인: '+issues.join(' · '));
  }
  const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe,...(prepared?{cleanUrl:finalUrl,cleanBase64:finalUrl.split(',')[1],cleanType:'image/png',sourcePreserved:true}: {})})-1;
- variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:'v3',recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
+ variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:'v3',knowledge:{copy:variant.knowledge,image:shot.knowledge},offerPolicy:variant.offerPolicy,referenceSnapshot:product.referenceSnapshot,recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
  const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
  variant.quality=q||quality;
  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+`AI 생성 · ${qLabel} · 상품 일치 확인 필요`;

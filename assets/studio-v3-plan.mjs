@@ -1,3 +1,5 @@
+import {advertisingProduct} from './studio-offer-policy.mjs';
+import {AXES} from './reference-axes.mjs';
 // R01–R30 are recipes, not six mutually exclusive asset-source slots.
 const rows=[
  ['R01','전면 화보','photo','full','person','none','product','photo','A dominant real photograph with a large headline in a separate top band.'],
@@ -34,6 +36,7 @@ const rows=[
 export const V3_RECIPES=rows.map(([id,label,family,frame,focus,motif,type,requires,design])=>({id,label,family,targetAxes:{frame,focus,motif},type,requires,design}));
 const usable=p=>p.matchesTarget===true&&p.role!=='unusable'&&!p.isGift&&p.assetKind!=='info'&&(p.sourceRegion||!(p.w&&p.h&&p.h/p.w>1.7));
 export function createV3Plan(product,{random=Math.random,recent=[]}={}){
+ product=advertisingProduct(product);
  const photos=product.photos||[],bank=photos.map((p,i)=>({p,i})).filter(x=>usable(x.p));
  if(!bank.length)return [];
  const main=bank.find(x=>x.p.provenance==='main'||x.p.role==='main')||bank.find(x=>x.p.assetKind!=='texture')||bank[0];
@@ -72,7 +75,7 @@ export function createV3Plan(product,{random=Math.random,recent=[]}={}){
 export function matchPlanReferences(plans,refs,product){
  const used=new Set();
  return plans.map(p=>{
-  const ranked=refs.filter(r=>r.thumbUrl).map(r=>({r,score:Object.entries(p.targetAxes||{}).reduce((s,[k,v])=>s+(r.axes?.[k]===v?({frame:6,focus:5,motif:6,appeal:4}[k]||1):0),0)+(r.type===p.type?6:0)+(String(r.brandName||r.brand||'').normalize('NFC').toLowerCase()===String(product.brand||'').normalize('NFC').toLowerCase()?2:0)-(used.has(r.thumbUrl)?25:0)})).sort((a,b)=>b.score-a.score);
+  const ranked=refs.filter(r=>r.thumbUrl).map(r=>({r,score:Object.entries(p.targetAxes||{}).reduce((s,[k,v])=>s+(r.axes?.[k]===v?(AXES[k]?.weight||1):0),0)+(r.type===p.type?6:0)+(String(r.brandName||r.brand||'').normalize('NFC').toLowerCase()===String(product.brand||'').normalize('NFC').toLowerCase()?2:0)-(used.has(r.thumbUrl)?25:0)})).sort((a,b)=>b.score-a.score);
   const hit=ranked[0];if(hit)used.add(hit.r.thumbUrl);
   return {...p,reference:hit?{...hit.r,matchScore:hit.score}:null};
  });
