@@ -17,7 +17,7 @@ export function parseCriteriaGuide(html){
   const id=Number(chunk.match(/class="item-num"[^>]*>(\d+)/)?.[1]);
   const title=plainGuideText(chunk.match(/class="item-title"[^>]*>([\s\S]*?)<\//)?.[1]||'');
   // Confirmation bullets and explicit rejection examples are mandatory.
-  // Detailed evidence remains present in the source; select a bounded excerpt per item.
+  // Include the full explanatory text for selected items so later additions apply too.
   const checks=[...chunk.matchAll(/<(ul|div)\b[^>]*class="(?:bullets|reject-box)"[^>]*>([\s\S]*?)<\/\1>/g)].map(m=>plainGuideText(m[2])).join(' ');
   const evidence=plainGuideText(chunk.split(/class="evidence-box"[^>]*>/).slice(1).join(' '));
   return {id,title,checks,evidence};
@@ -30,8 +30,8 @@ export function getDesignKnowledge(stage){
  if(!STAGES[stage])throw Error('공통 가이드 사용 단계를 확인해주세요.');
  const guide=parseCriteriaGuide(readFileSync(new URL('../criteria-guide.html',import.meta.url),'utf8'));
  const rules=guide.rules.filter(r=>STAGES[stage].includes(r.id));
- const metadata={source:'criteria-guide.html',version:guide.version,stage,itemIds:rules.map(r=>r.id),excerpted:true};
+ const metadata={source:'criteria-guide.html',version:guide.version,stage,itemIds:rules.map(r=>r.id),excerpted:false};
  const purpose=stage==='analysis'?'기존 판정 절차·예외·브랜드/매체 지침을 유지하며 아래 최신 공개 가이드도 함께 대조한다.':
   '퍼포먼스 광고 제작에 적용한다. 참고 예시의 브랜드·상품·수치·혜택은 사실 근거가 아니며 복사하지 않는다. 현재 상품의 확정 카피와 근거만 그린다. 제작 방향의 명확한 CTA 요구를 지킨다.';
- return {metadata,prompt:'\n[공통 항목 가이드 '+guide.version+'] '+purpose+'\n'+rules.map(r=>`${r.id}. ${r.title}\n${r.checks}\n설명 발췌: ${r.evidence.slice(0,600)}`).join('\n')};
+ return {metadata,prompt:'\n[공통 항목 가이드 '+guide.version+'] '+purpose+'\n'+rules.map(r=>`${r.id}. ${r.title}\n${r.checks}\n설명: ${r.evidence}`).join('\n')};
 }

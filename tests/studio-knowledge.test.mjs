@@ -35,6 +35,8 @@ assert.throws(()=>parseCriteriaGuide('<main>가이드가 없습니다</main>'));
 const copy=getDesignKnowledge('copy'),image=getDesignKnowledge('image'),analysis=getDesignKnowledge('analysis');
 assert.equal(copy.metadata.version,image.metadata.version);
 assert.equal(image.metadata.version,analysis.metadata.version);
+assert.ok(copy.prompt.includes(guide.rules.find(r=>r.id===3).evidence));
+assert.equal(copy.metadata.excerpted,false);
 assert.match(copy.prompt,/전략 적합성/);assert.match(image.prompt,/CTA/);
 assert.doesNotMatch(image.prompt,/<svg|<script|gnb-/);
 const a={thumbUrl:'a',type:'product',axes:{frame:'full'}};
