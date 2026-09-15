@@ -251,7 +251,11 @@
     background:rgba(255,255,255,.045);
     transition:transform .3s cubic-bezier(.2,.8,.2,1);}
   .akin-card button:hover img{transform:scale(1.04);}
-  .akin-sort{margin:8px 0 0 6px;min-height:36px;padding:6px 28px 6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;color-scheme:dark;}
+  .akin-sort{display:inline-flex;gap:4px;flex-wrap:wrap;margin-top:12px;padding:4px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+  .akin-sort button{min-height:40px;padding:8px 18px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--ink-2);font-family:inherit;font-size:14px;font-weight:600;line-height:1.4;cursor:pointer}
+  .akin-sort button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+  .akin-sort button:hover{border-color:var(--ink-3)}
+  .akin-sort button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   .akin-score{display:block; margin-top:8px; font:700 12px/1.4 var(--font-mono); color:var(--accent);}
   .akin-brand{display:block; margin-top:2px; font-size:12px; font-weight:600; color:var(--ink);}
   .akin-why{display:block; margin-top:3px; font-size:10.5px; line-height:1.55; color:var(--ink-4);}
@@ -865,7 +869,7 @@
     akinBack.innerHTML = '<div class="akin-box">'
       + '<div class="akin-top"><div><h3>비슷한 배너</h3>'
       + '<p>태그 기준 유사도입니다. 구도와 색감을 따로 비교하며, 광고 성과를 뜻하지 않습니다.</p>'
-      + '<label>정렬 <select class="akin-sort"><option value="composition">구도순</option><option value="color">색감순</option><option value="both">둘 다</option></select></label></div>'
+      + '<div class="akin-sort" role="group" aria-label="비슷한 배너 정렬"><button type="button" data-sort="composition" aria-pressed="false">구도순</button><button type="button" data-sort="color" aria-pressed="false">색감순</button><button type="button" data-sort="both" aria-pressed="false">둘 다</button></div></div>'
       + '<button type="button" class="akin-x">닫기</button></div>'
       + '<div class="akin-body">'
       + '<div class="akin-src"></div>'
@@ -876,7 +880,10 @@
     akinBack.querySelector('.akin-x').addEventListener('click', closeAkin);
     // 바깥을 눌러도 닫힌다. 안쪽을 눌렀을 때는 닫히면 안 된다.
     akinBack.addEventListener('click', (e) => { if(e.target === akinBack) closeAkin(); });
-    const sort=akinBack.querySelector('.akin-sort');sort.value=akinMode;sort.onchange=()=>{akinMode=sort.value;fillAkin(akinTarget)};
+    const sortButtons=[...akinBack.querySelectorAll('[data-sort]')];
+    const markSort=()=>sortButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sort===akinMode)));
+    markSort();
+    sortButtons.forEach(b=>b.onclick=()=>{if(akinMode===b.dataset.sort)return;akinMode=b.dataset.sort;markSort();fillAkin(akinTarget)});
     fillAkin(item);
   }
 
