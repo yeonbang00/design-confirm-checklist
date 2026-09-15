@@ -1,4 +1,4 @@
-import {normalizePhotoRegions} from '../assets/studio-photo-regions.mjs';
+import {normalizePhotoRegions} from './_photoRegions.js';
 // POST /api/productPhotos
 // Body: { urls: string[], referenceUrls?: string[] }
 // Returns: { photos:[...], category, usp, toneKo,
