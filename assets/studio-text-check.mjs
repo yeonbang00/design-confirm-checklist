@@ -1,3 +1,4 @@
+import {renderedBrandIssues} from './studio-brand-identity.mjs';
 /* 그림 안에 그려 넣은 숫자를 확인한다.
  *
  * 카피까지 그림에 그리게 열었다. 문구가 틀리면 고쳐 쓰면 그만이지만
@@ -56,10 +57,11 @@ export async function checkBakedText(url, verified, getJSON) {
 export function renderedTypographyIssues(check,copy,plan={},size=1024){
  if(!Array.isArray(check?.boxes))return [];
  const compact=s=>String(s||'').replace(/[^가-힣A-Za-z0-9]/g,'').toLowerCase();
- const texts={headline:compact(copy.headline),subline:compact(copy.subline),cta:compact(copy.cta)};
+ const texts={headline:compact(copy.headline),subline:compact(copy.subline),cta:compact(copy.cta),brandLine:compact(copy.brandLine)};
  const boxesFor=key=>check.boxes.filter(b=>{const t=compact(b.text);return t.length>=3&&texts[key].includes(t)&&!Object.entries(texts).some(([k,v])=>k!==key&&v.includes(t))&&b.h>0;});
  const head=boxesFor('headline'),support=boxesFor('subline'),cta=boxesFor('cta'),issues=[];
  if(support.some(b=>b.h/size<.017))issues.push('서브 문구가 모바일에서 읽기 어려운 크기');
+ if(boxesFor('brandLine').some(b=>b.h/size<.017))issues.push('상품 브랜드명이 읽기 어려운 크기');
  if(cta.some(b=>b.h/size<.017))issues.push('CTA 글자가 지나치게 작음');
  // A numeric emphasis concept may intentionally use a different figure size.
  if(!['numbers','benefit'].includes(plan.type)&&head.length>=2){
@@ -74,7 +76,7 @@ export function renderedTypographyIssues(check,copy,plan={},size=1024){
 export function renderedCopyIssues(check,copy){
  if(!check)return ['광고 문구를 확인하지 못했습니다'];
  const compact=s=>String(s||'').replace(/[^가-힣A-Za-z0-9%]/g,'').toLowerCase();
- const read=compact(check.read),issues=[];
+ const read=compact(check.read),issues=renderedBrandIssues(check,copy);
  if(check.claims.length)issues.push('확인되지 않은 수치: '+check.claims.join(', '));
  if(copy.cta&&!read.includes(compact(copy.cta)))issues.push('CTA 문구 누락 또는 오탈자');
  const prices=findClaims([copy.headline,copy.subline,copy.offer].join(' ')).filter(x=>x.endsWith('원'));

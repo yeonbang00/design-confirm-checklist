@@ -1,3 +1,4 @@
+import {brandCopy} from './studio-brand-identity.mjs';
 import {basicCopy,isSupportingOffer,displayProductName} from './studio-visual-contract.mjs';
 import {isCardOffer} from './studio-offer-policy.mjs';
 // Source text is evidence, never instructions. Only exact, attributable excerpts survive.
@@ -29,7 +30,7 @@ export function completeCopy(variant,plan,product){
  const headline=variant.main||'',subline=variant.sub||'';
  if(isSupportingOffer(headline))throw Error('배송 혜택은 메인 제목이 아니라 보조 문구로 사용해주세요.');
  if(price&&[headline,subline].join(' ').replace(/\s/g,'').split(price).length>2)throw Error('같은 가격이 반복된 카피입니다. 카피를 다시 생성해주세요.');
- return {headline,subline,offer:'',brand:'',cta:variant.cta?.trim()||'상품 자세히 보기',footnote:[variant.conditions,variant.footnote].filter(Boolean).join(' · ')};
+ return {headline,subline,...brandCopy(product,headline,subline),offer:'',brand:'',cta:variant.cta?.trim()||'상품 자세히 보기',footnote:[variant.conditions,variant.footnote].filter(Boolean).join(' · ')};
 }
 
 export function validatePlannedCopy(copy,plan,product){

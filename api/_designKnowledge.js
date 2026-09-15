@@ -32,6 +32,6 @@ export function getDesignKnowledge(stage){
  const rules=guide.rules.filter(r=>STAGES[stage].includes(r.id));
  const metadata={source:'criteria-guide.html',version:guide.version,stage,itemIds:rules.map(r=>r.id),excerpted:false};
  const purpose=stage==='analysis'?'기존 판정 절차·예외·브랜드/매체 지침을 유지하며 아래 최신 공개 가이드도 함께 대조한다.':
-  '퍼포먼스 광고 제작에 적용한다. 참고 예시의 브랜드·상품·수치·혜택은 사실 근거가 아니며 복사하지 않는다. 현재 상품의 확정 카피와 근거만 그린다. CTA는 매체와 시안에 맞는 텍스트 링크·버튼·띠로 표현하며 과도한 크기를 강제하지 않는다. 디자이너가 나중에 넣을 로고는 이번 생성에서 생략한다. 생성된 광고 글자도 15번의 검수 대상이다. 실제 원본 및 브랜드 무드와 선택한 레퍼런스의 위계를 우선하고 확인되지 않은 효능을 만들지 않는다.';
+  '퍼포먼스 광고 제작에 적용한다. 참고 예시의 브랜드·상품·수치·혜택은 사실 근거가 아니며 복사하지 않는다. 현재 상품의 확정 카피와 근거만 그린다. CTA는 매체와 시안에 맞는 텍스트 링크·버튼·띠로 표현하며 과도한 크기를 강제하지 않는다. 디자이너가 나중에 넣을 로고는 이번 생성에서 생략한다. 로고 생략은 상품 브랜드명 생략을 뜻하지 않는다. 확인된 상품 브랜드는 제목·서브 또는 별도 일반 텍스트로 읽히게 표기한다. 생성된 광고 글자도 15번의 검수 대상이다. 실제 원본 및 브랜드 무드와 선택한 레퍼런스의 위계를 우선하고 확인되지 않은 효능을 만들지 않는다.';
  return {metadata,prompt:'\n[공통 항목 가이드 '+guide.version+'] '+purpose+'\n'+rules.map(r=>`${r.id}. ${r.title}\n${r.checks}\n설명: ${r.evidence}`).join('\n')};
 }
