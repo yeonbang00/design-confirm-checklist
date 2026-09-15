@@ -629,6 +629,19 @@ async function tuneScrim(i){
    여섯 장을 다 고화질로 뽑으면 생성만 3분이 넘는다. 쓸 시안을 고른 뒤
    그 한 장만 올린다. */
 let quality='medium';
+async function generationSource(photo){
+ if(!photo.cleanBase64)return {imageUrl:photo.url};
+ if(photo.cleanBase64.length<2000000)return {base64:photo.cleanBase64,mediaType:photo.cleanType};
+ // Keep the downloadable original; compress only the API request copy below server limits.
+ const img=new Image();
+ await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('생성용 사진을 읽지 못했습니다.'));img.src=`data:${photo.cleanType};base64,${photo.cleanBase64}`});
+ const scale=Math.min(1,1400/Math.max(img.naturalWidth,img.naturalHeight));
+ const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);
+ const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+ const base64=c.toDataURL('image/jpeg',0.88).split(',')[1];
+ if(base64.length>3000000)throw Error('생성용 사진 용량이 너무 큽니다. 다른 사진을 선택해주세요.');
+ return {base64,mediaType:'image/jpeg'};
+}
 async function generateImage(plan,run,q){
  const variant=variants.find(v=>v.id===plan.id);if(!variant)return;
  variant.autoStatus='이미지 생성 중';variant.imageFailed=false;variant.imageReady=false;variant.imageError='';renderBoard();
@@ -638,7 +651,7 @@ async function generateImage(plan,run,q){
  variant.sourcePhoto=plan.photo;
  try{
  // 1단계: 장면을 만든다. 이 호출에는 글자 지시를 넣지 않는다.
- const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:plan.imagePrompt||`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...await generationSource(src),scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:plan.imagePrompt||`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
  if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
  let finalUrl=shot.imageUrl;
 
@@ -652,7 +665,7 @@ async function generateImage(plan,run,q){
  }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
  renderBoard();fillEditor();tuneScrim(variants.indexOf(variant));
 }
-async function retryImage(id,q){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun,q)}finally{setBusy(false);finishMessage()}}
+async function retryImage(id,q){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun,q);if(!autoCopyFailed)await designCopy(id,true)}finally{setBusy(false);finishMessage()}}
 /* 실패 이유를 화면에 적는다. 전에는 "실패했습니다"만 적어서 무엇이 왜
    죽었는지 알 길이 없었다. 한 판에 사진 분류·카피·이미지가 모두 죽은
    적이 있는데, 세 곳 다 이유를 삼켜서 매번 처음부터 파야 했다. */
