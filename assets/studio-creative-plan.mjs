@@ -68,6 +68,9 @@ export function createCreativePlan(product, random=Math.random) {
   while(selected.length<6&&take(c=>c.method==='original')){}
   // 충분한 자료가 없는 업종·상품은 기존 기획기가 처리한다. 가짜 레시피로 여섯을 채우지 않는다.
   if(selected.length<6)return null;
+  // Generated set must also carry the verified offer; previously price was never selected.
+  const offerScene=selected.find(c=>c.method==='newscene'&&c.axes.person==='none')||selected.find(c=>c.method==='newscene');
+  if(offerScene&&Number(product.salePrice)>0){offerScene.emphasis='offer';offerScene.copyBrief='PRICE와 QUANTITY를 명확하게 전달한다. 구성 수량과 가격이 주인공인 짧은 카피. 할인율·최저가·마감은 만들지 않는다.';}
   return selected.map((c,id)=>{
     const source=photos[c.photo],made=c.method==='newscene';
     const kind=c.emphasis==='offer'?'numbers':c.emphasis==='story'?'usage':'product';

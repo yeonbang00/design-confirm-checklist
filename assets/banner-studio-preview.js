@@ -271,7 +271,7 @@ for(const id of ['productName','productBrand','productPrice','productQuantity','
 validProduct=function(){syncFacts();let error='';if(!product.productName)error='상품명을 입력해주세요.';else if(!product.photos.length)error='상품 사진을 한 장 이상 등록해주세요.';else if(product.salePrice!==null&&(!Number.isInteger(product.salePrice)||product.salePrice<1))error='판매가를 양의 정수로 입력해주세요.';else if(product.quantity!==null&&(!Number.isInteger(product.quantity)||product.quantity<1))error='구성 수량을 양의 정수로 입력해주세요.';else if(product.benefitConfirmed&&!factSlots(product).BENEFIT)error='1~100% 할인율과 적용 조건을 함께 입력해주세요.';else if(!$('#factCheck').checked)error='상품명·판매가·구성을 확인하고 체크해주세요.';$('#productError').textContent=error;$('#productError').hidden=!error;return !error};
 async function getJSON(url,options={}){
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),240000);
- try{const response=await fetch(url,{...options,signal:controller.signal});let data;try{data=await response.json()}catch{throw Error('응답을 읽지 못했습니다. 로그인 상태와 서버 연결을 확인해주세요. 로컬 화면에서는 API가 실행되지 않습니다.')}
+ try{const response=await fetch(url,{...options,signal:controller.signal});let data;try{data=await response.json()}catch{const reason=response.status===504?'서버 처리 시간이 초과됐습니다':response.status===401||response.status===403?'로그인 또는 관리자 확인이 필요합니다':'서버가 올바른 응답을 반환하지 않았습니다';throw Error(`${reason} (${url.split('?')[0]}, HTTP ${response.status}). 다시 시도해주세요.`)}
  if(!response.ok){const e=Error(data.error||'요청을 처리하지 못했습니다. 다시 시도해주세요.');e.blocked=data.blocked;throw e}return data;
  }catch(e){if(e.name==='AbortError')throw Error('응답 시간이 길어졌습니다. 잠시 후 다시 시도해주세요.');throw e}finally{clearTimeout(timeout)}
 }
@@ -516,9 +516,7 @@ async function classifyPhotos(run){
    +`지금은 사진 ${product.photos.length}장뿐이라 여섯 중 다섯 장이 생성물입니다. · `+photoNotice;
  }
  }catch(e){
-  /* 왜 실패했는지 안 남기면 매번 처음부터 파야 한다. 실제로 한 번 그랬다. */
-  photoNotice=(sizeNote?sizeNote+' · ':'')
-   +'사진 분류에 실패해 비율로 나눕니다 ('+String(e&&e.message||e).slice(0,80)+')';
+  throw Error('사진 분석을 완료하지 못해 생성을 중단했습니다. '+String(e?.message||e));
  }
 }
 
@@ -671,6 +669,8 @@ function finishMessage(){
   autoMessage((photoNotice?photoNotice+' · ':'')
     +(autoCopyFailed?'카피 생성에 실패해 카피까지 그리는 시안은 만들지 못했습니다. 카피만 다시 시도할 수 있습니다.'
       :failedImages.size?`6종 중 이미지 ${failedImages.size}개가 실패했습니다. 해당 카드에서 다시 생성할 수 있습니다.`
+      :variants.some(v=>v.designError)?'일부 시안의 타이포그래피 생성에 실패했습니다. 기본 조판 미리보기를 표시합니다.'
+      :variants.some(v=>v.baked&&(!v.textClaims||v.textClaims.length))?'시안 생성 완료 · 일부 시안의 문구·숫자 확인이 필요합니다.'
       :'시안 6종이 완성됐습니다. 마음에 드는 시안을 선택해 수정·저장하세요.')
     +(why.length?'  —  '+why.join(' · '):''));
   $('#autoRetryCopy').hidden=!autoCopyFailed;
@@ -704,8 +704,10 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
    if(extracted.failures.length)photoNotice+=` · ${extracted.failures.length}장은 추출하지 못해 원본 유지`;
   }
   // 로고 지우기와 누끼는 여기서 시작만 걸어 둔다. 계획·카드·카피와 겹쳐 돈다.
+  autoPlan=createPlan(product);
+  if(/^(fashion-|beauty$)/.test(product.category||'')&&autoPlan[0]?.plannerVersion!=='creative-v1')throw Error('사진 분석은 완료했지만 서로 다른 시안을 구성할 자료가 부족합니다. 상품 정보를 보완한 뒤 다시 생성해주세요.');
   const pixelWork=startPixelWork(run);
-  autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
+  failedImages.clear();autoCopyFailed=false;
   photoNotice+=autoPlan[0]?.plannerVersion==='creative-v1'?' · 사진·메시지 통합 기획':' · 기본 기획(통합 기획 후보 부족 또는 미지원 업종)';
   const slots=factSlots(product);
   /* 카피가 오기 전과 카피 생성이 실패했을 때 쓰는 값이다. 전에는 여섯 장이
@@ -739,6 +741,11 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   await pixelWork;
   if(run!==autoRun)return;
   await Promise.all([copyTask,...drain(imageQueue)]);
+  if(!autoCopyFailed){
+   autoMessage('장면에 맞춰 배너 타이포그래피를 완성하는 중…');
+   const queue=autoPlan.filter(p=>p.method==='newscene'&&!variants.find(v=>v.id===p.id)?.imageFailed);
+   await Promise.all(Array.from({length:2},async()=>{while(queue.length&&run===autoRun)await designCopy(queue.shift().id,true)}));
+  }
   renderBoard();fillEditor();finishMessage();
  }catch(e){autoMessage(e.message);if(!useCurrent&&!fromGrab)$('#quickGrab').focus()}finally{setBusy(false)}
 }
@@ -779,17 +786,17 @@ const legacyFill=fillEditor;fillEditor=function(){legacyFill();$('#saveVariant')
 $('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=true;$('#savedStep').hidden=true;
 
 // Keep the clean scene separately so no inpainting is needed to download it later.
-async function designCopy(id){
- if(autoBusy)return;
+async function designCopy(id,automatic=false){
+ if(autoBusy&&!automatic)return;
  const v=variants.find(x=>x.id===id);if(!v||v.imageReady===false||v.imageFailed||v.baked)return;
  const original=PHOTOS[v.photo],clean=srcOf(original);if(!clean)return;
- const run=autoRun;setBusy(true);v.autoStatus='디자인형 카피 생성 중';renderBoard();
+ const run=autoRun;if(!automatic)setBusy(true);v.designError='';v.autoStatus='디자인형 카피 생성 중';renderBoard();
  try{
-  const data=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'design-copy',imageUrl:clean,quality:'medium',size:'1024x1024',text:{headline:v.main,subline:v.sub,offer:v.offer,brand:product.brand,cta:v.showCta?v.cta:'',eyebrow:v.eyebrow,footnote:v.footnote,style:'expressive Korean advertising lettering; use dimensional balloon-like offer numerals when an offer is provided, otherwise bold outlined sticker lettering; keep small supporting copy simple and legible'}})});
+  const data=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'design-copy',imageUrl:clean,quality:'medium',size:'1024x1024',text:{headline:v.main,subline:v.sub,offer:v.offer,brand:product.brand,cta:v.showCta?v.cta:'',eyebrow:v.eyebrow,footnote:v.footnote,style:(autoPlan.find(p=>p.id===id)?.emphasis==='offer'?'Bold campaign typography with a large verified price or quantity; dimensional offer lettering, restrained supporting text.':'Refined fashion or product editorial typography. Large confident Korean headline, carefully spaced; no cartoon sticker outlines.')+' Integrate typography into the existing negative space, never cover the face, neckline or product. Keep all Korean copy legible on a mobile feed. Do not add extra wording.'}})});
   if(run!==autoRun)return;if(!safeUrl(data.imageUrl))throw Error('생성 이미지를 받지 못했습니다.');
   v.sourcePhoto=v.photo;v.photo=PHOTOS.push({...original,url:data.imageUrl,cleanUrl:undefined,cleanBase64:undefined,cutUrl:undefined,baseImageUrl:clean,label:original.label+' · 디자인형 카피'})-1;v.baked=true;v.original=false;v.autoStatus='디자인형 카피 · 숫자 확인 중';renderBoard();
   const slots=factSlots(product);const check=await checkBakedText(data.imageUrl,[slots.PRICE,slots.BENEFIT,...(product.facts||[]).map(x=>x.text)],getJSON);
   if(run!==autoRun)return;v.textClaims=check?.claims||null;v.autoStatus=!check?'디자인형 카피 · 숫자 확인 못 함':check.claims.length?'확인되지 않은 숫자: '+check.claims.join(', '):'디자인형 카피 · 숫자 대조 완료 · 문구와 상품 확인 필요';
- }catch(e){v.autoStatus='디자인형 카피 실패 · 기존 이미지 유지';notify(e.message)}
- finally{setBusy(false);renderBoard();fillEditor()}
+ }catch(e){v.designError=String(e.message||e);v.autoStatus='타이포그래피 생성 실패 · 기본 조판 미리보기';if(!automatic)notify(e.message)}
+ finally{if(!automatic)setBusy(false);renderBoard();fillEditor()}
 }

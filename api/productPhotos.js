@@ -33,6 +33,8 @@ const CATEGORIES = new Set(['fashion-top', 'fashion-outer', 'fashion-bottom', 's
    얹는다. AI가 그림 안에 또 그리면 두 겹이 된다. */
 const BANNED = /\b(text|letter|word|logo|sign|signage|label|price tag|billboard|poster|brand name)\b/i;
 
+// Six detail images plus visual planning can exceed the platform default timeout.
+export const maxDuration = 180;
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
 
 const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에서 모은 사진들을 보고, 각 사진이 배너에서 어떤 소재로 쓸 수 있는지 분류하세요.
@@ -308,6 +310,7 @@ function cleanCuts(raw) {
 
 async function fetchImage(url) {
   const r = await fetch(url, {
+    signal: AbortSignal.timeout(20000),
     headers: {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 '
                   + '(KHTML, like Gecko) Version/17.0 Safari/605.1.15',
@@ -354,6 +357,7 @@ export default async function handler(req, res) {
     });
 
     const rows = Array.isArray(data?.photos) ? data.photos : [];
+    if (rows.length !== kept.length) throw Object.assign(new Error('사진 분석 결과가 누락됐습니다. 다시 생성해주세요.'), {status:502});
     const photos = kept.map((url, i) => {
       const row = rows.find(r => Number(r?.index) === i) || rows[i] || {};
       const role = ROLES.has(row.role) ? row.role : (i === 0 ? 'main' : 'packshot');
