@@ -56,3 +56,9 @@ for(let seed=0;seed<40;seed++){
  assert.ok(!plan.some(p=>['R04','R05','R06','R07','R08','R14','R15'].includes(p.recipe)));
 }
 console.log('PASS: long-page coverage, source containment, CTA/money quality gate, category-specific recipe eligibility');
+
+const rationaleCopy=resolveCopy({...row,concept:'배송 정보를 배지로 정리하는 내부 제작 설명'},p);
+assert.match(rationaleCopy.concept,/배송/);
+assert.ok(!JSON.stringify(completeCopy(rationaleCopy,{},p)).includes('내부 제작 설명'));
+assert.throws(()=>resolveCopy({...row,sub:'무료배송 50% 쿠폰'},p));
+assert.throws(()=>resolveCopy({...row,sub:'혜택 패널에 배치합니다'},p));

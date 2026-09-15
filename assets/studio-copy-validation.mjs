@@ -21,6 +21,9 @@ export function resolveCopy(row,p,facts=[]) {
     if(key==='eyebrow'&&(text===undefined||text===null||text===''))
       {out.eyebrow='';continue}
     if(typeof text!=='string'||text.length>(key==='concept'?180:key==='eyebrow'?14:100))throw Error('카피 형식 또는 길이가 맞지 않습니다. 다시 생성해주세요.');
+    // Internal design rationale is never rendered as advertising copy.
+    // Keep consumer fields strict; do not reject rationale mentioning a CTA or delivery panel.
+    if(key==='concept'){out.concept=text.trim();continue;}
     let probe=tight(text.replace(/\{\{(PRICE|QUANTITY|BENEFIT|OFFER_\d+)\}\}/g,''));
     probe=probe.replace(NUM,n=>allowed.includes(tight(n))?'':n);
     if(/[0-9０-９%％]|무료|첫\s*구매|최저|최고|보장|한정|마감|배송|증정|캐시백|쿠폰/.test(probe))throw Error(key+'에 확인되지 않은 숫자/혜택 표현이 있습니다: '+probe.slice(0,100));
