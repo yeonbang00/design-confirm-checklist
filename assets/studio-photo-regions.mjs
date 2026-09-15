@@ -14,6 +14,8 @@ export function normalizePhotoRegions(rows) {
     if(row.role==='model'&&personKind!=='body')continue;
     out.push({box,assetKind:['texture','product','detail','lifestyle'].includes(row.assetKind)?row.assetKind:'detail',role:row.role,personKind,hasPerson:personKind==='body'||personKind==='hands',
       colorway:String(row.colorway||'').slice(0,20),plainBg:row.plainBg===true,
+      pose:String(row.pose||'').slice(0,100),light:String(row.light||'').slice(0,100),note:String(row.note||'').slice(0,160),
+      foodState:['raw','cooked','packaged'].includes(row.foodState)?row.foodState:'unknown',actualPreparedMeal:row.actualPreparedMeal===true,
       shotAngle:String(row.shotAngle||'front').slice(0,20),shotDistance:String(row.shotDistance||'medium').slice(0,20),
       itemCount:Number.isInteger(row.itemCount)&&row.itemCount>0?row.itemCount:1,
       isHero:row.isHero===true,isGift:row.isGift===true});
@@ -38,20 +40,31 @@ function loadImage(src) {
   });
 }
 
+export function regionExtractionQuotas(photos,limit=24){
+  const quotas=new Map();let budget=limit;
+  for(let round=0;round<3;round++)for(const photo of photos){
+    if(budget>0&&photo.regions?.[round]&&(!photo.sourceRegion||photo.detailTile)){quotas.set(photo,(quotas.get(photo)||0)+1);budget--;}
+  }
+  return quotas;
+}
+
 export async function extractPhotoRegions(photos,getJSON,isCurrent=()=>true) {
   const output=[],failures=[];let extracted=0;
+  // Spread the extraction budget across the whole page before taking second or
+  // third crops. Early blue portraits must not consume all slots before ivory.
+  const quotas=regionExtractionQuotas(photos);
   // 응답·브라우저 저장 용량을 제한한다. 실패 시 원본을 보존한다.
   for(const photo of photos) {
     if(!isCurrent())return {photos,extracted:0,failures:[],cancelled:true};
     const regions=photo.regions||[];
-    if(!regions.length||(photo.sourceRegion&&!photo.detailTile)||extracted>=12){output.push(photo);continue;}
+    if(!regions.length||(photo.sourceRegion&&!photo.detailTile)||!quotas.has(photo)){output.push(photo);continue;}
     try {
       const data=photo.cleanBase64?{base64:photo.cleanBase64,mediaType:photo.cleanType}:await getJSON('/api/imageText',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:photo.url,ocr:false})});
       if(!isCurrent())return {photos,extracted:0,failures:[],cancelled:true};
       if(!data.base64||!/^image\//.test(data.mediaType||''))throw Error('상세사진 데이터 없음');
       const img=await loadImage(`data:${data.mediaType};base64,${data.base64}`);
       const children=[];
-      for(const region of regions.slice(0,12-extracted)) {
+      for(const region of regions.slice(0,quotas.get(photo)||0)) {
         const bounds=regionPixels(region.box,img.naturalWidth,img.naturalHeight);
         if(!bounds)continue;
         const {x,y,w,h}=bounds,scale=Math.min(1,1400/Math.max(w,h));

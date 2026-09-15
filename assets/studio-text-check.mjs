@@ -45,10 +45,30 @@ export async function checkBakedText(url, verified, getJSON) {
     });
     if (!data || !data.ocr || !Array.isArray(data.boxes)) return null;
     const text = data.boxes.map(b => b.text).join(' ');
-    return { claims: unverifiedClaims(text, verified), read: text.slice(0, 6000) };
+    return { claims: unverifiedClaims(text, verified), read: text.slice(0, 6000), boxes:data.boxes };
   } catch {
     return null;
   }
+}
+
+// Reuse the existing OCR response; no additional image/vision API invocation.
+// Only uniquely attributable advertising words count, not tiny package labels.
+export function renderedTypographyIssues(check,copy,plan={},size=1024){
+ if(!Array.isArray(check?.boxes))return [];
+ const compact=s=>String(s||'').replace(/[^가-힣A-Za-z0-9]/g,'').toLowerCase();
+ const texts={headline:compact(copy.headline),subline:compact(copy.subline),cta:compact(copy.cta)};
+ const boxesFor=key=>check.boxes.filter(b=>{const t=compact(b.text);return t.length>=3&&texts[key].includes(t)&&!Object.entries(texts).some(([k,v])=>k!==key&&v.includes(t))&&b.h>0;});
+ const head=boxesFor('headline'),support=boxesFor('subline'),cta=boxesFor('cta'),issues=[];
+ if(support.some(b=>b.h/size<.017))issues.push('서브 문구가 모바일에서 읽기 어려운 크기');
+ if(cta.some(b=>b.h/size<.017))issues.push('CTA 글자가 지나치게 작음');
+ // A numeric emphasis concept may intentionally use a different figure size.
+ if(!['numbers','benefit'].includes(plan.type)&&head.length>=2){
+   const lines=[];
+   for(const b of [...head].sort((a,b)=>a.y-b.y)){const line=lines.find(l=>Math.abs(l.y-b.y)<Math.max(l.h,b.h)*.6);if(line){line.h=Math.max(line.h,b.h)}else lines.push({y:b.y,h:b.h});}
+   if(lines.length===2&&Math.max(...lines.map(l=>l.h))/Math.min(...lines.map(l=>l.h))>1.5)issues.push('같은 메인 문장 두 줄의 크기 차이가 과도함');
+ }
+ if(head.some(b=>b.h/size>.23))issues.push('메인 글자가 화면에 비해 과도하게 큼');
+ return issues;
 }
 
 export function renderedCopyIssues(check,copy){

@@ -163,12 +163,15 @@ edits가 low 17.2초 / medium 38.9초 / high 108.5초. 기본은 medium이고, �
 
 아래 9월 10일 흐름은 과거 기록이다. 현재 기본 경로는 다음과 같다.
 
-- `assets/studio-v3-plan.mjs`: R01–R30 중 자료 요건·업종·다양성·최근 사용 이력으로 6종을 고른다. 원본 출처와 제작 방법을 별도 축으로 취급한다.
+- `assets/studio-v3-plan.mjs`: R01–R30 중 자료 요건·업종·브랜드 무드·다양성·최근 사용 이력으로 6종을 고른다. 상품명·가격 기본안은 하나를 보장한다. 원본 출처와 제작 방법을 별도 축으로 취급한다.
 - `assets/studio-detail-tiles.mjs`: 긴 상세 이미지를 겹치는 구간으로 나누고, `studio-photo-regions.mjs`가 독립 사진 영역을 추출한다.
 - `assets/studio-evidence.mjs`: 페이지 원문과 정확히 대조한 혜택/조건, 카피 근거 연결. 참고 배너의 행사 정보는 가져오지 않는다.
 - `assets/studio-copy-validation.mjs`가 숫자/혜택 검증의 단일 구현이다. `api/_studioData.js`와 `assets/studio-data.mjs`는 이를 다시 내보낸다. 검증을 느슨하게 열지 말 것.
-- 각 시안의 frame/focus/motif/appeal로 이미지 레퍼런스를 선정한 뒤 `productPhotos`의 `referenceBriefs`가 실제 이미지를 읽어 구도·타이포·CTA 관찰을 전달한다.
-- 기본 출력은 텍스트까지 포함한 완성 배너다. CSS 편집을 기본으로 되돌리지 않는다. 원본 활용 시안은 `studio-source-panels.mjs`에서 실제 사진을 합성해 보존한다.
+- 각 시안의 frame/focus/motif/appeal 및 mood/palette/person으로 이미지 레퍼런스를 선정한 뒤 `productPhotos`의 `referenceBriefs`가 실제 이미지를 읽어 구도·타이포·CTA 관찰을 전달한다.
+- 기본 출력은 텍스트까지 포함한 완성 배너다. CSS 편집을 기본으로 되돌리지 않는다. 원본 활용도 선택한 실제 사진을 이미지 모델에 전달하며, 생성 후 고정 사각형으로 사진을 덮는 경로는 사용하지 않는다. 픽셀 단위 원본 보존을 주장하지 않는다.
+- `studio-source-selection.mjs`는 같은 사진의 반복 사용을 줄이고 실제 포즈·컬러를 분배한다. 전체 상세에서 최대 24장 분석/24개 영역을 고르게 배정한다. 제형/접사는 의자·행거용 완제품으로 쓰지 않는다.
+- `studio-visual-contract.mjs`는 무드·타이포·배송 보조·로고 생략 규칙을 공유한다. `studio-reference-study.mjs`는 선택 레퍼런스의 텍스트 줄 수·상대 크기·버튼/사진 비율을 관찰하고 변경되지 않은 결과를 재사용한다.
+- `studio-generation-contract.mjs`가 실제 상품 사진과 디자인 레퍼런스를 구분해 요청을 만든다. API multipart에서도 실제 상품을 먼저, 디자인 레퍼런스는 마지막에 넣는다. 테스트에서 배열 순서와 실제 핸들러를 함께 검증한다.
 - 완성 후 CTA와 금액 중복/미확인 수치를 OCR로 검사한다. 뷰티는 제품 동일성도 비교한다. 검사 실패를 성공으로 표시하거나 임시 원본을 다운로드시키지 않는다.
 - 텍스트 없는 이미지가 필요하면 사용자가 해당 카드에서 별도 생성한다. 우측 카피 편집 패널은 숨긴 상태를 유지한다.
 

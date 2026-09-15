@@ -1,6 +1,6 @@
 /* 분류 API와 기획기 사이의 계약. 미분류를 인물 없음으로 확정하지 않는다. */
 const FIELDS = ['matchesTarget','assetKind','role', 'hasPerson', 'personKind', 'plainBg', 'shotAngle',
-  'shotDistance', 'itemCount', 'isHero', 'isGift', 'colorway', 'burnedText', 'note', 'regions'];
+  'shotDistance', 'itemCount', 'isHero', 'isGift', 'colorway', 'burnedText', 'note', 'regions', 'pose', 'light', 'foodState', 'actualPreparedMeal'];
 
 export function selectClassificationPhotos(photos, limit = 6) {
   const unique = [...new Map(photos.filter(p => p?.url).map(p => [p.url, p])).values()];

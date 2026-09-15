@@ -1,9 +1,11 @@
 import {tileDetailPhotos} from './studio-detail-tiles.mjs';
-import {prepareSourcePanels,restoreSourcePanels} from './studio-source-panels.mjs';
+import {generationRequest} from './studio-generation-contract.mjs';
+import {mergeVisualTones,VISUAL_CONTRACT_VERSION} from './studio-visual-contract.mjs';
+import {studyReferences} from './studio-reference-study.mjs';
 import {createV3Plan,matchPlanReferences} from './studio-v3-plan.mjs';
 import {evidenceSections,completeCopy} from './studio-evidence.mjs';
 import {artDirect,recentDesigns,rememberDesign} from './studio-art-direction.mjs';
-import {checkBakedText,renderedCopyIssues} from './studio-text-check.mjs';
+import {checkBakedText,renderedCopyIssues,renderedTypographyIssues} from './studio-text-check.mjs';
 import {exportBanner,saveBlob} from './studio-export.mjs';
 import {attachCopyRemoval} from './studio-copy-removal.mjs';
 import {extractPhotoRegions} from './studio-photo-regions.mjs';
@@ -458,10 +460,8 @@ async function measurePhotos(){
  const dead=before-ok.length;
  ok=dropSmallTwins(ok);
  const twins=before-dead-ok.length;
- if(ok.length!==before){
-  product.photos=ok;
-  PHOTOS.splice(0,PHOTOS.length,...product.photos);
- }
+ product.photos=ok;
+ PHOTOS.splice(0,PHOTOS.length,...product.photos);
  const note=[dead?`못 여는 사진 ${dead}장 제외`:'', twins?`같은 사진 작은 판 ${twins}장 제외`:'']
    .filter(Boolean).join(' · ');
  return note;
@@ -479,7 +479,7 @@ async function classifyPhotos(run){
  PHOTOS.splice(0,PHOTOS.length,...product.photos);
  const sizeNote=bigger?`사진 ${bigger}장을 원본 크기로 교체`:'';
  /* API의 6장 한도 안에서 대표컷부터 마지막 상세컷까지 고르게 본다. */
- const urls=[...new Set(product.photos.map(p=>p.url))].slice(0,24);
+ const urls=selectClassificationPhotos(product.photos,24).map(p=>p.url);
  /* 우리 이미지 레퍼런스에 이 업종 배너가 쌓여 있다. 지금까지는 캡션만 카피
     생성에 쓰고 이미지는 아무 데도 안 넣었다. 실제로 어떻게 구성했는지는
     그림을 봐야 알 수 있다. 몇 장 함께 보내 조판을 고르게 한다. */
@@ -497,7 +497,7 @@ async function classifyPhotos(run){
   product.category=data.category||'other';product.cuts=Array.isArray(data.cuts)?data.cuts:[];
   // 사진에서 읽은 USP와 톤을 카피 생성으로 넘긴다. 상품명만 보고 쓰면
   // 어느 상품에나 맞는 말이 나온다.
-  product.usp=data.usp||'';product.tone=data.toneKo||'';
+  product.usp=data.usp||'';product.tone=data.toneKo||'';product.visualTone=mergeVisualTones(batches.map(b=>b.visualTone),product.tone);
   /* 상세 페이지 이미지에 인쇄된 임상 수치·성분·후기·인증을 읽어 온다.
      이 목록이 카피가 숫자를 쓸 수 있는 유일한 화이트리스트다. */
   product.facts=[...(data.pageFacts||[]),...(Array.isArray(data.facts)?data.facts:[])];product.offers=data.offers||[];
@@ -671,14 +671,10 @@ async function generateImage(plan,run,q){
  variant.sourcePhoto=plan.photo;
  try{
  // Complete concepts share their art direction and exact copy in this image request.
- const references=[];
- if(plan.completeBanner)for(const i of (plan.photoSet||[]).filter(i=>i!==plan.photo).slice(0,3))references.push(await generationSource(product.photos[i]));
- const slots=factSlots(product);
- const prepared=plan.sourceMode==='preserve'?await prepareSourcePanels(plan,product,getJSON):null;
- const complete=plan.completeBanner?{operation:'complete-banner',artDirection:prepared?prepared.instruction+' '+plan.artDirection:plan.artDirection,references:prepared?[]:references,text:completeCopy(variant,plan,product)}:{};
- const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...prepared?{base64:prepared.base64,mediaType:prepared.mediaType}:await generationSource(src),...complete,scene:prepared?prepared.instruction:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:plan.imagePrompt||`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ const request=plan.completeBanner?await generationRequest(plan,product,variant,generationSource,q||quality):{...await generationSource(src),scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:plan.imagePrompt,size:'1024x1024'};
+ const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
  if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
- let finalUrl=prepared?await restoreSourcePanels(shot.imageUrl,prepared,getJSON):shot.imageUrl;
+ const finalUrl=shot.imageUrl;
  if(run!==autoRun)return;
  if(product.category==='beauty'){
   const anchor=product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture'&&p.role==='main')||product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture');
@@ -694,11 +690,11 @@ async function generateImage(plan,run,q){
   const copy=completeCopy(variant,plan,product);
   verifiedText=await checkBakedText(finalUrl,Object.values(copy),getJSON);
   if(run!==autoRun)return;
-  const issues=renderedCopyIssues(verifiedText,copy);
+  const issues=[...renderedCopyIssues(verifiedText,copy),...renderedTypographyIssues(verifiedText,copy,plan)];
   if(issues.length)throw Error('완성 배너 확인: '+issues.join(' · '));
  }
- const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe,...(prepared?{cleanUrl:finalUrl,cleanBase64:finalUrl.split(',')[1],cleanType:'image/png',sourcePreserved:true}: {})})-1;
- variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:'v3',knowledge:{copy:variant.knowledge,image:shot.knowledge},offerPolicy:variant.offerPolicy,referenceSnapshot:product.referenceSnapshot,recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
+ const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
+ variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:'v3.1',contract:VISUAL_CONTRACT_VERSION,visualTone:plan.visualTone,copyMode:plan.copyMode,knowledge:{copy:variant.knowledge,image:shot.knowledge},offerPolicy:variant.offerPolicy,referenceSnapshot:product.referenceSnapshot,recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
  const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
  variant.quality=q||quality;
  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+`AI 생성 · ${qLabel} · 상품 일치 확인 필요`;
@@ -765,16 +761,12 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   if(autoPlan.length!==6)throw Error('동일 상품 자료로 구성 가능한 시안이 부족합니다. 상세 자료를 확인해주세요.');
   const refs=await autoReferences(product);if(run!==autoRun)return;
   autoPlan=matchPlanReferences(autoPlan,refs,product);
-  const entries=[...new Set(autoPlan.map(p=>p.reference?.thumbUrl).filter(Boolean))].map(url=>({url}));
-  if(entries.length){
-    autoMessage('시안별 레퍼런스의 구도와 타이포를 확인하는 중…');
-    const data=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'referenceBriefs',entries})});
-    if(run!==autoRun)return;
-    autoPlan=autoPlan.map(p=>{const b=data.briefs?.find(x=>x.url===p.reference?.thumbUrl);return {...p,designObservation:b||null,artDirection:p.artDirection+(b?' Reference structure/style only: '+JSON.stringify(b):'')};});
-  }
+  autoMessage('시안별 레퍼런스의 사진·텍스트 배치를 확인하는 중…');
+  autoPlan=await studyReferences(autoPlan,getJSON,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});
+  if(run!==autoRun)return;
   const pixelWork=startPixelWork(run);
   failedImages.clear();autoCopyFailed=false;
-  photoNotice+=autoPlan[0]?.plannerVersion==='v3'?' · 사진·메시지 통합 기획':' · 기본 기획(통합 기획 후보 부족 또는 미지원 업종)';
+  photoNotice+=autoPlan[0]?.plannerVersion?.startsWith('v3')?' · 사진·메시지 통합 기획':' · 기본 기획(통합 기획 후보 부족 또는 미지원 업종)';
   const slots=factSlots(product);
   /* 카피가 오기 전과 카피 생성이 실패했을 때 쓰는 값이다. 전에는 여섯 장이
      전부 상품명과 가격으로 똑같아졌다. 조판도 카피 지시도 자리마다 갈라 놓고
@@ -795,7 +787,7 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
     const f=facts.length?facts[factAt++%facts.length]:'';
     return {sub:f||slots.QUANTITY||'', offer:slots.PRICE||'', cta:'상품 자세히 보기'};
   };
-  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.designLabel||p.label),designId:p.designId,designFamily:p.designFamily,fontFamily:p.fontFamily,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,imageReady:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
+  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.designLabel||p.label),designId:p.designId,designFamily:p.designFamily,fontFamily:p.fontFamily,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:'',mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,imageReady:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   /* 실패 이유를 한 군데에만 적어 두면 못 본다. 카드 옆 문구와 상태줄 양쪽에 남긴다. */
   lastCopyError='';
@@ -853,7 +845,7 @@ async function designCopy(id,automatic=false){
  const original=PHOTOS[v.photo],clean=srcOf(original);if(!clean)return;
  const run=autoRun;if(!automatic)setBusy(true);v.designError='';v.autoStatus='디자인형 카피 생성 중';renderBoard();
  try{
-  const data=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'design-copy',imageUrl:clean,quality:'medium',size:'1024x1024',text:{headline:v.main,subline:v.sub,offer:v.offer,brand:product.brand,cta:v.showCta?v.cta:'',eyebrow:v.eyebrow,footnote:v.footnote,style:(autoPlan.find(p=>p.id===id)?.emphasis==='offer'?'Bold campaign typography with a large verified price or quantity; dimensional offer lettering, restrained supporting text.':'Refined fashion or product editorial typography. Large confident Korean headline, carefully spaced; no cartoon sticker outlines.')+' Integrate typography into the existing negative space, never cover the face, neckline or product. Keep all Korean copy legible on a mobile feed. Do not add extra wording.'}})});
+  const data=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'design-copy',imageUrl:clean,quality:'medium',size:'1024x1024',text:{headline:v.main,subline:v.sub,offer:v.offer,brand:'',cta:v.showCta?v.cta:'',eyebrow:v.eyebrow,footnote:v.footnote,style:(autoPlan.find(p=>p.id===id)?.emphasis==='offer'?'Bold campaign typography with a large verified price or quantity; dimensional offer lettering, restrained supporting text.':'Refined fashion or product editorial typography. Large confident Korean headline, carefully spaced; no cartoon sticker outlines.')+' Integrate typography into the existing negative space, never cover the face, neckline or product. Keep all Korean copy legible on a mobile feed. Do not add extra wording.'}})});
   if(run!==autoRun)return;if(!safeUrl(data.imageUrl))throw Error('생성 이미지를 받지 못했습니다.');
   v.sourcePhoto=v.photo;v.photo=PHOTOS.push({...original,url:data.imageUrl,cleanUrl:undefined,cleanBase64:undefined,cutUrl:undefined,baseImageUrl:clean,label:original.label+' · 디자인형 카피'})-1;v.baked=true;v.original=false;v.autoStatus='디자인형 카피 · 숫자 확인 중';renderBoard();
   const slots=factSlots(product);const check=await checkBakedText(data.imageUrl,[slots.PRICE,slots.BENEFIT,...(product.facts||[]).map(x=>x.text)],getJSON);

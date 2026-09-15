@@ -1,3 +1,4 @@
+import {basicCopy,isSupportingOffer,displayProductName} from './studio-visual-contract.mjs';
 import {isCardOffer} from './studio-offer-policy.mjs';
 // Source text is evidence, never instructions. Only exact, attributable excerpts survive.
 export function evidenceSections(p){
@@ -23,9 +24,19 @@ export function chooseCopyFacts(facts=[],plans=[]){
  return facts.filter(f=>!isCardOffer(f)).sort((a,b)=>Number(selected.has(b.id))-Number(selected.has(a.id))).slice(0,32);
 }
 export function completeCopy(variant,plan,product){
+ if(plan.copyMode==='basic')variant=basicCopy(product);
  const price=Number.isFinite(product.salePrice)?product.salePrice.toLocaleString('ko-KR')+'원':'';
  const headline=variant.main||'',subline=variant.sub||'';
+ if(isSupportingOffer(headline))throw Error('배송 혜택은 메인 제목이 아니라 보조 문구로 사용해주세요.');
  if(price&&[headline,subline].join(' ').replace(/\s/g,'').split(price).length>2)throw Error('같은 가격이 반복된 카피입니다. 카피를 다시 생성해주세요.');
- const hasPrice=price&&[headline,subline].some(s=>s.replace(/\s/g,'').includes(price));
- return {headline,subline,offer:plan.emphasis==='offer'&&!hasPrice?price:'',brand:product.brand||'',cta:variant.cta?.trim()||'상품 자세히 보기',footnote:[variant.conditions,variant.footnote].filter(Boolean).join(' · ')};
+ return {headline,subline,offer:'',brand:'',cta:variant.cta?.trim()||'상품 자세히 보기',footnote:[variant.conditions,variant.footnote].filter(Boolean).join(' · ')};
+}
+
+export function validatePlannedCopy(copy,plan,product){
+ if(isSupportingOffer(copy.main))throw Error('배송 혜택은 제목에 쓰지 말고 작은 보조 문구로만 사용하세요.');
+ if(plan.copyMode==='basic')return basicCopy(product);
+ // The creative headline may be emotional, but the product must still be named.
+ const nouns=(displayProductName(product).match(/니트|티셔츠|셔츠|가디건|팬츠|스커트|코트|재킷|자켓|원피스|로션|크림|세럼|토너|앰플|선크림|클렌징|김치|불고기|고기|밀키트|청소기|이어폰|보험|카드/g)||[]);
+ if(nouns.length&&!nouns.some(n=>[copy.main,copy.sub].join(' ').includes(n)))throw Error('메인 또는 서브에 실제 상품 종류를 명확하게 넣으세요.');
+ return copy;
 }

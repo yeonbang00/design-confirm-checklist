@@ -1,3 +1,4 @@
+import {completeBannerPrompt} from '../assets/studio-generation-contract.mjs';
 import {getDesignKnowledge} from './_designKnowledge.js';
 // POST /api/bannerImage
 // Body: { imageUrl?: string, base64?: string, mediaType?: string,
@@ -161,18 +162,6 @@ function textBlock({ headline, subline, offer, brand, cta, style, eyebrow, footn
 const TYPE_STYLES_FALLBACK = 'a heavy geometric sans-serif';
 
 
-function completeBannerPrompt(body){
- const text=body.text||{};
- const copy=Object.fromEntries(['headline','subline','offer','brand','cta','footnote'].map(k=>[k,String(text[k]||'').slice(0,k==='footnote'?600:300)]));
- return 'Create ONE finished professional Korean advertising banner. Design photography, typography, graphic devices and negative space TOGETHER, not a photograph with a generic text overlay. '
- + 'ART DIRECTION: '+String(body.artDirection||'').slice(0,4500)
- + ' SCENE: '+String(body.scene||'Use the supplied product photographs to compose an editorial advertisement.').slice(0,1200)
- + ' Target product: '+String(body.productName||'').slice(0,160)+' . Use only the exact supplied target packaging; never substitute another brand or line. If a supplied image shows real texture, preserve that photographed texture, do not synthesize a new formulation. '
- + ' The attached images are product references, not layouts to copy. Preserve the actual product shape, fine texture, neckline, sleeves, color and printed product labels. Do not invent additional products or change raw food into cooked food. '
- + 'EXACT ADVERTISING COPY JSON: '+JSON.stringify(copy)
- + ' Render only these advertising words, with accurate Hangul. Do not invent words, prices, discounts or claims. Keep the headline large; supporting information may use feature callouts, badges or a checklist as specified. Render every supplied condition and CTA legibly. No duplicate price or repeated sentence. Typography must be clearly readable on a mobile feed; never overlap faces or essential product details. This is a designer concept, not an app screenshot. A CTA button or action strip is part of the advertisement and MUST be drawn using the supplied cta. Do not draw app navigation, editor controls or explanatory captions.';
-}
-
 const REMOVE_AD_COPY = 'Edit the provided banner in place. Remove advertising overlay text, headlines, promotional numbers, prices, CTA lettering and floating brand/store logos, including their outlines and text shadows. Reconstruct the background behind them seamlessly. Preserve product positions, sizes, shapes, materials, people, decorative objects, lighting and contact shadows. Preserve ALL wording and logos physically printed on the actual products or packaging. If giant promotional numbers sit behind a product, remove the numbers while preserving the product boundary. Keep non-text design elements, colored footer strips, blank buttons, frames and decorations. Do not add new text or objects, crop, rearrange, or redesign. Return the same composition with advertising typography removed. This is background restoration, not a new photograph.';
 
 function buildPrompt({ scene, keep, imagePrompt, productName }) {
@@ -241,6 +230,10 @@ export default async function handler(req, res) {
         if(ref.base64)extra={buf:Buffer.from(ref.base64,'base64'),type:ref.mediaType||'image/jpeg'};
         else if(ref.imageUrl)extra=await fetchSource(ref.imageUrl);
         if(extra)form.append('image[]',new Blob([extra.buf],{type:extra.type}),'reference.png');
+      }
+      if(complete&&req.body.styleReference?.imageUrl){
+        const style=await fetchSource(req.body.styleReference.imageUrl);
+        form.append('image[]',new Blob([style.buf],{type:style.type}),'design-reference-only.png');
       }
       form.append('prompt', prompt);
       form.append('size', outSize);
