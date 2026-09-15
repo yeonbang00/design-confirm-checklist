@@ -230,13 +230,13 @@ export default async function handler(req, res) {
 
       const form = new FormData();
       form.append('model', IMAGE_MODEL);
-      form.append('image', new Blob([buf], { type }), 'source.png');
+      form.append(complete?'image[]':'image', new Blob([buf], { type }), 'source.png');
       // Complete designs may need several actual color/pose references.
       if(complete)for(const ref of (Array.isArray(req.body.references)?req.body.references:[]).slice(0,3)){
         let extra;
         if(ref.base64)extra={buf:Buffer.from(ref.base64,'base64'),type:ref.mediaType||'image/jpeg'};
         else if(ref.imageUrl)extra=await fetchSource(ref.imageUrl);
-        if(extra)form.append('image',new Blob([extra.buf],{type:extra.type}),'reference.png');
+        if(extra)form.append('image[]',new Blob([extra.buf],{type:extra.type}),'reference.png');
       }
       form.append('prompt', prompt);
       form.append('size', outSize);
