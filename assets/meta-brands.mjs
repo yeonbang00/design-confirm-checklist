@@ -10,6 +10,13 @@
  */
 
 export const META_BRANDS = [
+  {"name": "정관장", "cat": "healthcare"},
+  {"name": "한삼인", "cat": "healthcare"},
+  {"name": "천지양", "cat": "healthcare"},
+  {"name": "캐치웰", "cat": "electronics"},
+  {"name": "아이닉", "cat": "electronics"},
+  {"name": "디베아", "cat": "electronics"},
+  {"name": "에어메이드", "cat": "electronics"},
   {"name": "쿠팡", "pageId": "149885735024609", "cat": "shopping"},
   {"name": "무신사", "pageId": "119546338123785", "cat": "fashion"},
   {"name": "컬리", "pageId": "848866181842706", "cat": "shopping"},
