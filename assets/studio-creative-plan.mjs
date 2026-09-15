@@ -2,7 +2,7 @@
 export function createCreativePlan(product, random=Math.random) {
   if(!/^(fashion-|beauty$)/.test(product.category||''))return null;
   const photos=product.photos||[];
-  const usable=photos.map((p,i)=>({p,i})).filter(({p})=>p.role&&p.role!=='unusable'&&!p.isGift&&(p.sourceRegion||!(p.w&&p.h&&p.h/p.w>1.65))&&['none','hands','body'].includes(p.personKind));
+  const usable=photos.map((p,i)=>({p,i})).filter(({p})=>p.matchesTarget!==false&&p.role&&p.role!=='unusable'&&!p.isGift&&(p.sourceRegion||!(p.w&&p.h&&p.h/p.w>1.65))&&['none','hands','body'].includes(p.personKind));
   if(!usable.length)return null;
   const candidates=[];
   const add=(key,family,label,photo,layout,brief,extra={})=>candidates.push({
@@ -10,9 +10,9 @@ export function createCreativePlan(product, random=Math.random) {
   const main=usable.find(x=>x.p.role==='main')||usable[0];
   add('hero','photo','대표 사진 화보',main.i,main.p.plainBg?'framed':'header',
     '이 사진에 보이는 상품을 중심으로 짧은 제목을 쓴다. 소재나 기능을 추측하지 않는다.');
-  const detail=usable.find(x=>x.i!==main.i&&(x.p.sourceRegion||x.p.role==='detail'));
+  const detail=(product.category==='beauty'?usable.find(x=>x.p.assetKind==='texture'):null)||usable.find(x=>x.i!==main.i&&(x.p.sourceRegion||x.p.role==='detail'));
   if(detail)add('detail','photo','상세 사진 중심',detail.i,'top-center',
-    '선택한 상세 사진에 실제 보이는 색상·형태·착장만 이야기한다. 접사라고 단정하지 않는다.');
+    '선택한 상세 사진에 실제 보이는 색상·형태·착장만 이야기한다. 실제 제형이면 그 사진을 그대로 활용하고 확인된 제형 설명만 한다.',detail.p.assetKind==='texture'?{photoSet:[main.i,detail.i],scene:'Use the supplied real texture photograph as a prominent detail panel alongside the exact product package. Preserve texture; do not invent a new cream or formula.'}:{});
   const body=usable.filter(x=>x.p.personKind==='body');
   if(body.length>=2)add('poses','editorial','착장 두 컷 편집',body[0].i,'duo-panel',
     '두 착장 사진을 함께 보여주는 편집 구성. 비교 우열이나 전후 효과를 만들지 않는다.',{photoSet:body.slice(0,2).map(x=>x.i)});
@@ -26,7 +26,7 @@ export function createCreativePlan(product, random=Math.random) {
     if(!cut.scene||!['none','keep','hands'].includes(cut.person))continue;
     // 제형 확대는 생성으로 대체하지 않는다. 확인된 실제 제형 사진을 활용해야 한다.
     if(product.category==='beauty'&&(/macro/i.test(cut.name||'')||cut.distance==='extreme-close'))continue;
-    const sources=usable.filter(x=>cut.person==='keep'?x.p.personKind==='body':cut.person==='hands'?['hands','body'].includes(x.p.personKind):true);
+    const sources=usable.filter(x=>x.p.assetKind!=='texture').filter(x=>cut.person==='keep'?x.p.personKind==='body':cut.person==='hands'?['hands','body'].includes(x.p.personKind):true);
     if(!sources.length)continue;
     const source=sources.find(x=>cut.person==='none'&&['packshot','flat'].includes(x.p.role))||sources[0];
     const key=[cut.mount,cut.person,cut.angle,cut.distance].join('/');

@@ -46,7 +46,7 @@ export function eligibleDesigns(plan,product){
 export function artDirect(plans,product,{random=Math.random,recent=[]}={}){
  const selected=[];
  // Shuffle slots, not just the designs: serif does not always occupy the same two cards.
- const fonts=plans.map((_,i)=>i<Math.ceil(plans.length*2/3)?'sans':'serif');
+ const fonts=plans.map(()=>random()<0.85?'sans':'serif');
  for(let i=fonts.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[fonts[i],fonts[j]]=[fonts[j],fonts[i]];}
  return plans.map((p,i)=>{
   const candidates=eligibleDesigns(p,product).filter(d=>!selected.some(s=>s.id===d.id));
@@ -55,10 +55,12 @@ export function artDirect(plans,product,{random=Math.random,recent=[]}={}){
   if(!pool.length)throw Error('서로 다른 배너 구성을 선택할 수 없습니다.');
   const ranked=pool.map(d=>({d,score:random()*2-(recent.includes(d.id)?12:0)-selected.filter(s=>s.family===d.family).length*8})).sort((a,b)=>b.score-a.score);
   const d=ranked[0].d;selected.push(d);
+  const effects=['Clean bold lettering with strong size contrast','Rounded sticker lettering with contrasting outline','Dimensional headline with restrained depth and shadow','Two-tone headline highlighting one key word','Condensed bold poster lettering with oversized keyword','Soft inflated headline letters, supporting copy stays flat'];
+  const effect=effects[i%effects.length];
   const typography=d.font==='sans'?'Use modern Korean sans-serif (Gothic) for all headline and supporting copy. No Korean serif headline.':'Use a refined Korean serif headline with restrained supporting sans-serif text.';
   return {...p,completeBanner:true,designId:d.id,designLabel:d.label,designFamily:d.family,fontFamily:d.font,
-   artDirection:d.design+' '+typography+' Make the headline readable on a mobile feed. Follow the supplied scene and keep instructions; these override decorative staging. Never invent additional products, colors, ingredients or cooked food. Use only supplied exact text and verified numbers.',
-   copyBrief:(p.copyBrief||'')+' '+d.label+' 구성에 어울리는 짧은 광고 제목. 메인 2줄 이내, 총 18자 안팎. 사진 해설이나 형용사 나열을 피하고 상단 라벨은 비운다. '+(/^fashion/.test(product.category||'')?'패션 광고 어조.':''),
+   artDirection:d.design+' '+typography+' '+effect+'. Reference design observations (style only, never product identity or claims): '+String(product.refNote||'').slice(0,400)+' Make the headline readable on a mobile feed. Follow the supplied scene and keep instructions; these override decorative staging. Never invent additional products, colors, ingredients or cooked food. Use only supplied exact text and verified numbers.',
+   copyBrief:(p.copyBrief||'')+' '+d.label+' 구성에 어울리는 짧은 광고 제목. 제목은 구성에 따라 한 줄 핵심어, 두 줄 메시지, 최대 세 줄 위계 중 선택한다. 서브 카피는 확인된 제품 특징이나 상세페이지 근거를 활용한다. 가격만 반복하지 않는다. 사진 해설이나 형용사 나열을 피한다. '+(/^fashion/.test(product.category||'')?'패션 광고 어조.':''),
    emphasis:d.family==='type'?'offer':p.emphasis};
  });
 }

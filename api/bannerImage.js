@@ -166,6 +166,7 @@ function completeBannerPrompt(body){
  return 'Create ONE finished professional Korean advertising banner. Design photography, typography, graphic devices and negative space TOGETHER, not a photograph with a generic text overlay. '
  + 'ART DIRECTION: '+String(body.artDirection||'').slice(0,1600)
  + ' SCENE: '+String(body.scene||'Use the supplied product photographs to compose an editorial advertisement.').slice(0,1200)
+ + ' Target product: '+String(body.productName||'').slice(0,160)+' . Use only the exact supplied target packaging; never substitute another brand or line. If a supplied image shows real texture, preserve that photographed texture, do not synthesize a new formulation. '
  + ' The attached images are product references, not layouts to copy. Preserve the actual product shape, fine texture, neckline, sleeves, color and printed product labels. Do not invent additional products or change raw food into cooked food. '
  + 'EXACT ADVERTISING COPY JSON: '+JSON.stringify(copy)
  + ' Render only these advertising words, with accurate Hangul. Do not invent words, prices, discounts or claims. Keep the title short and large, supporting information sparse. No duplicate price or repeated sentence. Typography must be clearly readable on a mobile feed; never overlap faces or essential product details. This is a designer concept, not an app screenshot. No UI controls or explanatory captions.';

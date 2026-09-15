@@ -6,14 +6,15 @@ const product={sourceUrl:'https://example.test/item',productName:'리브 티셔�
 const plans=Array.from({length:6},(_,id)=>({id,photo:0,photoSet:[0,1],copyBrief:'실제 상품',emphasis:'product'}));
 assert.equal(DESIGN_LIBRARY.length,30);
 assert.equal(new Set(DESIGN_LIBRARY.map(d=>d.id)).size,30);
-const seen=new Set();
+const seen=new Set();let sans=0,allSans=0;
 for(const category of ['fashion-top','beauty','food'])for(let n=0;n<200;n++){
  const result=artDirect(plans,{...product,category},{random});
  assert.equal(new Set(result.map(p=>p.designId)).size,6);
- assert.equal(result.filter(p=>p.fontFamily==='sans').length,4);
- assert.ok(new Set(result.map(p=>p.designFamily)).size>=3);
+ sans+=result.filter(p=>p.fontFamily==='sans').length;allSans+=Number(result.every(p=>p.fontFamily==='sans'));
+ assert.ok(new Set(result.map(p=>p.designFamily)).size>=2);
  result.forEach(p=>{seen.add(p.designId);assert.ok(p.artDirection.includes('supplied scene'));assert.equal(p.completeBanner,true);});
 }
+assert.ok(sans>2600&&sans<3500);assert.ok(allSans>0);
 assert.equal(seen.size,30,'Every library design can actually be selected');
 const sparse={category:'food',photos:[{personKind:'none'}]};
 assert.ok(eligibleDesigns({photo:0},sparse).every(d=>!d.requires));
@@ -28,4 +29,4 @@ assert.deepEqual(recentDesigns({...product,productName:'other'},storage),[]);
 const broken={getItem:()=>{throw Error('blocked');},setItem:()=>{throw Error('blocked');}};
 assert.deepEqual(recentDesigns(product,broken),[]);
 assert.doesNotThrow(()=>rememberDesign(product,'editorial',broken));
-console.log('PASS: 30 reachable designs; 600 selections; eligibility, 4:2 fonts, diversity, recent history and blocked storage');
+console.log('PASS: 30 reachable designs; 600 selections; eligibility, weighted fonts, diversity, recent history and blocked storage');

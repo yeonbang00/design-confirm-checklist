@@ -1,5 +1,5 @@
 /* 분류 API와 기획기 사이의 계약. 미분류를 인물 없음으로 확정하지 않는다. */
-const FIELDS = ['role', 'hasPerson', 'personKind', 'plainBg', 'shotAngle',
+const FIELDS = ['matchesTarget','assetKind','role', 'hasPerson', 'personKind', 'plainBg', 'shotAngle',
   'shotDistance', 'itemCount', 'isHero', 'isGift', 'colorway', 'burnedText', 'note', 'regions'];
 
 export function selectClassificationPhotos(photos, limit = 6) {

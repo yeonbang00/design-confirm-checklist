@@ -58,7 +58,7 @@ export async function extractPhotoRegions(photos,getJSON,isCurrent=()=>true) {
         const canvas=document.createElement('canvas');canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);
         canvas.getContext('2d').drawImage(img,x,y,w,h,0,0,canvas.width,canvas.height);
         const cleanUrl=canvas.toDataURL('image/jpeg',0.92);
-        children.push({...region,url:photo.url,sourceUrl:photo.url,sourceRegion:region.box,sourcePixels:bounds,
+        children.push({...region,matchesTarget:photo.matchesTarget,assetKind:photo.assetKind,url:photo.url,sourceUrl:photo.url,sourceRegion:region.box,sourcePixels:bounds,
           w:canvas.width,h:canvas.height,kind:'original',burnedText:'',cleanUrl,
           cleanBase64:cleanUrl.split(',')[1],cleanType:'image/jpeg',
           label:[region.colorway,'상세 추출컷',children.length+1].filter(Boolean).join(' ')});
