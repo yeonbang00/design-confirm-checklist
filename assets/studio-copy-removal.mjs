@@ -20,7 +20,7 @@ export function attachCopyRemoval(card, photo, {request, source, download}) {
     const c=document.createElement('figcaption');c.textContent=label;f.append(c,img);figures.append(f);
   }
   const warning=document.createElement('p');warning.textContent='제품 로고·모양·작은 글자와 배경을 원본과 비교해주세요. AI 복원 과정에서 달라질 수 있습니다.';
-  const save=document.createElement('button');save.type='button';save.className='btn';save.textContent='결과 이미지 다운로드';
+  const save=document.createElement('button');save.type='button';save.className='btn';save.textContent='텍스트 없는 이미지 다운로드';
   compare.append(figures,save);details.append(note,action,status,compare);card.append(details);
   const show=url=>{out.src=url;compare.hidden=false;action.hidden=true;status.textContent='';details.hidden=false;details.open=true;save.onclick=()=>download(url);};
   const cached=results.get(source); if(cached?.url)show(cached.url);
@@ -36,8 +36,8 @@ export function attachCopyRemoval(card, photo, {request, source, download}) {
       }
       const data=job.url?{imageUrl:job.url}:await job.pending;
       const url=new URL(data.imageUrl);if(url.protocol!=='https:'&&url.protocol!=='http:')throw Error('결과 이미지 주소를 확인할 수 없습니다.');
-      job.url=url.href;show(job.url);
-    } catch(e) {results.delete(source);status.textContent='글자 제거 실패: '+e.message+' 다시 시도할 수 있습니다.';action.textContent='다시 시도';action.hidden=false;}
+      job.url=url.href;show(job.url);await download(job.url);
+    } catch(e) {const ready=!!results.get(source)?.url;if(!ready)results.delete(source);status.textContent=(ready?'다운로드 실패: ':'글자 제거 실패: ')+e.message+' 다시 시도할 수 있습니다.';action.textContent='다시 시도';action.hidden=false;}
     finally{action.disabled=false;}
   };
   action.onclick=execute;
