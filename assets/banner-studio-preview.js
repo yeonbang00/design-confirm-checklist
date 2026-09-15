@@ -1,7 +1,9 @@
+import {attachCopyRemoval} from './studio-copy-removal.mjs';
+import {extractPhotoRegions} from './studio-photo-regions.mjs';
+import {selectClassificationPhotos, applyPhotoClassification} from './studio-photo-analysis.mjs';
 import {createPlan} from './studio-auto-plan.mjs';
 import {scrubLogo} from './studio-logo-scrub.mjs';
 import {upgradePhotos} from './studio-photo-size.mjs';
-import {checkBakedText} from './studio-text-check.mjs';
 import {cutout,scrimFor,paletteFrom} from './studio-pixels.mjs';
 import {normalizeProduct,safeUrl,factSlots} from './studio-data.mjs';
 // Product originals + editable designer drafts. Image synthesis is not connected.
@@ -127,7 +129,7 @@ function art(v){const photos=v.photos||PHOTOS,
  /* 원본 보기를 켜면 생성 전 사진으로 되돌린다. 카피까지 그린 컷은 글자가
     그림에 박혀 있어서 HTML 카피만 숨겨서는 원본이 되지 않는다. */
  pi=(v.original&&Number.isInteger(v.sourcePhoto)&&photos[v.sourcePhoto])?v.sourcePhoto:v.photo,
- p=photos[pi]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=pool[(pool.findIndex(x=>x.url===p.url)+1)%pool.length]||p;const cut=p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(v.layout);
+ p=photos[pi]||photos[0],pool=(v.mode||'original')==='original'?photos.filter(x=>x.kind==='original'):photos,second=(Array.isArray(v.photoSet)&&photos[v.photoSet[1]])||pool[(pool.indexOf(p)+1)%pool.length]||p;const cut=p&&p.cutUrl&&['offer','type-diagonal','arch','framed','numeral'].includes(v.layout);
  /* 카피까지 그린 컷은 글자가 그림에 박혀 있다. '카피 없이 원본 보기'를 켜면
     HTML 카피만 숨기는 게 아니라 생성 전 원본 사진으로 되돌려야 말이 된다.
     그래서 original일 때는 baked 표시를 떼고 원본 사진을 보여준다. */
@@ -192,13 +194,15 @@ function renderRecipeReview(){const r=recipeData();$('#recipeReview').innerHTML=
 function imageFileName(v,i){
   const base=(product.productName||'banner').replace(/[^\w가-힣]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
   const photo=PHOTOS[v.photo]||{};
-  const tag=photo.kind==='ai'?'AI':(photo.cleanUrl?'원본-로고제거':'원본');
+  const tag=photo.kind==='ai'?'AI':photo.sourceRegion?'상세-추출':(photo.cleanUrl?'원본-로고제거':'원본');
   const scene=(photo.label||'').split('·')[0].trim().replace(/\s+/g,'') || ('시안'+(i+1));
-  const ext=photo.cleanUrl?'png':(String(photo.url||'').split('?')[0].match(/\.(png|jpe?g|webp)$/i)||[,'png'])[1];
+  const ext=photo.cleanUrl?(photo.cleanType==='image/jpeg'?'jpg':'png'):(String(photo.url||'').split('?')[0].match(/\.(png|jpe?g|webp)$/i)||[,'png'])[1];
   return `${base}_${i+1}_${tag}_${scene}.${ext}`;
 }
 async function downloadImage(i){
   const v=variants[i]; if(!v) return;
+  if(v.imageReady===false||v.imageFailed){notify('이미지가 완성된 뒤 내려받을 수 있습니다.');return;}
+  if(v.baked){notify('이전 방식으로 저장한 시안에는 글자가 이미지에 포함되어 있습니다. 카피 없는 이미지가 필요하면 다시 생성해주세요.');return;}
   const url=srcOf(PHOTOS[v.photo]);
   if(!url){ notify('이 시안에는 아직 이미지가 없습니다.'); return; }
   // 로고를 지운 판은 data: URL이라 그냥 저장하면 된다
@@ -219,10 +223,10 @@ async function downloadImage(i){
   }
 }
 async function downloadAllImages(){
-  const ready=variants.map((v,i)=>srcOf(PHOTOS[v.photo])?i:-1).filter(i=>i>=0);
+  const ready=variants.map((v,i)=>v.imageReady!==false&&!v.imageFailed&&!v.baked&&srcOf(PHOTOS[v.photo])?i:-1).filter(i=>i>=0);
   if(!ready.length){ notify('내려받을 이미지가 없습니다.'); return; }
   for(const i of ready){ await downloadImage(i); await new Promise(r=>setTimeout(r,400)); }
-  notify(`이미지 ${ready.length}장을 내려받았습니다. 조판은 포토샵에서 하시면 됩니다.`);
+  notify(`완성된 이미지 ${ready.length}장의 내려받기를 요청했습니다. 조판은 포토샵에서 하시면 됩니다.`);
 }
 
 function download(data,name){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
@@ -232,7 +236,7 @@ function renderSaved(){
  $('#savedCount').textContent=saved.length+recipes.length;$('#emptySaved').hidden=!!(saved.length+recipes.length);$('#exportAll').disabled=!(saved.length+recipes.length);$('#variantSavedTitle').hidden=!saved.length;$('#recipeSavedTitle').hidden=!recipes.length;
  $('#savedGrid').innerHTML=saved.map(s=>`<article class="saved-entry">${art(s.variant)}<h3 style="margin-top:12px">${esc(s.variant.title)}</h3><p class="hint">${esc(s.productName)} · ${new Date(s.savedAt).toLocaleDateString('ko-KR')}</p><div class="row"><button class="btn" data-load="${esc(s.id)}">다시 편집</button><button class="btn" data-export="${esc(s.id)}">전달 파일</button><button class="btn quiet" data-remove="${esc(s.id)}">삭제</button></div></article>`).join('');
  $('#recipeSavedGrid').innerHTML=recipes.map(r=>`<article class="recipe-saved"><img src="${esc(r.referenceUrl||(r.mode==='outfit'?(r.product?.photos||SAMPLE_PHOTOS)[0].url:MODES.scene.image))}" alt="${esc(MODES[r.mode].caption)}"><div><span class="preview-tag">설정만 저장 · 합성 결과 없음</span><h3>${esc(r.name)}</h3><p class="hint">${MODES[r.mode].name} · ${esc(r.range)}<br>${esc((r.product?.photos||SAMPLE_PHOTOS)[r.productPhoto].label)}</p><div class="row"><button class="btn" data-reuse="${esc(r.id)}">설정 다시 사용</button><button class="btn" data-recipe-export="${esc(r.id)}">지시서 내려받기</button><button class="btn quiet" data-recipe-remove="${esc(r.id)}">삭제</button></div></div></article>`).join('');
- $$('[data-load]').forEach(b=>b.onclick=()=>{const s=saved.find(x=>x.id===b.dataset.load);preserveWorkspace();if(s.product)setProduct(s.product);else setProduct({...normalizeProduct({productName:s.productName,brand:'BLUEFIT',salePrice:79000,quantity:4},s.sourceUrl),photos:SAMPLE_PHOTOS.slice(0,2)});$('#productName').value=s.productName;$('#factCheck').checked=true;$('#benefitCheck').checked=!!product.benefitConfirmed;activeReference=LIBRARY_SAMPLES.find(x=>x.type===s.variant.reference?.type)||null;renderLibrary();mode=s.variant.mode==='newscene'?'newscene':'original';variants=[{...s.variant,photos:structuredClone(s.variant.photos||PHOTOS),id:'saved-'+s.id+'-'+Date.now()}];choice=new Set([variants[0].id]);selected=0;go(2);notify('저장한 시안을 복사해 편집합니다. 저장본은 유지됩니다.')});
+ $$('[data-load]').forEach(b=>b.onclick=()=>{const s=saved.find(x=>x.id===b.dataset.load);preserveWorkspace();if(s.product)setProduct(s.product);else setProduct({...normalizeProduct({productName:s.productName,brand:'BLUEFIT',salePrice:79000,quantity:4},s.sourceUrl),photos:SAMPLE_PHOTOS.slice(0,2)});$('#productName').value=s.productName;$('#factCheck').checked=true;$('#benefitCheck').checked=!!product.benefitConfirmed;activeReference=LIBRARY_SAMPLES.find(x=>x.type===s.variant.reference?.type)||null;renderLibrary();mode=s.variant.mode==='newscene'?'newscene':'original';PHOTOS.splice(0,PHOTOS.length,...structuredClone(s.variant.photos||PHOTOS));variants=[{...s.variant,photos:undefined,id:'saved-'+s.id+'-'+Date.now()}];choice=new Set([variants[0].id]);selected=0;go(2);notify('저장한 시안을 복사해 편집합니다. 저장본은 유지됩니다.')});
  $$('[data-export]').forEach(b=>b.onclick=()=>download(packageEntry(saved.find(x=>x.id===b.dataset.export)),'AdCheck-시안전달.json'));
  $$('[data-remove]').forEach(b=>b.onclick=()=>{const next=saved.filter(x=>x.id!==b.dataset.remove);if(writeStore(KEY,next)){saved=next;renderSaved();notify('저장함에서 삭제했습니다.')}});
  $$('[data-reuse]').forEach(b=>b.onclick=()=>{const r=recipes.find(x=>x.id===b.dataset.reuse);preserveWorkspace();if(r.product)setProduct(r.product);modeDrafts[mode]={variants,choice:new Set(choice),selected};mode=r.mode;activeReference=LIBRARY_SAMPLES.find(x=>x.type===r.creativeReference?.type)||null;renderLibrary();planState[mode]={name:r.name,range:r.range,productPhoto:r.productPhoto,notes:r.notes};$('#factCheck').checked=true;go(1);notify('연출 설정을 불러왔습니다. 상품 자료와 교체 영역을 확인해주세요.')});
@@ -333,7 +337,7 @@ setProduct(product);renderSaved();renderLibrary();updateStepNav();
 let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, lastCopyError='', photoNotice='', grabSourceKind='link', grabStale=false;
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
-renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
+renderBoard=function(){originalBoard();$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const dl=card.querySelector('[data-dlimg]');if(dl)dl.disabled=v.imageReady===false||!!v.imageFailed;if(v.imageReady!==false&&!v.imageFailed){const photo=PHOTOS[v.photo];attachCopyRemoval(card,photo,{request:getJSON,source:srcOf(photo),download:async url=>{try{const r=await fetch(url,{mode:'cors'});if(!r.ok)throw Error();const blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='adcheck-no-ad-copy.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}catch{window.open(url,'_blank','noopener');notify('새 탭에서 결과 이미지를 저장해주세요.')}}});}const small=card.querySelector('.card-meta small');if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
 })};
 function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
 function setBusy(b){autoBusy=b;$('#quickGenerate').disabled=b;// 버튼이 둘 다 '시안 6종 생성'이라, 진행 중 표시도 둘 다 해야 어느 쪽을 눌렀든 보인다.
@@ -391,7 +395,8 @@ async function autoReferences(p){
 async function autoCopies(run){
  const refs=await autoReferences(product);if(run!==autoRun)return;
  const references=autoPlan.map(p=>{const candidates=refs.filter(r=>r.type===p.type);const ref=candidates[Math.floor(Math.random()*candidates.length)];return ref?{...ref,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'표현 방식과 카피 구조를 참고합니다.'}:{type:p.type,typeLabel:REF_TYPES[p.type],principle:REF_GUIDES[p.type]||'상품 사실 안에서 표현합니다.'}});
- const data=await getJSON('/api/bannerCopy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'studio',autoPlan:true,product,layouts:autoPlan.map(p=>p.layout),references,plans:autoPlan,facts:product.facts||[]})});
+ const {photos:photoBytes,sourcePhotos:sourceBytes,...copyProduct}=product;
+ const data=await getJSON('/api/bannerCopy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'studio',autoPlan:true,product:copyProduct,layouts:autoPlan.map(p=>p.layout),references,plans:autoPlan,facts:product.facts||[]})});
  if(run!==autoRun)return;
  if(!Array.isArray(data.copies)||data.copies.length!==6)throw Error('카피가 6개 돌아오지 않았습니다. 카피만 다시 시도해주세요.');
  variants.forEach((v,i)=>Object.assign(v,data.copies[i],{reference:references[i],copyModel:data.model,copyEdited:false}));autoCopyFailed=false;renderBoard();fillEditor();
@@ -455,13 +460,8 @@ async function classifyPhotos(run){
  if(run!==autoRun)return;
  if(bigger){PHOTOS.splice(0,PHOTOS.length,...product.photos);renderPhotos?.()}
  const sizeNote=bigger?`사진 ${bigger}장을 원본 크기로 교체`:'';
- /* 분류에 여섯 장까지 보낸다. 앞에서 여섯 장을 자르면 대표컷과 그 옆 판형만
-    가고 상세컷은 한 장도 안 간다. 앞 세 장은 그대로 두고 나머지는 뒤에서
-    고르게 뽑아 상세컷이 반드시 섞이게 한다. */
- const all=product.photos;
- const step=Math.max(1,Math.floor((all.length-3)/3));
- const picked=all.length<=6?all:[...all.slice(0,3),all[3+step*0],all[3+step*1],all[3+step*2]].filter(Boolean);
- const urls=[...new Set(picked.map(p=>p.url))].slice(0,6);
+ /* API의 6장 한도 안에서 대표컷부터 마지막 상세컷까지 고르게 본다. */
+ const urls=selectClassificationPhotos(product.photos).map(p=>p.url);
  /* 우리 이미지 레퍼런스에 이 업종 배너가 쌓여 있다. 지금까지는 캡션만 카피
     생성에 쓰고 이미지는 아무 데도 안 넣었다. 실제로 어떻게 구성했는지는
     그림을 봐야 알 수 있다. 몇 장 함께 보내 조판을 고르게 한다. */
@@ -482,13 +482,13 @@ async function classifyPhotos(run){
   product.layoutHints=Array.isArray(data.layoutHints)?data.layoutHints:[];product.refNote=data.refNote||'';
   const byUrl=new Map((data.photos||[]).map(x=>[x.url,x]));
   product.photos.forEach((p,i)=>{const x=byUrl.get(p.url);if(!x)return;
-   p.role=x.role;p.hasPerson=x.hasPerson;p.colorway=x.colorway;p.burnedText=x.burnedText;p.note=x.note;
+   applyPhotoClassification(p,x);
    p.label=(x.colorway?x.colorway+' ':'')+({main:'대표컷',model:'모델컷',packshot:'단품컷',flat:'펼침컷',detail:'상세컷',unusable:'배너 부적합'}[x.role]||'상품 원본 '+(i+1));});
   // 배너에 못 쓰는 것(정보 고시표·사이즈표)은 뺀다. 다 빼면 원래대로 둔다.
   /* 분류에 못 보낸 사진은 역할이 없다. 비율로 짐작해 채운다. 안 그러면
      상세컷 열 장이 전부 '역할 없음'이 되어 원본 자리에 못 들어간다. */
   product.photos.forEach((p,i)=>{if(p.role)return;
-   const r=p.w&&p.h?p.h/p.w:0;p.role=r>=1.7?'detail':(i===0?'main':'detail');p.personKind=p.personKind||'none'});
+   const r=p.w&&p.h?p.h/p.w:0;p.role=r>=1.7?'detail':(i===0?'main':'detail')});
   const usable=product.photos.filter(p=>p.role!=='unusable');
   const dropped=product.photos.length-usable.length;
   // PHOTOS는 setProduct에서 product.photos를 그대로 복사해 둔 목록이고,
@@ -497,7 +497,7 @@ async function classifyPhotos(run){
   if(usable.length&&dropped)product.photos=usable;
   PHOTOS.splice(0,PHOTOS.length,...product.photos);
   if(SOURCE.includes('/1002447881'))PHOTOS.push(...SAMPLE_PHOTOS.slice(2));
-  photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 분류 완료`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
+  photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 확보 · ${product.photos.filter(p=>byUrl.has(p.url)).length}장 분석`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
    +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다')
    +(referenceUrls.length?` · 레퍼런스 배너 ${referenceUrls.length}장 참고`:'')
    +(product.refNote?` (${product.refNote})`:'')
@@ -522,7 +522,7 @@ async function classifyPhotos(run){
 /* 조판에 색을 박아 두면 남의 브랜드 색이 상품 위에 얹힌다. 대표컷에서
    한 번 뽑아 모든 카드에 넣는다. 여섯 장이 한 세트로 보이는 효과도 있다. */
 async function readPalette(run){
- const main=product.photos[0];if(!main)return;
+ const main=product.photos[0];if(!main||main.sourceRegion)return;
  const p=await paletteFrom(main.cutUrl||main.url,getJSON);
  if(run!==autoRun||!p)return;
  product.palette=p;
@@ -590,7 +590,7 @@ function axisLabel(p){
 /* 누끼. 단색 배경 단품컷에서만 된다. 되는지 먼저 재고, 안 되면 손대지 않는다.
    억지로 지운 누끼는 원본보다 나쁘다. */
 async function cutoutPhotos(run){
- const targets=product.photos.filter(p=>['packshot','flat','main'].includes(p.role)&&!p.cutUrl).slice(0,3);
+ const targets=product.photos.filter(p=>['packshot','flat','main'].includes(p.role)&&!p.cutUrl&&!p.sourceRegion).slice(0,3);
  if(!targets.length)return '';
  let why='';
  const results=await Promise.all(targets.map(async p=>{
@@ -630,48 +630,24 @@ async function tuneScrim(i){
 let quality='medium';
 async function generateImage(plan,run,q){
  const variant=variants.find(v=>v.id===plan.id);if(!variant)return;
- variant.autoStatus='이미지 생성 중';variant.imageFailed=false;renderBoard();
+ variant.autoStatus='이미지 생성 중';variant.imageFailed=false;variant.imageReady=false;variant.imageError='';renderBoard();
  const src=product.photos[plan.photo]||{};
- const baked=plan.render==='baked';
+ // 광고 카피는 항상 편집 가능한 화면 레이어로 유지한다.
  // 생성 전 사진을 기억해 둔다. '카피 없이 원본 보기'가 되돌아갈 자리다.
  variant.sourcePhoto=plan.photo;
  try{
  // 1단계: 장면을 만든다. 이 호출에는 글자 지시를 넣지 않는다.
- const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
+ const shot=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...(src.cleanBase64?{base64:src.cleanBase64,mediaType:src.cleanType}:{imageUrl:src.url}),scene:plan.scene,keep:plan.keep,quality:q||quality,productName:product.productName,imagePrompt:plan.imagePrompt||`Do not introduce other products. Reserve empty space for ${plan.layout==='bottom-right'||plan.layout==='band'?'lower':'upper'} text.`,size:'1024x1024'})});
  if(run!==autoRun)return;if(!safeUrl(shot.imageUrl))throw Error('생성된 이미지 주소를 받지 못했습니다.');
  let finalUrl=shot.imageUrl;
 
- // 2단계: 카피까지 그리는 컷만, 방금 만든 그림에 글자를 얹는다.
- // 장면과 글자를 한 번에 시키면 글자가 통째로 빠진다(두 번 시험해 두 번 다).
- if(baked){
-  variant.autoStatus='카피를 그리는 중';renderBoard();
-  const withText=await getJSON('/api/bannerImage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageUrl:finalUrl,size:'1024x1024',quality:q||quality,text:{headline:variant.main,subline:variant.sub,offer:variant.offer,brand:product.brand,cta:variant.showCta?variant.cta:'',style:plan.typeStyle?.[1]||'',eyebrow:variant.eyebrow||'',footnote:variant.footnote||''}})});
-  if(run!==autoRun)return;
-  if(safeUrl(withText.imageUrl))finalUrl=withText.imageUrl;
- }
-
  const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
- variant.photo=index;variant.photos=undefined;variant.baked=baked;variant.imageFailed=false;failedImages.delete(plan.id);
+ variant.photo=index;variant.photos=undefined;variant.baked=false;variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
  const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
  variant.quality=q||quality;
- variant.autoStatus=(variant.axes?variant.axes+' · ':'')+(baked?'카피까지 생성 · 숫자 확인 중':`AI 생성 · ${qLabel} · 상품 일치 확인 필요`);
+ variant.autoStatus=(variant.axes?variant.axes+' · ':'')+`AI 생성 · ${qLabel} · 상품 일치 확인 필요`;
  renderBoard();
 
- if(baked){
-  // 그림에 박힌 금액·퍼센트를 다시 읽어 확인된 값과 맞춰 본다
-  const slots=factSlots(product);
-  /* 그림에 그린 숫자를 OCR로 다시 읽어 대조한다. 확인된 값에는 가격·혜택뿐
-     아니라 상세 페이지에서 읽은 사실도 들어간다. 근거가 있는 11.44%를
-     '확인되지 않은 숫자'로 잡으면 오탐만 는다. */
-  const verified=[slots.PRICE,slots.BENEFIT,slots.QUANTITY,...(product.facts||[]).map(f=>f.text),variant.footnote||''].filter(Boolean);
-  const check=await checkBakedText(finalUrl,verified,getJSON);
-  if(run!==autoRun)return;
-  variant.textClaims=check?check.claims:null;
-  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+(
-   !check?'카피까지 생성 · 숫자 확인 못 함':
-   check.claims.length?'확인되지 않은 숫자: '+check.claims.join(', ')+' · 쓰기 전에 확인하세요':
-   '카피까지 생성 · 숫자 대조 통과');
- }
  }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
  renderBoard();fillEditor();tuneScrim(variants.indexOf(variant));
 }
@@ -713,9 +689,21 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
   const probeNote=await measurePhotos();if(run!==autoRun)return;
   await classifyPhotos(run);if(run!==autoRun)return;
   if(probeNote)photoNotice=probeNote+(photoNotice?' · '+photoNotice:'');
+  if(product.photos.some(p=>p.regions?.length)){
+   autoMessage('상세이미지에서 사진을 꺼내는 중…');
+   const sourcePhotos=product.photos;
+   const extracted=await extractPhotoRegions(sourcePhotos,getJSON,()=>run===autoRun);
+   if(run!==autoRun)return;
+   product.sourcePhotos=sourcePhotos;product.photos=extracted.photos;
+   product.regionFailures=extracted.failures;
+   PHOTOS.splice(0,PHOTOS.length,...product.photos);
+   photoNotice+=` · 상세 사진 ${extracted.extracted}컷 추출`;
+   if(extracted.failures.length)photoNotice+=` · ${extracted.failures.length}장은 추출하지 못해 원본 유지`;
+  }
   // 로고 지우기와 누끼는 여기서 시작만 걸어 둔다. 계획·카드·카피와 겹쳐 돈다.
   const pixelWork=startPixelWork(run);
   autoPlan=createPlan(product);failedImages.clear();autoCopyFailed=false;
+  photoNotice+=autoPlan[0]?.plannerVersion==='creative-v1'?' · 사진·메시지 통합 기획':' · 기본 기획(통합 기획 후보 부족 또는 미지원 업종)';
   const slots=factSlots(product);
   /* 카피가 오기 전과 카피 생성이 실패했을 때 쓰는 값이다. 전에는 여섯 장이
      전부 상품명과 가격으로 똑같아졌다. 조판도 카피 지시도 자리마다 갈라 놓고
@@ -736,34 +724,18 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
     const f=facts.length?facts[factAt++%facts.length]:'';
     return {sub:f||slots.QUANTITY||'', offer:slots.PRICE||'', cta:'상품 자세히 보기'};
   };
-  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
+  variants=autoPlan.map(p=>{const s0=seed(p);return {id:p.id,title:(p.angle?p.angle.ko+' · ':'')+p.label,recipe:p.recipe,angle:p.angle||null,eyebrow:'',footnote:'',layout:p.layout,minimalCopy:!!p.minimalCopy,photoSet:p.photoSet||null,photo:p.photo,brand:product.brand,mode:'original',main:product.productName,sub:s0.sub,cta:s0.cta,offer:s0.offer,benefitCondition:slots.BENEFIT&&p.emphasis==='offer'?product.benefitCondition:'',showCta:true,lockImage:true,lockLayout:false,original:false,imageReady:p.method==='original',autoStatus:p.method==='original'?p.desc:'이미지 생성 중',axes:axisLabel(p)}});
   selected=0;choice=new Set(variants.map(v=>v.id));enterResults();$('#quickProduct').textContent=product.productName;autoMessage('카피와 이미지를 만들고 있습니다. 완성되는 순서대로 표시합니다.');
   /* 실패 이유를 한 군데에만 적어 두면 못 본다. 카드 옆 문구와 상태줄 양쪽에 남긴다. */
   lastCopyError='';
   const copyTask=autoCopies(run).catch(e=>{autoCopyFailed=true;lastCopyError=String(e&&e.message||e).slice(0,90);
     const box=$('#autoCopyError');if(box)box.textContent=lastCopyError;});
-  // 사진만 만드는 컷은 바로 시작한다. 카피까지 그리는 컷은 문구가 나와야
-  // 그릴 수 있으므로 카피를 기다린다. 둘을 한 줄에 세우면 전부 늦어진다.
-  const layerQueue=autoPlan.filter(p=>p.method==='newscene'&&p.render!=='baked');
-  const bakedQueue=autoPlan.filter(p=>p.method==='newscene'&&p.render==='baked');
-  /* 한 장씩 두 줄로 돌리면 네 장에 두 바퀴가 걸린다. 생성 한 장이 가장 긴
-     구간이라 줄을 늘리는 것이 체감에 가장 크게 온다. */
+  // 카피 실패·재시도와 무관하게 텍스트 없는 장면을 생성한다.
+  const imageQueue=autoPlan.filter(p=>p.method==='newscene');
   const drain=q=>Array.from({length:4},async()=>{while(q.length){await generateImage(q.shift(),run)}});
   await pixelWork;
   if(run!==autoRun)return;
-  await Promise.all([
-   ...drain(layerQueue),
-   /* 카피가 실패하면 카피까지 그리는 시안은 아예 시작하지 않는다. 그런데
-      그 카드는 처음 값인 '이미지 생성 중'을 그대로 달고 남아 영영 도는 것처럼
-      보였다. 시작도 안 했다는 것을 카드에 적는다. */
-   copyTask.then(()=>{
-    if(!autoCopyFailed) return Promise.all(drain(bakedQueue));
-    bakedQueue.forEach(pl=>{const v=variants.find(x=>x.id===pl.id);
-      if(v) v.autoStatus='카피 생성에 실패해 만들지 못했습니다. 카피만 다시 생성을 눌러주세요.'});
-    renderBoard();
-    return null;
-   }),
-  ]);
+  await Promise.all([copyTask,...drain(imageQueue)]);
   renderBoard();fillEditor();finishMessage();
  }catch(e){autoMessage(e.message);if(!useCurrent&&!fromGrab)$('#quickGrab').focus()}finally{setBusy(false)}
 }
@@ -800,5 +772,5 @@ function syncSavedToggle(){
 }
 $('#openSaved').onclick=()=>{if($('#savedStep').hidden){go(3);syncSavedToggle()}else closeSaved()};
 $('#quickBack') && ($('#quickBack').onclick=()=>closeSaved());
-const legacyFill=fillEditor;fillEditor=function(){legacyFill();$('#saveVariant').disabled=autoBusy||!!variants[selected]?.imageFailed;$('#varyCopy').disabled=autoBusy;$('#varyScene').disabled=autoBusy;$('#applyReference').disabled=autoBusy||!activeReference};
+const legacyFill=fillEditor;fillEditor=function(){legacyFill();$('#saveVariant').disabled=autoBusy||!!variants[selected]?.imageFailed||variants[selected]?.imageReady===false;$('#varyCopy').disabled=autoBusy;$('#varyScene').disabled=autoBusy;$('#applyReference').disabled=autoBusy||!activeReference};
 $('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=true;$('#savedStep').hidden=true;

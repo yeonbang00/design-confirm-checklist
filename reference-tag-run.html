@@ -119,7 +119,8 @@ async function loadState() {
      축 어휘에서 직접 센다. */
   const AXIS_COUNT = AX ? Object.keys(AX.AXES).length : 12;
   const thin = new Set(Object.entries(stored)
-    .filter(([, v]) => Object.keys(v?.axes || {}).length < AXIS_COUNT)
+    .filter(([, v]) => Number(v?.v || 0) < Number(saved.schema || 1)
+      || (AX ? Object.keys(AX.cleanAxes(v?.axes)).length : Object.keys(v?.axes || {}).length) < AXIS_COUNT)
     .map(([k]) => k));
   const patchMode = $('#patch').checked;
   const left = all.filter((x) => {

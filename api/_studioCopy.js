@@ -27,7 +27,10 @@ export async function studioCopy(req,res,apiKey) {
       light:{soft:'부드러운 빛',hard:'딱딱한 그림자',back:'역광',rim:'윤곽광',window:'창가 빛','studio-key':'스튜디오 조명',split:'반측광',golden:'해질녘 빛',neon:'색조명',dappled:'나뭇잎 그림자'}};
     const shots=Array.isArray(req.body.plans)?req.body.plans.slice(0,6).map(x=>{
       const a=x&&x.axes||{};
-      return {컷:String(x&&x.sceneName||x&&x.label||'').slice(0,30),
+      return {제작의도:String(x?.copyBrief||'').slice(0,300),
+        선택사진:{역할:String(x?.sourceSummary?.role||'').slice(0,20),색상:String(x?.sourceSummary?.colorway||'').slice(0,20),사진별색상:(x?.sourceSummary?.colors||[]).slice(0,3).map(c=>String(c).slice(0,20))},
+        장면설명:String(x?.scene||'').slice(0,600),
+        컷:String(x&&x.sceneName||x&&x.label||'').slice(0,30),
         찍히는것:[KO.person[a.person],KO.mount[a.mount],KO.distance[a.distance],KO.light[a.light]].filter(Boolean).join(' · ')||'상품 원본 그대로',
         강조:{offer:'혜택',product:'제품',story:'무드'}[x&&x.emphasis]||'',
         광고유형:String(x&&x.angle&&x.angle.ko||'').slice(0,20),

@@ -10,11 +10,12 @@
 // 스키마가 바뀌면 v를 올린다. 러너가 v가 다른 항목을 다시 태깅한다.
 
 import { put } from './_blobPut.js';
+import { cleanAxes } from './_referenceAxes.js';
 
 const BLOB_PUBLIC_BASE = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com';
 const AXES_URL = `${BLOB_PUBLIC_BASE}/reference-axes.json`;
 
-export const AXES_SCHEMA = 1;
+export const AXES_SCHEMA = 2;
 
 /* 매니페스트 키. Blob URL 끝의 무작위 접미사를 쓴다.
    .../coach-nhn-001-thumb-qehN61NNlt24NzwAWzHY0nJ1wz0GcH.jpg → qehN61NN... */
@@ -44,10 +45,11 @@ export async function mergeReferenceAxes(entries) {
   let added = 0;
   for (const e of entries) {
     const key = axesKey(e?.url);
-    if (!key || !e?.axes || !Object.keys(e.axes).length) continue;
+    const axes = cleanAxes(e?.axes);
+    if (!key || !Object.keys(axes).length) continue;
     items[key] = {
-      v: AXES_SCHEMA,
-      axes: e.axes,
+      v: ['frame','focus','motif'].every(k => axes[k]) ? AXES_SCHEMA : 1,
+      axes,
       ...(e.note ? { note: String(e.note).slice(0, 120) } : {}),
       ...(e.type ? { type: String(e.type).slice(0, 20) } : {}),
     };

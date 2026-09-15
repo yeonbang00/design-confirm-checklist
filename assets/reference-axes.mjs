@@ -36,6 +36,10 @@
  * 중간을 골랐다.
  */
 export const AXES = {
+  frame: {ko:'프레임',weight:7,values:{full:'전면 한 장',split:'좌우 분할',bands:'상하 띠',grid:'여러 칸',inset:'사진 속 작은 창',poster:'포스터·종이판'}},
+  focus: {ko:'주인공',weight:5,values:{product:'상품',person:'인물',type:'문구',number:'숫자',group:'상품 묶음',scene:'장면',symbol:'상징물'}},
+  motif: {ko:'핵심 시각 장치',weight:5,values:{none:'특별한 장치 없음',moon:'달·큰 원형 배경',spotlight:'스포트라이트·빛줄기',balance:'저울·균형',balloon:'풍선·입체 숫자',sticker:'스티커·외곽선',gift:'선물상자',stage:'단상·무대',paper:'종이·테이프',window:'창·화면 프레임',other:'기타 장치'}},
+
   appeal: {
     ko: '소구', weight: 1,
     values: {
@@ -308,4 +312,29 @@ export function rankSimilar(target, pool, limit = 6, min = SIMILAR_MIN) {
     out.push(row);
   }
   return out;
+}
+
+// Similarity indexes, not probabilities or ad-performance scores.
+const GROUPS={composition:{frame:7,focus:5,motif:5,layout:6,letter:4,figure:2,chunks:2,space:2,subject:2,person:2,distance:1,device:2},color:{hue:7,palette:4}};
+function groupScore(a,b,weights){
+ let total=0,matched=0,count=0;const shared=[];
+ for(const [k,w] of Object.entries(weights)){
+  if(!Object.hasOwn(AXES[k].values,a?.[k])||!Object.hasOwn(AXES[k].values,b?.[k]))continue;
+  // Absence of a motif is not a shared visual device.
+  if(k==='motif'&&[a[k],b[k]].some(v=>['none','other'].includes(v)))continue;
+  total+=w;count++;
+  if(a[k]===b[k]){matched+=w;shared.push(k)}
+ }
+ return {score:count>=(weights===GROUPS.color?2:4)?matched/total:null,shared,count,coverage:total/Object.values(weights).reduce((s,w)=>s+w,0)};
+}
+export function visualSimilarity(a,b){
+ const composition=groupScore(a,b,GROUPS.composition),color=groupScore(a,b,GROUPS.color);
+ return {composition,color,combined:composition.score===null||color.score===null?null:Math.sqrt(composition.score*color.score)};
+}
+export function rankVisualSimilar(target,pool,mode='composition',limit=12){
+ const rows=pool.filter(x=>x!==target&&(!target.thumbUrl||x.thumbUrl!==target.thumbUrl))
+ .map(item=>{const scores=visualSimilarity(target.axes,item.axes);return {item,...scores,score:mode==='both'?scores.combined:scores[mode]?.score}})
+ .filter(x=>x.score!==null&&x.score!==undefined&&x.score>0)
+ .sort((a,b)=>b.score-a.score||(b.composition.coverage+b.color.coverage)-(a.composition.coverage+a.color.coverage));
+ return rows.slice(0,limit);
 }

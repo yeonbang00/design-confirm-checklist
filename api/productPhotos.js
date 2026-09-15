@@ -1,3 +1,4 @@
+import {normalizePhotoRegions} from '../assets/studio-photo-regions.mjs';
 // POST /api/productPhotos
 // Body: { urls: string[], referenceUrls?: string[] }
 // Returns: { photos:[...], category, usp, toneKo,
@@ -25,6 +26,12 @@ const ROLES = new Set(['main', 'model', 'packshot', 'flat', 'detail', 'unusable'
    프롬프트가 부르는 이름과 같아야 한다. */
 const CATEGORIES = new Set(['fashion-top', 'fashion-outer', 'fashion-bottom', 'shoes', 'bag',
   'accessory', 'beauty', 'food', 'kitchen', 'home', 'electronics', 'kids', 'sports', 'pet', 'other']);
+/* CATEGORIES와 같은 커밋(6ccc53a)에서 함께 사라졌다. 상수 블록을 다시 쓰면서
+   쓰는 쪽만 남기고 정의를 지운 것이다. 없으면 cleanCuts가 첫 컷에서 죽고,
+   컷 후보 12개가 통째로 빈 배열이 된다.
+   장면 문장에 글자·간판·가격표가 들어오는 것을 막는다. 배너의 글자는 코드가
+   얹는다. AI가 그림 안에 또 그리면 두 겹이 된다. */
+const BANNED = /\b(text|letter|word|logo|sign|signage|label|price tag|billboard|poster|brand name)\b/i;
 
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
 
@@ -63,6 +70,14 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 - isGift: 이 사진이 **증정품·사은품**만 찍은 컷이면 true. 본품이면 false.
   상품명에 "증정" "추가" "사은품"이 있거나 본품보다 작게 취급되는 것.
 - note: 이 사진을 배너에 쓸 때 주의할 점 한 문장. 없으면 ""
+
+상세 편집 이미지에는 regions 배열을 추가하세요. 독립적으로 잘라 쓸 수 있는 사진 영역을 최대 3개 제안합니다.
+- box: 원본 이미지 전체 기준 [x,y,width,height], 각 값은 0~1. 흰 여백·제목·설명은 제외.
+- complete: 사각형 안에 해당 사진의 상품과 원래 보여주는 신체 범위가 보존되면 true.
+- overlayText: 사진 영역에 편집용 글자가 겹치면 true. 제품 자체 인쇄 라벨은 제외.
+- 각 영역의 role, personKind, colorway, plainBg, shotAngle, shotDistance, itemCount, isHero, isGift를 별도로 적으세요.
+원본 그대로 쓸 단일 사진은 regions: []. 콜라주에서 다른 사진이 겹치거나 얼굴·상품이 잘릴 영역은 제외하세요.
+좌표를 확신하지 못하면 빈 배열. 레퍼런스 배너에서는 영역을 추출하지 마세요.
 
 첫 번째 사진이 대표컷입니다. 그 사진이 model이나 packshot에 해당하더라도 role은 "main"으로 하세요.
 
@@ -345,6 +360,7 @@ export default async function handler(req, res) {
       return {
         url,
         role: i === 0 ? 'main' : role,
+        regions: normalizePhotoRegions(row.regions),
         hasPerson: !!row.hasPerson,
         /* 배경이 빈 누끼컷인지. 조판을 고를 때 쓴다. 누끼를 화면 가득 깔면
            흰 바탕만 커지고 제품은 그대로라 배너가 안 된다. */

@@ -7,6 +7,10 @@
 // 축을 더하거나 값을 바꾸면 **두 파일을 같이 고쳐야 한다.**
 
 export const AXES = {
+  frame: {ko:'프레임',weight:7,values:{full:'전면 한 장',split:'좌우 분할',bands:'상하 띠',grid:'여러 칸',inset:'사진 속 작은 창',poster:'포스터·종이판'}},
+  focus: {ko:'주인공',weight:5,values:{product:'상품',person:'인물',type:'문구',number:'숫자',group:'상품 묶음',scene:'장면',symbol:'상징물'}},
+  motif: {ko:'핵심 시각 장치',weight:5,values:{none:'특별한 장치 없음',moon:'달·큰 원형 배경',spotlight:'스포트라이트·빛줄기',balance:'저울·균형',balloon:'풍선·입체 숫자',sticker:'스티커·외곽선',gift:'선물상자',stage:'단상·무대',paper:'종이·테이프',window:'창·화면 프레임',other:'기타 장치'}},
+
   appeal: {
     ko: '소구', weight: 1,
     values: {

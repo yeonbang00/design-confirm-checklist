@@ -1,3 +1,4 @@
+import {createCreativePlan} from './studio-creative-plan.mjs';
 /* 시안 6종에 '무슨 컷을 찍을지'를 정한다.
  *
  * 처음에는 방식이 둘뿐이었다 — 원본 그대로 2장, 배경만 바꾼 것 4장. 사진이
@@ -100,7 +101,7 @@ export function guessRole(photo, index) {
   const r = photo.w && photo.h ? photo.h / photo.w : 0;
   if (r >= 1.7) return 'detail';
   if (index === 0) return 'main';
-  return 'model';
+  return photo.personKind === 'body' ? 'model' : 'detail';
 }
 
 /* 같은 역할의 사진이 여러 장일 때 앞에서부터 집으면 매번 같은 장이 나온다.
@@ -124,13 +125,7 @@ function pickPhoto(prefer, photos, used, random = Math.random) {
      offer   숫자·혜택이 주인공 (확인된 가격이 있을 때만)
      product 제품이 주인공, 카피는 비켜선다
      story   말이 주인공, 사진은 배경 */
-/* 글자를 어디에 둘 것인가.
-     layer  사진만 생성하고 카피는 HTML/CSS로 얹는다. 문구를 화면에서 고칠 수
-            있고 숫자는 코드가 채우므로 틀릴 일이 없다.
-     baked  카피까지 그림 안에 그린다. CSS로는 못 만드는 표현(스티커 레터링,
-            손글씨, 3D 세트 안의 글자)이 열린다. 대신 픽셀에 박히므로 고칠 수
-            없고, 숫자가 틀릴 수 있어 생성 뒤에 OCR로 대조한다.
-   둘을 섞는다. 여섯 장이 전부 baked면 고칠 수 있는 시안이 하나도 없다. */
+/* 모든 카피는 HTML/CSS 레이어로 표시한다. 다운로드 이미지는 광고 문구를 포함하지 않는다. */
 /* 외곽선 타이포는 뺐다. 속이 빈 글자는 생성 품질이 눈에 띄게 떨어져
    테두리가 뭉개지고 획이 붙어 버렸다. */
 export const TYPE_STYLES = [
@@ -258,6 +253,8 @@ export const EMPHASIS = {
 };
 
 export function createPlan(product, random = Math.random) {
+  const creative = createCreativePlan(product, random);
+  if (creative) return creative;
   const hasBenefit = product.benefitConfirmed && product.benefitRate > 0 && product.benefitCondition;
   const photos = (product.photos.length ? product.photos : [{}])
     .map((p, i) => ({ ...p, role: guessRole(p, i) }));
@@ -276,7 +273,6 @@ export function createPlan(product, random = Math.random) {
   const mix = MIXES[Math.floor(random() * MIXES.length)] || MIXES[1];
   /* 여섯 장 중 둘은 카피까지 그림에 그린다. 어느 자리가 될지는 매번 다르다.
      그대로 못 고치는 대신 CSS로는 안 되는 표현이 나온다. */
-  const bakedAt = new Set(shuffle([0, 1, 2, 3, 4, 5], random).slice(0, 2));
   const typeOrder = shuffle(TYPE_STYLES, random);
   // 확인된 가격이 없으면 숫자를 앞세울 수 없다. 그 자리는 제품으로 돌린다.
   const emphasisPlan = shuffle(mix.map(e => (e === 'offer' && !canOffer ? 'product' : e)), random);
@@ -459,20 +455,14 @@ export function createPlan(product, random = Math.random) {
      없는 유형은 후보에 올리지 않는다. 후기가 없는데 후기형을 만들 수 없다. */
   const angles = pickAngles(emphasisPlan, angleContext(product, photos), random);
 
-  /* 생성 자리는 카피 세 줄만 얹는다. 다만 그중 한 장은 카피까지 그림에 그린다.
-     CSS로는 못 만드는 표현(스티커 레터링, 손글씨, 세트 안의 글자)이 거기서만
-     나온다. 그 한 장은 글자가 픽셀에 박히므로 세 줄 규칙에서 뺀다.
-     어느 자리가 될지는 매번 다르되 한 장을 넘지 않는다. */
   const ordered = shuffle(slots, random);
-  const madeIdx = ordered.map((x, i) => (x.kind !== 'plain' ? i : -1)).filter(i => i >= 0);
-  const bakedIdx = madeIdx.find(i => bakedAt.has(i));
 
   /* 사진 세 장을 쓰는 자리를 한 장까지 연다. 원본을 그대로 쓰는 자리 중에서
      고른다. 생성 자리는 화면을 꽉 채우기로 이미 정해져 있다. */
   const usable = photos.map((p, i) => (p.role !== 'unusable' ? i : -1)).filter(i => i >= 0);
   const canMulti = MULTI_CATEGORIES.has(product.category) && usable.length >= 3;
   const multiIdx = canMulti
-    ? ordered.findIndex((x, i) => x.kind === 'plain' && i !== bakedIdx)
+    ? ordered.findIndex(x => x.kind === 'plain')
     : -1;
   const multiLayout = multiIdx >= 0 ? shuffle(MULTI.slice(), random)[0] : '';
   /* 세 칸에 비슷한 컷만 넣으면 판을 나눈 뜻이 없다. 각도와 거리가 다른
@@ -535,14 +525,8 @@ export function createPlan(product, random = Math.random) {
       scene: slot.scene || '',
       emphasis: emphasisPlan[i],
       axes: slot.axes || null,
-      // 그대로 쓰는 컷은 생성 자체를 안 하므로 baked가 될 수 없다
-      /* 카피 세 줄만 그리는 자리. 눈썹·강조 숫자·각주를 안 붙인다. */
-      /* 생성 자리는 카피 세 줄만 얹는다. 다만 한 장은 카피까지 그림에 그린다.
-         CSS로는 못 만드는 표현(스티커 레터링, 손글씨, 세트 안의 글자)이
-         거기서만 나온다. 그 한 장은 글자가 픽셀에 박히므로 세 줄 규칙에서 뺀다. */
-      minimalCopy: made && i !== bakedIdx,
-      // 세 줄만 그리는 자리는 그림에 글자를 박지 않는다. 고칠 수 있어야 한다.
-      render: i === bakedIdx ? 'baked' : 'layer',
+      minimalCopy: made,
+      render: 'layer',
       typeStyle: typeOrder[i % typeOrder.length],
       madeByAi: slot.kind === 'made',
     };

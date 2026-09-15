@@ -1,12 +1,19 @@
 export function safeUrl(value) {
   try { const u=new URL(value); return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:''; } catch { return ''; }
 }
+// 상품명에 명확히 적힌 한 가지 구성 수만 읽는다. 1+1이나 서로 다른 종 수는 추정하지 않는다.
+export function productQuantity(raw={}) {
+  const explicit=Number(raw.quantity);
+  if(Number.isInteger(explicit)&&explicit>0)return explicit;
+  const matches=[...String(raw.productName||'').matchAll(/(?:^|[^0-9])([1-9][0-9]?)종(?=$|[^가-힣0-9])/g)];
+  return matches.length===1?Number(matches[0][1]):null;
+}
 export function normalizeProduct(raw={}, source='') {
   const number=v=>{const n=Number(String(v??'').replace(/[,원\s]/g,''));return Number.isFinite(n)&&n>0?n:null};
   const urls=[raw.mainImage,...(Array.isArray(raw.images)?raw.images:[])].map(safeUrl).filter(Boolean);
   // 북마클릿이 보낸 크기 정보. 분류가 실패해도 이것만으로 상세컷을 가른다.
   const meta=new Map((Array.isArray(raw.imageMeta)?raw.imageMeta:[]).map(m=>[safeUrl(m?.url),m]).filter(([u])=>u));
-  return {productName:String(raw.productName||'').trim().slice(0,80),brand:String(raw.brand||'').slice(0,40),salePrice:number(raw.salePrice),quantity:number(raw.quantity),description:String(raw.description||'').slice(0,600),sourceUrl:safeUrl(source||raw.sourceUrl),photos:[...new Set(urls)].slice(0,16).map((url,i)=>{const m=meta.get(url)||{};return {url,label:`상품 원본 ${i+1}`,kind:'original',w:Number(m.w)||0,h:Number(m.h)||0,role:i===0?'main':(m.tall?'detail':'')}}),benefitRate:null,benefitCondition:'',benefitKind:'정률',benefitConfirmed:false};
+  return {productName:String(raw.productName||'').trim().slice(0,80),brand:String(raw.brand||'').slice(0,40),salePrice:number(raw.salePrice),quantity:productQuantity(raw),description:String(raw.description||'').slice(0,600),sourceUrl:safeUrl(source||raw.sourceUrl),photos:[...new Set(urls)].slice(0,16).map((url,i)=>{const m=meta.get(url)||{};return {url,label:`상품 원본 ${i+1}`,kind:'original',w:Number(m.w)||0,h:Number(m.h)||0,role:i===0?'main':(m.tall?'detail':'')}}),benefitRate:null,benefitCondition:'',benefitKind:'정률',benefitConfirmed:false};
 }
 export function factSlots(p) {
   const slots={};

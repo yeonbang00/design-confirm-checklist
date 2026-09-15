@@ -251,6 +251,7 @@
     background:rgba(255,255,255,.045);
     transition:transform .3s cubic-bezier(.2,.8,.2,1);}
   .akin-card button:hover img{transform:scale(1.04);}
+  .akin-sort{margin:8px 0 0 6px;min-height:36px;padding:6px 28px 6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;color-scheme:dark;}
   .akin-score{display:block; margin-top:8px; font:700 12px/1.4 var(--font-mono); color:var(--accent);}
   .akin-brand{display:block; margin-top:2px; font-size:12px; font-weight:600; color:var(--ink);}
   .akin-why{display:block; margin-top:3px; font-size:10.5px; line-height:1.55; color:var(--ink-4);}
@@ -849,10 +850,10 @@
     return allPool;
   }
 
-  let akinBack = null;
+  let akinBack = null, akinMode = 'composition', akinTarget = null, akinRequest = 0;
   function closeAkin(){
     if(!akinBack) return;
-    akinBack.remove(); akinBack = null;
+    akinBack.remove(); akinBack = null; akinRequest++;
     document.body.style.overflow = '';
   }
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeAkin(); });
@@ -863,8 +864,8 @@
     akinBack.className = 'akin-back';
     akinBack.innerHTML = '<div class="akin-box">'
       + '<div class="akin-top"><div><h3>비슷한 배너</h3>'
-      + '<p>숫자가 클수록 구성이 가깝습니다. 0.4 위면 전체에서 상위 10% 안이고, '
-      + '0.6을 넘으면 눈에도 닮아 보입니다. 겹친 축을 함께 적었습니다.</p></div>'
+      + '<p>태그 기준 유사도입니다. 구도와 색감을 따로 비교하며, 광고 성과를 뜻하지 않습니다.</p>'
+      + '<label>정렬 <select class="akin-sort"><option value="composition">구도순</option><option value="color">색감순</option><option value="both">둘 다</option></select></label></div>'
       + '<button type="button" class="akin-x">닫기</button></div>'
       + '<div class="akin-body">'
       + '<div class="akin-src"></div>'
@@ -875,11 +876,13 @@
     akinBack.querySelector('.akin-x').addEventListener('click', closeAkin);
     // 바깥을 눌러도 닫힌다. 안쪽을 눌렀을 때는 닫히면 안 된다.
     akinBack.addEventListener('click', (e) => { if(e.target === akinBack) closeAkin(); });
+    const sort=akinBack.querySelector('.akin-sort');sort.value=akinMode;sort.onchange=()=>{akinMode=sort.value;fillAkin(akinTarget)};
     fillAkin(item);
   }
 
   function fillAkin(item){
     if(!akinBack) return;
+    akinTarget=item;const request=++akinRequest;
     const src = akinBack.querySelector('.akin-src');
     const tags = AX && item.axes
       ? AX.AXIS_KEYS.filter(k => item.axes[k])
@@ -888,23 +891,24 @@
     src.innerHTML = `<img src="${item.thumbUrl}" alt="">`
       + `<h4>${escapeHtml(item.brandName || '레퍼런스')}</h4>`
       + `<p>${escapeHtml(item.note || '')}</p>`
-      + (tags ? `<div class="akin-tags">${tags}</div>` : '');
+      + (tags ? `<div class="akin-tags">${tags}</div>` : '')
+      + (!item.axes?.frame||!item.axes?.focus||!item.axes?.motif?'<p>기존 태그로 비교 중 · 새 구도 태그 재분석 필요</p>':'');
     src.querySelector('img').addEventListener('click', () => adcheckLightbox(item.fullUrl,
       (item.brandName || '') + (item.note ? ' · ' + item.note : '')));
 
     const list = akinBack.querySelector('.akin-list');
     list.innerHTML = '<div class="akin-empty">비슷한 배너를 찾는 중…</div>';
     pool().then((all) => {
-      if(!akinBack) return;
+      if(!akinBack||request!==akinRequest) return;
       if(!AX) throw new Error('축 모듈이 아직 준비되지 않았습니다');
-      const ranked = AX.rankSimilar(item, all, 12);
+      const ranked = AX.rankVisualSimilar(item, all, akinMode, 12);
       if(!ranked.length){
         list.innerHTML = '<div class="akin-empty">구성이 비슷한 레퍼런스를 찾지 못했습니다.</div>';
         return;
       }
       const grid = document.createElement('div');
       grid.className = 'akin-grid';
-      ranked.forEach(({ item: b, score, shared }) => {
+      ranked.forEach(({ item: b, composition, color }) => {
         const card = document.createElement('div');
         card.className = 'akin-card';
         const btn = document.createElement('button');
@@ -915,14 +919,15 @@
         btn.addEventListener('click', () => { fillAkin(b); list.scrollTop = 0; });
         card.appendChild(btn);
         card.insertAdjacentHTML('beforeend',
-          `<span class="akin-score">${score.toFixed(2)}</span>`
+          `<span class="akin-score">구도 ${composition.score===null?'—':Math.round(composition.score*100)} · 색감 ${color.score===null?'—':Math.round(color.score*100)}</span>`
           + `<span class="akin-brand">${escapeHtml(b.brandName || '')}</span>`
-          + `<span class="akin-why">${escapeHtml(AX.whySimilar(shared))}</span>`);
+          + `<span class="akin-why">${escapeHtml(AX.whySimilar(akinMode==='color'?color.shared:composition.shared))}</span>`);
         grid.appendChild(card);
       });
       list.innerHTML = '';
       list.appendChild(grid);
     }).catch(() => {
+      if(!akinBack||request!==akinRequest)return;
       list.innerHTML = '<div class="akin-empty">전체 레퍼런스를 불러오지 못했습니다.</div>';
     });
   }
