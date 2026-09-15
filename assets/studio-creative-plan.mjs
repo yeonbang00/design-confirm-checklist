@@ -2,13 +2,13 @@
 export function createCreativePlan(product, random=Math.random) {
   if(!/^(fashion-|beauty$)/.test(product.category||''))return null;
   const photos=product.photos||[];
-  const usable=photos.map((p,i)=>({p,i})).filter(({p})=>p.role&&p.role!=='unusable'&&!p.isGift&&['none','hands','body'].includes(p.personKind));
+  const usable=photos.map((p,i)=>({p,i})).filter(({p})=>p.role&&p.role!=='unusable'&&!p.isGift&&(p.sourceRegion||!(p.w&&p.h&&p.h/p.w>1.65))&&['none','hands','body'].includes(p.personKind));
   if(!usable.length)return null;
   const candidates=[];
   const add=(key,family,label,photo,layout,brief,extra={})=>candidates.push({
     key,family,label,photo,layout,copyBrief:brief,method:'original',emphasis:'product',...extra});
   const main=usable.find(x=>x.p.role==='main')||usable[0];
-  add('hero','photo','대표 사진 화보',main.i,main.p.plainBg?'framed':'top-left',
+  add('hero','photo','대표 사진 화보',main.i,main.p.plainBg?'framed':'header',
     '이 사진에 보이는 상품을 중심으로 짧은 제목을 쓴다. 소재나 기능을 추측하지 않는다.');
   const detail=usable.find(x=>x.i!==main.i&&(x.p.sourceRegion||x.p.role==='detail'));
   if(detail)add('detail','photo','상세 사진 중심',detail.i,'top-center',
