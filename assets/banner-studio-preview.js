@@ -1,3 +1,4 @@
+import {exportBanner,saveBlob} from './studio-export.mjs';
 import {attachCopyRemoval} from './studio-copy-removal.mjs';
 import {extractPhotoRegions} from './studio-photo-regions.mjs';
 import {selectClassificationPhotos, applyPhotoClassification} from './studio-photo-analysis.mjs';
@@ -137,7 +138,8 @@ function art(v){const photos=v.photos||PHOTOS,
  return `<div class="art ${esc(v.layout)}${asOriginal?' original':''}${(v.baked&&!asOriginal)?' baked':''}${cut?' has-cut':''}"><img src="${esc(artSrc(p,v.layout))}" alt="${esc(p.label)}" loading="lazy">${['duo','duo-panel'].includes(v.layout)?`<img class="second-photo" src="${esc(srcOf(second))}" alt="${esc(second.label)}" loading="lazy">`:''}${extraShots(v,photos,p)}<span class="brand">${esc(v.brand??'BLUEFIT')}</span><div class="copy">${v.minimalCopy?'':(v.eyebrow?`<span class="eyebrow">${esc(v.eyebrow)}</span>`:'')}${v.minimalCopy&&v.sub?`<span class="subline lead">${esc(v.sub)}</span>`:''}<span class="headline">${esc(v.main)}</span>${(v.minimalCopy||dupOffer(v))?'':`<span class="subline">${esc(v.sub)}</span>`}${!v.minimalCopy&&['offer','numeral','arch','badge','type-diagonal','framed','duo-panel'].includes(v.layout)&&v.offer?`<strong class="offer-value">${esc(v.offer)}</strong>`:''}${v.showCta?`<span class="cta">${esc(v.cta)}</span>`:''}${!v.minimalCopy&&v.benefitCondition?`<span class="benefit-condition">${esc(v.benefitCondition)}</span>`:''}${!v.minimalCopy&&v.footnote?`<span class="footnote">${esc(v.footnote)}</span>`:''}</div></div>`}
 function renderProductStrip(){$('#stripPhoto').src=PHOTOS[isPlan()?planState[mode].productPhoto:photo].url;$('#stripName').textContent=product.productName;$('#stripFacts').textContent=Object.values(factSlots(product)).join(' · ')}
 function renderBoard(){
- $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div></div><button class="btn card-dl" data-dlimg="${i}">이미지 내려받기</button></article>`).join('');
+ $('#board').innerHTML=variants.map((v,i)=>`<article class="card"><button class="card-select" data-card="${i}" aria-label="${esc(v.title)} 시안 편집" aria-pressed="${selected===i}">${art(v)}</button><div class="card-meta"><div><strong>${esc(v.title)}</strong><small>${PHOTOS[v.photo].kind==='ai'?'기존 AI 생성 예시 · 상품 확인 필요':'상품 원본 활용'}</small></div></div><button class="btn card-dl" data-dlbanner="${i}">완성 배너 PNG</button><button class="btn card-dl" data-dlimg="${i}">이미지만 다운로드</button></article>`).join('');
+ $$('[data-dlbanner]').forEach(b=>{const i=Number(b.dataset.dlbanner);b.disabled=variants[i].imageReady===false||!!variants[i].imageFailed;b.onclick=async e=>{e.stopPropagation();b.disabled=true;b.textContent='PNG 만드는 중…';try{const blob=await exportBanner(b.closest('.card').querySelector('.art'),getJSON);saveBlob(blob,imageFileName(variants[i],i).replace(/\.[^.]+$/,'_완성.png'));notify('완성 배너를 저장했습니다.')}catch(err){notify('완성 배너 저장 실패: '+err.message)}finally{b.disabled=false;b.textContent='완성 배너 PNG'}}});
  $$('[data-dlimg]').forEach(b=>b.onclick=e=>{e.stopPropagation();downloadImage(Number(b.dataset.dlimg))});
  $$('[data-card]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.card);renderBoard();fillEditor();if(innerWidth<781){$('#editTitle').focus({preventScroll:true});$('.editor').scrollIntoView({behavior:'instant',block:'start'})}else $(`[data-card="${selected}"]`).focus({preventScroll:true})});
  fitAll();
@@ -202,7 +204,7 @@ function imageFileName(v,i){
 async function downloadImage(i){
   const v=variants[i]; if(!v) return;
   if(v.imageReady===false||v.imageFailed){notify('이미지가 완성된 뒤 내려받을 수 있습니다.');return;}
-  if(v.baked){notify('이전 방식으로 저장한 시안에는 글자가 이미지에 포함되어 있습니다. 카피 없는 이미지가 필요하면 다시 생성해주세요.');return;}
+  if(v.baked){notify('이 시안은 이미지에 글자가 포함되어 있습니다. 카드 아래 ‘이미지 안의 광고 글자 제거’를 이용해주세요.');return;}
   const url=srcOf(PHOTOS[v.photo]);
   if(!url){ notify('이 시안에는 아직 이미지가 없습니다.'); return; }
   // 로고를 지운 판은 data: URL이라 그냥 저장하면 된다
