@@ -33,11 +33,29 @@ export function completeCopy(variant,plan,product){
  return {headline,subline,...brandCopy(product,headline,subline),offer:'',brand:'',cta:variant.cta?.trim()||'상품 자세히 보기',footnote:[variant.conditions,variant.footnote].filter(Boolean).join(' · ')};
 }
 
+function productKinds(product){
+ let name=displayProductName(product),brand=String(product.brand||'').trim();
+ if(brand&&name.startsWith(brand))name=name.slice(brand.length).trim();
+ const nouns=name.match(/니트|티셔츠|셔츠|가디건|팬츠|스커트|코트|재킷|자켓|원피스|로션|선크림|크림|세럼|토너|앰플|클렌징|김치|불고기|갈비|고기|밀키트|만두|반찬|청소기|이어폰|보험|카드/g)||[];
+ // A one-character noun must be a whole word, not e.g. the 국 in 한국.
+ const short=[...name.matchAll(/(?:^|\s)(떡|국|탕)(?=$|[\s\d])/g)].map(m=>m[1]);
+ return [...new Set([...nouns,...short])];
+}
+// Only repair missing product identity, AFTER factual/numeric validation.
+// Reuse a noun from the supplied title; never invent benefits or replace a review.
+export function restoreProductKind(copy,plan,product){
+ const nouns=productKinds(product),text=[copy.main,copy.sub].join(' ');
+ if(!nouns.length||nouns.some(n=>text.includes(n))||plan.copyMode==='basic')return copy;
+ const field=plan.strategyId==='review'?'main':'sub';
+ const patched=`${nouns[0]} · ${copy[field]||''}`.trim();
+ if(patched.length>100)return copy; // Let the normal validator request a shorter rewrite.
+ return {...copy,[field]:patched};
+}
 export function validatePlannedCopy(copy,plan,product){
  if(isSupportingOffer(copy.main))throw Error('배송 혜택은 제목에 쓰지 말고 작은 보조 문구로만 사용하세요.');
  if(plan.copyMode==='basic')return basicCopy(product);
  // The creative headline may be emotional, but the product must still be named.
- const nouns=(displayProductName(product).match(/니트|티셔츠|셔츠|가디건|팬츠|스커트|코트|재킷|자켓|원피스|로션|크림|세럼|토너|앰플|선크림|클렌징|김치|불고기|갈비|고기|밀키트|만두|떡|국|탕|반찬|청소기|이어폰|보험|카드/g)||[]);
+ const nouns=productKinds(product);
  if(nouns.length&&!nouns.some(n=>[copy.main,copy.sub].join(' ').includes(n)))throw Error('메인 또는 서브에 실제 상품 종류를 명확하게 넣으세요.');
  return copy;
 }

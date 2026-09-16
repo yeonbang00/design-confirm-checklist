@@ -43,7 +43,7 @@ summary{cursor:pointer;font-size:13px;padding:14px 0;color:#d6dae1}details .btn{
 
 .quick-result-head{display:flex;align-items:start;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:24px}.quick-result-head h2{font-size:22px}.quick-result-head .row{justify-content:flex-end}
 #productStep{border:1px solid var(--line);padding:24px;margin-bottom:30px;border-radius:12px}#productStep .import-product,#productStep #factCheck,#productStep .check:has(#factCheck){display:none}#productStep .product-hero{max-height:350px}#productStep .product-hero img{max-height:350px}
-#boardStep .product-strip,#boardStep .board-head,#boardStep #restoreWorkspace{display:none}.editor{max-height:calc(100vh - 112px)}.toast{bottom:22px}.image-pending .art{filter:saturate(.2);opacity:.4}.image-pending .card-select{cursor:progress}.card:has(.image-pending){position:relative}#boardWorkspace>.workspace{margin-top:24px}#boardWorkspace .board{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 16px}#boardWorkspace .workspace{grid-template-columns:minmax(0,1fr)}.art .offer-value{font-size:11cqw;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#boardStep .product-strip,#boardStep .board-head,#boardStep #restoreWorkspace{display:none}.editor{max-height:calc(100vh - 112px)}.toast{bottom:22px}.image-pending .art:not(:has(.result-state)){filter:saturate(.2);opacity:.4}.image-pending .card-select{cursor:progress}.card:has(.image-pending){position:relative}#boardWorkspace>.workspace{margin-top:24px}#boardWorkspace .board{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 16px}#boardWorkspace .workspace{grid-template-columns:minmax(0,1fr)}.art .offer-value{font-size:11cqw;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:1100px){#boardWorkspace .workspace{grid-template-columns:1fr}#boardWorkspace .editor{position:static;max-height:none}.quick-result-head{flex-wrap:wrap}}@media(max-width:780px){.quick-bar{flex-direction:column}.quick-bar .btn{width:100%}#boardWorkspace .board{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-result-head .row{justify-content:flex-start}#productStep{padding:16px}.page-title{align-items:start}.page-title h1{font-size:28px}}@media(max-width:420px){#boardWorkspace .board{grid-template-columns:1fr}}
 
 /* 카드마다 이미지 내려받기 — 결과물은 이미지이고 조판은 포토샵에서 한다 */
@@ -479,3 +479,13 @@ body:has(.step-nav:not([hidden])) .page-footer{padding-bottom:110px}
 .result-state{aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:clamp(16px,3vw,32px);background:var(--panel);color:var(--ink);text-align:center;overflow-wrap:anywhere;box-sizing:border-box}
 .result-state strong{font-size:16px;font-weight:600;line-height:1.5}
 .result-state span{font-size:14px;line-height:1.6;color:var(--muted);max-width:32ch}
+
+/* Real elapsed time, separate from live announcements so every second is not read aloud. */
+.generation-progress{margin-top:20px;color:var(--ink);font-size:14px;line-height:1.6}
+.generation-progress[hidden],.generation-progress [hidden]{display:none}
+.generation-progress-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 20px}
+.generation-progress strong{font-weight:600}
+.generation-progress[data-running="true"] strong{color:var(--lime)}
+.generation-progress time{font-variant-numeric:tabular-nums;font-weight:600;margin-inline-start:4px}
+.generation-progress p{margin:6px 0 0;color:var(--muted)}
+.card.image-pending .result-state{opacity:1}

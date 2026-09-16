@@ -1,7 +1,7 @@
 import {basicCopy,primaryOffers} from '../assets/studio-visual-contract.mjs';
 import {advertisingProduct,OFFER_POLICY_VERSION} from '../assets/studio-offer-policy.mjs';
 import {getDesignKnowledge} from './_designKnowledge.js';
-import {chooseCopyFacts,completeCopy,validatePlannedCopy,validateStrategyEvidence} from '../assets/studio-evidence.mjs';
+import {chooseCopyFacts,completeCopy,restoreProductKind,validatePlannedCopy,validateStrategyEvidence} from '../assets/studio-evidence.mjs';
 import { callOpenAI, OPENAI_MODEL } from './_openaiClient.js';
 import { factSlots, resolveCopy } from './_studioData.js';
 
@@ -87,7 +87,7 @@ main은 최대 세 줄, 줄당 약 12자, sub는 정보 패널에 맞춰 최대 
         if(!Array.isArray(result.copies)||result.copies.length!==layouts.length)throw Error('시안 수가 맞지 않습니다.');
         copies=result.copies.map((row,i)=>{
           const plan=req.body.plans?.[i]||{};
-          const copy=plan.copyMode==='basic'?basicCopy(product):validatePlannedCopy(resolveCopy(validateStrategyEvidence(row,plan,facts),product,facts),plan,product);
+          const copy=plan.copyMode==='basic'?basicCopy(product):validatePlannedCopy(restoreProductKind(resolveCopy(validateStrategyEvidence(row,plan,facts),product,facts),plan,product),plan,product);
           completeCopy(copy,req.body.plans?.[i]||{},product);
           if(req.body.plans?.[i]?.type==='benefit'&&!copy.evidenceIds.some(id=>primaryOffers(product).some(o=>o.id===id))&&!(product.benefitConfirmed&&copy.conditions))throw Error('혜택 시안 '+i+'에 제공된 OFFER 토큰이 빠졌습니다.');
           return copy;
