@@ -1,5 +1,5 @@
 import {garmentIdentityPrompt} from '../assets/studio-retailer-audience.mjs';
-import {foodIdentityPrompt} from '../assets/studio-food-policy.mjs';
+import {foodIdentityPrompt,normalizeFoodVisualRole} from '../assets/studio-food-policy.mjs';
 import {visualTone,normalizeReferenceStudy,REFERENCE_STUDY_PROMPT} from '../assets/studio-visual-contract.mjs';
 import {verifiedPageEvidence} from '../assets/studio-evidence.mjs';
 import {normalizePhotoRegions} from './_photoRegions.js';
@@ -61,7 +61,7 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 - burnedText: 사진 위에 덧씌워진 글자나 로고가 있으면 그 글자를 그대로, 없으면 ""
 - itemCount: 이 사진에 제품이 몇 개 보이는지 숫자. 기획세트 나열컷이면 그 개수.
 - isHero: 이 사진이 **제품 하나만** 크게 보여주는 컷이면 true. 여러 개가 나열돼
-  있으면 false. 배너에서 주인공으로 쓸 수 있는지를 가른다.
+  있으면 false. 식품은 예외로, 한 접시의 여러 조각이나 완성 상차림도 음식이 주인공이면 true. 배너에서 주인공으로 쓸 수 있는지를 가른다.
 - shotAngle: 어느 쪽에서 찍었는지. front(정면) three-quarter(45도) side(측면)
   back(후면) top-down(위에서 내려다봄) 중 하나. 모르면 "front".
 - shotDistance: 얼마나 당겨 찍었는지. close(부분 확대) medium(상품 전체가 꽉 참)
@@ -100,10 +100,11 @@ const PROMPT = `당신은 광고 배너 제작자입니다. 상품 페이지에�
 - visualTone: {moods:[clean/warm/premium/playful/fresh/dramatic/serene/bold/nostalgic/minimal 중 최대 3개],energy:quiet/balanced/expressive,palette:warm-neutral/cool-neutral/mono/contrast/pastel/saturated/earth/metallic,description,light,evidence}. evidence에 실제 사진의 빛·스타일링·여백·색을 근거로 적는다. 젊은 모델이라고 키치·펑키로 간주하지 않는다. 서로 다른 색상의 동일 상품은 다른 상품이 아니다.
 - 패션 photos 및 regions에는 garmentComplete:true/false를 기록한다. 광고 대상 옷의 형태·기장·소매 등 식별에 필요한 부분이 보이면 true, 일부 소재 접사나 주요 부분 가림이면 false. 원본 인물의 인종·정확한 나이는 추정하지 않는다.
 - 각 photos 및 regions에 pose(실제 동작·방향), light(관찰한 빛), note(보이는 장면)도 기록한다.
-- 식품 photos 및 regions는 foodState:raw/cooked/packaged/unknown, actualPreparedMeal:true/false, foodUse:served/raw/package/process/info/unknown, packageVisible:true/false를 포함한다.
+- 식품 photos 및 regions는 foodState:raw/cooked/packaged/unknown, actualPreparedMeal:true/false, foodUse:served/raw/package/process/info/unknown, foodVisualRole:hero/support/package/process/info/unknown, packageVisible:true/false를 포함한다.
   actualPreparedMeal=true는 상품 상세에 있는 해당 상품의 실제 완성 음식/상차림 사진으로 확인됐을 때다. 밀키트뿐 아니라 양념갈비·냉동식품·반찬 등에도 적용한다. 원물과 완성 음식은 상태별로 보존하며 AI로 서로 변환하지 않는다.
   foodUse=process는 굽기·절단·양념 붓기·해동·조리 중 사진, info는 레시피 안내·상품정보표·조리법 합성 패널이다. 이들은 광고 주인공 사진으로 쓰지 않는다. 긴 상세 중 실제 완성 음식 사진은 별도 regions로 추출하되 작은 레시피 예시 사진과 혼동하지 않는다.
-  packageVisible는 실제 판매 포장이 사진에 보일 때만 true. 접시·냄비는 포장이 아니다. 완성 음식 사진에 포장 인셋이 있으면 각각 독립 영역으로 분리한다.
+  foodVisualRole=hero는 본제품을 중심으로 식욕을 돋우는 독립 음식 사진(온전한 접시·상차림 또는 음식 중심 접사)이다. 접시에 여러 조각이 있어도 hero이며 isHero=true일 수 있다. support는 젓가락/숟가락에 든 한입, 밥 위의 작은 고기 등 먹는 동작의 보조 컷이다. cooked/served/close라고 모두 hero로 분류하지 않는다. 볶음밥·김치찜 등 본제품을 재료로 만든 다른 요리/레시피 예시는 info로 구분한다.
+  packageVisible는 실제 판매 포장이 사진에 보일 때만 true. 접시·냄비는 포장이 아니다. 완성 음식 사진에 포장 인셋이 있어도 음식이 주인공이면 전체 사진은 cooked/served/hero로 유지하고 packageVisible=true로 적는다. 가려진 음식을 복원해야 하는 영역을 무리하게 자르지 않는다. 포장만 독립 추출 가능하면 해당 region만 packaged/package로 기록한다. 대표 상품 사진이라는 이유만으로 부적합한 장면을 hero로 분류하지 않는다.
   식품 컷 후보는 좋은 완성 음식 사진의 재사용이 우선이다. 접사·식탁·포장 병치·여백과 그래픽을 바꾸며 음식 자체를 새로 만들거나 조리 과정을 연출하지 않는다.
 
 cuts는 12개이고, 각 항목은 **축을 나눠서** 적습니다. 문장 하나에 뭉뚱그리지 마세요.
@@ -434,7 +435,7 @@ export default async function handler(req, res) {
         burnedText: String(row.burnedText || '').slice(0, 60),
         note: String(row.note || '').slice(0, 160),
         pose:String(row.pose||'').slice(0,100),light:String(row.light||'').slice(0,100),
-        foodState:['raw','cooked','packaged'].includes(row.foodState)?row.foodState:'unknown',actualPreparedMeal:row.actualPreparedMeal===true,
+        foodState:['raw','cooked','packaged'].includes(row.foodState)?row.foodState:'unknown',actualPreparedMeal:row.actualPreparedMeal===true,foodVisualRole:normalizeFoodVisualRole(row.foodVisualRole),
         garmentComplete:row.garmentComplete===true,
         foodUse:['served','raw','package','process','info'].includes(row.foodUse)?row.foodUse:'unknown',packageVisible:row.packageVisible===true,
       };

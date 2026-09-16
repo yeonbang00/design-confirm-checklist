@@ -474,3 +474,8 @@ body:has(.step-nav:not([hidden])) .page-footer{padding-bottom:110px}
 .art.hero-stack .headline{font-size:3.3cqw; font-weight:800; line-height:1.25;}
 .art.hero-stack .subline{font-size:2.1cqw; margin-top:.4%;}
 .art.hero-stack .cta{margin-top:.8%; font-size:2cqw; padding:.9cqw 1.8cqw; background:#fff; color:#15150f;}
+
+/* An unfinished image is a status, not an unverified CSS banner. */
+.result-state{aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:clamp(16px,3vw,32px);background:var(--panel);color:var(--ink);text-align:center;overflow-wrap:anywhere;box-sizing:border-box}
+.result-state strong{font-size:16px;font-weight:600;line-height:1.5}
+.result-state span{font-size:14px;line-height:1.6;color:var(--muted);max-width:32ch}

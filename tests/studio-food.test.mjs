@@ -4,7 +4,7 @@ import {sourceBank} from '../assets/studio-source-selection.mjs';
 import {generationRequest,completeBannerPrompt} from '../assets/studio-generation-contract.mjs';
 import {foodVerificationRequest,protectFoodLabel,foodContract,foodIdentityPrompt} from '../assets/studio-food-policy.mjs';
 import {applyPhotoClassification} from '../assets/studio-photo-analysis.mjs';
-import {normalizePhotoRegions} from '../assets/studio-photo-regions.mjs';
+import {normalizePhotoRegions,preserveMainFoodPhoto,extractPhotoRegions} from '../assets/studio-photo-regions.mjs';
 import {validatePlannedCopy,validateStrategyEvidence} from '../assets/studio-evidence.mjs';
 import {unverifiedClaims} from '../assets/studio-text-check.mjs';
 import photoHandler from '../api/productPhotos.js';
@@ -82,6 +82,54 @@ assert.ok(!Array.from({length:40},()=>createV3Plan({...product,facts:[{...fact,s
 assert.throws(()=>validateStrategyEvidence({fact:0,sub:'새로 쓴 찬사'},reviewPlans[0],[fact]),/원문/);
 assert.throws(()=>validateStrategyEvidence({fact:-1,sub:fact.text},reviewPlans[0],[fact]),/근거/);
 assert.deepEqual(validateStrategyEvidence({fact:0,sub:fact.text},reviewPlans[0],[fact]),{fact:0,sub:fact.text});
+// Regression: the LA-rib page has a mixed main dish/package, another plated
+// hero, a bite over rice, package crop and recipe panels. State alone cannot
+// assign the bite to a primary or satisfy a package strategy.
+const foodPage={...product,photos:[
+ img('main-round-plate',{provenance:'main',foodState:'cooked',actualPreparedMeal:true,foodVisualRole:'hero',packageVisible:true}),
+ img('rectangular-plate',{foodState:'cooked',actualPreparedMeal:true,foodVisualRole:'hero'}),
+ img('bite-over-rice',{foodState:'cooked',actualPreparedMeal:true,foodVisualRole:'support',personKind:'hands',shotDistance:'close'}),
+ img('tray',{foodState:'packaged',foodVisualRole:'package',packageVisible:true}),
+ img('recipe',{foodState:'cooked',actualPreparedMeal:true,foodUse:'info',foodVisualRole:'info'})]};
+let packCard;
+for(let n=0;n<200;n++){
+ const six=createV3Plan(foodPage,{random});
+ assert.equal(six.length,6);
+ assert.ok(six.filter(p=>p.photo===0).length>=3,'preserve useful main image priority across different strategies');
+ assert.ok(six.every(p=>p.photo<2),'bite is not a primary even for close-up');
+ for(const p of six.filter(p=>p.strategyId==='pack'||p.presentationId==='package')){
+  assert.ok(p.photoSet.includes(3),'explicit package source regardless of visual layout');
+  assert.equal(p.foodPolicy.requiresPackage,true);
+  if(p.strategyId==='pack'&&p.presentationId==='card')packCard=p;
+ }
+}
+assert.ok(packCard,'pack strategy is allowed with information-card presentation');
+const packRequest=await generationRequest(packCard,foodPage,{},async p=>({imageUrl:p.url}));
+assert.equal(packRequest.foodPolicy.requiresPackage,true);
+assert.match(foodIdentityPrompt(packRequest.sourceDescriptions,packRequest.foodPolicy),/Reject an output missing the supplied package/);
+assert.match(completeBannerPrompt(packRequest),/FIRST attachment is the primary/);
+assert.equal(packRequest.sourceDescriptions[0].foodVisualRole,'hero');
+let reads=0;const read=async p=>{reads++;return {imageUrl:p.url}};
+await assert.rejects(generationRequest({...packCard,photoSet:[2,3]},foodPage,{},read),/대표 음식/);
+await assert.rejects(generationRequest({...packCard,photoSet:[1]},foodPage,{},read),/포장 사진/);
+assert.equal(reads,0,'reject invalid source assignment before any image fetch/generation');
+assert.equal(createV3Plan({...foodPage,photos:[foodPage.photos[2]]}).length,0,'support-only page cannot invent a hero');
+assert.equal(preserveMainFoodPhoto(foodPage.photos[0]),true);
+assert.equal(preserveMainFoodPhoto({...foodPage.photos[0],detailTile:true}),false);
+assert.equal(preserveMainFoodPhoto({...foodPage.photos[0],foodVisualRole:'support'}),false);
+const supportRegion=normalizePhotoRegions([{box:[0,0,1,1],complete:true,overlayText:false,role:'detail',foodState:'cooked',actualPreparedMeal:true,foodVisualRole:'support'}])[0];
+applyPhotoClassification(applied,supportRegion);assert.equal(applied.foodVisualRole,'support');
+// Exercise the actual extraction path: a package crop augments, not replaces,
+// the full main dish. Mock only browser image/canvas I/O (no network or model).
+const previousImage=globalThis.Image,previousDocument=globalThis.document;
+try{
+ globalThis.Image=class{naturalWidth=1000;naturalHeight=1000;set src(value){queueMicrotask(()=>this.onload());}};
+ globalThis.document={createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'data:image/jpeg;base64,Y3JvcA=='})};
+ const main={...foodPage.photos[0],cleanBase64:'bWFpbg==',cleanType:'image/jpeg',regions:normalizePhotoRegions([{box:[0,0,.4,.4],role:'packshot',complete:true,overlayText:false,foodState:'packaged',foodVisualRole:'package',packageVisible:true}])};
+ const cropped=await extractPhotoRegions([main],()=>{throw Error('Unexpected request')});
+ assert.equal(cropped.photos.length,2);assert.equal(cropped.photos[0],main);
+ assert.equal(cropped.photos[1].foodVisualRole,'package');assert.equal(cropped.extracted,1);
+}finally{globalThis.Image=previousImage;globalThis.document=previousDocument;}
 // Mock only transport: real server imports, source fetches and food verification.
 const before=globalThis.fetch,oldKey=process.env.OPENAI_API_KEY;let response={matches:false,reason:'트레이가 봉지로 바뀜'},sent;
 try{
@@ -95,9 +143,9 @@ try{
  await photoHandler({method:'POST',headers:{host:'test.local',origin:'https://test.local'},body:verification},res);
  assert.equal(code,200);assert.equal(output.matches,false);assert.match(JSON.stringify(sent),/LAST image/);assert.match(JSON.stringify(sent),/raw-to-cooked/);
  for(const matches of [true,undefined]){response={matches};await photoHandler({method:'POST',headers:{host:'test.local',origin:'https://test.local'},body:verification},res);assert.equal(output.matches,matches===true);}
- response={category:'food',photos:[{index:0,role:'main',matchesTarget:true,foodState:'cooked',foodUse:'served',actualPreparedMeal:true,packageVisible:true,regions:[{box:[0,0,1,1],complete:true,overlayText:false,role:'detail',personKind:'none',foodState:'raw',foodUse:'process',packageVisible:false}]}]};
+ response={category:'food',photos:[{index:0,role:'main',matchesTarget:true,foodState:'cooked',foodUse:'served',actualPreparedMeal:true,foodVisualRole:'hero',packageVisible:true,regions:[{box:[0,0,1,1],complete:true,overlayText:false,role:'detail',personKind:'none',foodState:'raw',foodUse:'process',packageVisible:false}]}]};
  await photoHandler({method:'POST',headers:{host:'test.local',origin:'https://test.local'},body:{urls:['https://food.test/hero'],productName:product.productName}},res);
- assert.equal(code,200);assert.equal(output.photos[0].foodUse,'served');assert.equal(output.photos[0].packageVisible,true);assert.equal(output.photos[0].regions[0].foodUse,'process','server must preserve process exclusion on extracted regions');
+ assert.equal(code,200);assert.equal(output.photos[0].foodVisualRole,'hero');assert.equal(output.photos[0].foodUse,'served');assert.equal(output.photos[0].packageVisible,true);assert.equal(output.photos[0].regions[0].foodUse,'process','server must preserve process exclusion on extracted regions');
  const row={main:'조선호텔 LA갈비',sub:'지어낸 후기',cta:'상품 보기',eyebrow:'구매 후기',concept:'실제 구매 후기 인용',fact:0};
  const copyReq={body:{product,layouts:['header'],plans:[reviewPlans[0]],facts:[fact],autoPlan:true}};
  response={copies:[row]};await studioCopy(copyReq,res,'test-only');assert.equal(code,502,'invented review blocked by actual copy handler');

@@ -1,6 +1,6 @@
 import {angleById} from './studio-angles.mjs';
 import {sourceKey} from './studio-source-selection.mjs';
-import {foodUse,foodContract} from './studio-food-policy.mjs';
+import {foodUse,foodContract,primaryFoodSource,primaryMainFood,hasFoodPackage,foodVisualRole} from './studio-food-policy.mjs';
 import {primaryOffers} from './studio-visual-contract.mjs';
 
 // Strategy answers WHY to click. Presentation answers HOW to show it. Neither
@@ -19,7 +19,7 @@ const visuals=[
 ].map(([id,label,family,frame,motif,design])=>({id,label,family,frame,motif,design}));
 const usableFact=f=>f?.id&&f.source&&String(f.text||'').trim().length>=4;
 export function foodStrategies(product,bank){
- const facts=(product.facts||[]).filter(usableFact),served=bank.some(x=>foodUse(x.p)==='served'),packs=bank.some(x=>foodUse(x.p)==='package');
+ const facts=(product.facts||[]).filter(usableFact),served=bank.some(x=>primaryFoodSource(x.p)&&foodUse(x.p)==='served'),packs=bank.some(x=>hasFoodPackage(x.p));
  const feature=facts.filter(f=>!['review','authority','comparison','beforeafter','usage'].includes(f.kind)&&!/제조일|유통기한|보관|해동|조리법/.test(f.text));
  const out=[];
  const add=(id,label,type,brief,evidence=[])=>out.push({id,label,type,brief,evidence});
@@ -43,8 +43,8 @@ export function foodStrategies(product,bank){
 }
 const hash=s=>{let n=2166136261;for(const c of s)n=Math.imul(n^c.charCodeAt(0),16777619);return (n>>>0).toString(36);};
 export function createFoodPlan(product,bank,tone,{random=Math.random,recent=[],references=[]}={}){
- const served=bank.filter(x=>foodUse(x.p)==='served'),raw=bank.filter(x=>foodUse(x.p)==='raw'),packs=bank.filter(x=>foodUse(x.p)==='package');
- const heroes=served.length?served:raw.length?raw:packs;if(!heroes.length)return [];
+ const served=bank.filter(x=>primaryFoodSource(x.p)&&foodUse(x.p)==='served'),raw=bank.filter(x=>primaryFoodSource(x.p)&&foodUse(x.p)==='raw'),packs=bank.filter(x=>hasFoodPackage(x.p));
+ const heroes=served.length?served:raw.length?raw:packs.filter(x=>foodVisualRole(x.p)==='package');if(!heroes.length)return [];
  const strategies=foodStrategies(product,bank),hasDish=served.length>0,hasFood=served.length+raw.length>0;
  const presentations=visuals.filter(v=>!(['table','close','pair'].includes(v.id)&&!hasDish)&&!(v.id==='package'&&(!hasFood||!packs.length)));
  const candidates=strategies.flatMap(s=>presentations.filter(v=>!(s.id==='basic'&&v.id==='type')).map(v=>({s,v,tie:random()})));
@@ -54,31 +54,35 @@ export function createFoodPlan(product,bank,tone,{random=Math.random,recent=[],r
   const ranked=candidates.filter(c=>!chosen.some(p=>p.strategyId===c.s.id&&p.presentationId===c.v.id)).map(c=>{
    const {s,v}=c;
    const rankedSources=[...heroes].sort((a,b)=>{
-    const score=x=>(sourceUses.get(sourceKey(x.p))||0)*4+(v.id==='close'&&x.p.shotDistance!=='close'?2:0)+(v.id==='table'&&x.p.shotDistance==='close'?2:0);
+    const score=x=>(sourceUses.get(sourceKey(x.p))||0)*2-(primaryMainFood(x.p)?5:0)+(v.id==='close'&&x.p.shotDistance!=='close'?0.5:0);
     return score(a)-score(b);
    });
    const selected=rankedSources.slice(0,v.id==='pair'?Math.min(2,heroes.length):1);
-   if(v.id==='package')selected.push(packs[0]);
+   const requiresPackage=v.id==='package'||s.id==='pack'||s.id==='gift';
+   if(requiresPackage){
+    const pack=packs.find(x=>foodUse(x.p)==='package')||packs[0];
+    if(pack&&!selected.some(x=>sourceKey(x.p)===sourceKey(pack.p)))selected.push(pack);
+   }
    const key=`food/${s.id}/${v.id}`,sourceToken=hash(selected.map(x=>sourceKey(x.p)).join('|'));
    const combinationKey=`combo/${key}/${sourceToken}`;
    const refFit=references.some(r=>r.axes?.frame===v.frame&&r.type===s.type)?1.5:0;
    const score=c.tie*4+strategyPriority.get(s.id)-count('strategyId',s.id)*3-count('presentationId',v.id)*4-count('designFamily',v.family)*1.2
     -(recent.includes(key)?4:0)-(recent.includes(combinationKey)?4:0)+refFit;
-   return {...c,selected,key,combinationKey,score};
+   return {...c,selected,key,combinationKey,requiresPackage,score};
   }).filter(c=>count('presentationId',c.v.id)<2&&count('strategyId',c.s.id)<(c.s.id==='basic'?1:Math.max(2,Math.ceil(5/Math.max(1,strategies.length-1)))));
   ranked.sort((a,b)=>b.score-a.score);const hit=ranked[0];if(!hit)break;
-  const {s,v,selected,key,combinationKey}=hit;
+  const {s,v,selected,key,combinationKey,requiresPackage}=hit;
   const primary=s.evidence.length?s.evidence[Math.floor(random()*s.evidence.length)]:null;
   const photoSet=selected.map(x=>x.i),scene=v.design+(!hasFood?' This is package-only photography: keep the sealed product; do not imagine unpackaged contents.':'');
   selected.forEach(x=>sourceUses.set(sourceKey(x.p),(sourceUses.get(sourceKey(x.p))||0)+1));
   const label=s.label+' · '+v.label;
-  chosen.push({id,recipe:key,plannerVersion:'v3.3-strategy',strategyId:s.id,presentationId:v.id,combinationKey,
+  chosen.push({id,recipe:key,plannerVersion:'v3.4-source-roles',strategyId:s.id,presentationId:v.id,combinationKey,
    label,sceneName:label,designId:key,designLabel:label,designFamily:v.family,
    targetAxes:{frame:v.frame,focus:s.type==='numbers'||s.type==='benefit'?'number':'product',motif:v.motif,mood:tone.moods[0],palette:tone.palette,person:'none',subject:selected.length>1?'multiple':'single',space:'balanced',letter:'gothic',appeal:s.type==='benefit'?'discount':s.type==='testimonial'?'popular':s.type==='numbers'?'price':'feature'},
    sourceMode:['table','texture'].includes(v.id)?'reference':'preserve',method:['table','texture'].includes(v.id)?'newscene':'original',photo:photoSet[0],photoSet,layout:'header',scene,artDirection:scene,keep:'product',
    emphasis:['numbers','benefit'].includes(s.type)?'offer':'product',type:s.type,angle:{...angleById(s.type),how:s.brief},completeBanner:true,fontFamily:'sans',copyMode:s.id==='basic'?'basic':'creative',visualTone:tone,
-   foodPolicy:foodContract(selected.map(x=>x.p),{allowAccompaniments:v.id==='table'}),evidenceIds:primary?[primary.id]:[],
-   sourceSummary:{role:selected[0].p.role,photos:selected.map(x=>({index:x.i,role:x.p.role,foodState:x.p.foodState,foodUse:foodUse(x.p),note:x.p.note}))},
+   foodPolicy:foodContract(selected.map(x=>x.p),{allowAccompaniments:v.id==='table',requiresPackage}),evidenceIds:primary?[primary.id]:[],
+   sourceSummary:{role:selected[0].p.role,photos:selected.map(x=>({index:x.i,role:x.p.role,foodState:x.p.foodState,foodUse:foodUse(x.p),foodVisualRole:foodVisualRole(x.p),note:x.p.note}))},
    copyBrief:`${s.brief} 표현은 ${v.label}. 상품 종류를 명확히 드러낸다. 조리 과정을 묘사하지 않는다. 연출용 곁들임은 판매 구성·함유재료로 말하지 않는다. ${primary?.text||''}`,
    coverage:{main:selected.some(x=>x.p.role==='main'||x.p.provenance==='main'),detail:selected.some(x=>x.p.provenance==='detail'||x.p.sourceRegion),template:v.family==='template',graphic:v.family==='graphic',industry:v.family==='industry'},desc:label,render:'layer'});
  }

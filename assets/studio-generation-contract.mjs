@@ -1,5 +1,5 @@
 import {retailerAudience,modelAdaptationInstructions} from './studio-retailer-audience.mjs';
-import {foodContract,foodInstructions,usableFoodSource} from './studio-food-policy.mjs';
+import {foodContract,foodInstructions,usableFoodSource,primaryFoodSource,hasFoodPackage,foodVisualRole} from './studio-food-policy.mjs';
 import {BRAND_COPY_INSTRUCTION,BRAND_COPY_VERSION} from './studio-brand-identity.mjs';
 import {completeCopy} from './studio-evidence.mjs';
 import {visualInstructions,VISUAL_CONTRACT_VERSION} from './studio-visual-contract.mjs';
@@ -10,11 +10,16 @@ export async function generationRequest(plan,product,variant,readSource,quality=
  const ids=[...new Set(plan.photoSet?.length?plan.photoSet:[plan.photo])].slice(0,4);
  if(!ids.length||ids.some(i=>!product.photos[i]||product.photos[i].matchesTarget!==true))throw Error('시안에 배정한 실제 상품 사진을 확인해주세요.');
  if(product.category==='food'&&ids.some(i=>!usableFoodSource(product.photos[i])))throw Error('식품의 실제 완성 음식·원물·포장 사진을 확인해주세요. 조리 과정과 안내 이미지는 사용할 수 없습니다.');
+ if(product.category==='food'){
+  const selected=ids.map(i=>product.photos[i]);
+  if(!primaryFoodSource(selected[0])&&foodVisualRole(selected[0])!=='package')throw Error('대표 음식 사진이 필요합니다. 한입·조리·레시피 보조 컷은 대표 이미지로 사용할 수 없습니다.');
+  if((plan.foodPolicy?.requiresPackage||['pack','gift'].includes(plan.strategyId)||plan.presentationId==='package')&&!selected.some(hasFoodPackage))throw Error('포장·구성 시안에 사용할 실제 포장 사진이 없습니다.');
+ }
  const sources=await Promise.all(ids.map(i=>readSource(product.photos[i])));
  return {...sources[0],operation:'complete-banner',references:sources.slice(1),
   styleReference:plan.reference?{imageUrl:plan.reference.fullUrl||plan.reference.thumbUrl}:null,
-  category:product.category,sourceUrl:product.sourceUrl,modelAdaptation:plan.modelAdaptation?retailerAudience(product):null,foodPolicy:product.category==='food'?foodContract(ids.map(i=>product.photos[i]),plan.foodPolicy):null,
-  sourceDescriptions:ids.map(i=>({role:product.photos[i].role,color:product.photos[i].colorway,pose:product.photos[i].pose,foodState:product.photos[i].foodState,foodUse:product.photos[i].foodUse,actualPreparedMeal:product.photos[i].actualPreparedMeal,packageVisible:product.photos[i].packageVisible})),
+  category:product.category,sourceUrl:product.sourceUrl,modelAdaptation:plan.modelAdaptation?retailerAudience(product):null,foodPolicy:product.category==='food'?foodContract(ids.map(i=>product.photos[i]),{...plan.foodPolicy,requiresPackage:!!plan.foodPolicy?.requiresPackage||['pack','gift'].includes(plan.strategyId)||plan.presentationId==='package'}):null,
+  sourceDescriptions:ids.map(i=>({role:product.photos[i].role,color:product.photos[i].colorway,pose:product.photos[i].pose,foodState:product.photos[i].foodState,foodVisualRole:foodVisualRole(product.photos[i]),foodUse:product.photos[i].foodUse,actualPreparedMeal:product.photos[i].actualPreparedMeal,packageVisible:product.photos[i].packageVisible})),
   visualPlan:{sourceMode:plan.sourceMode,visualTone:plan.visualTone,copyMode:plan.copyMode,designObservation:plan.designObservation},
   contractVersion:VISUAL_CONTRACT_VERSION,brandCopyVersion:BRAND_COPY_VERSION,artDirection:plan.artDirection,scene:plan.scene,
   productName:product.productName,text:completeCopy(variant,plan,product),size:'1024x1024',quality};

@@ -1,3 +1,4 @@
+import {normalizeFoodVisualRole,primaryMainFood} from './studio-food-policy.mjs';
 /* 좌표는 원본 전체 기준 0~1. 애매한 영역은 전체 사진보다 안전하지 않으므로 버린다. */
 export function normalizePhotoRegions(rows) {
   const out=[];
@@ -16,7 +17,7 @@ export function normalizePhotoRegions(rows) {
       colorway:String(row.colorway||'').slice(0,20),plainBg:row.plainBg===true,
       pose:String(row.pose||'').slice(0,100),light:String(row.light||'').slice(0,100),note:String(row.note||'').slice(0,160),
       foodState:['raw','cooked','packaged'].includes(row.foodState)?row.foodState:'unknown',actualPreparedMeal:row.actualPreparedMeal===true,
-      garmentComplete:row.garmentComplete===true,
+      garmentComplete:row.garmentComplete===true,foodVisualRole:normalizeFoodVisualRole(row.foodVisualRole),
       foodUse:['served','raw','package','process','info'].includes(row.foodUse)?row.foodUse:'unknown',packageVisible:row.packageVisible===true,
       shotAngle:String(row.shotAngle||'front').slice(0,20),shotDistance:String(row.shotDistance||'medium').slice(0,20),
       itemCount:Number.isInteger(row.itemCount)&&row.itemCount>0?row.itemCount:1,
@@ -25,6 +26,9 @@ export function normalizePhotoRegions(rows) {
   }
   return out;
 }
+
+// Secondary crops augment a usable main dish; they must not replace it.
+export const preserveMainFoodPhoto=p=>primaryMainFood(p)&&p.matchesTarget===true&&p.role!=='unusable'&&!!p.w&&!!p.h&&p.h/p.w<=1.85;
 
 export function regionPixels(box,width,height) {
   const x=Math.round(box[0]*width),y=Math.round(box[1]*height);
@@ -78,7 +82,7 @@ export async function extractPhotoRegions(photos,getJSON,isCurrent=()=>true) {
           cleanBase64:cleanUrl.split(',')[1],cleanType:'image/jpeg',
           label:[region.colorway,'상세 추출컷',children.length+1].filter(Boolean).join(' ')});
       }
-      if(children.length){output.push(...children);extracted+=children.length;}
+      if(children.length){if(preserveMainFoodPhoto(photo))output.push(photo);output.push(...children);extracted+=children.length;}
       else{output.push(photo);failures.push({url:photo.url,reason:'활용할 크기의 사진 영역 없음'});}
     }catch(e){output.push(photo);failures.push({url:photo.url,reason:String(e.message||e).slice(0,100)});}
   }

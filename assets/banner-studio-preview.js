@@ -1,3 +1,4 @@
+import {unfinishedResult} from './studio-result-state.mjs';
 import {foodVerificationRequest,protectFoodLabel} from './studio-food-policy.mjs';
 import {tileDetailPhotos} from './studio-detail-tiles.mjs';
 import {generationRequest} from './studio-generation-contract.mjs';
@@ -135,7 +136,7 @@ function extraShots(v,photos,first){
   return idx.slice(1).map((i,n)=>{const q=photos[i]||first;
     return `<img class="shot shot-${n+2}" src="${esc(srcOf(q))}" alt="${esc(q.label||'')}" loading="lazy">`;}).join('');
 }
-function art(v){const photos=v.photos||PHOTOS,
+function art(v){const unfinished=unfinishedResult(v);if(unfinished)return unfinished;const photos=v.photos||PHOTOS,
  /* 원본 보기를 켜면 생성 전 사진으로 되돌린다. 카피까지 그린 컷은 글자가
     그림에 박혀 있어서 HTML 카피만 숨겨서는 원본이 되지 않는다. */
  pi=(v.original&&Number.isInteger(v.sourcePhoto)&&photos[v.sourcePhoto])?v.sourcePhoto:v.photo,
@@ -181,7 +182,7 @@ function fitAll(){$$('#board .art').forEach(fitCopy)}
 let fitTimer=0;
 addEventListener('resize',()=>{clearTimeout(fitTimer);fitTimer=setTimeout(fitAll,120)});
 
-function copyFits(i){const card=$(`[data-card="${i}"]`);if(!card)return true;const a=card.querySelector('.art').getBoundingClientRect(),copy=card.querySelector('.copy'),r=copy.getBoundingClientRect();if(!r.width&&!r.height)return true;return r.left>=a.left-1&&r.right<=a.right+1&&r.top>=a.top-1&&r.bottom<=a.bottom+1&&copy.scrollWidth<=copy.clientWidth+1&&copy.scrollHeight<=copy.clientHeight+1}
+function copyFits(i){const card=$(`[data-card="${i}"]`);if(!card)return true;const art=card.querySelector('.art'),copy=card.querySelector('.copy');if(!art||!copy)return true;const a=art.getBoundingClientRect(),r=copy.getBoundingClientRect();if(!r.width&&!r.height)return true;return r.left>=a.left-1&&r.right<=a.right+1&&r.top>=a.top-1&&r.bottom<=a.bottom+1&&copy.scrollWidth<=copy.clientWidth+1&&copy.scrollHeight<=copy.clientHeight+1}
 function updateFit(){$('#fitWarning').hidden=copyFits(selected)}
 $('#layout').innerHTML=Object.entries(LAYOUTS).map(([k,label])=>`<option value="${k}">${label}</option>`).join('');
 function fillEditor(){const v=variants[selected];if(!v)return;$('#conceptInfo').textContent=v.concept?'컨셉: '+v.concept:'기본 조판 · AI 카피 생성 전';$('#editIndex').textContent=`${selected+1} / ${variants.length} 시안`;$('#editTitle').textContent=v.title;$('#imageOrigin').textContent=PHOTOS[v.photo].label;$('#mainCopy').value=v.main;$('#subCopy').value=v.sub;$('#ctaCopy').value=v.cta;$('#showCta').checked=v.showCta;$('#originalView').checked=v.original;$('#layout').value=v.layout;$('#lockImage').checked=v.lockImage;$('#lockLayout').checked=v.lockLayout;$('#layout').disabled=v.lockLayout;$('#varyScene').disabled=v.lockImage&&v.lockLayout;$('#offerInfo').hidden=v.layout!=='offer'||!v.offer;$('#offerInfo').textContent=v.offer?`확인한 숫자: ${v.offer} · 상품 확인 단계의 조건을 사용합니다.`:'';updateFit();updateReferenceEditor()}
@@ -354,7 +355,7 @@ setProduct(product);renderSaved();renderLibrary();updateStepNav();
 let autoBusy=false, autoRun=0, autoPlan=[], failedImages=new Set(), autoCopyFailed=false, lastCopyError='', photoNotice='', grabSourceKind='link', grabStale=false;
 const autoMessage=text=>{$('#autoStatus').textContent=text};
 const originalBoard=renderBoard;
-renderBoard=function(){originalBoard();if($('#dlAllImages'))$('#dlAllImages').textContent=variants.some(v=>v.completeBanner)?'완성 배너 전부 다운로드':'이미지만 전부 다운로드';$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const dl=card.querySelector('[data-dlimg]');if(dl&&v.baked&&!PHOTOS[v.photo]?.baseImageUrl)dl.textContent='텍스트 없는 이미지 다운로드';if(dl)dl.disabled=v.imageReady===false||!!v.imageFailed;if(v.imageReady!==false&&!v.imageFailed){const photo=PHOTOS[v.photo];if(photo.kind==='ai'&&!v.baked&&!v.photoSet?.length){const type=document.createElement('button');type.className='btn';type.dataset.designCopy='';type.textContent='디자인형 카피 생성 · API 비용';type.disabled=autoBusy;type.onclick=()=>designCopy(v.id);card.append(type)}attachCopyRemoval(card,photo,{request:getJSON,source:srcOf(photo),download:async url=>{try{const r=await fetch(url,{mode:'cors'});if(!r.ok)throw Error();const blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='adcheck-no-ad-copy.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}catch{window.open(url,'_blank','noopener');notify('새 탭에서 결과 이미지를 저장해주세요.')}}});}const small=card.querySelector('.card-meta small');small.hidden=!!(v.completeBanner&&v.imageReady!==false&&!v.imageFailed);if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
+renderBoard=function(){originalBoard();if($('#dlAllImages'))$('#dlAllImages').textContent=variants.some(v=>v.completeBanner)?'완성 배너 전부 다운로드':'이미지만 전부 다운로드';$$('[data-card]').forEach(button=>{const v=variants[Number(button.dataset.card)];if(!v)return;const card=button.closest('.card');const dl=card.querySelector('[data-dlimg]');if(dl&&v.baked&&!PHOTOS[v.photo]?.baseImageUrl)dl.textContent='텍스트 없는 이미지 다운로드';if(dl)dl.disabled=v.imageReady===false||!!v.imageFailed;if(v.imageReady!==false&&!v.imageFailed){const photo=PHOTOS[v.photo];if(photo.kind==='ai'&&!v.baked&&!v.photoSet?.length){const type=document.createElement('button');type.className='btn';type.dataset.designCopy='';type.textContent='디자인형 카피 생성 · API 비용';type.disabled=autoBusy;type.onclick=()=>designCopy(v.id);card.append(type)}attachCopyRemoval(card,photo,{request:getJSON,source:srcOf(photo),download:async url=>{try{const r=await fetch(url,{mode:'cors'});if(!r.ok)throw Error();const blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='adcheck-no-ad-copy.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}catch{window.open(url,'_blank','noopener');notify('새 탭에서 결과 이미지를 저장해주세요.')}}});}const small=card.querySelector('.card-meta small');small.hidden=!!(v.completeBanner||v.imageReady===false||v.imageFailed);if(v.autoStatus){small.textContent=v.autoStatus;card.classList.toggle('image-pending',v.autoStatus==='이미지 생성 중');card.classList.toggle('baked-warn',!!(v.textClaims&&v.textClaims.length));}if(v.imageFailed){const retry=document.createElement('button');retry.className='btn';retry.textContent='이 이미지 다시 생성';retry.onclick=()=>retryImage(v.id);card.append(retry)}
 })};
 function enterResults(){step=2;$('#productStep').hidden=true;$('#directionStep').hidden=true;$('#boardStep').hidden=false;$('#savedStep').hidden=true;$('#boardWorkspace').hidden=false;$('#recipeReview').hidden=true;renderProductStrip();renderBoard();fillEditor();$('#quickResults').hidden=false;$('#autoRetryCopy').hidden=!autoCopyFailed}
 function setBusy(b){autoBusy=b;$$('[data-design-copy]').forEach(el=>el.disabled=b);$('#quickGenerate').disabled=b;// 버튼이 둘 다 '시안 6종 생성'이라, 진행 중 표시도 둘 다 해야 어느 쪽을 눌렀든 보인다.
@@ -522,7 +523,7 @@ async function classifyPhotos(run){
   PHOTOS.splice(0,PHOTOS.length,...product.photos);
 
   photoNotice=(sizeNote?sizeNote+' · ':'')+`사진 ${product.photos.length}장 확보 · ${product.photos.filter(p=>byUrl.has(p.url)).length}장 분석`+(dropped?` (제외: 배너 부적합 ${dropped}장)`:'')
-   +(product.cuts.length?` · 이 상품에 맞는 컷 후보 ${product.cuts.length}개 중 무작위로 뽑습니다`:' · 컷 후보는 기본값을 씁니다')
+   +' · 실제 상품 사진과 근거로 전략을 구성합니다'
    +(referenceUrls.length?` · 레퍼런스 배너 ${referenceUrls.length}장 참고`:'')
    +(product.refNote?` (${product.refNote})`:'')
    +(grabStale?' · 상품 담기를 다시 설치하면 후기 사진과 추천 상품을 걸러냅니다':'');
@@ -710,7 +711,7 @@ async function generateImage(plan,run,q){
  if(plan.completeBanner){variant.textClaims=verifiedText.claims;variant.autoStatus='';}
  renderBoard();
 
- }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지 생성 실패 · 원본을 임시로 표시합니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
+ }catch(e){if(run!==autoRun)return;variant.autoStatus='이미지를 완성하지 못했습니다';variant.imageFailed=true;variant.imageError=e.message;failedImages.add(plan.id)}
  renderBoard();fillEditor();tuneScrim(variants.indexOf(variant));
 }
 async function retryImage(id,q){if(autoBusy)return;const p=autoPlan.find(p=>p.id===id);if(!p)return;setBusy(true);try{await generateImage(p,autoRun,q);if(!autoCopyFailed&&!p.completeBanner)await designCopy(id,true)}finally{setBusy(false);finishMessage()}}
