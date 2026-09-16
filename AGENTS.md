@@ -241,3 +241,12 @@ crop·person·light·mood를 따로 돌려주고, `createPlan`이 같은 mount�
 - 포장·구성/선물 전략은 표현 방식과 관계없이 실제 포장 입력이 필수다. 입력 검사와 출력 동일성 검사에 requiresPackage를 전달한다.
 - 미완성 카드는 CSS로 원본에 카피를 얹어 대체 배너처럼 표시하지 않는다. `studio-result-state.mjs`의 진행/실패 상태를 쓰고 다운로드를 비활성화한다.
 - 원본 상세에도 직사각 접시에 나열한 갈비 사진이 있었다. 배너의 식재료 오류를 판단하기 전에 실제 선택된 원본을 확인한다. 오프라인 입력·기획 테스트 통과를 생성 품질 검증으로 보고하지 않는다.
+
+### 계정 보안 (2026-09-16)
+
+- 계정 정보는 전용 private Blob의 auth/users.json에만 저장한다. AUTH_BLOB_READ_WRITE_TOKEN을 사용하며 이미지용 public Blob으로 대체하지 않는다.
+- 로그인 서명은 AUTH_SESSION_SECRET(무작위 32바이트 hex) 기반 HMAC이며 v2 쿠키를 쓴다. 계정 해시만으로 서명을 만들거나 이전 쿠키를 허용하지 않는다.
+- 계정 저장소/설정 오류는 503으로 차단한다. 조회 실패를 빈 계정 목록으로 바꾸거나 쿠키 형태만 보고 통과시키지 않는다.
+- middleware.js의 runtime: nodejs를 유지한다. 현재 private Blob SDK는 이 프로젝트의 Edge 번들에서 호환되지 않는다.
+- AUTH_MAINTENANCE=1은 이관 중 가입·승인 변경을 포함한 계정 접근을 차단한다. 운영에서는 정상 상태로 해제해야 한다.
+- 검증: node --test tests/auth-security.test.mjs. 실제 계정, 해시, 토큰을 테스트 fixture나 로그에 넣지 않는다.

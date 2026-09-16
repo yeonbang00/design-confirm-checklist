@@ -4,22 +4,19 @@
 // own email/password, an admin approves the request from /admin.html,
 // and only then can that account log in.
 //
-// Everything (signup, login, admin approve/reject/revoke) is handled
-// right here in Edge Middleware via virtual "/_gate/*" paths — no new
-// serverless function was added, since api/ is already at Vercel Hobby's
-// 12-function cap. Password hashing uses Web Crypto's PBKDF2 (not Node's
-// crypto.scrypt) because Edge Middleware doesn't have Node's crypto
-// module, only Web Crypto.
+// Signup, login and admin decisions use virtual /_gate/* paths in
+// Node.js Routing Middleware. PBKDF2 stays on Web Crypto to preserve
+// existing password hashes while the private Blob SDK uses Node.js.
 //
-// User accounts live in a single users.json file in Vercel Blob Storage
-// (same fetch → modify → overwrite-PUT pattern as brand-guide-state/*.json
-// in api/_brandGuideStore.js). ADMIN_PASSWORD and BLOB_READ_WRITE_TOKEN
-// are set directly in the Vercel dashboard — never typed or seen here.
+// Account records use a dedicated private Blob store. Configure
+// AUTH_BLOB_READ_WRITE_TOKEN and a random 32-byte hex AUTH_SESSION_SECRET
+// in the deployment secret store. Public media storage is unchanged.
 
 import { next } from '@vercel/edge';
-import { put } from './api/_blobPut.js';
+import {getUsers,saveUsers} from './api/_privateUsers.js';
+import {sessionToken,verifySession,draftToken,verifyDraftToken,checkSessionConfig,SESSION_TTL} from './api/_authSession.js';
 
-const COOKIE_NAME = 'adcheck_session';
+const COOKIE_NAME = 'adcheck_session_v2';
 const LOGIN_PATH = '/_gate/login';
 const SIGNUP_PATH = '/_gate/signup';
 const ADMIN_PENDING_PATH = '/_gate/admin/pending';
@@ -58,13 +55,12 @@ function draftDeniedResponse(pathname, nextPath) {
   }
   return htmlResponse(draftHtml({ nextPath }), 401);
 }
-const DRAFT_COOKIE = 'adcheck_draft';
+const DRAFT_COOKIE = 'adcheck_draft_v2';
 const DRAFT_UNLOCK_PATH = '/_gate/draft';
-const USERS_BLOB_PATH = 'users.json';
-const USERS_URL = 'https://oeiquwo26iglgctf.public.blob.vercel-storage.com/users.json';
 const PBKDF2_ITERATIONS = 210000;
 
 export const config = {
+  runtime: 'nodejs', // Private Blob SDK uses Node.js dependencies.
   matcher: '/(.*)',
 };
 
@@ -75,15 +71,10 @@ function escapeHtml(s) {
 }
 
 function safeNextPath(raw) {
-  if (typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  if (typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') && !/[\\\x00-\x20\x7f]/.test(raw)) return raw;
   return '/';
 }
 
-async function sha256Hex(text) {
-  const data = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 function bytesToHex(bytes) {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -115,29 +106,6 @@ async function pbkdf2Hex(password, saltHex) {
   return bytesToHex(new Uint8Array(derivedBits));
 }
 
-async function getUsers() {
-  try {
-    const resp = await fetch(USERS_URL, { cache: 'no-store' });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && Array.isArray(data.users)) return data;
-    }
-    if (resp.status === 404) return { users: [] }; // not created yet — genuinely no users
-    // Blob responded but with an error status — treat as unreachable, not "no users".
-    return { users: [], fetchFailed: true };
-  } catch (e) {
-    // Network/DNS/etc — Blob unreachable. Distinguish this from "no such user" so
-    // login doesn't tell someone their real password is wrong when the actual
-    // problem is we couldn't even read the user list.
-    return { users: [], fetchFailed: true };
-  }
-}
-
-async function saveUsers(data) {
-  const bytes = new TextEncoder().encode(JSON.stringify(data));
-  await put(USERS_BLOB_PATH, bytes, 'application/json', { allowOverwrite: true });
-}
-
 function findUserByEmail(data, email) {
   const normalized = String(email || '').trim().toLowerCase();
   return data.users.find((u) => u.email.toLowerCase() === normalized) || null;
@@ -145,27 +113,6 @@ function findUserByEmail(data, email) {
 
 function findUserById(data, id) {
   return data.users.find((u) => u.id === id) || null;
-}
-
-async function sessionToken(user) {
-  const sig = await sha256Hex(user.id + ':' + user.passwordHash + ':adcheck-session');
-  return `${user.id}.${sig}`;
-}
-
-// Re-derives the signature from the user's CURRENT stored passwordHash on
-// every check (not just at login) — so revoking/rejecting a user, or a
-// password change, invalidates any cookie they're already holding right
-// away, without needing a separate revocation list.
-async function verifySession(cookieVal, data) {
-  if (!cookieVal) return null;
-  const dot = cookieVal.indexOf('.');
-  if (dot === -1) return null;
-  const userId = cookieVal.slice(0, dot);
-  const sig = cookieVal.slice(dot + 1);
-  const user = findUserById(data, userId);
-  if (!user || user.status !== 'approved') return null;
-  const expectedSig = await sha256Hex(user.id + ':' + user.passwordHash + ':adcheck-session');
-  return sig === expectedSig ? user : null;
 }
 
 function parseCookies(header) {
@@ -259,13 +206,8 @@ function gateHtml({ nextPath, tab, loginError, signupError, signupNotice }) {
 </html>`;
 }
 
-async function draftToken() {
-  return sha256Hex((process.env.ADMIN_PASSWORD || '') + ':adcheck-draft');
-}
-
 async function draftAllowed(cookies) {
-  if (!process.env.ADMIN_PASSWORD) return false;
-  return cookies[DRAFT_COOKIE] === (await draftToken());
+  return verifyDraftToken(cookies[DRAFT_COOKIE]);
 }
 
 function draftHtml({ nextPath, error }) {
@@ -322,7 +264,7 @@ function jsonResponse(body, status) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 }
 
-export default async function middleware(request) {
+async function handleRequest(request) {
   const url = new URL(request.url);
   const pathname = url.pathname;
   const method = request.method;
@@ -337,6 +279,10 @@ export default async function middleware(request) {
   // 하는 일은 사용자가 보고 있는 페이지의 공개 정보를 읽는 것뿐이다.
   // (열어두지 않으면 북마클릿을 고칠 때마다 팀원 전원이 다시 설치해야 한다)
   if (pathname === GRAB_SCRIPT_PATH || pathname === ADS_SCRIPT_PATH) return next();
+
+  if (process.env.AUTH_MAINTENANCE === '1') throw Error('AUTH_MAINTENANCE');
+  checkSessionConfig();
+  if (method === 'POST' && pathname.startsWith('/_gate/') && request.headers.get('origin') !== url.origin) return jsonResponse({error:'요청 출처를 확인할 수 없습니다.'},403);
 
   if (pathname === ADMIN_PENDING_PATH && method === 'POST') {
     const body = await request.json().catch(() => ({}));
@@ -365,6 +311,7 @@ export default async function middleware(request) {
     const user = findUserById(data, body.userId);
     if (!user) return jsonResponse({ error: '사용자를 찾을 수 없습니다.' }, 404);
 
+    user.sessionVersion=randomHex(16); // invalidate sessions even after later re-approval
     if (body.action === 'approve') {
       user.status = 'approved';
       user.approvedAt = new Date().toISOString();
@@ -390,7 +337,7 @@ export default async function middleware(request) {
     const res = new Response(null, { status: 302, headers: { Location: nextPath } });
     res.headers.append(
       'Set-Cookie',
-      `${DRAFT_COOKIE}=${await draftToken()}; Path=/; Max-Age=604800; HttpOnly; Secure; SameSite=Lax`
+      `${DRAFT_COOKIE}=${await draftToken()}; Path=/; Max-Age=${SESSION_TTL}; HttpOnly; Secure; SameSite=Lax`
     );
     return res;
   }
@@ -405,14 +352,14 @@ export default async function middleware(request) {
     const user = findUserByEmail(data, email);
 
     let loginError = null;
-    if (data.fetchFailed) {
-      loginError = '로그인 서비스에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해주세요. (계속되면 관리자에게 알려주세요 — Blob Storage 연결 문제일 수 있습니다)';
-    } else if (!user) {
+    if (!user) {
       loginError = '이메일 또는 비밀번호가 올바르지 않습니다.';
     } else if (user.status === 'pending') {
       loginError = '아직 관리자 승인 대기 중입니다.';
     } else if (user.status === 'rejected') {
       loginError = '가입이 거절되었습니다. 관리자에게 문의해주세요.';
+    } else if (user.status !== 'approved') {
+      loginError = '접근 권한이 없습니다.';
     } else {
       const hash = await pbkdf2Hex(password, user.passwordSalt);
       if (hash !== user.passwordHash) loginError = '이메일 또는 비밀번호가 올바르지 않습니다.';
@@ -426,7 +373,7 @@ export default async function middleware(request) {
     const res = new Response(null, { status: 302, headers: { Location: nextPath } });
     res.headers.append(
       'Set-Cookie',
-      `${COOKIE_NAME}=${token}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`
+      `${COOKIE_NAME}=${token}; Path=/; Max-Age=${SESSION_TTL}; HttpOnly; Secure; SameSite=Lax`
     );
     return res;
   }
@@ -488,26 +435,21 @@ export default async function middleware(request) {
     return next();
   }
 
-  // Session re-verifies against the CURRENT user list on every request (see
-  // verifySession's comment) — but that means a transient Blob hiccup makes
-  // getUsers() return an empty list, which fails EVERY session check and
-  // bounces already-logged-in people back to the login gate for no real
-  // reason. If we simply couldn't reach Blob this request (not "this cookie
-  // is invalid"), let a plausibly-shaped session cookie through rather than
-  // force a re-login — instant revocation just doesn't apply during that
-  // narrow outage window, which is an acceptable trade for not kicking the
-  // whole team out over a passing network blip.
-  if (data.fetchFailed && cookies[COOKIE_NAME] && cookies[COOKIE_NAME].indexOf('.') !== -1) {
-    if (isDraftPath(pathname) && !(await draftAllowed(cookies))) {
-      return draftDeniedResponse(pathname, pathname + url.search);
-    }
-    return next();
-  }
-
   const accept = request.headers.get('accept') || '';
   if (accept.includes('text/html')) {
     return htmlResponse(gateHtml({ nextPath: pathname + url.search, tab: 'login' }), 401);
   }
 
   return jsonResponse({ error: '접근 권한이 없습니다.' }, 401);
+}
+
+// A storage/configuration outage denies access. Never guess that a cookie is valid.
+export default async function middleware(request) {
+  try {
+    const response=await handleRequest(request);
+    response.headers.set('Cache-Control','no-store');
+    return response;
+  } catch {
+    return new Response('로그인 서비스를 점검 중입니다. 잠시 후 다시 시도해주세요.',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store','Retry-After':'60'}});
+  }
 }
