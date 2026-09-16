@@ -5,7 +5,7 @@ import {mergeVisualTones,VISUAL_CONTRACT_VERSION} from './studio-visual-contract
 import {studyReferences} from './studio-reference-study.mjs';
 import {createV3Plan,matchPlanReferences} from './studio-v3-plan.mjs';
 import {evidenceSections,completeCopy} from './studio-evidence.mjs';
-import {artDirect,recentDesigns,rememberDesign} from './studio-art-direction.mjs';
+import {artDirect,recentDesigns,rememberProductionPlan} from './studio-art-direction.mjs';
 import {checkBakedText,renderedCopyIssues,renderedTypographyIssues} from './studio-text-check.mjs';
 import {exportBanner,saveBlob} from './studio-export.mjs';
 import {attachCopyRemoval} from './studio-copy-removal.mjs';
@@ -681,6 +681,10 @@ async function generateImage(plan,run,q){
   const identity=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(foodVerificationRequest(request,finalUrl))});
   if(run!==autoRun)return;
   if(identity.matches!==true)throw Error('식품·포장 불일치: '+(identity.reason||'원본 음식·포장과 다른 결과입니다.'));
+ }else if(request.modelAdaptation){
+  const identity=await getJSON('/api/productPhotos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...foodVerificationRequest(request,finalUrl),category:'fashion-model-adaptation'})});
+  if(run!==autoRun)return;
+  if(identity.matches!==true)throw Error('의류 일치 확인: '+(identity.reason||'원본 의류와 다른 결과입니다.'));
  }else if(product.category==='beauty'){
   const anchor=product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture'&&p.role==='main')||product.photos.find(p=>p.matchesTarget===true&&p.assetKind!=='texture');
   if(!anchor)throw Error('상품 포장을 비교할 원본이 없습니다.');
@@ -699,7 +703,7 @@ async function generateImage(plan,run,q){
   if(issues.length)throw Error('완성 배너 확인: '+issues.join(' · '));
  }
  const index=PHOTOS.push({url:finalUrl,label:plan.sceneName+' · AI 생성',kind:'ai',recipe:plan.recipe})-1;
- variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberDesign(product,plan.designId,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:plan.plannerVersion||'v3.1',foodPolicy:request.foodPolicy,contract:VISUAL_CONTRACT_VERSION,brandCopyVersion:request.brandCopyVersion,visualTone:plan.visualTone,copyMode:plan.copyMode,knowledge:{copy:variant.knowledge,image:shot.knowledge},offerPolicy:variant.offerPolicy,referenceSnapshot:product.referenceSnapshot,recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
+ variant.photo=index;variant.photos=undefined;variant.baked=!!plan.completeBanner;variant.completeBanner=!!plan.completeBanner;if(plan.completeBanner)rememberProductionPlan(product,plan,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});variant.productionRecord={planner:plan.plannerVersion||'v3.1',foodPolicy:request.foodPolicy,modelAdaptation:request.modelAdaptation,strategyId:plan.strategyId,presentationId:plan.presentationId,combinationKey:plan.combinationKey,contract:VISUAL_CONTRACT_VERSION,brandCopyVersion:request.brandCopyVersion,visualTone:plan.visualTone,copyMode:plan.copyMode,knowledge:{copy:variant.knowledge,image:shot.knowledge},offerPolicy:variant.offerPolicy,referenceSnapshot:product.referenceSnapshot,recipe:plan.recipe,sourceMode:plan.sourceMode,sourceImages:(plan.photoSet||[plan.photo]).map(i=>({url:product.photos[i]?.url,region:product.photos[i]?.sourceRegion})),reference:plan.reference?.thumbUrl,targetAxes:plan.targetAxes,designObservation:plan.designObservation,evidenceIds:variant.evidenceIds,copy:completeCopy(variant,plan,product)};variant.textClaims=null;variant.imageFailed=false;variant.imageReady=true;failedImages.delete(plan.id);
  const qLabel={low:'빠른 화질',medium:'기본 화질',high:'고화질'}[q||quality];
  variant.quality=q||quality;
  variant.autoStatus=(variant.axes?variant.axes+' · ':'')+`AI 생성 · ${qLabel} · 상품 일치 확인 필요`;
@@ -762,10 +766,11 @@ async function startAutomatic(raw,fromGrab=false,useCurrent=false){
    if(extracted.failures.length)photoNotice+=` · ${extracted.failures.length}장은 추출하지 못해 원본 유지`;
   }
   // 로고 지우기와 누끼는 여기서 시작만 걸어 둔다. 계획·카드·카피와 겹쳐 돈다.
-  autoPlan=createV3Plan(product,{recent:recentDesigns(product,{getItem:key=>localStorage.getItem(key)})});
-  if(autoPlan.length!==6)throw Error('동일 상품 자료로 구성 가능한 시안이 부족합니다. 상세 자료를 확인해주세요.');
   const refs=await autoReferences(product);if(run!==autoRun)return;
-  autoPlan=matchPlanReferences(autoPlan,refs,product);
+  const recent=recentDesigns(product,{getItem:key=>localStorage.getItem(key)});
+  autoPlan=createV3Plan(product,{recent,references:refs});
+  if(autoPlan.length!==6)throw Error('동일 상품 자료로 구성 가능한 시안이 부족합니다. 상세 자료를 확인해주세요.');
+  autoPlan=matchPlanReferences(autoPlan,refs,product,{recent});
   autoMessage('시안별 레퍼런스의 사진·텍스트 배치를 확인하는 중…');
   autoPlan=await studyReferences(autoPlan,getJSON,{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)});
   if(run!==autoRun)return;

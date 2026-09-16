@@ -21,7 +21,7 @@ const request=completeCopy({main:'35,000원',sub:'제품 구성',cta:'구성 확
 assert.equal(request.offer,'');assert.equal(request.cta,'구성 확인하기');assert.equal(request.footnote,'삼성카드 결제');
 let state=9;const random=()=>((state=(state*1664525+1013904223)>>>0)/4294967296);
 p.category='beauty';p.facts=[{id:'detail',text:'실제 제형 설명',source:'https://example.com/detail'}];p.photos=[{url:'https://example.com/main',provenance:'main',role:'main',plainBg:true,personKind:'none',matchesTarget:true,assetKind:'product'},{url:'https://example.com/detail',provenance:'detail',role:'detail',personKind:'none',matchesTarget:true,assetKind:'texture'},{url:'https://example.com/wrong',role:'packshot',matchesTarget:false}];
-assert.equal(V3_RECIPES.length,30);
+assert.equal(V3_RECIPES.length,31);
 const sets=new Set();
 for(let n=0;n<100;n++){
  const plans=createV3Plan(p,{random});assert.equal(plans.length,6);assert.equal(new Set(plans.map(x=>x.recipe)).size,6);

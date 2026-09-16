@@ -1,3 +1,4 @@
+import {retailerAudience,modelAdaptationInstructions} from './studio-retailer-audience.mjs';
 import {createFoodPlan} from './studio-food-plan.mjs';
 import {advertisingProduct} from './studio-offer-policy.mjs';
 import {AXES} from './reference-axes.mjs';
@@ -34,14 +35,15 @@ const rows=[
  ['R27','서비스 상징','graphic','split','symbol','other','product','service','Generic 3D service symbols and verified service features, with clear CTA.'],
  ['R28','메시지 은유','graphic','split','symbol','other','question','service','Visual metaphor for the verified service; no invented benefit or promise.'],
  ['R29','안내 캐릭터','graphic','split','symbol','other','list','service','Original generic guide character and signboards carrying verified information, not an existing brand mascot.'],
+ ['R31','한국인 여성 모델 착장','industry','full','person','none','usage','retailerModel','Create a new refined Korean female fashion model in her 30s–40s wearing the exact supplied garment, with coherent editorial lighting and a composed contemporary mood.'],
  ['R30','질문·답변 카드','template','poster','type','paper','question','facts','One relevant question and concise verified answer with actual product and CTA.']
 ];
 export const V3_RECIPES=rows.map(([id,label,family,frame,focus,motif,type,requires,design])=>({id,label,family,targetAxes:{frame,focus,motif},type,requires,design}));
-export function createV3Plan(product,{random=Math.random,recent=[]}={}){
+export function createV3Plan(product,{random=Math.random,recent=[],references=[]}={}){
  product=advertisingProduct(product);
  const bank=sourceBank(product);if(!bank.length)return [];
  const fashion=/^fashion/.test(product.category),tone=visualTone(product.visualTone,product.tone);
- if(product.category==='food')return createFoodPlan(product,bank,tone,{random,recent});
+ if(product.category==='food')return createFoodPlan(product,bank,tone,{random,recent,references});
  const wearers=bank.filter(x=>isWearer(x.p)),objects=bank.filter(x=>isObject(x.p)),features=bank.filter(x=>isFeature(x.p));
  const photos=bank.filter(x=>!isFeature(x.p)),photoPool=photos.length?photos:bank;
  const lifestyle=photoPool.filter(x=>!x.p.plainBg),texture=features.filter(x=>x.p.assetKind==='texture');
@@ -51,7 +53,9 @@ export function createV3Plan(product,{random=Math.random,recent=[]}={}){
  const variants=pool=>new Set(pool.map(x=>x.p.colorway).filter(Boolean)).size;
  const options=variants(objects)>1?objects:wearers;
  const cooked=bank.filter(x=>x.p.foodState==='cooked'&&x.p.actualPreparedMeal===true);
- const requirements={any:true,photo:lifestyle.length>0,detail:features.length>0,texture:product.category==='beauty'&&texture.length>0,
+ const audience=retailerAudience(product);
+ const castingSources=bank.filter(x=>(isWearer(x.p)||isObject(x.p))&&x.p.shotDistance!=='close'&&x.p.garmentComplete===true);
+ const requirements={retailerModel:!!audience&&castingSources.length>0,any:true,photo:lifestyle.length>0,detail:features.length>0,texture:product.category==='beauty'&&texture.length>0,
   poses:wearers.length>1,options:fashion&&variants(options)>1,collection:bank.some(x=>x.p.itemCount>1),fashion:fashion&&objects.length>0,
   body:wearers.length>0,food:product.category==='food'&&objects.length>0,cooked:cooked.length>0,
   instructions:facts.some(f=>f.kind==='usage'),number:!!(product.quantity||product.salePrice||offer),offer,facts:facts.length>0,service:product.category==='service'};
@@ -68,6 +72,7 @@ export function createV3Plan(product,{random=Math.random,recent=[]}={}){
  if(product.category==='beauty'&&texture.length)take(r=>r.id==='R11');
  else if(fashion&&variants(options)>1)take(r=>r.id==='R05');
  else if(features.length)take(r=>r.id==='R03');
+ if(requirements.retailerModel)take(r=>r.id==='R31');
  if(offer)take(r=>r.requires==='offer');
  if(!chosen.some(r=>r.family==='graphic'))take(r=>r.family==='graphic');
  if(!chosen.some(r=>r.family==='template'))take(r=>r.family==='template');
@@ -76,7 +81,8 @@ export function createV3Plan(product,{random=Math.random,recent=[]}={}){
  const allocator=sourceAllocator(bank);
  return chosen.slice(0,6).map((r,id)=>{
   let selected;
-  if(r.id==='R11'||r.id==='R03')selected=[...allocator.pick(objects.length?objects:photoPool),...allocator.pick(r.id==='R11'?texture:features)];
+  if(r.id==='R31')selected=allocator.pick(castingSources);
+  else if(r.id==='R11'||r.id==='R03')selected=[...allocator.pick(objects.length?objects:photoPool),...allocator.pick(r.id==='R11'?texture:features)];
   else if(r.id==='R04')selected=allocator.pick(wearers,2);
   else if(r.id==='R05')selected=allocator.pick(options,3,{distinctColors:true});
   else if(r.id==='R07')selected=allocator.pick(objects,3,{distinctColors:true});
@@ -91,23 +97,24 @@ export function createV3Plan(product,{random=Math.random,recent=[]}={}){
   const detail=r.family==='detail',primary=detail?facts.find(f=>/제형|텍스처|소재|골지|원단|리브/.test(f.text)):facts[id%Math.max(1,facts.length)];
   const type=id===0?'product':r.type;
   const targetAxes={...r.targetAxes,mood:tone.moods[0],palette:tone.palette,
-   person:selected.every(x=>!isWearer(x.p))?'none':selected.length>1?'many':'one',
-   subject:selected.length>1?'multiple':isWearer(selected[0].p)?'inuse':'single',
+   person:r.id==='R31'?'one':selected.every(x=>!isWearer(x.p))?'none':selected.length>1?'many':'one',
+   subject:r.id==='R31'?'inuse':selected.length>1?'multiple':isWearer(selected[0].p)?'inuse':'single',
    space:tone.energy==='expressive'?'balanced':'airy',letter:'gothic',
    appeal:type==='benefit'?'discount':type==='numbers'?'price':detail?'material':type==='usage'?'ease':'feature'};
-  const plan={id,recipe:r.id,plannerVersion:'v3.1',label:r.label,sceneName:r.label,designId:r.id,designLabel:r.label,designFamily:r.family,targetAxes,
-   sourceMode:original?'preserve':'reference',method:original?'original':'newscene',photo,photoSet,
-   layout:detail?'duo-panel':'header',scene:r.design,keep:selected.some(x=>isWearer(x.p))?'person':'product',
+  const plan={id,recipe:r.id,plannerVersion:'v3.3-strategy',label:r.label,sceneName:r.label,designId:r.id,designLabel:r.label,designFamily:r.family,targetAxes,
+   sourceMode:r.id==='R31'?'model-adaptation':original?'preserve':'reference',method:original?'original':'newscene',photo,photoSet,
+   layout:detail?'duo-panel':'header',scene:r.design,keep:r.id==='R31'?'product':selected.some(x=>isWearer(x.p))?'person':'product',
    emphasis:type==='benefit'||type==='numbers'?'offer':'product',type,angle:{id:type,ko:r.label,how:r.design},completeBanner:true,fontFamily:'sans',
    copyMode:id===0?'basic':'creative',visualTone:tone,evidenceIds:primary?[primary.id]:[],
    sourceSummary:{role:selected[0].p.role,colorway:selected[0].p.colorway||'',colors:selected.map(x=>x.p.colorway||''),
     photos:selected.map(x=>({index:x.i,role:x.p.role,color:x.p.colorway,pose:x.p.pose,angle:x.p.shotAngle,distance:x.p.shotDistance,light:x.p.light,note:x.p.note}))},
    copyBrief:id===0?'상품명과 판매가를 그대로 전달하는 기본안. 추상적인 슬로건으로 바꾸지 않는다.':`${r.label}. ${type==='benefit'?'확인된 일반 할인·쿠폰·증정 중 하나를 사용. 무료배송은 보조 문구만.':'상품이 무엇인지 드러내는 자연스러운 제목과 실제 구매 이유.'} 사진과 무드에 맞으면 같은 상품명·CTA를 써도 좋다. 억지 질문이나 소재 수치 나열은 금지. 추천 근거: ${primary?.text||'상품명과 구성'}`,
    coverage:{main:photoSet.includes(main.i),detail:selected.some(x=>x.p.provenance==='detail'||x.p.sourceRegion),template:r.family==='template',graphic:r.family==='graphic',industry:detail||r.family==='industry'},desc:r.label,render:'layer'};
+  if(r.id==='R31'){plan.modelAdaptation=audience;plan.scene=r.design+modelAdaptationInstructions(audience);plan.copyBrief+=' 새 모델은 연출이며 실제 구매자·후기 작성자로 소개하지 않는다. 광고에 나이·국적·타깃 설명을 쓰지 않는다.';}
   plan.artDirection=r.design;return plan;
  });
 }
-export function matchPlanReferences(plans,refs,product){
+export function matchPlanReferences(plans,refs,product,{recent=[]}={}){
  const used=new Set();
  return plans.map(p=>{
   const tone=visualTone(p.visualTone),quiet=!tone.moods.some(x=>['playful','bold','dramatic'].includes(x));
@@ -115,7 +122,7 @@ export function matchPlanReferences(plans,refs,product){
    !(p.targetAxes.person==='none'&&['one','many','character'].includes(r.axes?.person))&&
    !(p.targetAxes.person!=='none'&&r.axes?.person==='character'));
   const ranked=pool.map(r=>({r,score:Object.entries(p.targetAxes||{}).reduce((s,[k,v])=>s+(r.axes?.[k]===v?(AXES[k]?.weight||1):0),0)
-   +(tone.moods.includes(r.axes?.mood)?12:0)+(r.type===p.type?4:0)+(String(r.brandName||r.brand||'').normalize('NFC').toLowerCase()===String(product.brand||'').normalize('NFC').toLowerCase()?2:0)-(used.has(r.thumbUrl)?10:0)})).sort((a,b)=>b.score-a.score);
+   +(tone.moods.includes(r.axes?.mood)?12:0)+(r.type===p.type?4:0)+(String(r.brandName||r.brand||'').normalize('NFC').toLowerCase()===String(product.brand||'').normalize('NFC').toLowerCase()?2:0)-(used.has(r.thumbUrl)?10:0)-(recent.includes('ref/'+r.thumbUrl)?6:0)})).sort((a,b)=>b.score-a.score);
   const hit=ranked[0];if(hit)used.add(hit.r.thumbUrl);
   return {...p,reference:hit?{...hit.r,matchScore:hit.score}:null};
  });

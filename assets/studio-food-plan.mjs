@@ -1,58 +1,86 @@
-import {sourceAllocator} from './studio-source-selection.mjs';
+import {angleById} from './studio-angles.mjs';
+import {sourceKey} from './studio-source-selection.mjs';
 import {foodUse,foodContract} from './studio-food-policy.mjs';
 import {primaryOffers} from './studio-visual-contract.mjs';
 
-// Limited source count is normal for food. Reuse a good plated photograph rather
-// than invent six foods or treat every detail-page panel as a different shot.
-const recipes=[
- ['F01','음식 중심 기본안','photo','full','product','none','A dominant actual food photograph with concise product name, one price and modest CTA in natural negative space.'],
- ['F02','상차림 연출','industry','full','usage','stage','Use the actual plated dish as the hero on a warm dining table with linen and empty tableware. Keep the dish and its contents intact. No additional food or preparation action.'],
- ['F03','음식 접사','photo','full','product','none','Crop into the supplied food photograph to show its actual appetizing texture. Retain the real cut and surface; short copy in quiet negative space. No newly generated food detail.'],
- ['F04','패키지와 음식','template','split','product','none','Pair the exact supplied package with the actual plated food, food dominant and package supporting. Clear product title, no manufactured labels.'],
- ['F05','여백 화보','photo','split','product','none','Large actual dish photograph beside a calm editorial text field. Refined spacing, compact headline, restrained CTA; do not shrink the food into a thumbnail.'],
- ['F06','혜택과 음식','template','bands','benefit','paper','Prominent actual food with one proportionate verified benefit panel and modest CTA. No invented membership or coupon.'],
- ['F07','음식 그래픽 포스터','graphic','poster','product','other','Combine a large actual food photograph with one material or colour field suited to the product mood. Expressive but readable typography; graphic effect stays behind the food, no toy or fake package.'],
- ['F08','상품 정보 카드','template','inset','list','window','Dominant actual food photograph with one concise verified product feature in a small card. No reviews, diagrams, preparation steps or speculative ingredient claims.'],
- ['F09','음식과 질감','graphic','split','product','stage','The actual plated dish against a restrained tactile paper or stone backdrop. Directional light consistent with the food, balanced title and quiet CTA.'],
- ['F10','사진 두 구도','photo','grid','product','none','An unequal editorial pair of the supplied food photos: one dominant plate view and one actual close crop. Reusing the same source at two crop scales is allowed. No implied before/after.']
-].map(([id,label,family,frame,type,motif,design])=>({id,label,family,frame,type,motif,design}));
-export function createFoodPlan(product,bank,tone,{random=Math.random,recent=[]}={}){
- const served=bank.filter(x=>foodUse(x.p)==='served'),raw=bank.filter(x=>foodUse(x.p)==='raw'),packs=bank.filter(x=>foodUse(x.p)==='package');
- const heroes=served.length?served:raw.length?raw:packs;
- if(!heroes.length)return [];
- const hasDish=served.length>0,hasFood=served.length+raw.length>0;
- const offers=primaryOffers(product).length>0||product.benefitConfirmed===true;
- const facts=(product.facts||[]).filter(f=>f.kind!=='usage'&&!/조리|숙성|해동|굽|구워|절단|슬라이스|제조|유통기한/.test(f.text));
- const pool=recipes.filter(r=>!(['F02','F03','F10'].includes(r.id)&&!hasDish)&&!(r.id==='F04'&&(!hasFood||!packs.length))&&!(r.id==='F06'&&!offers)&&!(r.id==='F08'&&!facts.length)).map(r=>({...r,tie:random()}));
- const selected=[];
- const take=predicate=>{const candidates=pool.filter(r=>!selected.includes(r)&&predicate(r));candidates.sort((a,b)=>{
-  const score=r=>r.tie*3-(recent.includes(r.id)?2:0)+(selected.some(x=>x.family===r.family)?0:4);
-  return score(b)-score(a);
- });if(candidates[0])selected.push(candidates[0]);};
- take(r=>r.id==='F01');if(hasDish){take(r=>r.id==='F02');take(r=>r.id==='F03');}
- if(hasFood&&packs.length)take(r=>r.id==='F04');
- if(offers)take(r=>r.id==='F06');
- take(r=>r.family==='graphic');
- while(selected.length<6&&selected.length<pool.length)take(()=>true);
- // Raw/package-only products do not unlock cooked scenes to fill the set.
- for(const r of recipes.filter(r=>['F03','F10'].includes(r.id))){
-  if(selected.length>=6)break;
-  selected.push({...r,label:r.id==='F03'?'상품 확대':'상품 두 구도',design:'Use only the supplied actual product photograph in an editorial composition. Vary crop and scale, keep its photographed state. Never unpack, cook or infer hidden contents.'});
+// Strategy answers WHY to click. Presentation answers HOW to show it. Neither
+// occupies a fixed slot; eligibility depends on actual sources and evidence.
+const visuals=[
+ ['hero','음식 전면','photo','full','none','A dominant actual product photograph with typography in natural negative space.'],
+ ['table','상차림','industry','full','stage','Keep the actual plated food dominant in an inviting dining setting. Use a few quiet accompanying foods only as peripheral serving suggestions, separate from the advertised food.'],
+ ['close','음식 접사','photo','full','none','A close crop of the actual appetizing food surface; preserve its cut, texture and original garnish.'],
+ ['package','포장과 음식','template','split','none','Pair the exact supplied package with dominant actual food. Never invent a new pack.'],
+ ['margin','여백 화보','photo','split','none','A large actual product photograph alongside an airy editorial copy field.'],
+ ['card','정보 카드','template','inset','window','A dominant real product photograph with one proportionate concise text card, not a product-information screenshot.'],
+ ['graphic','그래픽 포스터','graphic','poster','other','Large actual product with one purposeful colour/material field and expressive readable typography appropriate to the brand mood.'],
+ ['texture','질감 배경','graphic','split','stage','Actual product against a restrained paper or stone surface; coherent light and restrained typography.'],
+ ['pair','두 구도','photo','grid','none','One large actual food view with a smaller real close crop; no before/after implication.'],
+ ['type','타이포 강조','graphic','poster','paper','One clear headline or verified figure with prominent actual product; a proportionate graphic accent, never repeated prices or oversized shipping coupons.']
+].map(([id,label,family,frame,motif,design])=>({id,label,family,frame,motif,design}));
+const usableFact=f=>f?.id&&f.source&&String(f.text||'').trim().length>=4;
+export function foodStrategies(product,bank){
+ const facts=(product.facts||[]).filter(usableFact),served=bank.some(x=>foodUse(x.p)==='served'),packs=bank.some(x=>foodUse(x.p)==='package');
+ const feature=facts.filter(f=>!['review','authority','comparison','beforeafter','usage'].includes(f.kind)&&!/제조일|유통기한|보관|해동|조리법/.test(f.text));
+ const out=[];
+ const add=(id,label,type,brief,evidence=[])=>out.push({id,label,type,brief,evidence});
+ add('basic','상품명·가격','product','상품명과 판매가를 그대로 전달한다.');
+ add('product','상품 매력','product','실제 상품 이름과 사진에 보이는 매력을 간결하게 전달한다. 맛·성분·효능을 추측하지 않는다.');
+ if(served)add('meal','식사 제안','usage','이 상품을 중심으로 즐기는 식사 상황을 제안한다. 인분·건강효과·조리시간을 만들지 않는다.');
+ if(packs)add('pack','포장·구성','list','실제 포장이나 확인된 구성을 소개한다. 포장만 보고 보존성·간편조리를 추론하지 않는다.');
+ if(Number(product.salePrice)>0||Number(product.quantity)>0)add('value','가격·구성','numbers','확인된 가격 또는 구성 하나를 중심으로 구매 이유를 전달한다. 할인으로 바꾸지 않는다.');
+ if(feature.length)add('feature','상품 특징','product','확인된 상품 특징 하나로 구매 이유를 설명한다.',feature);
+ if(primaryOffers(product).length||product.benefitConfirmed)add('benefit','구매 혜택','benefit','확인된 일반 구매 혜택을 조건과 함께 전달한다. 카드할인과 배송 중심 대형 강조는 제외.');
+ for(const [kind,id,label,type,brief] of [
+  ['review','review','구매 후기','testimonial','선택한 실제 후기 원문을 그대로 인용한다. 새로운 후기나 화자를 만들지 않는다.'],
+  ['authority','trust','품질 근거','authority','선택한 인증·수상 등 근거를 정확히 소개한다. 브랜드 이름만으로 인증을 만들지 않는다.'],
+  ['comparison','compare','차이 비교','comparison','명시된 비교 근거만 설명한다. 서로 다른 사진이라는 이유로 우열·전후를 주장하지 않는다.']]){
+  const evidence=facts.filter(f=>f.kind===kind&&(kind!=='review'||f.text.length<=100));
+  if(evidence.length)add(id,label,type,brief,evidence);
  }
- const allocator=sourceAllocator(bank);
- return selected.slice(0,6).map((r,id)=>{
-  const source=allocator.pick(heroes,r.id==='F10'?Math.min(2,heroes.length):1);
-  if(r.id==='F04')source.push(...allocator.pick(packs));
-  const photoSet=source.map(x=>x.i),fact=r.id==='F08'?facts[0]:null;
-  const design=(hasDish?r.design:r.design.replace(/actual plated dish|actual dish|plated dish|actual food|food photograph/g,'actual product'))+(hasFood?'':' This is package-only photography. Keep the sealed package; do not imagine or show unpackaged contents.');
-  return {id,recipe:r.id,plannerVersion:'v3.2-food',label:r.label,sceneName:r.label,designId:r.id,designLabel:r.label,designFamily:r.family,
-   targetAxes:{frame:r.frame,focus:r.id==='F06'?'number':'product',motif:r.motif,mood:tone.moods[0],palette:tone.palette,person:'none',subject:source.length>1?'multiple':'single',space:'balanced',letter:'gothic',appeal:r.type==='benefit'?'discount':'feature'},
-   sourceMode:['F02','F09'].includes(r.id)?'reference':'preserve',method:['F02','F09'].includes(r.id)?'newscene':'original',
-   photo:photoSet[0],photoSet,layout:'header',scene:design,artDirection:design,keep:'product',emphasis:r.type==='benefit'?'offer':'product',type:r.type,
-   angle:{id:r.type,ko:r.label,how:design},completeBanner:true,fontFamily:'sans',copyMode:id===0?'basic':'creative',visualTone:tone,
-   foodPolicy:foodContract(source.map(x=>x.p)),evidenceIds:fact?[fact.id]:[],
-   sourceSummary:{role:source[0].p.role,photos:source.map(x=>({index:x.i,role:x.p.role,foodState:x.p.foodState,foodUse:foodUse(x.p),note:x.p.note}))},
-   copyBrief:id===0?'상품명과 판매가를 그대로 쓰는 기본안.':`${r.label}. 실제 상품 이름을 알 수 있게 쓰고 사진 설명이나 억지 질문보다 먹고 싶은 이유를 짧게 전달한다. 조리 행동을 묘사하지 않는다. ${r.type==='benefit'?'확인된 일반 구매 혜택만 사용한다.':'가격·수치를 의무적으로 넣지 않는다.'} 후기는 이 안에서는 만들지 않는다. ${fact?.text||''}`,
-   coverage:{main:source.some(x=>x.p.role==='main'||x.p.provenance==='main'),detail:source.some(x=>x.p.provenance==='detail'||x.p.sourceRegion),template:r.family==='template',graphic:r.family==='graphic',industry:r.family==='industry'},desc:r.label,render:'layer'};
- });
+ const gifts=feature.filter(f=>/선물|gift/i.test(f.text));
+ if(packs&&gifts.length)add('gift','선물 제안','usage','실제 제공되는 선물 포장과 확인된 상품 정보를 바탕으로 선물 상황을 제안한다.',gifts);
+ return out;
+}
+const hash=s=>{let n=2166136261;for(const c of s)n=Math.imul(n^c.charCodeAt(0),16777619);return (n>>>0).toString(36);};
+export function createFoodPlan(product,bank,tone,{random=Math.random,recent=[],references=[]}={}){
+ const served=bank.filter(x=>foodUse(x.p)==='served'),raw=bank.filter(x=>foodUse(x.p)==='raw'),packs=bank.filter(x=>foodUse(x.p)==='package');
+ const heroes=served.length?served:raw.length?raw:packs;if(!heroes.length)return [];
+ const strategies=foodStrategies(product,bank),hasDish=served.length>0,hasFood=served.length+raw.length>0;
+ const presentations=visuals.filter(v=>!(['table','close','pair'].includes(v.id)&&!hasDish)&&!(v.id==='package'&&(!hasFood||!packs.length)));
+ const candidates=strategies.flatMap(s=>presentations.filter(v=>!(s.id==='basic'&&v.id==='type')).map(v=>({s,v,tie:random()})));
+ const chosen=[],sourceUses=new Map(),strategyPriority=new Map(strategies.map(s=>[s.id,random()*4]));
+ const count=(key,value)=>chosen.filter(x=>x[key]===value).length;
+ for(let id=0;id<6;id++){
+  const ranked=candidates.filter(c=>!chosen.some(p=>p.strategyId===c.s.id&&p.presentationId===c.v.id)).map(c=>{
+   const {s,v}=c;
+   const rankedSources=[...heroes].sort((a,b)=>{
+    const score=x=>(sourceUses.get(sourceKey(x.p))||0)*4+(v.id==='close'&&x.p.shotDistance!=='close'?2:0)+(v.id==='table'&&x.p.shotDistance==='close'?2:0);
+    return score(a)-score(b);
+   });
+   const selected=rankedSources.slice(0,v.id==='pair'?Math.min(2,heroes.length):1);
+   if(v.id==='package')selected.push(packs[0]);
+   const key=`food/${s.id}/${v.id}`,sourceToken=hash(selected.map(x=>sourceKey(x.p)).join('|'));
+   const combinationKey=`combo/${key}/${sourceToken}`;
+   const refFit=references.some(r=>r.axes?.frame===v.frame&&r.type===s.type)?1.5:0;
+   const score=c.tie*4+strategyPriority.get(s.id)-count('strategyId',s.id)*3-count('presentationId',v.id)*4-count('designFamily',v.family)*1.2
+    -(recent.includes(key)?4:0)-(recent.includes(combinationKey)?4:0)+refFit;
+   return {...c,selected,key,combinationKey,score};
+  }).filter(c=>count('presentationId',c.v.id)<2&&count('strategyId',c.s.id)<(c.s.id==='basic'?1:Math.max(2,Math.ceil(5/Math.max(1,strategies.length-1)))));
+  ranked.sort((a,b)=>b.score-a.score);const hit=ranked[0];if(!hit)break;
+  const {s,v,selected,key,combinationKey}=hit;
+  const primary=s.evidence.length?s.evidence[Math.floor(random()*s.evidence.length)]:null;
+  const photoSet=selected.map(x=>x.i),scene=v.design+(!hasFood?' This is package-only photography: keep the sealed product; do not imagine unpackaged contents.':'');
+  selected.forEach(x=>sourceUses.set(sourceKey(x.p),(sourceUses.get(sourceKey(x.p))||0)+1));
+  const label=s.label+' · '+v.label;
+  chosen.push({id,recipe:key,plannerVersion:'v3.3-strategy',strategyId:s.id,presentationId:v.id,combinationKey,
+   label,sceneName:label,designId:key,designLabel:label,designFamily:v.family,
+   targetAxes:{frame:v.frame,focus:s.type==='numbers'||s.type==='benefit'?'number':'product',motif:v.motif,mood:tone.moods[0],palette:tone.palette,person:'none',subject:selected.length>1?'multiple':'single',space:'balanced',letter:'gothic',appeal:s.type==='benefit'?'discount':s.type==='testimonial'?'popular':s.type==='numbers'?'price':'feature'},
+   sourceMode:['table','texture'].includes(v.id)?'reference':'preserve',method:['table','texture'].includes(v.id)?'newscene':'original',photo:photoSet[0],photoSet,layout:'header',scene,artDirection:scene,keep:'product',
+   emphasis:['numbers','benefit'].includes(s.type)?'offer':'product',type:s.type,angle:{...angleById(s.type),how:s.brief},completeBanner:true,fontFamily:'sans',copyMode:s.id==='basic'?'basic':'creative',visualTone:tone,
+   foodPolicy:foodContract(selected.map(x=>x.p),{allowAccompaniments:v.id==='table'}),evidenceIds:primary?[primary.id]:[],
+   sourceSummary:{role:selected[0].p.role,photos:selected.map(x=>({index:x.i,role:x.p.role,foodState:x.p.foodState,foodUse:foodUse(x.p),note:x.p.note}))},
+   copyBrief:`${s.brief} 표현은 ${v.label}. 상품 종류를 명확히 드러낸다. 조리 과정을 묘사하지 않는다. 연출용 곁들임은 판매 구성·함유재료로 말하지 않는다. ${primary?.text||''}`,
+   coverage:{main:selected.some(x=>x.p.role==='main'||x.p.provenance==='main'),detail:selected.some(x=>x.p.provenance==='detail'||x.p.sourceRegion),template:v.family==='template',graphic:v.family==='graphic',industry:v.family==='industry'},desc:label,render:'layer'});
+ }
+ return chosen;
 }

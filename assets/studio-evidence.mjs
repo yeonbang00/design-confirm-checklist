@@ -41,3 +41,15 @@ export function validatePlannedCopy(copy,plan,product){
  if(nouns.length&&!nouns.some(n=>[copy.main,copy.sub].join(' ').includes(n)))throw Error('메인 또는 서브에 실제 상품 종류를 명확하게 넣으세요.');
  return copy;
 }
+
+// A selected evidence-dependent strategy must survive copy generation. Never
+// silently turn a real review concept into an invented testimonial.
+export function validateStrategyEvidence(row,plan,facts){
+ if(!['feature','review','trust','compare','gift'].includes(plan.strategyId))return row;
+ const fact=facts[row?.fact];
+ if(!Number.isInteger(row?.fact)||!fact?.source||!plan.evidenceIds?.includes(fact.id))throw Error('선택한 광고 전략의 실제 근거 fact 번호를 사용하세요.');
+ const kind={review:'review',trust:'authority',compare:'comparison'}[plan.strategyId];
+ if(kind&&fact.kind!==kind)throw Error('광고 전략과 근거 종류가 다릅니다.');
+ if(plan.strategyId==='review'&&String(row.sub||'').trim()!==fact.text.trim())throw Error('후기 시안의 sub는 선택한 실제 후기 원문을 그대로 인용하세요.');
+ return row;
+}

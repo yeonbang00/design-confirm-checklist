@@ -71,3 +71,9 @@ export function rememberDesign(product,id,storage){
  try{const all=JSON.parse(storage.getItem(HISTORY_KEY)||'[]'),key=productKey(product),ids=all.find(x=>x.key===key)?.ids||[];
  storage.setItem(HISTORY_KEY,JSON.stringify([{key,ids:[id,...ids.filter(x=>x!==id)].slice(0,12)},...all.filter(x=>x.key!==key)].slice(0,20)));}catch{/* Storage restrictions must not interrupt generation. */}
 }
+
+export function rememberProductionPlan(product,plan,storage){
+ try{const all=JSON.parse(storage.getItem(HISTORY_KEY)||'[]'),key=productKey(product),ids=all.find(x=>x.key===key)?.ids||[];
+ const tokens=[plan.designId,plan.combinationKey,plan.reference?.thumbUrl?'ref/'+plan.reference.thumbUrl:null].filter(Boolean);
+ storage.setItem(HISTORY_KEY,JSON.stringify([{key,ids:[...tokens,...ids.filter(x=>!tokens.includes(x))].slice(0,36)},...all.filter(x=>x.key!==key)].slice(0,20)));}catch{}
+}
