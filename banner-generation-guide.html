@@ -193,6 +193,13 @@
   .criteria-table td{color:var(--ink-2);}
   .criteria-table td:first-child{width:24%;font-weight:600;color:var(--ink);}
   .criteria-table caption{text-align:left;font-size:18px;font-weight:600;color:var(--ink);padding:8px 0;}
+  .planning-flow{padding-left:24px;margin:24px 0 32px;max-width:760px;}
+  .planning-flow li+li{margin-top:16px;}
+  .recipe-catalog dd p{margin:0;}
+  .recipe-catalog dd p+p{margin-top:8px;}
+  .model-table code{font-size:13px;overflow-wrap:anywhere;}
+  .model-table th[scope="row"]{font-size:14px;color:var(--ink);font-weight:600;width:24%;}
+  .model-table td:nth-child(2){width:27%;}
   .guide-ending{padding-top:20px;border-top:1px solid var(--line);}
   .generation-guide .page-footer{min-height:0;padding:56px 40px 32px;border-top:1px solid var(--line);}
   .generation-guide .footer-copy{margin-top:40px;}
@@ -275,7 +282,7 @@
   <a class="guide-action" href="banner-studio.html">배너 생성 시작하기</a>
   <p class="guide-meta">2026.09.16 기준</p>
   <nav class="guide-toc" aria-label="가이드 목차">
-    <a href="#start">시작하기</a><a href="#type">6종 기획</a><a href="#image">업종별 기준</a><a href="#connection">가이드·레퍼런스 연계</a><a href="#result">결과 활용</a>
+    <a href="#start">시작하기</a><a href="#type">6종 기획·조합</a><a href="#image">업종별 기준</a><a href="#connection">가이드·레퍼런스 연계</a><a href="#result">결과 활용</a><a href="#models">사용 모델</a>
   </nav>
 
   <section id="start" aria-labelledby="start-title">
@@ -298,15 +305,74 @@
   </section>
 
   <section id="type" aria-labelledby="type-title">
-    <h2 id="type-title">6종은 무엇이 달라지나요?</h2>
-    <p><strong>무엇을 말할지, 어떤 사진을 쓸지, 어떻게 보여줄지</strong>를 함께 정합니다. 같은 상품도 착장·컬러·상세 장면을 달리하거나, 같은 좋은 사진을 다른 메시지와 구도로 활용할 수 있습니다.</p>
+    <h2 id="type-title">자료에서 6종의 기획이 만들어지는 과정</h2>
+    <p>사진 분석 결과와 상품 근거를 바탕으로 <strong>기획 규칙이 6종을 선택</strong>하고, AI가 각 시안의 카피와 디자인을 구체화합니다. 상품마다 쓸 수 있는 사진·정보·브랜드 무드가 다르므로 후보와 조합도 달라집니다.</p>
+    <ol class="planning-flow">
+      <li><strong>사용할 자료와 무드를 정합니다.</strong> 메인·상세 사진을 읽어 착장, 옵션, 제형, 음식, 포장을 구분합니다. 동일 상품 여부와 가격·혜택·특징의 근거를 확인하고 사진의 빛·색감·분위기를 정리합니다.</li>
+      <li><strong>가능한 구성만 후보에 올립니다.</strong> 제품 누끼가 필요한 구성, 실제 제형이 필요한 구성처럼 자료 요건을 적용합니다. 차분한 브랜드에 어울리지 않는 과한 연출도 제한합니다.</li>
+      <li><strong>우선 활용할 자료를 배정하고 6종을 고릅니다.</strong> 기본안과 업종별 우선 구성을 먼저 고려하고, 광고 유형·표현 계열·시각 장치의 중복과 최근 사용 이력을 반영해 나머지를 선택합니다. 무작위 값도 사용하지만 모든 후보의 확률이 같지는 않습니다.</li>
+      <li><strong>각 시안에 사진과 레퍼런스를 연결합니다.</strong> 실제 사용할 사진을 배정한 뒤, 프레임·주인공·무드·색감 등이 맞는 레퍼런스를 찾습니다. 메인·서브·CTA의 위치와 줄 수, 크기, 사진 비중, 효과를 읽습니다.</li>
+      <li><strong>근거 있는 카피와 완성 이미지를 만듭니다.</strong> 기획 의도, 실제 사진, 상품 근거, 레퍼런스 관찰, 항목가이드를 전달합니다. 카피를 확인한 뒤 이미지 모델이 사진과 글자를 함께 디자인하고 결과를 검사합니다.</li>
+    </ol>
+
+    <h3>유형·구성·텍스트 레이아웃은 서로 다른 선택입니다</h3>
     <dl class="guide-rows">
-      <div><dt>구매 이유</dt><dd>상품명과 가격, 특징, 사용 상황, 구성, 확인된 혜택 등을 나눠 전달합니다. 후기·인증·비교는 이를 뒷받침할 실제 자료가 있어야 합니다.</dd></div>
-      <div><dt>이미지 활용</dt><dd>원본 착장, 제품 누끼, 상세 접사, 제형, 완성 음식 등에서 시안에 맞는 자료를 고릅니다. 누끼는 구성형에, 장면이 완성된 사진은 화보형에 적합할 수 있습니다.</dd></div>
-      <div><dt>표현 방식</dt><dd>전면 사진, 분할 화보, 컬렉션, 정보 카드, 그래픽 포스터, 업종별 연출 등을 조합합니다. 다양성보다 상품의 명확성과 브랜드 무드를 우선합니다.</dd></div>
+      <div><dt>광고 유형</dt><dd><strong>왜 클릭해야 하는가.</strong> 제품 특징, 사용 상황, 구성, 가격, 혜택, 실제 후기 같은 설득 관점입니다.</dd></div>
+      <div><dt>구성·템플릿</dt><dd><strong>사진과 정보를 어떤 틀로 보여주는가.</strong> 전면 화보, 옵션 컬렉션, 상세 확대창, 정보 카드, 그래픽 포스터 등입니다. 현재 공통 구성은 유형·프레임·주인공·시각 장치가 연결된 출발점입니다.</dd></div>
+      <div><dt>이미지 배정</dt><dd><strong>어떤 원본이 그 기획에 적합한가.</strong> 패션은 실제 포즈·컬러를 나누고, 식품은 좋은 대표 음식 사진을 여러 전략에서 재사용할 수 있습니다.</dd></div>
+      <div><dt>텍스트 레이아웃</dt><dd><strong>무엇을 어느 크기로 어디에 읽히게 하는가.</strong> 메인·서브·브랜드·가격·CTA의 위치, 줄 수, 상대 크기, 정렬, 효과를 시안과 레퍼런스에 맞춥니다.</dd></div>
     </dl>
-    <p>다시 생성하면 선택하는 조합과 표현이 달라질 수 있습니다. 최근 완료된 구성과 레퍼런스의 반복을 줄이지만, 매번 모든 안이 달라지거나 기존보다 좋아진다는 의미는 아닙니다.</p>
-    <p class="guide-note">현재 패션 등 공통 기획에는 <strong>상품명·가격 기본안</strong>을 포함합니다. 식품은 고정된 여섯 자리를 두지 않고, 확보한 자료로 가능한 전략과 표현을 조합합니다.</p>
+    <p class="guide-note"><strong>30개 구성안 + 모델 확장 1개가 현재 목록입니다.</strong> 다만 ‘14개 광고 유형 × 31개 구성 × 모든 조판’을 전부 곱해 무작위로 뽑지는 않습니다. 공통 기획은 구성에 연결된 유형을 사용하고, 식품은 전략과 표현을 별도로 조합합니다.</p>
+
+    <details id="selection"><summary>6종을 고르는 우선순위와 랜덤 범위</summary><div class="disclosure-body">
+      <p><strong>패션·화장품 등 공통 기획</strong>은 상품명·가격 기본안을 먼저 포함합니다. 자료가 있으면 패션의 다른 포즈와 컬러, 화장품의 실제 제형, 상세 접사를 우선 고려합니다. 신세계쇼핑의 대상 의류에는 새 모델 착장 확장을 고려하고, 확인된 혜택이 있으면 혜택 구성을 우선 후보로 올립니다.</p>
+      <p>그다음 그래픽·템플릿·업종 연출 등을 보완합니다. 앞에서 6자리가 채워지면 뒤의 모든 계열을 추가로 보장하지는 않습니다. 후보가 부족하면 만들 수 없는 구성을 억지로 채우지 않습니다.</p>
+      <p><strong>다양성 점수</strong>는 아직 쓰지 않은 유형과 표현 계열을 우대하고, 같은 장치와 최근 완료한 구성의 반복을 줄입니다. 사진 배정도 포즈·컬러·사용 횟수를 고려합니다. 따라서 같은 상품을 다시 생성해도 조합은 달라질 수 있지만, 모든 안이 매번 완전히 바뀌는 것은 아닙니다.</p>
+      <p><strong>식품</strong>은 상품명·가격, 상품 매력, 식사 제안, 포장·구성, 가격·구성, 상품 특징, 구매 혜택, 후기, 품질 근거, 비교, 선물 제안 중 자료가 뒷받침하는 전략을 고릅니다. 이를 음식 전면·상차림·접사·포장과 음식·여백 화보·정보 카드·그래픽 포스터·질감 배경·두 구도·타이포 강조의 10가지 표현과 조합합니다. 같은 전략·표현 쌍은 한 묶음에서 중복하지 않으며, 표현 방식 하나가 6종을 독점하지 않도록 제한합니다.</p>
+      <p>식품에서 무작위로 달라지는 것은 <strong>광고 전략과 보여주는 방식</strong>입니다. 대표 음식의 형태·조리 상태·포장을 무작위로 바꾸지는 않습니다. 포장 전략에는 실제 포장이 필요하고, 조리 과정·레시피 안내·한입 보조 컷은 대표 음식으로 배정하지 않습니다.</p>
+    </div></details>
+
+    <details id="recipes"><summary>30개 구성안과 추가 모델 착장 구성 전체 보기</summary><div class="disclosure-body">
+      <p>구성 이름은 제작의 출발점입니다. 같은 구성이어도 상품 사진, 구매 이유, 무드, 레퍼런스와 카피에 따라 결과가 달라집니다. 아래 목록 전체가 모든 업종의 후보가 되지는 않습니다.</p>
+      <dl class="guide-rows recipe-catalog">
+<div><dt>사진을 살리는 구성</dt><dd><p><span data-recipe="R01">전면 화보</span> · <span data-recipe="R02">비대칭 편집 화보</span> · <span data-recipe="R04">포즈 연속 화보</span> · <span data-recipe="R26">사진 틀</span></p><p>완성된 장면이나 실제 착장 사진을 활용합니다. 포즈 연속 화보는 서로 다른 착장 사진이 있어야 합니다.</p></dd></div>
+<div><dt>제품 상세를 보여주는 구성</dt><dd><p><span data-recipe="R03">디테일 확대창</span> · <span data-recipe="R11">실제 제형 그래픽</span></p><p>실제 접사·소재 사진을 씁니다. 제형 그래픽은 해당 화장품의 실제 제형 사진이 있어야 합니다.</p></dd></div>
+<div><dt>정보·옵션을 정리하는 구성</dt><dd><p><span data-recipe="R05">옵션 컬렉션</span> · <span data-recipe="R12">사용 순서 카드</span> · <span data-recipe="R15">구성품 펼치기</span> · <span data-recipe="R21">쿠폰·티켓 포스터</span> · <span data-recipe="R30">질문·답변 카드</span></p><p>옵션·사용 순서·구성품·혜택·상품 특징 등 각 구성에 필요한 자료가 있을 때 후보가 됩니다.</p></dd></div>
+<div><dt>제품과 모델을 연출하는 구성</dt><dd><p><span data-recipe="R06">의자 스타일링</span> · <span data-recipe="R07">행거 진열</span> · <span data-recipe="R08">모델 착장</span> · <span data-recipe="R16">패키지 무대</span> · <span data-recipe="R31">한국인 여성 모델 착장</span></p><p>옷 전체가 보이는 제품 사진이나 실제 착장, 포장 자료를 사용합니다. 새 한국인 여성 모델 착장은 신세계쇼핑의 대상 의류에 한해 적용합니다.</p></dd></div>
+<div><dt>장면 중심 구성</dt><dd><p><span data-recipe="R09">생활 장면</span> · <span data-recipe="R10">스튜디오 정물</span></p><p>상품에 어울리는 생활 공간이나 정물 장면을 구성합니다. 제품 형태와 브랜드 무드를 유지합니다.</p></dd></div>
+<div><dt>그래픽·타이포 중심 구성</dt><dd><p><span data-recipe="R17">선물상자 군집</span> · <span data-recipe="R18">나무상자 진열</span> · <span data-recipe="R19">집게로 고르기</span> · <span data-recipe="R20">소재 숫자</span> · <span data-recipe="R22">대형 타이포</span> · <span data-recipe="R23">스포트라이트</span> · <span data-recipe="R24">원형 후광 컬렉션</span> · <span data-recipe="R25">시즌 그래픽</span></p><p>숫자·티켓·입체 소품·빛 등을 활용합니다. 집게와 스포트라이트는 강한 표현이 어울리는 무드에서만 후보가 됩니다. 혜택·숫자는 확인된 정보가 필요합니다.</p></dd></div>
+<div><dt>서비스 전용 구성</dt><dd><p><span data-recipe="R27">서비스 상징</span> · <span data-recipe="R28">메시지 은유</span> · <span data-recipe="R29">안내 캐릭터</span></p><p>서비스 업종에 사용하는 상징·은유·안내 구성입니다. 상품 사진을 다른 제품으로 바꾸는 용도가 아닙니다.</p></dd></div>
+<div><dt>식품 구성 기록</dt><dd><p><span data-recipe="R13">원물 테이블</span> · <span data-recipe="R14">실제 조리컷</span></p><p>목록에 남아 있는 식품 구성입니다. 현재 식품 6종은 이 두 구성을 뽑는 대신 아래의 별도 전략·표현 조합으로 기획합니다.</p></dd></div>
+      </dl>
+    </div></details>
+
+    <details id="advertising-types"><summary>광고 유형 14종은 어디까지 연결돼 있나요?</summary><div class="disclosure-body">
+      <p>배너분석·이미지 레퍼런스의 분류에는 <strong>제품단독형, 사용장면형, 혜택직관형, 숫자강조형, 비교형, 리스트형, 질문형, 후기·인용형, 문제제기형, 비포애프터형, 권위형, 시즌이슈형, 이벤트·응모형, 캐릭터·일러스트형</strong>이 있습니다.</p>
+      <p>현재 공통 자동 기획은 이 중 제품·사용 장면·혜택·숫자·리스트·질문 관점을 구성안에 연결해 사용합니다. 식품은 근거가 있는 후기·품질 근거·비교 전략도 선택합니다.</p>
+      <p>문제제기·비포애프터·시즌이슈·이벤트·캐릭터가 모두 독립 광고 전략으로 자동 추첨되는 것은 아닙니다. 예를 들어 ‘시즌 그래픽’이나 ‘안내 캐릭터’ 구성이 있어도, 그 자체로 기간 한정 행사나 브랜드 캐릭터 사용을 뜻하지 않습니다. <strong>레퍼런스 분류의 범위와 현재 생성 규칙의 범위는 구분</strong>해서 봐야 합니다.</p>
+    </div></details>
+
+    <details id="composition"><summary>문구·글자 효과·버튼·조판은 어떻게 정하나요?</summary><div class="disclosure-body">
+      <ol>
+        <li><strong>사진과 메시지에 맞는 공간을 정합니다.</strong> 전면·분할·격자·띠·인셋·포스터 등 구성과 사진 속 여백을 기준으로 시선을 설계합니다.</li>
+        <li><strong>선택한 레퍼런스의 텍스트 구조를 읽습니다.</strong> 메인·서브의 실제 줄 수, 상대 글자 크기, 위치와 정렬, 굵기·외곽선·입체 효과, 사진 비중을 관찰합니다. CTA가 있으면 형태·폭·높이·채움·테두리를 함께 봅니다.</li>
+        <li><strong>그 구조에 맞게 카피를 작성합니다.</strong> 상품명, 특징, 사용 상황, 확인된 혜택 중 기획에 필요한 내용을 고릅니다. 제목은 보통 1~2줄, 필요하면 최대 3줄로 구성하고, 가격 반복이나 서브 문구 과밀을 피합니다. 서로 다른 사진에 같은 제목이나 CTA를 쓰는 것도 허용합니다.</li>
+        <li><strong>항목가이드와 무드로 조정합니다.</strong> 한 제목의 줄별 크기를 이유 없이 다르게 하지 않고, 메인과 서브의 위계·대비·여백을 맞춥니다. 고딕을 기본으로 하되 명조 개수를 고정하지 않으며, 효과와 버튼도 브랜드의 차분함·고급스러움·표현 강도에 맞춥니다.</li>
+        <li><strong>이미지 모델이 최종 조판합니다.</strong> 확정 카피와 실제 사진, 디자인 레퍼런스, 관찰한 배치를 함께 전달합니다. 기존 편집용 CSS 조판 목록에서 하나를 뽑아 글자를 덮는 방식은 현재 기본 생성 경로가 아닙니다.</li>
+      </ol>
+      <p>레퍼런스의 위치·크기는 AI가 관찰한 비율이며 고정 픽셀 좌표가 아닙니다. 버튼은 작은 링크·테두리·채움·띠 등으로 표현할 수 있고, 무료배송은 보조 정보로 다룹니다. 모델이 모든 배치를 정확하게 재현한다고 보장하지는 않습니다.</p>
+    </div></details>
+
+    <details id="planning-example"><summary>한 상품에서 조합이 달라지는 예시</summary><div class="disclosure-body">
+      <p><strong>다음은 조합을 이해하기 위한 예시이며 고정된 6개 슬롯이 아닙니다.</strong> 스트라이프 니트의 착장 사진, 실제 컬러 옵션과 가격이 확보됐다고 가정합니다.</p>
+      <dl class="guide-rows">
+        <div><dt>상품을 바로 알리는 안</dt><dd>상품명·가격 + 전면 화보 + 실제 착장 전신 사진 + 사진 여백의 짧은 제목·가격·작은 CTA.</dd></div>
+        <div><dt>컬러 선택을 돕는 안</dt><dd>구성 안내 + 옵션 컬렉션 + 확인된 컬러별 누끼 + 하나의 제목·짧은 컬러명·공통 CTA.</dd></div>
+        <div><dt>입었을 때를 보여주는 안</dt><dd>사용 장면 + 포즈 연속 화보 + 상세페이지의 서로 다른 착장 두 컷 + 여백에 간결한 카피와 링크형 CTA.</dd></div>
+      </dl>
+      <p>같은 전면 화보라도 사진·카피·레퍼런스에 따라 제목의 위치와 크기, 사진 비중과 버튼이 달라집니다. 반대로 같은 문구를 유지하고 착장 사진만 바꾸는 것도 유효한 변화입니다.</p>
+    </div></details>
+
     <details><summary>어떤 자료가 있어야 사용할 수 있나요?</summary><div class="disclosure-body">
       <dl class="guide-rows">
         <div><dt>가격·할인·쿠폰</dt><dd>해당 상품에 적용되는 금액, 할인율, 기간과 조건. 참고 배너의 혜택은 가져오지 않으며 카드 결제 할인은 기본 광고에서 제외합니다.</dd></div>
@@ -377,6 +443,24 @@
     <p class="guide-note"><strong>마지막으로 디자이너가 확인하세요.</strong> 상품·옵션의 정확성, 문구와 판매 조건, 브랜드 무드, 합성의 자연스러움과 매체 규격을 확인합니다. 판매처 로고는 후작업으로 넣고, 상품 브랜드명은 읽히는 일반 텍스트로 유지합니다.</p>
     <p class="guide-ending">완성안을 더 살펴보려면 <a href="index.html">배너 분석</a>과 <a href="media-guide.html">매체 가이드</a>를 활용하세요.</p>
   </section>
+  <section id="models" aria-labelledby="models-title">
+    <h2 id="models-title">수집·기획·생성에 사용하는 모델</h2>
+    <p>북마클릿이 AI로 페이지를 분석하는 것은 아닙니다. <strong>수집은 코드, 사진 해석과 카피는 언어·이미지 이해 모델, 완성 배너 제작은 이미지 모델</strong>이 맡습니다.</p>
+    <table class="criteria-table model-table">
+      <caption>2026.09.16 코드 기준</caption>
+      <thead><tr><th scope="col">단계</th><th scope="col">사용 기술·모델</th><th scope="col">하는 일</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">상품 담기·링크 수집</th><td>JavaScript · 서버 수집 코드</td><td>페이지의 사진 주소, 상품 설명, 가격·조건을 수집합니다. 이 단계에는 생성형 AI 모델을 쓰지 않습니다.</td></tr>
+        <tr><th scope="row">사진·레퍼런스 분석</th><td><code>gpt-5.6-terra</code> 기본값</td><td>동일 상품, 사진 역할, 상세 문구와 브랜드 무드를 읽고, 레퍼런스의 구도·타이포·CTA를 관찰합니다.</td></tr>
+        <tr><th scope="row">6종 선택</th><td>기획 규칙 코드</td><td>분석 결과를 받아 자료 요건, 우선순위, 다양성, 최근 사용 이력과 무작위 값을 적용합니다. AI가 자유롭게 여섯 개를 정하는 단계는 아닙니다.</td></tr>
+        <tr><th scope="row">카피 작성</th><td><code>gpt-5.6-terra</code> 기본값</td><td>시안별 의도와 상품 근거로 문구를 작성합니다. 기본안의 상품명·가격은 코드에서 직접 구성하고, 수치·혜택을 검증합니다.</td></tr>
+        <tr><th scope="row">완성 이미지·글자 제거</th><td><code>gpt-image-2</code></td><td>실제 상품 사진과 레퍼런스, 확정 카피로 완성 배너를 만듭니다. 요청한 광고 글자 제거도 같은 이미지 모델을 사용합니다.</td></tr>
+        <tr><th scope="row">결과 검사</th><td>CLOVA OCR · 검증 코드 · 분석 모델</td><td>OCR로 읽은 글자를 카피·수치·CTA 등과 대조합니다. 식품·화장품·새 모델 착장의 상품 동일성은 분석 모델로 비교합니다.</td></tr>
+      </tbody>
+    </table>
+    <p class="guide-note">분석·카피 모델은 서버 설정으로 변경할 수 있어 위 이름은 <strong>코드 기본값</strong>입니다. 실제 실행 모델은 서버 설정과 응답값을 확인해야 합니다. 이 생성 경로에 Claude 모델은 연결돼 있지 않습니다. 한 번의 ‘6종 생성’에는 수집·분석·카피·이미지·검수의 여러 작업이 포함됩니다.</p>
+  </section>
+
 </main>
 
 <div class="page-footer show" data-reveal>
