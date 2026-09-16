@@ -18,7 +18,8 @@ let middleware=readFileSync(new URL('../middleware.js',import.meta.url),'utf8')
  .replace("import { next } from '@vercel/edge';", "const next=()=>new Response(null,{status:200,headers:{'x-test-next':'1'}});")
  .replace("'./api/_privateUsers.js'",JSON.stringify(storeUrl))
  .replace("'./api/_authSession.js'",JSON.stringify(new URL('../api/_authSession.js',import.meta.url).href));
-const {default:handle}=await import(url(middleware));
+const {default:closedHandle}=await import(url(middleware));
+const {default:handle}=await import(url(middleware.replace('const SITE_MAINTENANCE = true;', 'const SITE_MAINTENANCE = false;')));
 function request(path='/',cookie='',body){return new Request('https://app.example.invalid'+path,{method:body?'POST':'GET',headers:{cookie,accept:'application/json',...(body?{origin:'https://app.example.invalid','content-type':'application/x-www-form-urlencoded'}:{})},...(body?{body:new URLSearchParams(body)}:{})});}
 test('valid signed session admitted; cached response forbidden',async()=>{const token=await sessionToken(dummy);const r=await handle(request('/','adcheck_session_v2='+token));assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');});
 test('legacy and tampered tokens rejected',async()=>{assert.equal(await verifySession('old.invalid',state),null);const t=await sessionToken(dummy);assert.equal(await verifySession(t.slice(0,-1)+(t.endsWith('0')?'1':'0'),state),null);assert.equal((await handle(request('/','adcheck_session=old.invalid'))).status,401);});
@@ -58,6 +59,18 @@ test('maintenance freezes account reads and writes including administrator mutat
  for(const path of ['/', '/_gate/signup','/_gate/admin/decide']){
   const response=await handle(request(path,'',{name:'Synthetic',email:'test@example.invalid',password:'dummy-password',passwordConfirm:'dummy-password'}));
   assert.equal(response.status,503);
+ }
+ assert.equal(reads,0);assert.equal(writes,0);
+});
+
+ test('full-site closure blocks pages, APIs, existing signed sessions and admin before storage',async()=>{
+ const token=await sessionToken(dummy);const dt=await draftToken();
+ for(const path of ['/', '/banner-studio.html','/admin.html','/assets/adcheck-grab.js','/api/bannerImage','/_gate/login','/_gate/admin/decide']){
+  const r=await closedHandle(request(path,`adcheck_session_v2=${token}; adcheck_draft_v2=${dt}`));
+  assert.equal(r.status,503);assert.equal(r.headers.get('cache-control'),'no-store');
+  assert.equal(r.headers.get('retry-after'),'3600');
+  if(path.startsWith('/api/')||path.startsWith('/_gate/'))assert.equal((await r.json()).code,'SITE_MAINTENANCE');
+  else assert.match(await r.text(),/서비스 개편 작업/);
  }
  assert.equal(reads,0);assert.equal(writes,0);
 });

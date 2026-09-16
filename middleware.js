@@ -264,7 +264,22 @@ function jsonResponse(body, status) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 }
 
+// Temporary full-site closure requested for the service-home rebuild.
+// Reopen by setting this flag to false and deploying; credentials are unchanged.
+const SITE_MAINTENANCE = true;
+function siteMaintenanceResponse(request) {
+  const headers = {'Cache-Control':'no-store','Retry-After':'3600','X-Robots-Tag':'noindex'};
+  const pathname = new URL(request.url).pathname;
+  if (pathname.startsWith('/api/') || pathname.startsWith('/_gate/')) {
+    headers['Content-Type']='application/json; charset=utf-8';
+    return new Response(JSON.stringify({error:'서비스 개편 작업 중입니다. 작업이 끝나면 다시 안내드리겠습니다.',code:'SITE_MAINTENANCE'}),{status:503,headers});
+  }
+  headers['Content-Type']='text/html; charset=utf-8';
+  return new Response(`<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AdCheck · 서비스 점검</title><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#0b0c0e;color:#f4f5f6;font-family:system-ui,sans-serif;padding:32px}main{max-width:620px}small{color:#c3ff4d;font-weight:700;letter-spacing:.12em}h1{font-size:clamp(30px,5vw,48px);line-height:1.3;letter-spacing:-.04em;margin:24px 0}p{font-size:17px;line-height:1.8;color:#aeb2ba}footer{margin-top:48px;color:#777f88;font-size:13px}</style><main><small>ADCHECK · MAINTENANCE</small><h1>더 나은 작업 공간을<br>준비하고 있습니다.</h1><p>서비스 개편 작업으로 이용을 잠시 중단했습니다.<br>작업이 끝나면 다시 안내드리겠습니다.</p><footer>NHN AD 디자인팀</footer></main></html>`,{status:503,headers});
+}
+
 async function handleRequest(request) {
+  if (SITE_MAINTENANCE) return siteMaintenanceResponse(request);
   const url = new URL(request.url);
   const pathname = url.pathname;
   const method = request.method;
